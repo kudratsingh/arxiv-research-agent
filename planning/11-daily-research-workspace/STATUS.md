@@ -18,6 +18,33 @@ Paid services require a separate, concrete approval before activation.
 | W8–W9 | Real grounded summaries and guided deep dives | Exact source/model/usage envelope and separate owner spending approval; actual retained-source/provider walkthrough required |
 | W10–W12 | Questions, assumptions and experiment proposals; daily-use pilot; optional expansion | Follow observed owner workflow. No automatic code execution, publishing or external delivery |
 
+## Sonnet5.5 model choice (2026-11-04)
+
+The owner selected `claude-sonnet-5-5` for subsequent API requests. Offline
+preparation on `codex/workspace-qualification-sonnet55` updates the actual
+qualification wire shape, capability/rate rows and sealed V3 packet. The
+[migration note](22-sonnet55-model-migration.md) records exact compatibility,
+cost bounds and blockers. The stopped4.6 trial is preserved; no additional
+provider contacts, approvals, owner writes or budget-counter reset occurred.
+Recurrence and everyday generation remain disabled. Local focused gate output:
+
+```text
+202 passed in 53.61s
+Success: no issues found in 5 source files
+All checks passed!
+```
+
+This includes the existing qualification/measurement/admission suite, new5.5
+compatibility/drift/old-approval tests, capability properties, documented claims
+and repository hygiene. Mypy covers the five changed source modules; Ruff and
+`git diff --check` pass. Initial added tests needed their expected refusals moved
+around constructor-time gates; both failed logs remain under outputs. No gate
+was weakened. No full-project coverage gate,5.5 provider measurement, push or
+remote CI was run for this local preparation. The generated V3 packet digest is
+`ff77e48380fd68c0e98e63bd5e306f42433631b5a4b46b095a97b45c07742909`.
+The1200-token truncation/reference contract and old hold remain blockers;
+this is model compatibility preparation, not a dispatch-ready qualification.
+
 ## Qualification-readiness repair of PR284 (2026-11-03)
 
 Reviewed916f038 and current remote PR284 agree; no later commits at start.

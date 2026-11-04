@@ -38,7 +38,7 @@ def fixture(store):
 def approve(store, packet, **changes):
     return support.admission.policy(
         store,
-        model_ids=["claude-sonnet-4-6"],
+        model_ids=[support.p.MODEL],
         purpose="workspace-measurement-only",
         transport_mode="mock",
         everyday_generation=False,

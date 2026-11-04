@@ -56,14 +56,15 @@ class Transport:
         assert request.url.host == "api.anthropic.com"
         assert request.headers["x-api-key"] == "local-preview-disabled"
         assert body["model"] == p.MODEL and "output_config" in body
-        assert "thinking" not in body and "effort" not in body["output_config"]
+        assert body["thinking"] == {"type": "between_tools"}
+        assert body["output_config"]["effort"] == "medium"
+        assert not {"temperature", "top_p", "top_k"} & body.keys()
         if request.url.path.endswith("count_tokens"):
             assert "max_tokens" not in body and "temperature" not in body
             return httpx.Response(200, json={"input_tokens": 100})
         context = json.loads(body["messages"][0]["content"])
         assert context["private_context"] == {"notes": False, "history": False, "profile": False}
         if context["stage"] == "check":
-            assert body["temperature"] == 0
             output = {
                 "checks": [
                     {
@@ -76,7 +77,6 @@ class Transport:
                 ]
             }
         else:
-            assert body["temperature"] == 0.2
             with self.store.pool.connection() as conn:
                 materials = p.FakeExecutor(self.store)._sources(
                     conn, "a", [s.material_id for s in self.inputs.sources]
@@ -435,10 +435,10 @@ async def test_provider_branch_uses_mocked_transport_but_records_priced_role_usa
     await adapter.advance(job)
     result = await adapter.advance(job)
     assert result["state"] == "ready"
-    assert result["workflow_usd"] == result["checker_usd"] == "0.00168"
+    assert result["workflow_usd"] == result["checker_usd"] == "0.00112"
     assert admission.row(store, job)[2:5] == (
-        p.Decimal("0.00168"),
-        p.Decimal("0.00168"),
+        p.Decimal("0.00112"),
+        p.Decimal("0.00112"),
         p.Decimal(0),
     )
 

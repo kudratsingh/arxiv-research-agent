@@ -175,6 +175,18 @@ _SONNET_5 = ModelCapabilities(
     source="Anthropic thinking/effort matrix — Claude Sonnet 5 row",
 )
 
+_SONNET_5_5 = ModelCapabilities(
+    sampling_params=False,
+    adaptive_thinking=True,
+    effort_levels=ALL_EFFORT,
+    structured_outputs=True,
+    source=(
+        "Verified 2026-11-04: https://platform.claude.com/docs/en/models/"
+        "sonnet-5-5/migration-guide — no sampling or disabled thinking; "
+        "between_tools at low/medium/high for no up-front thinking"
+    ),
+)
+
 _OPUS_4_5 = ModelCapabilities(
     # Opus 4.5: pre-adaptive — thinking is the `budget_tokens` form,
     # which this gateway does not send, so adaptive is False rather
@@ -213,6 +225,7 @@ MODEL_CAPABILITIES: Final[dict[str, ModelCapabilities]] = {
     "claude-opus-4-6": _GEN_4_6,
     "claude-opus-4-5": _OPUS_4_5,
     # Sonnet tier.
+    "claude-sonnet-5-5": _SONNET_5_5,
     "claude-sonnet-5": _SONNET_5,
     "claude-sonnet-4-6": _GEN_4_6,
     # Haiku tier. The dated id is in the price table because ADR 0021

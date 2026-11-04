@@ -34,10 +34,10 @@ def bound_jobs(
 ) -> list[tuple[dict[str, Any], GenerationInput]]:
     jobs = []
     if (
-        packet.get("revision") != "workspace-qualification-packet-v2"
+        packet.get("revision") != "workspace-qualification-packet-v3-sonnet55"
         or len(packet.get("jobs", [])) != 4
     ):
-        raise AdmissionError("four_request_v2_packet_required")
+        raise AdmissionError("four_request_v3_sonnet55_packet_required")
     for job in packet["jobs"]:
         raw = job["sealed_input"]
         inputs = GenerationInput(

@@ -66,7 +66,10 @@ PRICES_USD_PER_MILLION: dict[str, dict[str, float]] = {
     "claude-opus-4-7": {"input": 5.0, "output": 25.0},
     "claude-opus-4-6": {"input": 5.0, "output": 25.0},
     "claude-opus-4-5": {"input": 5.0, "output": 25.0},
-    # Sonnet tier — $3 / $15.
+    # Sonnet5.5 standard global rates verified 2026-11-04:
+    # https://platform.claude.com/docs/en/models/sonnet-5-5/overview
+    "claude-sonnet-5-5": {"input": 2.0, "output": 10.0},
+    # Earlier Sonnet rows retain their historical estimates.
     "claude-sonnet-5": {"input": 3.0, "output": 15.0},
     "claude-sonnet-4-6": {"input": 3.0, "output": 15.0},
     # Haiku tier — $1 / $5. The dated id is the ADR 0021 recommended

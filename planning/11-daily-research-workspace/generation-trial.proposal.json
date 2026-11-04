@@ -1,14 +1,14 @@
 {
-  "status": "unapproved_proposal",
+  "status": "sonnet55_offline_preparation_not_dispatch_ready",
   "approved": false,
   "approval_record": null,
-  "model_id": "claude-sonnet-4-6",
+  "model_id": "claude-sonnet-5-5",
   "prices_usd_per_million": {
-    "input": 3,
-    "output": 15
+    "input": 2,
+    "output": 10
   },
-  "prices_verified_at": "2026-11-03",
-  "price_source": "https://platform.claude.com/docs/en/about-claude/pricing",
+  "prices_verified_at": "2026-11-04",
+  "price_source": "https://platform.claude.com/docs/en/models/sonnet-5-5/overview",
   "sources": [
     {
       "work_id": "arxiv:2610.41482",
@@ -78,10 +78,10 @@
     "implicit_question": false
   },
   "settings": {
-    "draft_temperature": 0.2,
-    "judge_temperature": 0.0,
-    "thinking": "disabled",
-    "effort": null,
+    "draft_temperature": null,
+    "judge_temperature": null,
+    "thinking": "between_tools",
+    "effort": "medium",
     "structured_outputs": true,
     "sdk_retries": 0,
     "max_concurrency": 1,
@@ -95,9 +95,9 @@
       "max_count_contacts": 4,
       "per_call_input_tokens": 8000,
       "per_call_output_tokens": 1200,
-      "workflow_usd_estimate": "0.084",
-      "checker_usd_estimate": "0.084",
-      "raw_usd_max": "0.168",
+      "workflow_usd_estimate": "0.056",
+      "checker_usd_estimate": "0.056",
+      "raw_usd_max": "0.112",
       "margin_multiplier": "1.25",
       "job_cap_usd": "0.25"
     },
@@ -106,17 +106,17 @@
       "max_count_contacts": 4,
       "per_call_input_tokens": 12000,
       "per_call_output_tokens": 2400,
-      "workflow_usd_estimate": "0.144",
-      "checker_usd_estimate": "0.144",
-      "raw_usd_max": "0.288",
+      "workflow_usd_estimate": "0.096",
+      "checker_usd_estimate": "0.096",
+      "raw_usd_max": "0.192",
       "margin_multiplier": "1.25",
       "job_cap_usd": "0.40"
     },
     "qualification": {
       "summary_jobs": 3,
       "study_jobs": 1,
-      "raw_usd_max": "0.792",
-      "margin_adjusted_usd": "0.990",
+      "raw_usd_max": "0.528",
+      "margin_adjusted_usd": "0.660",
       "sum_job_reservations_usd": "1.15",
       "trial_cap_usd": "1.25",
       "day_cap_usd": "1.25",
@@ -130,13 +130,15 @@
   "provider_calls": 0,
   "execution_enabled": false,
   "remaining": [
-    "Explicit external measurement-only or quarantined-experiment approval; runners cannot write approvals",
-    "Actual provider counts and remote schema acceptance (no contact yet)",
-    "Human claim/span review, measured checker quality and usefulness; everyday generation remains gated"
+    "Reconcile stopped 4.6 trial hold without replay or resetting total contacts/costs",
+    "Review newly sealed Sonnet5.5 model/settings/body digests and original remaining contact limits before dispatch",
+    "Address observed 1200-token truncation and quote/offset mismatch; this model-only migration is not a repair of those defects",
+    "Measure actual Sonnet5.5 token counts; 4.6 counts do not transfer",
+    "Checker quality and human usefulness remain unmeasured; everyday generation stays disabled"
   ],
-  "prepared_at": "2026-11-03",
+  "prepared_at": "2026-11-04",
   "qualification_kind": "separately approvable measurement/qualification experiment; unqualified checker permitted only for quarantined experiment; everyday generation requires quality evidence",
-  "token_basis": "unmeasured design ceilings; MockTransport usage and fake byte counters are synthetic",
+  "token_basis": "Sonnet5.5 not measured; prior4.6 counts cannot transfer to its different tokenizer; design ceilings only",
   "paid_request_digest": null,
   "fake_verification": {
     "provider_calls": 0,
@@ -145,7 +147,7 @@
     "receipt": "outputs/workspace-next/fake-execution-receipt.json",
     "claim": "State/protocol tests only; fake checks are not model-quality evidence"
   },
-  "adapter_revision": "workspace-qualification-adapter-v2",
+  "adapter_revision": "workspace-qualification-adapter-v3-sonnet55",
   "provider_contact_scope": {
     "measurement_only_option": {
       "count_contacts_max": 4,
@@ -171,43 +173,43 @@
     "Review every experiment claim/span and omissions; checker qualification is an outcome, never assumed",
     "Everyday generation remains disabled pending adequate measured quality evidence and separate decision"
   ],
-  "exact_initial_request_artifact": "outputs/workspace-qualification-repair/trial-packet.json",
+  "exact_initial_request_artifact": "outputs/qualification-sonnet55/trial-packet.json",
   "dynamic_request_rule": "seal and count each check/repair/recheck after prior output exists; no source truncation or schema/model fallback",
   "review_cases": {
     "count": 24,
     "human_labels": null,
     "checker_qualified": false,
-    "artifact": "outputs/workspace-readiness/trial-packet.json",
+    "artifact": "outputs/qualification-sonnet55/trial-packet.json",
     "scope": "three retained text sources; PDF region review separate; not automatically sent by the four-job trial"
   },
   "sealed_requests": [
     {
-      "request_id": "qualification-628a8c442856af150ca3314cdc0fc8abd7cf38ff",
-      "measurement_request_id": "measurement-628a8c442856af150ca3314cdc0fc8abd7cf38ff",
-      "input_digest": "628a8c442856af150ca3314cdc0fc8abd7cf38ff266c276b92e664af652241af",
-      "initial_wire_digest": "aed12fc542319b081556639b1528750d23d59f6a2a820d6098afbd61a5e0fb80",
-      "count_request_digest": "227522a658cd15626a99298dc770af84829c7029a466447c3d921eb3de16f1da"
+      "request_id": "qualification-841ed3e402e268f049d1238dac1f1195d472b151",
+      "measurement_request_id": "measurement-841ed3e402e268f049d1238dac1f1195d472b151",
+      "input_digest": "841ed3e402e268f049d1238dac1f1195d472b1519531f9d48328daf06a647492",
+      "initial_wire_digest": "9426c6e0807adfc5725c3f06ba187dbe1124eeb1cb5ec721029b6ed660a0096c",
+      "count_request_digest": "3e2dd57b3e2cb05b8910ae2df57cc1d845b54732b4b2f8148534431f35bc27d2"
     },
     {
-      "request_id": "qualification-c176d1185c983662bfaf660390e0502f5646aabd",
-      "measurement_request_id": "measurement-c176d1185c983662bfaf660390e0502f5646aabd",
-      "input_digest": "c176d1185c983662bfaf660390e0502f5646aabdae34f4cc63057292faf76ad3",
-      "initial_wire_digest": "354f9acd05aaae21707be7a01d5f543c490f65f2749b2e573cdfb5dc9894aabf",
-      "count_request_digest": "f14b7c1783aa214b18ccdf70f3ce1bb08e56162bcd56169246ad3c9022cbe6d2"
+      "request_id": "qualification-0198bcf37659440feacdb2c0d8245c987dc39083",
+      "measurement_request_id": "measurement-0198bcf37659440feacdb2c0d8245c987dc39083",
+      "input_digest": "0198bcf37659440feacdb2c0d8245c987dc390832c008af331cba6beed0019ea",
+      "initial_wire_digest": "b49d43d6f43b2b8c656ce2e80c891b966540d0eeeee8a627c815e4a64f5b099d",
+      "count_request_digest": "6c9a7f20a31dab63f9972861e5eb0383555cd22090ed1edb84705a7a72b881f4"
     },
     {
-      "request_id": "qualification-6d88f34321c4967d7dc50d71a04259c7301e998a",
-      "measurement_request_id": "measurement-6d88f34321c4967d7dc50d71a04259c7301e998a",
-      "input_digest": "6d88f34321c4967d7dc50d71a04259c7301e998a0afe3743f6fb39aea7ba5090",
-      "initial_wire_digest": "1193f7b5ac73382cbfd18ef11afcfcde908235904ea42d0d5c7159140d6c3968",
-      "count_request_digest": "d1c4533d035ec642d3277724df0f3e15d9f5aee55e7b9a178ceafb1113b63127"
+      "request_id": "qualification-8cab0a4795d56acd9f9bba7ff4b0ce684e5b929a",
+      "measurement_request_id": "measurement-8cab0a4795d56acd9f9bba7ff4b0ce684e5b929a",
+      "input_digest": "8cab0a4795d56acd9f9bba7ff4b0ce684e5b929a30672e024bba56f0e4edb334",
+      "initial_wire_digest": "a6bd65499a0339042423d912ffe7fcf7ab9e09d09bd95ac289f017f97f109d37",
+      "count_request_digest": "ff7224d5916d9614f6ad582014694a9b78a330d429bde07a0f7ea33cc68e2a10"
     },
     {
-      "request_id": "qualification-e7a77fb58382efa4ada6226fcf516cbe03371442",
-      "measurement_request_id": "measurement-e7a77fb58382efa4ada6226fcf516cbe03371442",
-      "input_digest": "e7a77fb58382efa4ada6226fcf516cbe03371442f12c9d37511e8e1759397e91",
-      "initial_wire_digest": "eded63040ad770c7bfc9d7bc2f852c102a3209fd485407675e637c311e77ea51",
-      "count_request_digest": "6c45fbb104fe5e1740bf16f258d343d25ba83590f6e4db995c337476ddc8101b"
+      "request_id": "qualification-cf0f1522c4722519da2929dd4116911645e334e3",
+      "measurement_request_id": "measurement-cf0f1522c4722519da2929dd4116911645e334e3",
+      "input_digest": "cf0f1522c4722519da2929dd4116911645e334e300b9f35295a1c9d9d2580b9c",
+      "initial_wire_digest": "7b36b69b288f422af3b052cbdac02a5951028c19592fad856a43ff99d29f971d",
+      "count_request_digest": "443a5ce8a156b4bd70fa5d83a5cc5d45c316add8e523deb6ab65bdafa8b124b8"
     }
   ],
   "schema_digests": {
@@ -225,15 +227,29 @@
     "mode": "measurement",
     "approval_purpose": "workspace-measurement-only",
     "request_ids": [
-      "measurement-628a8c442856af150ca3314cdc0fc8abd7cf38ff",
-      "measurement-c176d1185c983662bfaf660390e0502f5646aabd",
-      "measurement-6d88f34321c4967d7dc50d71a04259c7301e998a",
-      "measurement-e7a77fb58382efa4ada6226fcf516cbe03371442"
+      "measurement-841ed3e402e268f049d1238dac1f1195d472b151",
+      "measurement-0198bcf37659440feacdb2c0d8245c987dc39083",
+      "measurement-8cab0a4795d56acd9f9bba7ff4b0ce684e5b929a",
+      "measurement-cf0f1522c4722519da2929dd4116911645e334e3"
     ],
     "monetary_reservation_usd": "0",
     "count_contacts_max": 4,
     "messages_contacts_max": 0,
     "approval_record": null,
-    "status": "unapproved; MockTransport demonstration only"
-  }
+    "status": "offline preparation only; no new approval or contacts"
+  },
+  "prior_trial_accounting": {
+    "code_commit": "06c593f1dc3d01fb980b6d7fbd454d0ee1f0dd7a",
+    "count_contacts_used": 5,
+    "messages_contacts_used": 1,
+    "workflow_usd": "0.025329",
+    "checker_usd": "0",
+    "unknown_hold_usd": "0.224671",
+    "original_total_trial_day_month_cap_usd": "1.25",
+    "original_remaining_count_contacts": 15,
+    "original_remaining_messages_contacts": 15,
+    "no_counter_reset": true,
+    "status": "stopped; no replay/new IDs to repeat old job"
+  },
+  "prepared_packet_digest": "ff77e48380fd68c0e98e63bd5e306f42433631b5a4b46b095a97b45c07742909"
 }

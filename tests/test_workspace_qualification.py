@@ -72,7 +72,7 @@ def test_exact_requests_read_only_and_cli_never_contact_or_approve(
     )
     for job in result["jobs"]:
         body = job["initial_generation"]["body"]
-        assert body["model"] == "claude-sonnet-4-6" and "output_config" in body
+        assert body["model"] == "claude-sonnet-5-5" and "output_config" in body
         assert job["measured_tokens"] is None
         assert job["initial_count_request"] == {
             k: v for k, v in body.items() if k not in {"max_tokens", "temperature"}
