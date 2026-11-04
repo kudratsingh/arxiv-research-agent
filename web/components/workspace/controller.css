@@ -348,6 +348,54 @@
 .workspace-app .workspace-import-fields { min-width: 0; margin: 0; padding: 0; border: 0; }
 /* == end P5 == */
 
+/* == P6 supporting screens == */
+.workspace-app .ws-interests, .workspace-app .ws-operations, .workspace-app .ws-review { max-width: 1000px; margin-inline: auto; }
+.workspace-app .ws-interests .daily-intro, .workspace-app .ws-operations .daily-intro, .workspace-app .ws-review .daily-intro { margin-bottom: 24px; }
+.workspace-app .ws-interests .daily-intro h1, .workspace-app .ws-operations .daily-intro h1, .workspace-app .ws-review .daily-intro h1 { font-size: clamp(28px, 3vw, 38px); line-height: 1.15; }
+.workspace-app .ws-interests .ws-interest-fields, .workspace-app .ws-review .ws-review-feedback-fields { min-width: 0; margin: 0; padding: 0; border: 0; }
+.workspace-app .ws-interests [tabindex="-1"] { scroll-margin-top: 24px; }
+.workspace-app .ws-interests .daily-lens, .workspace-app .ws-interests .daily-interests-grid { gap: 20px; }
+.workspace-app .ws-interests .daily-interest-summary { border-radius: var(--ws-radius-md); }
+.workspace-app .ws-interests .workspace-interest-coverage { margin-top: 24px; }
+.workspace-app .ws-interests .workspace-coverage-status { font-size: 13px; line-height: 1.6; }
+.workspace-app .ws-sidebar-slot nav[aria-label="Interest sections"] { display: grid; gap: 6px; }
+.workspace-app .ws-sidebar-slot nav[aria-label="Interest sections"] a { display: block; padding: 10px 12px; border-radius: var(--ws-radius-sm); text-decoration: none; color: var(--color-ink); }
+.workspace-app .ws-sidebar-slot nav[aria-label="Interest sections"] a:hover { background: var(--ws-hover); }
+.workspace-app .ws-unsaved, .workspace-app .ws-review-dirty { font: 400 12px/1.5 var(--font-mono); color: var(--color-ink-muted); }
+.workspace-app .ws-interests-actions, .workspace-app .ws-operations-actions, .workspace-app .ws-review-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; padding-top: 8px; }
+.workspace-app .ws-interests-actions .ws-unsaved, .workspace-app .ws-review-dirty { flex-basis: 100%; }
+.workspace-app .ws-source-queue { display: grid; gap: 6px; list-style: none; margin: 0; padding: 0; }
+.workspace-app .ws-source-row { display: flex; width: 100%; align-items: flex-start; justify-content: space-between; gap: 10px; padding: 12px; border: 0; border-left: 3px solid transparent; border-radius: var(--ws-radius-sm); background: transparent; color: var(--color-ink); text-align: left; font: 500 14px/1.45 var(--font-ui); }
+.workspace-app .ws-source-row span { min-width: 0; overflow-wrap: anywhere; }
+.workspace-app .ws-source-row[aria-current="true"] { background: var(--ws-accent-soft); border-left-color: var(--color-signature); }
+.workspace-app .ws-source-row:not(:disabled):hover { background: var(--ws-hover); }
+.workspace-app .ws-source-detail, .workspace-app .ws-schedule { margin-block: 20px; padding: 24px; border: 1px solid var(--color-border-subtle); border-radius: var(--ws-radius-md); background: var(--color-surface); }
+.workspace-app .ws-source-detail h2 { overflow-wrap: anywhere; }
+.workspace-app .ws-source-detail .workspace-receipt { max-height: 420px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+.workspace-app .ws-operations-position { font: 400 12px/1.4 var(--font-mono); color: var(--color-ink-muted); }
+.workspace-app .ws-review .workspace-review-candidate { margin-block: 20px; padding: 24px; border: 1px solid var(--color-border-subtle); border-radius: var(--ws-radius-md); background: var(--color-surface); scroll-margin-top: 24px; }
+.workspace-app .ws-review .workspace-review-candidate[data-current="true"] { border-left: 3px solid var(--color-signature); background: var(--ws-accent-wash); }
+.workspace-app .ws-review .workspace-review-candidate h2 { font: 650 26px/1.2 var(--font-report); overflow-wrap: anywhere; }
+.workspace-app .ws-review .workspace-feedback { margin-top: 20px; }
+.workspace-app .ws-review .workspace-review-candidate .daily-item-change { font: 400 17px/1.7 var(--font-report); }
+.workspace-app .ws-review-state, .workspace-app .ws-interests-state { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; padding-block: 20px; }
+.workspace-app .ws-review-queue .ws-queue-row { font-size: 13px; }
+@media (max-width: 767px) {
+  .workspace-app .ws-interests .daily-intro h1, .workspace-app .ws-operations .daily-intro h1, .workspace-app .ws-review .daily-intro h1 { font-size: 26px; }
+  .workspace-app .ws-interests .daily-intro, .workspace-app .ws-operations .daily-intro, .workspace-app .ws-review .daily-intro { margin-bottom: 18px; }
+  .workspace-app .ws-interests .daily-lens, .workspace-app .ws-interests .daily-interests-grid { grid-template-columns: minmax(0, 1fr); }
+  .workspace-app .ws-source-detail, .workspace-app .ws-schedule, .workspace-app .ws-review .workspace-review-candidate { padding: 16px; }
+  .workspace-app .ws-review .workspace-review-candidate h2 { font-size: 24px; }
+  .workspace-app .ws-interests-actions button, .workspace-app .ws-operations-actions button, .workspace-app .ws-review-bar button, .workspace-app .ws-source-row { min-height: 44px; }
+  .workspace-app .ws-review .workspace-review-candidate .daily-item-change { font-size: 16px; }
+}
+/* == end P6 == */
+
+.workspace-app .ws-source-number { display: none; }
+.workspace-app .ws-source-row .ws-queue-text { display: grid; gap: 4px; text-align: left; }
+.workspace-app[data-rail="true"] .ws-source-number { display: inline; }
+.workspace-app[data-rail="true"] .ws-side-section:has(.ws-source-queue) > button, .workspace-app[data-rail="true"] .ws-side-section:has(.ws-source-queue) > p { display: none; }
+
 /* == P6 additive paper surface refinement == */
 .workspace-app .ws-focus { background: transparent; }
 /* Red remains concentrated in the cover; the reading surface follows its theme. */

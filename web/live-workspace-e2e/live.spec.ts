@@ -419,6 +419,8 @@ test("a frozen candidate review stays unlabelled until an explicit verification 
   page,
 }, testInfo) => {
   await page.goto("/workspace/review");
+  // P6 moves packet preparation into the single responsive controls slot.
+  await openControls(page);
   const prepare = page.getByRole("button", {
     name: /^Prepare (up to 10 candidates|another candidate set)$/,
   });
