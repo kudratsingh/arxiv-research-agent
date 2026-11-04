@@ -1,0 +1,262 @@
+{
+  "principal": "controller-p6",
+  "work": "arxiv:2611.99800",
+  "version": "arxiv:2611.99800:v1",
+  "mode": "CI synthetic walkthrough; only reversible reading writes",
+  "cases": [
+    {
+      "size": "desktop",
+      "theme": "dark",
+      "status": "pass",
+      "savedRestored": true,
+      "midAbstractScroll": 870,
+      "queueInset": {
+        "inset": 16.484375,
+        "scroll": 358,
+        "max": 359
+      },
+      "jInset": {
+        "inset": 16.484375,
+        "scroll": 358,
+        "max": 359
+      },
+      "kInset": {
+        "inset": 16.484375,
+        "scroll": 358,
+        "max": 1704
+      },
+      "rapidMs": 8,
+      "motion": [
+        {
+          "frames": [
+            {
+              "opacity": 0.55,
+              "transform": "translateY(6px)"
+            },
+            {
+              "opacity": 1,
+              "transform": "translateY(0)"
+            }
+          ],
+          "options": {
+            "duration": 170,
+            "easing": "ease-out"
+          }
+        },
+        {
+          "frames": [
+            {
+              "opacity": 0.55,
+              "transform": "translateY(6px)"
+            },
+            {
+              "opacity": 1,
+              "transform": "translateY(0)"
+            }
+          ],
+          "options": {
+            "duration": 170,
+            "easing": "ease-out"
+          }
+        },
+        {
+          "frames": [
+            {
+              "opacity": 0.55,
+              "transform": "translateY(6px)"
+            },
+            {
+              "opacity": 1,
+              "transform": "translateY(0)"
+            }
+          ],
+          "options": {
+            "duration": 170,
+            "easing": "ease-out"
+          }
+        }
+      ],
+      "pageInset": {
+        "inset": 15.765625,
+        "scroll": 346,
+        "max": 346
+      },
+      "beforeReader": 870,
+      "restoredScroll": 870,
+      "readerVersion": "arxiv:2611.99800:v1",
+      "readerAnchor": "#abstract:0",
+      "farRange": "abstract:2500:2520",
+      "farGeometry": {
+        "top": 24.34375,
+        "inset": 16.34375,
+        "bottom": 51.34375,
+        "barTop": 788
+      },
+      "farTextLength": 20,
+      "lowerContent": {
+        "bottom": 453.109375,
+        "barTop": 780
+      },
+      "history": "back/forward/back"
+    },
+    {
+      "size": "mobile",
+      "theme": "light",
+      "status": "pass",
+      "savedRestored": true,
+      "midAbstractScroll": 1354,
+      "queueInset": {
+        "inset": 16.34375,
+        "scroll": 362,
+        "max": 453
+      },
+      "jInset": {
+        "inset": 16.34375,
+        "scroll": 362,
+        "max": 463
+      },
+      "kInset": {
+        "inset": 16.34375,
+        "scroll": 362,
+        "max": 2773
+      },
+      "rapidMs": 7,
+      "motion": [
+        {
+          "frames": [
+            {
+              "opacity": 0.55,
+              "transform": "translateY(6px)"
+            },
+            {
+              "opacity": 1,
+              "transform": "translateY(0)"
+            }
+          ],
+          "options": {
+            "duration": 170,
+            "easing": "ease-out"
+          }
+        },
+        {
+          "frames": [
+            {
+              "opacity": 0.55,
+              "transform": "translateY(6px)"
+            },
+            {
+              "opacity": 1,
+              "transform": "translateY(0)"
+            }
+          ],
+          "options": {
+            "duration": 170,
+            "easing": "ease-out"
+          }
+        },
+        {
+          "frames": [
+            {
+              "opacity": 0.55,
+              "transform": "translateY(6px)"
+            },
+            {
+              "opacity": 1,
+              "transform": "translateY(0)"
+            }
+          ],
+          "options": {
+            "duration": 170,
+            "easing": "ease-out"
+          }
+        }
+      ],
+      "pageInset": {
+        "inset": 15.765625,
+        "scroll": 451,
+        "max": 451
+      },
+      "beforeReader": 1354,
+      "restoredScroll": 1354,
+      "readerVersion": "arxiv:2611.99800:v1",
+      "readerAnchor": "#abstract:0",
+      "farRange": "abstract:2500:2520",
+      "farGeometry": {
+        "top": 16.109375,
+        "inset": 16.109375,
+        "bottom": 40.109375,
+        "barTop": 666
+      },
+      "farTextLength": 20,
+      "lowerContent": {
+        "bottom": 240.03125,
+        "barTop": 712
+      },
+      "history": "back/forward/back"
+    }
+  ],
+  "writes": [
+    {
+      "size": "desktop",
+      "path": "/api/workspace/reading",
+      "body": {
+        "work_id": "arxiv:2611.99800",
+        "revision": 7,
+        "data": {
+          "status": "dismissed",
+          "anchor": "abstract:0",
+          "version_id": "arxiv:2611.99800:v1",
+          "snoozed_until": null
+        },
+        "request_id": "35d02f11-ec37-4fed-ba60-a55cf55f23ed"
+      }
+    },
+    {
+      "size": "desktop",
+      "path": "/api/workspace/reading",
+      "body": {
+        "work_id": "arxiv:2611.99800",
+        "revision": 8,
+        "data": {
+          "status": "saved",
+          "anchor": "abstract:0",
+          "version_id": "arxiv:2611.99800:v1",
+          "snoozed_until": null
+        },
+        "request_id": "04ff8a6f-4b87-4276-a043-018a6e99c744"
+      }
+    },
+    {
+      "size": "mobile",
+      "path": "/api/workspace/reading",
+      "body": {
+        "work_id": "arxiv:2611.99800",
+        "revision": 9,
+        "data": {
+          "status": "dismissed",
+          "anchor": "abstract:0",
+          "version_id": "arxiv:2611.99800:v1",
+          "snoozed_until": null
+        },
+        "request_id": "fd847e9b-6789-4dfc-b759-f9401b0565dc"
+      }
+    },
+    {
+      "size": "mobile",
+      "path": "/api/workspace/reading",
+      "body": {
+        "work_id": "arxiv:2611.99800",
+        "revision": 10,
+        "data": {
+          "status": "saved",
+          "anchor": "abstract:0",
+          "version_id": "arxiv:2611.99800:v1",
+          "snoozed_until": null
+        },
+        "request_id": "1c8020eb-0660-4cb6-bc37-e8abffc44a73"
+      }
+    }
+  ],
+  "blocked": [],
+  "errors": []
+}

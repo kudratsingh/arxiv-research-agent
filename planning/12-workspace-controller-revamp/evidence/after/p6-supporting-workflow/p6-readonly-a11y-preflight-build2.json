@@ -1,0 +1,391 @@
+{
+  "base": "http://127.0.0.1:3148",
+  "build": "P6 Build 2 preflight",
+  "fixture": "controller-p6-preview synthetic sample",
+  "cases": [
+    {
+      "size": "desktop",
+      "theme": "light",
+      "route": "today",
+      "status": "pass",
+      "heading": "What changed.",
+      "url": "http://127.0.0.1:3148/workspace/today?focus=arxiv%3A2611.99800",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": []
+    },
+    {
+      "size": "desktop",
+      "theme": "light",
+      "route": "radar",
+      "status": "pass",
+      "heading": "A wider view.\nYour terms, your pace.",
+      "url": "http://127.0.0.1:3148/workspace/radar?q=agent&days=0&as_of=2026-11-04T08%3A31%3A28.036199%2B00%3A00",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": []
+    },
+    {
+      "size": "desktop",
+      "theme": "light",
+      "route": "library",
+      "status": "pass",
+      "heading": "Keep the source.\nKeep your thinking.",
+      "url": "http://127.0.0.1:3148/workspace/library?view=notes",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": []
+    },
+    {
+      "size": "desktop",
+      "theme": "light",
+      "route": "reader",
+      "status": "pass",
+      "heading": "CI synthetic long abstract agent navigation study",
+      "url": "http://127.0.0.1:3148/workspace/items/arxiv%3A2611.99800?version=arxiv%3A2611.99800%3Av1&return_to=%2Fworkspace%2Ftoday%3Ffocus%3Darxiv%253A2611.99800#abstract%3A0",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": []
+    },
+    {
+      "size": "desktop",
+      "theme": "light",
+      "route": "interests",
+      "status": "pass",
+      "heading": "Follow a field.\nOr your own question.",
+      "url": "http://127.0.0.1:3148/workspace/interests",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": []
+    },
+    {
+      "size": "desktop",
+      "theme": "light",
+      "route": "operations",
+      "status": "pass",
+      "heading": "Know what was checked.\nAnd what wasn’t.",
+      "url": "http://127.0.0.1:3148/workspace/operations",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": []
+    },
+    {
+      "size": "desktop",
+      "theme": "light",
+      "route": "review",
+      "status": "pass",
+      "heading": "What deserves\nyour attention?",
+      "url": "http://127.0.0.1:3148/workspace/review",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": []
+    },
+    {
+      "size": "desktop",
+      "theme": "dark",
+      "route": "today",
+      "status": "pass",
+      "heading": "What changed.",
+      "url": "http://127.0.0.1:3148/workspace/today?focus=arxiv%3A2611.99800",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": []
+    },
+    {
+      "size": "desktop",
+      "theme": "dark",
+      "route": "radar",
+      "status": "pass",
+      "heading": "A wider view.\nYour terms, your pace.",
+      "url": "http://127.0.0.1:3148/workspace/radar?q=agent&days=0&as_of=2026-11-04T08%3A31%3A37.942386%2B00%3A00",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": []
+    },
+    {
+      "size": "desktop",
+      "theme": "dark",
+      "route": "library",
+      "status": "pass",
+      "heading": "Keep the source.\nKeep your thinking.",
+      "url": "http://127.0.0.1:3148/workspace/library?view=notes",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": []
+    },
+    {
+      "size": "desktop",
+      "theme": "dark",
+      "route": "reader",
+      "status": "pass",
+      "heading": "CI synthetic long abstract agent navigation study",
+      "url": "http://127.0.0.1:3148/workspace/items/arxiv%3A2611.99800?version=arxiv%3A2611.99800%3Av1&return_to=%2Fworkspace%2Ftoday%3Ffocus%3Darxiv%253A2611.99800#abstract%3A0",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": []
+    },
+    {
+      "size": "desktop",
+      "theme": "dark",
+      "route": "interests",
+      "status": "pass",
+      "heading": "Follow a field.\nOr your own question.",
+      "url": "http://127.0.0.1:3148/workspace/interests",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": []
+    },
+    {
+      "size": "desktop",
+      "theme": "dark",
+      "route": "operations",
+      "status": "pass",
+      "heading": "Know what was checked.\nAnd what wasn’t.",
+      "url": "http://127.0.0.1:3148/workspace/operations",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": []
+    },
+    {
+      "size": "desktop",
+      "theme": "dark",
+      "route": "review",
+      "status": "pass",
+      "heading": "What deserves\nyour attention?",
+      "url": "http://127.0.0.1:3148/workspace/review",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": []
+    },
+    {
+      "size": "mobile",
+      "theme": "light",
+      "route": "today",
+      "status": "pass",
+      "heading": "What changed.",
+      "url": "http://127.0.0.1:3148/workspace/today?focus=arxiv%3A2611.99800",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": []
+    },
+    {
+      "size": "mobile",
+      "theme": "light",
+      "route": "radar",
+      "status": "pass",
+      "heading": "A wider view.\nYour terms, your pace.",
+      "url": "http://127.0.0.1:3148/workspace/radar?q=agent&days=0&as_of=2026-11-04T08%3A31%3A46.940932%2B00%3A00",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": []
+    },
+    {
+      "size": "mobile",
+      "theme": "light",
+      "route": "library",
+      "status": "pass",
+      "heading": "Keep the source.\nKeep your thinking.",
+      "url": "http://127.0.0.1:3148/workspace/library?view=notes",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": []
+    },
+    {
+      "size": "mobile",
+      "theme": "light",
+      "route": "reader",
+      "status": "pass",
+      "heading": "CI synthetic long abstract agent navigation study",
+      "url": "http://127.0.0.1:3148/workspace/items/arxiv%3A2611.99800?version=arxiv%3A2611.99800%3Av1&return_to=%2Fworkspace%2Ftoday%3Ffocus%3Darxiv%253A2611.99800#abstract%3A0",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": []
+    },
+    {
+      "size": "mobile",
+      "theme": "light",
+      "route": "interests",
+      "status": "pass",
+      "heading": "Follow a field.\nOr your own question.",
+      "url": "http://127.0.0.1:3148/workspace/interests",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": []
+    },
+    {
+      "size": "mobile",
+      "theme": "light",
+      "route": "operations",
+      "status": "pass",
+      "heading": "Know what was checked.\nAnd what wasn’t.",
+      "url": "http://127.0.0.1:3148/workspace/operations",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": []
+    },
+    {
+      "size": "mobile",
+      "theme": "light",
+      "route": "review",
+      "status": "pass",
+      "heading": "What deserves\nyour attention?",
+      "url": "http://127.0.0.1:3148/workspace/review",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": []
+    },
+    {
+      "size": "mobile",
+      "theme": "dark",
+      "route": "today",
+      "status": "pass",
+      "heading": "What changed.",
+      "url": "http://127.0.0.1:3148/workspace/today?focus=arxiv%3A2611.99800",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": []
+    },
+    {
+      "size": "mobile",
+      "theme": "dark",
+      "route": "radar",
+      "status": "pass",
+      "heading": "A wider view.\nYour terms, your pace.",
+      "url": "http://127.0.0.1:3148/workspace/radar?q=agent&days=0&as_of=2026-11-04T08%3A31%3A55.681289%2B00%3A00",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": []
+    },
+    {
+      "size": "mobile",
+      "theme": "dark",
+      "route": "library",
+      "status": "pass",
+      "heading": "Keep the source.\nKeep your thinking.",
+      "url": "http://127.0.0.1:3148/workspace/library?view=notes",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": []
+    },
+    {
+      "size": "mobile",
+      "theme": "dark",
+      "route": "reader",
+      "status": "pass",
+      "heading": "CI synthetic long abstract agent navigation study",
+      "url": "http://127.0.0.1:3148/workspace/items/arxiv%3A2611.99800?version=arxiv%3A2611.99800%3Av1&return_to=%2Fworkspace%2Ftoday%3Ffocus%3Darxiv%253A2611.99800#abstract%3A0",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": []
+    },
+    {
+      "size": "mobile",
+      "theme": "dark",
+      "route": "interests",
+      "status": "pass",
+      "heading": "Follow a field.\nOr your own question.",
+      "url": "http://127.0.0.1:3148/workspace/interests",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": []
+    },
+    {
+      "size": "mobile",
+      "theme": "dark",
+      "route": "operations",
+      "status": "pass",
+      "heading": "Know what was checked.\nAnd what wasn’t.",
+      "url": "http://127.0.0.1:3148/workspace/operations",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": []
+    },
+    {
+      "size": "mobile",
+      "theme": "dark",
+      "route": "review",
+      "status": "pass",
+      "heading": "What deserves\nyour attention?",
+      "url": "http://127.0.0.1:3148/workspace/review",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": []
+    }
+  ],
+  "tablet": [
+    {
+      "width": 768,
+      "status": "pass",
+      "dimensions": {
+        "width": 768,
+        "scrollWidth": 768
+      }
+    },
+    {
+      "width": 1024,
+      "status": "pass",
+      "dimensions": {
+        "width": 1024,
+        "scrollWidth": 1024
+      }
+    }
+  ],
+  "blocked": [],
+  "errors": []
+}

@@ -1,0 +1,11 @@
+{
+  "applicationCommit": "fda9d7616e8cbd0d882bcc41510a997ade117bf9",
+  "webTree": "2b8b01462772c55e69ff0310d92c3d299afb0ecb",
+  "gateAndBrowserSource": "same frozen application bytes, committed without application edits after final gates",
+  "manifest": "frozen-web-sha256.json",
+  "manifestSha256": "dbb3d8446ee3809fbcfc4e9af63fb4b690d349266e3e786dfe68bb1f798f347f",
+  "manifestFileCount": 601,
+  "nextBuildId": "FqOkJwvSTsd5JfZCNhztE",
+  "mainBase": "17f9221d9433ad24b3b951245d8a26653c1d4751",
+  "remoteCI": "No GitHub Actions run is attributed; local gates and synthetic browser evidence only."
+}

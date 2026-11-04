@@ -1,0 +1,85 @@
+
+> arxiv-research-agent-web@0.1.0 build
+> next build --webpack
+
+▲ Next.js 16.4.4 (webpack)
+✓ Running next.config.mjs took 8ms
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead.
+
+  To migrate automatically, run:
+  npx @next/codemod@canary middleware-to-proxy .
+
+  Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+✓ Compiled successfully in 6.1s
+  Running TypeScript ...
+  Finished TypeScript in 5.8s ...
+  Collecting page data using 7 workers ...
+  Generating static pages using 7 workers (0/9) ...
+  Generating static pages using 7 workers (2/9)
+  Generating static pages using 7 workers (4/9)
+  Generating static pages using 7 workers (6/9)
+✓ Generating static pages using 7 workers (9/9) in 161ms
+  Finalizing page optimization ...
+  Collecting build traces ...
+⚠ 27 traced files were not included in the standalone output
+because their paths are outside of `outputFileTracingRoot`.
+First 100 skipped files:
+  - ../../arxiv-agent-eng-workspace-controller/web/node_modules/next/dist/compiled/jest-worker/processChild.js
+  - ../../arxiv-agent-eng-workspace-controller/web/node_modules/next/dist/compiled/jest-worker/threadChild.js
+  - ../../arxiv-agent-eng-workspace-controller/web/node_modules/next/dist/server/lib/start-server.js
+  - ../../arxiv-agent-eng-workspace-controller/web/node_modules/next/dist/server/next-server.js
+  - ../../arxiv-agent-eng-workspace-controller/web/node_modules/next/dist/server/next.js
+  - ../../arxiv-agent-eng-workspace-controller/web/node_modules/next/dist/server/require-hook.js
+  - ../../arxiv-agent-eng-workspace-controller/web/node_modules/next/dist/server/route-modules/app-page/module.compiled.js
+  - ../../arxiv-agent-eng-workspace-controller/web/node_modules/next/dist/server/route-modules/app-page/vendored/contexts/app-router-context.js
+  - ../../arxiv-agent-eng-workspace-controller/web/node_modules/next/dist/server/route-modules/app-page/vendored/contexts/entrypoints.js
+  - ../../arxiv-agent-eng-workspace-controller/web/node_modules/next/dist/server/route-modules/app-page/vendored/contexts/head-manager-context.js
+  - ../../arxiv-agent-eng-workspace-controller/web/node_modules/next/dist/server/route-modules/app-page/vendored/contexts/hooks-client-context.js
+  - ../../arxiv-agent-eng-workspace-controller/web/node_modules/next/dist/server/route-modules/app-page/vendored/contexts/image-config-context.js
+  - ../../arxiv-agent-eng-workspace-controller/web/node_modules/next/dist/server/route-modules/app-page/vendored/contexts/router-context.js
+  - ../../arxiv-agent-eng-workspace-controller/web/node_modules/next/dist/server/route-modules/app-page/vendored/contexts/server-inserted-html.js
+  - ../../arxiv-agent-eng-workspace-controller/web/node_modules/next/dist/server/route-modules/pages/module.compiled.js
+  - ../../arxiv-agent-eng-workspace-controller/web/node_modules/next/dist/server/route-modules/pages/vendored/contexts/app-router-context.js
+  - ../../arxiv-agent-eng-workspace-controller/web/node_modules/next/dist/server/route-modules/pages/vendored/contexts/entrypoints.js
+  - ../../arxiv-agent-eng-workspace-controller/web/node_modules/next/dist/server/route-modules/pages/vendored/contexts/head-manager-context.js
+  - ../../arxiv-agent-eng-workspace-controller/web/node_modules/next/dist/server/route-modules/pages/vendored/contexts/hooks-client-context.js
+  - ../../arxiv-agent-eng-workspace-controller/web/node_modules/next/dist/server/route-modules/pages/vendored/contexts/html-context.js
+  - ../../arxiv-agent-eng-workspace-controller/web/node_modules/next/dist/server/route-modules/pages/vendored/contexts/image-config-context.js
+  - ../../arxiv-agent-eng-workspace-controller/web/node_modules/next/dist/server/route-modules/pages/vendored/contexts/loadable-context.js
+  - ../../arxiv-agent-eng-workspace-controller/web/node_modules/next/dist/server/route-modules/pages/vendored/contexts/loadable.js
+  - ../../arxiv-agent-eng-workspace-controller/web/node_modules/next/dist/server/route-modules/pages/vendored/contexts/router-context.js
+  - ../../arxiv-agent-eng-workspace-controller/web/node_modules/next/dist/server/route-modules/pages/vendored/contexts/server-inserted-html.js
+  - ../../arxiv-agent-eng-workspace-controller/web/node_modules/styled-jsx/index.js
+  - ../../arxiv-agent-eng-workspace-controller/web/node_modules/styled-jsx/style.js
+Set `outputFileTracingRoot` to a common parent directory
+to include these files.
+
+Route (app)
+┌ ƒ /
+├ ƒ /_not-found
+├ ƒ /api/[...path]
+├ ƒ /c/[id]
+├ ○ /icon.svg
+├ ƒ /interests
+├ ƒ /learn
+├ ƒ /learn/paths/[id]
+├ ƒ /learn/progress
+├ ƒ /learn/sessions/[id]
+├ ƒ /library
+├ ƒ /library/items/[id]
+├ ƒ /today
+├ ƒ /workspace/interests
+├ ƒ /workspace/items/[id]
+├ ƒ /workspace/library
+├ ƒ /workspace/operations
+├ ƒ /workspace/radar
+├ ƒ /workspace/review
+└ ƒ /workspace/today
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand

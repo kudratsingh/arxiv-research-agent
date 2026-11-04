@@ -1,0 +1,497 @@
+{
+  "base": "http://127.0.0.1:3148",
+  "build": "P6 final build",
+  "fixture": "controller-p6-preview synthetic sample",
+  "cases": [
+    {
+      "size": "desktop",
+      "theme": "light",
+      "route": "today",
+      "status": "pass",
+      "heading": "What changed.",
+      "url": "http://127.0.0.1:3148/workspace/today?focus=arxiv%3A2611.99800",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": [],
+      "lowerReach": null
+    },
+    {
+      "size": "desktop",
+      "theme": "light",
+      "route": "radar",
+      "status": "pass",
+      "heading": "A wider view.\nYour terms, your pace.",
+      "url": "http://127.0.0.1:3148/workspace/radar?q=agent&days=0&as_of=2026-11-04T10%3A18%3A49.771422%2B00%3A00",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": [],
+      "lowerReach": null
+    },
+    {
+      "size": "desktop",
+      "theme": "light",
+      "route": "library",
+      "status": "pass",
+      "heading": "Keep the source.\nKeep your thinking.",
+      "url": "http://127.0.0.1:3148/workspace/library?view=notes",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": [],
+      "lowerReach": null
+    },
+    {
+      "size": "desktop",
+      "theme": "light",
+      "route": "reader",
+      "status": "pass",
+      "heading": "CI synthetic long abstract agent navigation study",
+      "url": "http://127.0.0.1:3148/workspace/items/arxiv%3A2611.99800?version=arxiv%3A2611.99800%3Av1&return_to=%2Fworkspace%2Ftoday%3Ffocus%3Darxiv%253A2611.99800#abstract%3A0",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": [],
+      "lowerReach": null
+    },
+    {
+      "size": "desktop",
+      "theme": "light",
+      "route": "interests",
+      "status": "pass",
+      "heading": "Follow a field.\nOr your own question.",
+      "url": "http://127.0.0.1:3148/workspace/interests",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": [],
+      "lowerReach": null
+    },
+    {
+      "size": "desktop",
+      "theme": "light",
+      "route": "operations",
+      "status": "pass",
+      "heading": "Know what was checked.\nAnd what wasn’t.",
+      "url": "http://127.0.0.1:3148/workspace/operations",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": [],
+      "lowerReach": {
+        "top": 663.3125,
+        "bottom": 692.109375,
+        "viewport": 1000,
+        "barTop": 825,
+        "hit": true
+      }
+    },
+    {
+      "size": "desktop",
+      "theme": "light",
+      "route": "review",
+      "status": "pass",
+      "heading": "What deserves\nyour attention?",
+      "url": "http://127.0.0.1:3148/workspace/review",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": [],
+      "lowerReach": {
+        "top": 376.078125,
+        "bottom": 407.265625,
+        "viewport": 1000,
+        "barTop": 816,
+        "hit": true
+      }
+    },
+    {
+      "size": "desktop",
+      "theme": "dark",
+      "route": "today",
+      "status": "pass",
+      "heading": "What changed.",
+      "url": "http://127.0.0.1:3148/workspace/today?focus=arxiv%3A2611.99800",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": [],
+      "lowerReach": null
+    },
+    {
+      "size": "desktop",
+      "theme": "dark",
+      "route": "radar",
+      "status": "pass",
+      "heading": "A wider view.\nYour terms, your pace.",
+      "url": "http://127.0.0.1:3148/workspace/radar?q=agent&days=0&as_of=2026-11-04T10%3A18%3A59.495931%2B00%3A00",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": [],
+      "lowerReach": null
+    },
+    {
+      "size": "desktop",
+      "theme": "dark",
+      "route": "library",
+      "status": "pass",
+      "heading": "Keep the source.\nKeep your thinking.",
+      "url": "http://127.0.0.1:3148/workspace/library?view=notes",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": [],
+      "lowerReach": null
+    },
+    {
+      "size": "desktop",
+      "theme": "dark",
+      "route": "reader",
+      "status": "pass",
+      "heading": "CI synthetic long abstract agent navigation study",
+      "url": "http://127.0.0.1:3148/workspace/items/arxiv%3A2611.99800?version=arxiv%3A2611.99800%3Av1&return_to=%2Fworkspace%2Ftoday%3Ffocus%3Darxiv%253A2611.99800#abstract%3A0",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": [],
+      "lowerReach": null
+    },
+    {
+      "size": "desktop",
+      "theme": "dark",
+      "route": "interests",
+      "status": "pass",
+      "heading": "Follow a field.\nOr your own question.",
+      "url": "http://127.0.0.1:3148/workspace/interests",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": [],
+      "lowerReach": null
+    },
+    {
+      "size": "desktop",
+      "theme": "dark",
+      "route": "operations",
+      "status": "pass",
+      "heading": "Know what was checked.\nAnd what wasn’t.",
+      "url": "http://127.0.0.1:3148/workspace/operations",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": [],
+      "lowerReach": {
+        "top": 663.3125,
+        "bottom": 692.109375,
+        "viewport": 1000,
+        "barTop": 825,
+        "hit": true
+      }
+    },
+    {
+      "size": "desktop",
+      "theme": "dark",
+      "route": "review",
+      "status": "pass",
+      "heading": "What deserves\nyour attention?",
+      "url": "http://127.0.0.1:3148/workspace/review",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": [],
+      "lowerReach": {
+        "top": 376.078125,
+        "bottom": 407.265625,
+        "viewport": 1000,
+        "barTop": 816,
+        "hit": true
+      }
+    },
+    {
+      "size": "mobile",
+      "theme": "light",
+      "route": "today",
+      "status": "pass",
+      "heading": "What changed.",
+      "url": "http://127.0.0.1:3148/workspace/today?focus=arxiv%3A2611.99800",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": [],
+      "lowerReach": null
+    },
+    {
+      "size": "mobile",
+      "theme": "light",
+      "route": "radar",
+      "status": "pass",
+      "heading": "A wider view.\nYour terms, your pace.",
+      "url": "http://127.0.0.1:3148/workspace/radar?q=agent&days=0&as_of=2026-11-04T10%3A19%3A08.793072%2B00%3A00",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": [],
+      "lowerReach": null
+    },
+    {
+      "size": "mobile",
+      "theme": "light",
+      "route": "library",
+      "status": "pass",
+      "heading": "Keep the source.\nKeep your thinking.",
+      "url": "http://127.0.0.1:3148/workspace/library?view=notes",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": [],
+      "lowerReach": null
+    },
+    {
+      "size": "mobile",
+      "theme": "light",
+      "route": "reader",
+      "status": "pass",
+      "heading": "CI synthetic long abstract agent navigation study",
+      "url": "http://127.0.0.1:3148/workspace/items/arxiv%3A2611.99800?version=arxiv%3A2611.99800%3Av1&return_to=%2Fworkspace%2Ftoday%3Ffocus%3Darxiv%253A2611.99800#abstract%3A0",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": [],
+      "lowerReach": null
+    },
+    {
+      "size": "mobile",
+      "theme": "light",
+      "route": "interests",
+      "status": "pass",
+      "heading": "Follow a field.\nOr your own question.",
+      "url": "http://127.0.0.1:3148/workspace/interests",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": [],
+      "lowerReach": null
+    },
+    {
+      "size": "mobile",
+      "theme": "light",
+      "route": "operations",
+      "status": "pass",
+      "heading": "Know what was checked.\nAnd what wasn’t.",
+      "url": "http://127.0.0.1:3148/workspace/operations",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": [],
+      "lowerReach": {
+        "top": 469.4375,
+        "bottom": 498.234375,
+        "viewport": 844,
+        "barTop": 604,
+        "hit": true
+      }
+    },
+    {
+      "size": "mobile",
+      "theme": "light",
+      "route": "review",
+      "status": "pass",
+      "heading": "What deserves\nyour attention?",
+      "url": "http://127.0.0.1:3148/workspace/review",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": [],
+      "lowerReach": {
+        "top": 392.703125,
+        "bottom": 450.296875,
+        "viewport": 844,
+        "barTop": 630,
+        "hit": true
+      }
+    },
+    {
+      "size": "mobile",
+      "theme": "dark",
+      "route": "today",
+      "status": "pass",
+      "heading": "What changed.",
+      "url": "http://127.0.0.1:3148/workspace/today?focus=arxiv%3A2611.99800",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": [],
+      "lowerReach": null
+    },
+    {
+      "size": "mobile",
+      "theme": "dark",
+      "route": "radar",
+      "status": "pass",
+      "heading": "A wider view.\nYour terms, your pace.",
+      "url": "http://127.0.0.1:3148/workspace/radar?q=agent&days=0&as_of=2026-11-04T10%3A19%3A17.578873%2B00%3A00",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": [],
+      "lowerReach": null
+    },
+    {
+      "size": "mobile",
+      "theme": "dark",
+      "route": "library",
+      "status": "pass",
+      "heading": "Keep the source.\nKeep your thinking.",
+      "url": "http://127.0.0.1:3148/workspace/library?view=notes",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": [],
+      "lowerReach": null
+    },
+    {
+      "size": "mobile",
+      "theme": "dark",
+      "route": "reader",
+      "status": "pass",
+      "heading": "CI synthetic long abstract agent navigation study",
+      "url": "http://127.0.0.1:3148/workspace/items/arxiv%3A2611.99800?version=arxiv%3A2611.99800%3Av1&return_to=%2Fworkspace%2Ftoday%3Ffocus%3Darxiv%253A2611.99800#abstract%3A0",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": [],
+      "lowerReach": null
+    },
+    {
+      "size": "mobile",
+      "theme": "dark",
+      "route": "interests",
+      "status": "pass",
+      "heading": "Follow a field.\nOr your own question.",
+      "url": "http://127.0.0.1:3148/workspace/interests",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": [],
+      "lowerReach": null
+    },
+    {
+      "size": "mobile",
+      "theme": "dark",
+      "route": "operations",
+      "status": "pass",
+      "heading": "Know what was checked.\nAnd what wasn’t.",
+      "url": "http://127.0.0.1:3148/workspace/operations",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": [],
+      "lowerReach": {
+        "top": 469.4375,
+        "bottom": 498.234375,
+        "viewport": 844,
+        "barTop": 604,
+        "hit": true
+      }
+    },
+    {
+      "size": "mobile",
+      "theme": "dark",
+      "route": "review",
+      "status": "pass",
+      "heading": "What deserves\nyour attention?",
+      "url": "http://127.0.0.1:3148/workspace/review",
+      "overflow": {
+        "document": 0,
+        "body": 0
+      },
+      "violations": [],
+      "lowerReach": {
+        "top": 392.703125,
+        "bottom": 450.296875,
+        "viewport": 844,
+        "barTop": 630,
+        "hit": true
+      }
+    }
+  ],
+  "tablet": [
+    {
+      "width": 768,
+      "status": "pass",
+      "dimensions": {
+        "width": 768,
+        "scrollWidth": 768
+      }
+    },
+    {
+      "width": 1024,
+      "status": "pass",
+      "dimensions": {
+        "width": 1024,
+        "scrollWidth": 1024
+      }
+    }
+  ],
+  "labelChecks": [
+    {
+      "size": "desktop",
+      "theme": "light",
+      "count": 10,
+      "allBlank": true,
+      "unchanged": true
+    },
+    {
+      "size": "desktop",
+      "theme": "dark",
+      "count": 10,
+      "allBlank": true,
+      "unchanged": true
+    },
+    {
+      "size": "mobile",
+      "theme": "light",
+      "count": 10,
+      "allBlank": true,
+      "unchanged": true
+    },
+    {
+      "size": "mobile",
+      "theme": "dark",
+      "count": 10,
+      "allBlank": true,
+      "unchanged": true
+    }
+  ],
+  "blocked": [],
+  "errors": []
+}

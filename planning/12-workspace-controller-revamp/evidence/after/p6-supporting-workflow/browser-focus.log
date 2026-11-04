@@ -1,0 +1,3 @@
+PASS desktop
+PASS mobile
+{"cases":[{"size":"desktop","status":"pass","playerFocusPreserved":true,"announcement":"Paper 2 of 9: Budgeted Retrieval for Long-Horizon Agents: When to Stop Searching","route":{"heading":"Follow a field.Or your own question.","focused":true,"inset":16}},{"size":"mobile","status":"pass","playerFocusPreserved":true,"announcement":"Paper 2 of 9: Budgeted Retrieval for Long-Horizon Agents: When to Stop Searching","route":{"heading":"Follow a field.Or your own question.","focused":true,"inset":16}}],"blocked":[],"errors":[]}

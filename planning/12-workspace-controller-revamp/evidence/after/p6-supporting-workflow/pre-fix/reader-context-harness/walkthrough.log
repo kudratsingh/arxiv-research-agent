@@ -1,0 +1,39 @@
+PASS desktop: guard isolated fixture
+PASS desktop: Interests failed save, reload recovery and success
+PASS desktop: Interests real conflict retains local text
+PASS desktop: Operations receipt and disabled schedule save
+FAIL desktop: Review drafts navigate without autosave, then explicit save and Reader return Expected values to be strictly equal:
++ actual - expected
+
++ 'ci:workspace-agent-evaluation:v2'
+- undefined
+
+PASS mobile: guard isolated fixture
+PASS mobile: Interests failed save, reload recovery and success
+PASS mobile: Interests real conflict retains local text
+PASS mobile: Operations receipt and disabled schedule save
+FAIL mobile: Review drafts navigate without autosave, then explicit save and Reader return Expected values to be strictly equal:
++ actual - expected
+
++ 'ci:workspace-agent-evaluation:v2'
+- undefined
+
+{
+  "cases": 10,
+  "failed": 2,
+  "blocked": 0,
+  "unexpectedConsole": 0,
+  "expectedConsole": 4,
+  "pageErrors": 0,
+  "requestFailures": 0,
+  "failures": [
+    {
+      "name": "desktop: Review drafts navigate without autosave, then explicit save and Reader return",
+      "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:"
+    },
+    {
+      "name": "mobile: Review drafts navigate without autosave, then explicit save and Reader return",
+      "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:"
+    }
+  ]
+}

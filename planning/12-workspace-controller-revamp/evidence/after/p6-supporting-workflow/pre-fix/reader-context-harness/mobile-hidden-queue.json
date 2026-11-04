@@ -1,0 +1,502 @@
+{
+  "base": "http://127.0.0.1:3149",
+  "fixture": "CI synthetic P6 walkthrough",
+  "principal": "controller-p6",
+  "cases": [
+    {
+      "name": "desktop: guard isolated fixture",
+      "status": "pass",
+      "detail": {
+        "works": 28,
+        "profileRevision": 9,
+        "scheduleEnabled": false
+      }
+    },
+    {
+      "name": "desktop: Interests failed save, reload recovery and success",
+      "status": "pass",
+      "detail": {
+        "savedRevision": 10
+      }
+    },
+    {
+      "name": "desktop: Interests real conflict retains local text",
+      "status": "pass",
+      "detail": {
+        "priorRevision": 10,
+        "serverRevision": 11,
+        "localPreservedUntilDiscard": true
+      }
+    },
+    {
+      "name": "desktop: Operations receipt and disabled schedule save",
+      "status": "pass",
+      "detail": {
+        "receiptSource": "arxiv-cs-lg",
+        "revision": 5,
+        "enabled": false
+      }
+    },
+    {
+      "name": "desktop: Review drafts navigate without autosave, then explicit save and Reader return",
+      "status": "pass",
+      "detail": {
+        "packetId": "review-da6649441e854e398affb548800c074b",
+        "candidates": 10,
+        "labelledBefore": 0,
+        "labelledAfter": 1,
+        "explicitSyntheticLabel": "maybe",
+        "readerPacketQueueAndVersionLinks": true
+      }
+    },
+    {
+      "name": "mobile: guard isolated fixture",
+      "status": "pass",
+      "detail": {
+        "works": 28,
+        "profileRevision": 11,
+        "scheduleEnabled": false
+      }
+    },
+    {
+      "name": "mobile: Interests failed save, reload recovery and success",
+      "status": "pass",
+      "detail": {
+        "savedRevision": 12
+      }
+    },
+    {
+      "name": "mobile: Interests real conflict retains local text",
+      "status": "pass",
+      "detail": {
+        "priorRevision": 12,
+        "serverRevision": 13,
+        "localPreservedUntilDiscard": true
+      }
+    },
+    {
+      "name": "mobile: Operations receipt and disabled schedule save",
+      "status": "pass",
+      "detail": {
+        "receiptSource": "arxiv-cs-lg",
+        "revision": 6,
+        "enabled": false
+      }
+    },
+    {
+      "name": "mobile: Review drafts navigate without autosave, then explicit save and Reader return",
+      "status": "fail",
+      "error": "locator.waitFor: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('list', { name: 'Reader queue' })\u001b[22m\n\n    at /private/tmp/arxiv-agent-eng-workspace-controller/planning/12-workspace-controller-revamp/evidence/after/p6-supporting-workflow/walkthrough.cjs:46:454\n    at async check (/private/tmp/arxiv-agent-eng-workspace-controller/planning/12-workspace-controller-revamp/evidence/after/p6-supporting-workflow/walkthrough.cjs:6:65)\n    at async main (/private/tmp/arxiv-agent-eng-workspace-controller/planning/12-workspace-controller-revamp/evidence/after/p6-supporting-workflow/walkthrough.cjs:39:2)"
+    }
+  ],
+  "blocked": [],
+  "unexpectedConsole": [],
+  "expectedConsole": [
+    {
+      "size": "desktop",
+      "case": "desktop: Interests failed save, reload recovery and success",
+      "text": "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
+    },
+    {
+      "size": "desktop",
+      "case": "desktop: Interests real conflict retains local text",
+      "text": "Failed to load resource: the server responded with a status of 409 (Conflict)"
+    },
+    {
+      "size": "mobile",
+      "case": "mobile: Interests failed save, reload recovery and success",
+      "text": "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
+    },
+    {
+      "size": "mobile",
+      "case": "mobile: Interests real conflict retains local text",
+      "text": "Failed to load resource: the server responded with a status of 409 (Conflict)"
+    }
+  ],
+  "pageErrors": [],
+  "requestFailures": [],
+  "writes": [
+    {
+      "size": "desktop",
+      "case": "desktop: Interests failed save, reload recovery and success",
+      "path": "/api/workspace/profile",
+      "body": {
+        "revision": 9,
+        "data": {
+          "topics": [
+            "ml:agents-and-tool-use",
+            "ml:retrieval-and-memory",
+            "ml:evaluation-and-responsible-ml",
+            "ml:reasoning-and-inference-time-compute",
+            "ml:ml-systems-and-efficiency",
+            "ml:machine-learning-for-science",
+            "study:22/control-systems",
+            "ml:embodied-intelligence/model-based-reinforcement-learning",
+            "ml:multimodal-and-perception/3d-perception",
+            "ml:generative-models/controllable-generation",
+            "ml:embodied-intelligence"
+          ],
+          "custom_topics": [],
+          "exclusions": [],
+          "streams": [
+            "core",
+            "rocket-twin",
+            "spatial"
+          ],
+          "minutes": 15,
+          "research_question": "CI synthetic P6 desktop: which evidence should I check?",
+          "exploration": 0.15,
+          "pinned_entry_id": null
+        },
+        "request_id": "f3f43859-4d57-41d4-b05f-ae8fe91a1f50"
+      },
+      "injected503": true
+    },
+    {
+      "size": "desktop",
+      "case": "desktop: Interests failed save, reload recovery and success",
+      "path": "/api/workspace/profile",
+      "body": {
+        "revision": 9,
+        "data": {
+          "topics": [
+            "ml:agents-and-tool-use",
+            "ml:retrieval-and-memory",
+            "ml:evaluation-and-responsible-ml",
+            "ml:reasoning-and-inference-time-compute",
+            "ml:ml-systems-and-efficiency",
+            "ml:machine-learning-for-science",
+            "study:22/control-systems",
+            "ml:embodied-intelligence/model-based-reinforcement-learning",
+            "ml:multimodal-and-perception/3d-perception",
+            "ml:generative-models/controllable-generation",
+            "ml:embodied-intelligence"
+          ],
+          "custom_topics": [],
+          "exclusions": [],
+          "streams": [
+            "core",
+            "rocket-twin",
+            "spatial"
+          ],
+          "minutes": 15,
+          "research_question": "CI synthetic P6 desktop: which evidence should I check?",
+          "exploration": 0.15,
+          "pinned_entry_id": null
+        },
+        "request_id": "f3f43859-4d57-41d4-b05f-ae8fe91a1f50"
+      },
+      "injected503": false
+    },
+    {
+      "size": "desktop",
+      "case": "desktop: Interests failed save, reload recovery and success",
+      "path": "/api/workspace/edition",
+      "body": {},
+      "injected503": false
+    },
+    {
+      "size": "desktop",
+      "case": "desktop: Interests real conflict retains local text",
+      "path": "/api/workspace/profile",
+      "body": {
+        "revision": 10,
+        "request_id": "d625b34a-1737-4430-953e-be145204ee0b",
+        "data": {
+          "topics": [
+            "ml:agents-and-tool-use",
+            "ml:retrieval-and-memory",
+            "ml:evaluation-and-responsible-ml",
+            "ml:reasoning-and-inference-time-compute",
+            "ml:ml-systems-and-efficiency",
+            "ml:machine-learning-for-science",
+            "study:22/control-systems",
+            "ml:embodied-intelligence/model-based-reinforcement-learning",
+            "ml:multimodal-and-perception/3d-perception",
+            "ml:generative-models/controllable-generation",
+            "ml:embodied-intelligence"
+          ],
+          "custom_topics": [],
+          "exclusions": [],
+          "streams": [
+            "core",
+            "rocket-twin",
+            "spatial"
+          ],
+          "minutes": 15,
+          "research_question": "CI synthetic desktop concurrent profile",
+          "exploration": 0.15,
+          "pinned_entry_id": null
+        }
+      },
+      "injected503": false
+    },
+    {
+      "size": "desktop",
+      "case": "desktop: Interests real conflict retains local text",
+      "path": "/api/workspace/profile",
+      "body": {
+        "revision": 10,
+        "data": {
+          "topics": [
+            "ml:agents-and-tool-use",
+            "ml:retrieval-and-memory",
+            "ml:evaluation-and-responsible-ml",
+            "ml:reasoning-and-inference-time-compute",
+            "ml:ml-systems-and-efficiency",
+            "ml:machine-learning-for-science",
+            "study:22/control-systems",
+            "ml:embodied-intelligence/model-based-reinforcement-learning",
+            "ml:multimodal-and-perception/3d-perception",
+            "ml:generative-models/controllable-generation",
+            "ml:embodied-intelligence"
+          ],
+          "custom_topics": [],
+          "exclusions": [],
+          "streams": [
+            "core",
+            "rocket-twin",
+            "spatial"
+          ],
+          "minutes": 15,
+          "research_question": "CI synthetic desktop local unsaved conflict",
+          "exploration": 0.15,
+          "pinned_entry_id": null
+        },
+        "request_id": "2c9f5e5d-34f1-4bd5-85b0-12f5a4e84257"
+      },
+      "injected503": false
+    },
+    {
+      "size": "desktop",
+      "case": "desktop: Operations receipt and disabled schedule save",
+      "path": "/api/workspace/schedule",
+      "body": {
+        "revision": 4,
+        "data": {
+          "enabled": false,
+          "timezone": "UTC",
+          "local_time": "08:15"
+        },
+        "request_id": "097a9532-b1a2-490b-9453-24c755eb797a"
+      },
+      "injected503": false
+    },
+    {
+      "size": "desktop",
+      "case": "desktop: Review drafts navigate without autosave, then explicit save and Reader return",
+      "path": "/api/workspace/review/prepare",
+      "body": {
+        "profile_revision": 11,
+        "request_id": "b4b242cf-54b3-45e4-9071-366ca508005a"
+      },
+      "injected503": false
+    },
+    {
+      "size": "desktop",
+      "case": "desktop: Review drafts navigate without autosave, then explicit save and Reader return",
+      "path": "/api/workspace/review/feedback",
+      "body": {
+        "packet_id": "review-da6649441e854e398affb548800c074b",
+        "work_id": "ci:workspace-agent-evaluation",
+        "version_id": "ci:workspace-agent-evaluation:v2",
+        "revision": 0,
+        "label": "maybe",
+        "reason": "CI synthetic desktop verification reason",
+        "request_id": "b0025807-42b6-41e0-9f89-ad469906ac15"
+      },
+      "injected503": false
+    },
+    {
+      "size": "mobile",
+      "case": "mobile: Interests failed save, reload recovery and success",
+      "path": "/api/workspace/profile",
+      "body": {
+        "revision": 11,
+        "data": {
+          "topics": [
+            "ml:agents-and-tool-use",
+            "ml:retrieval-and-memory",
+            "ml:evaluation-and-responsible-ml",
+            "ml:reasoning-and-inference-time-compute",
+            "ml:ml-systems-and-efficiency",
+            "ml:machine-learning-for-science",
+            "study:22/control-systems",
+            "ml:embodied-intelligence/model-based-reinforcement-learning",
+            "ml:multimodal-and-perception/3d-perception",
+            "ml:generative-models/controllable-generation",
+            "ml:embodied-intelligence"
+          ],
+          "custom_topics": [],
+          "exclusions": [],
+          "streams": [
+            "core",
+            "rocket-twin",
+            "spatial"
+          ],
+          "minutes": 15,
+          "research_question": "CI synthetic P6 mobile: which evidence should I check?",
+          "exploration": 0.15,
+          "pinned_entry_id": null
+        },
+        "request_id": "27ccc3b0-3f37-4767-9a05-7247c6306bdd"
+      },
+      "injected503": true
+    },
+    {
+      "size": "mobile",
+      "case": "mobile: Interests failed save, reload recovery and success",
+      "path": "/api/workspace/profile",
+      "body": {
+        "revision": 11,
+        "data": {
+          "topics": [
+            "ml:agents-and-tool-use",
+            "ml:retrieval-and-memory",
+            "ml:evaluation-and-responsible-ml",
+            "ml:reasoning-and-inference-time-compute",
+            "ml:ml-systems-and-efficiency",
+            "ml:machine-learning-for-science",
+            "study:22/control-systems",
+            "ml:embodied-intelligence/model-based-reinforcement-learning",
+            "ml:multimodal-and-perception/3d-perception",
+            "ml:generative-models/controllable-generation",
+            "ml:embodied-intelligence"
+          ],
+          "custom_topics": [],
+          "exclusions": [],
+          "streams": [
+            "core",
+            "rocket-twin",
+            "spatial"
+          ],
+          "minutes": 15,
+          "research_question": "CI synthetic P6 mobile: which evidence should I check?",
+          "exploration": 0.15,
+          "pinned_entry_id": null
+        },
+        "request_id": "27ccc3b0-3f37-4767-9a05-7247c6306bdd"
+      },
+      "injected503": false
+    },
+    {
+      "size": "mobile",
+      "case": "mobile: Interests failed save, reload recovery and success",
+      "path": "/api/workspace/edition",
+      "body": {},
+      "injected503": false
+    },
+    {
+      "size": "mobile",
+      "case": "mobile: Interests real conflict retains local text",
+      "path": "/api/workspace/profile",
+      "body": {
+        "revision": 12,
+        "request_id": "c83fd624-c88e-453d-bfab-2e8fed2402a2",
+        "data": {
+          "topics": [
+            "ml:agents-and-tool-use",
+            "ml:retrieval-and-memory",
+            "ml:evaluation-and-responsible-ml",
+            "ml:reasoning-and-inference-time-compute",
+            "ml:ml-systems-and-efficiency",
+            "ml:machine-learning-for-science",
+            "study:22/control-systems",
+            "ml:embodied-intelligence/model-based-reinforcement-learning",
+            "ml:multimodal-and-perception/3d-perception",
+            "ml:generative-models/controllable-generation",
+            "ml:embodied-intelligence"
+          ],
+          "custom_topics": [],
+          "exclusions": [],
+          "streams": [
+            "core",
+            "rocket-twin",
+            "spatial"
+          ],
+          "minutes": 15,
+          "research_question": "CI synthetic mobile concurrent profile",
+          "exploration": 0.15,
+          "pinned_entry_id": null
+        }
+      },
+      "injected503": false
+    },
+    {
+      "size": "mobile",
+      "case": "mobile: Interests real conflict retains local text",
+      "path": "/api/workspace/profile",
+      "body": {
+        "revision": 12,
+        "data": {
+          "topics": [
+            "ml:agents-and-tool-use",
+            "ml:retrieval-and-memory",
+            "ml:evaluation-and-responsible-ml",
+            "ml:reasoning-and-inference-time-compute",
+            "ml:ml-systems-and-efficiency",
+            "ml:machine-learning-for-science",
+            "study:22/control-systems",
+            "ml:embodied-intelligence/model-based-reinforcement-learning",
+            "ml:multimodal-and-perception/3d-perception",
+            "ml:generative-models/controllable-generation",
+            "ml:embodied-intelligence"
+          ],
+          "custom_topics": [],
+          "exclusions": [],
+          "streams": [
+            "core",
+            "rocket-twin",
+            "spatial"
+          ],
+          "minutes": 15,
+          "research_question": "CI synthetic mobile local unsaved conflict",
+          "exploration": 0.15,
+          "pinned_entry_id": null
+        },
+        "request_id": "d15e0f8e-31ff-49ca-9cc6-7dbd0ba31e41"
+      },
+      "injected503": false
+    },
+    {
+      "size": "mobile",
+      "case": "mobile: Operations receipt and disabled schedule save",
+      "path": "/api/workspace/schedule",
+      "body": {
+        "revision": 5,
+        "data": {
+          "enabled": false,
+          "timezone": "UTC",
+          "local_time": "08:30"
+        },
+        "request_id": "994bf68d-ae86-4ec9-8614-df32fbed4204"
+      },
+      "injected503": false
+    },
+    {
+      "size": "mobile",
+      "case": "mobile: Review drafts navigate without autosave, then explicit save and Reader return",
+      "path": "/api/workspace/review/prepare",
+      "body": {
+        "profile_revision": 13,
+        "request_id": "00a8cdf1-eb99-4a7c-879e-294365791532"
+      },
+      "injected503": false
+    },
+    {
+      "size": "mobile",
+      "case": "mobile: Review drafts navigate without autosave, then explicit save and Reader return",
+      "path": "/api/workspace/review/feedback",
+      "body": {
+        "packet_id": "review-8d8867396c86491fb874a4016673f913",
+        "work_id": "ci:workspace-agent-evaluation",
+        "version_id": "ci:workspace-agent-evaluation:v2",
+        "revision": 0,
+        "label": "maybe",
+        "reason": "CI synthetic mobile verification reason",
+        "request_id": "f90baaca-f36e-4681-a874-6214c91141a7"
+      },
+      "injected503": false
+    }
+  ]
+}

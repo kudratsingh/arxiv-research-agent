@@ -1,0 +1,13 @@
+PASS desktop light today
+PASS desktop light radar
+PASS desktop light library
+PASS desktop dark today
+PASS desktop dark radar
+PASS desktop dark library
+PASS mobile light today
+PASS mobile light radar
+PASS mobile light library
+PASS mobile dark today
+PASS mobile dark radar
+PASS mobile dark library
+{"cases":12,"blocked":[],"errors":[]}

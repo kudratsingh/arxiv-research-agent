@@ -1,0 +1,28 @@
+PASS desktop: guard isolated fixture
+PASS desktop: Interests failed save, reload recovery and success
+PASS desktop: Interests real conflict retains local text
+PASS desktop: Operations receipt and disabled schedule save
+PASS desktop: Review drafts navigate without autosave, then explicit save and Reader return
+PASS mobile: guard isolated fixture
+PASS mobile: Interests failed save, reload recovery and success
+PASS mobile: Interests real conflict retains local text
+PASS mobile: Operations receipt and disabled schedule save
+FAIL mobile: Review drafts navigate without autosave, then explicit save and Reader return locator.waitFor: Timeout 30000ms exceeded.
+Call log:
+[2m  - waiting for getByRole('list', { name: 'Reader queue' })[22m
+
+{
+  "cases": 10,
+  "failed": 1,
+  "blocked": 0,
+  "unexpectedConsole": 0,
+  "expectedConsole": 4,
+  "pageErrors": 0,
+  "requestFailures": 0,
+  "failures": [
+    {
+      "name": "mobile: Review drafts navigate without autosave, then explicit save and Reader return",
+      "error": "locator.waitFor: Timeout 30000ms exceeded."
+    }
+  ]
+}

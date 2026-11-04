@@ -1,0 +1,95 @@
+{
+  "application": "P6 final build; see application-tree manifest",
+  "base": "http://127.0.0.1:3148",
+  "principal": "controller-p6-preview",
+  "work": "arxiv:2611.99800",
+  "version": "arxiv:2611.99800:v1",
+  "cases": [
+    {
+      "size": "desktop",
+      "theme": "light",
+      "route": "today",
+      "title": "CI synthetic long abstract agent navigation study",
+      "version": "arxiv:2611.99800:v1"
+    },
+    {
+      "size": "desktop",
+      "theme": "light",
+      "route": "radar",
+      "title": "CI synthetic long abstract agent navigation study",
+      "version": "arxiv:2611.99800:v1"
+    },
+    {
+      "size": "desktop",
+      "theme": "light",
+      "route": "library",
+      "title": "CI synthetic long abstract agent navigation study",
+      "version": "arxiv:2611.99800:v1"
+    },
+    {
+      "size": "desktop",
+      "theme": "dark",
+      "route": "today",
+      "title": "CI synthetic long abstract agent navigation study",
+      "version": "arxiv:2611.99800:v1"
+    },
+    {
+      "size": "desktop",
+      "theme": "dark",
+      "route": "radar",
+      "title": "CI synthetic long abstract agent navigation study",
+      "version": "arxiv:2611.99800:v1"
+    },
+    {
+      "size": "desktop",
+      "theme": "dark",
+      "route": "library",
+      "title": "CI synthetic long abstract agent navigation study",
+      "version": "arxiv:2611.99800:v1"
+    },
+    {
+      "size": "mobile",
+      "theme": "light",
+      "route": "today",
+      "title": "CI synthetic long abstract agent navigation study",
+      "version": "arxiv:2611.99800:v1"
+    },
+    {
+      "size": "mobile",
+      "theme": "light",
+      "route": "radar",
+      "title": "CI synthetic long abstract agent navigation study",
+      "version": "arxiv:2611.99800:v1"
+    },
+    {
+      "size": "mobile",
+      "theme": "light",
+      "route": "library",
+      "title": "CI synthetic long abstract agent navigation study",
+      "version": "arxiv:2611.99800:v1"
+    },
+    {
+      "size": "mobile",
+      "theme": "dark",
+      "route": "today",
+      "title": "CI synthetic long abstract agent navigation study",
+      "version": "arxiv:2611.99800:v1"
+    },
+    {
+      "size": "mobile",
+      "theme": "dark",
+      "route": "radar",
+      "title": "CI synthetic long abstract agent navigation study",
+      "version": "arxiv:2611.99800:v1"
+    },
+    {
+      "size": "mobile",
+      "theme": "dark",
+      "route": "library",
+      "title": "CI synthetic long abstract agent navigation study",
+      "version": "arxiv:2611.99800:v1"
+    }
+  ],
+  "blocked": [],
+  "errors": []
+}

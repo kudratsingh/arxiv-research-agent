@@ -1,0 +1,20 @@
+{
+  "mode": "offline native event diagnostic; no application or network requests",
+  "cases": [
+    {
+      "cleanup": "microtask",
+      "trace": [
+        "document capture",
+        "microtask cleanup"
+      ]
+    },
+    {
+      "cleanup": "task",
+      "trace": [
+        "document capture",
+        "target capture",
+        "task cleanup"
+      ]
+    }
+  ]
+}

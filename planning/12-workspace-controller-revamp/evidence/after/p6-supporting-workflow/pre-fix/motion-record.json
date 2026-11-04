@@ -1,0 +1,42 @@
+{
+  "principal": "controller-p6",
+  "work": "arxiv:2611.99800",
+  "version": "arxiv:2611.99800:v1",
+  "mode": "CI synthetic walkthrough; only reversible reading writes",
+  "cases": [],
+  "writes": [
+    {
+      "size": "desktop",
+      "path": "/api/workspace/reading",
+      "body": {
+        "work_id": "arxiv:2611.99800",
+        "revision": 1,
+        "data": {
+          "status": "dismissed",
+          "anchor": "abstract:0",
+          "version_id": "arxiv:2611.99800:v1",
+          "snoozed_until": null
+        },
+        "request_id": "f0bbfa42-4037-4633-a8c4-357d9f214843"
+      }
+    },
+    {
+      "size": "desktop",
+      "path": "/api/workspace/reading",
+      "body": {
+        "work_id": "arxiv:2611.99800",
+        "revision": 2,
+        "data": {
+          "status": "saved",
+          "anchor": "abstract:0",
+          "version_id": "arxiv:2611.99800:v1",
+          "snoozed_until": null
+        },
+        "request_id": "90179791-4e54-4869-8763-c51aba95996a"
+      }
+    }
+  ],
+  "blocked": [],
+  "errors": [],
+  "error": "AssertionError [ERR_ASSERTION]: Back scroll 0 vs 870\n    at /private/tmp/arxiv-agent-eng-workspace-controller/planning/12-workspace-controller-revamp/evidence/after/p6-supporting-workflow/motion-record.cjs:7:1808"
+}

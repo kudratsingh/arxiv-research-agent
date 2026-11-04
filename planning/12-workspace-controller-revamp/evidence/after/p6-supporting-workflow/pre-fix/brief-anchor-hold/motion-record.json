@@ -1,0 +1,270 @@
+{
+  "principal": "controller-p6",
+  "work": "arxiv:2611.99800",
+  "version": "arxiv:2611.99800:v1",
+  "mode": "CI synthetic walkthrough; only reversible reading writes",
+  "cases": [
+    {
+      "size": "desktop",
+      "theme": "dark",
+      "resolvedTheme": {
+        "attribute": "dark",
+        "canvas": "rgb(10, 10, 10)"
+      },
+      "status": "pass",
+      "savedRestored": true,
+      "midAbstractScroll": 870,
+      "queueInset": {
+        "inset": 16.484375,
+        "scroll": 358,
+        "max": 359
+      },
+      "jInset": {
+        "inset": 16.484375,
+        "scroll": 358,
+        "max": 359
+      },
+      "kInset": {
+        "inset": 16.484375,
+        "scroll": 358,
+        "max": 1704
+      },
+      "rapidMs": 9,
+      "motion": [
+        {
+          "frames": [
+            {
+              "opacity": 0.55,
+              "transform": "translateY(6px)"
+            },
+            {
+              "opacity": 1,
+              "transform": "translateY(0)"
+            }
+          ],
+          "options": {
+            "duration": 170,
+            "easing": "ease-out"
+          }
+        },
+        {
+          "frames": [
+            {
+              "opacity": 0.55,
+              "transform": "translateY(6px)"
+            },
+            {
+              "opacity": 1,
+              "transform": "translateY(0)"
+            }
+          ],
+          "options": {
+            "duration": 170,
+            "easing": "ease-out"
+          }
+        },
+        {
+          "frames": [
+            {
+              "opacity": 0.55,
+              "transform": "translateY(6px)"
+            },
+            {
+              "opacity": 1,
+              "transform": "translateY(0)"
+            }
+          ],
+          "options": {
+            "duration": 170,
+            "easing": "ease-out"
+          }
+        }
+      ],
+      "pageInset": {
+        "inset": 15.765625,
+        "scroll": 346,
+        "max": 346
+      },
+      "beforeReader": 870,
+      "restoredScroll": 870,
+      "readerVersion": "arxiv:2611.99800:v1",
+      "readerAnchor": "#abstract:0",
+      "farRange": "abstract:2500:2520",
+      "farGeometry": {
+        "top": 24.34375,
+        "inset": 16.34375,
+        "bottom": 51.34375,
+        "barTop": 788
+      },
+      "farTextLength": 20,
+      "lowerContent": {
+        "bottom": 453.109375,
+        "barTop": 780
+      },
+      "history": "back/forward/back"
+    },
+    {
+      "size": "mobile",
+      "theme": "light",
+      "resolvedTheme": {
+        "attribute": "light",
+        "canvas": "rgb(245, 245, 245)"
+      },
+      "status": "pass",
+      "savedRestored": true,
+      "midAbstractScroll": 1354,
+      "queueInset": {
+        "inset": 16.34375,
+        "scroll": 362,
+        "max": 453
+      },
+      "jInset": {
+        "inset": 16.34375,
+        "scroll": 362,
+        "max": 463
+      },
+      "kInset": {
+        "inset": 16.34375,
+        "scroll": 362,
+        "max": 2773
+      },
+      "rapidMs": 14,
+      "motion": [
+        {
+          "frames": [
+            {
+              "opacity": 0.55,
+              "transform": "translateY(6px)"
+            },
+            {
+              "opacity": 1,
+              "transform": "translateY(0)"
+            }
+          ],
+          "options": {
+            "duration": 170,
+            "easing": "ease-out"
+          }
+        },
+        {
+          "frames": [
+            {
+              "opacity": 0.55,
+              "transform": "translateY(6px)"
+            },
+            {
+              "opacity": 1,
+              "transform": "translateY(0)"
+            }
+          ],
+          "options": {
+            "duration": 170,
+            "easing": "ease-out"
+          }
+        },
+        {
+          "frames": [
+            {
+              "opacity": 0.55,
+              "transform": "translateY(6px)"
+            },
+            {
+              "opacity": 1,
+              "transform": "translateY(0)"
+            }
+          ],
+          "options": {
+            "duration": 170,
+            "easing": "ease-out"
+          }
+        }
+      ],
+      "pageInset": {
+        "inset": 15.765625,
+        "scroll": 451,
+        "max": 451
+      },
+      "beforeReader": 1354,
+      "restoredScroll": 1354,
+      "readerVersion": "arxiv:2611.99800:v1",
+      "readerAnchor": "#abstract:0",
+      "farRange": "abstract:2500:2520",
+      "farGeometry": {
+        "top": 16.109375,
+        "inset": 16.109375,
+        "bottom": 40.109375,
+        "barTop": 666
+      },
+      "farTextLength": 20,
+      "lowerContent": {
+        "bottom": 240.03125,
+        "barTop": 712
+      },
+      "history": "back/forward/back"
+    }
+  ],
+  "writes": [
+    {
+      "size": "desktop",
+      "path": "/api/workspace/reading",
+      "body": {
+        "work_id": "arxiv:2611.99800",
+        "revision": 11,
+        "data": {
+          "status": "dismissed",
+          "anchor": "abstract:0",
+          "version_id": "arxiv:2611.99800:v1",
+          "snoozed_until": null
+        },
+        "request_id": "14f2b71f-7f27-4984-aee5-49b636047b08"
+      }
+    },
+    {
+      "size": "desktop",
+      "path": "/api/workspace/reading",
+      "body": {
+        "work_id": "arxiv:2611.99800",
+        "revision": 12,
+        "data": {
+          "status": "saved",
+          "anchor": "abstract:0",
+          "version_id": "arxiv:2611.99800:v1",
+          "snoozed_until": null
+        },
+        "request_id": "35f622ea-61a2-4b81-afd0-67bdcbf9c5e8"
+      }
+    },
+    {
+      "size": "mobile",
+      "path": "/api/workspace/reading",
+      "body": {
+        "work_id": "arxiv:2611.99800",
+        "revision": 13,
+        "data": {
+          "status": "dismissed",
+          "anchor": "abstract:0",
+          "version_id": "arxiv:2611.99800:v1",
+          "snoozed_until": null
+        },
+        "request_id": "895430ce-7716-4dc3-afb2-376e3dfa3cf5"
+      }
+    },
+    {
+      "size": "mobile",
+      "path": "/api/workspace/reading",
+      "body": {
+        "work_id": "arxiv:2611.99800",
+        "revision": 14,
+        "data": {
+          "status": "saved",
+          "anchor": "abstract:0",
+          "version_id": "arxiv:2611.99800:v1",
+          "snoozed_until": null
+        },
+        "request_id": "c0773b21-f481-4afb-ac9c-3c83cb9663d1"
+      }
+    }
+  ],
+  "blocked": [],
+  "errors": []
+}

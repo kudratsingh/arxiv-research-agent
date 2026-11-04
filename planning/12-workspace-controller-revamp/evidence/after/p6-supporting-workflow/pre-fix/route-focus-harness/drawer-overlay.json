@@ -1,0 +1,18 @@
+{
+  "cases": [
+    {
+      "size": "desktop",
+      "status": "pass",
+      "playerFocusPreserved": true,
+      "announcement": "Paper 2 of 9: Budgeted Retrieval for Long-Horizon Agents: When to Stop Searching",
+      "route": {
+        "heading": "Follow a field.Or your own question.",
+        "focused": true,
+        "inset": 16
+      }
+    }
+  ],
+  "blocked": [],
+  "errors": [],
+  "error": "locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('link', { name: 'Interests', exact: true })\u001b[22m\n\u001b[2m    - locator resolved to <a title=\"Interests\" aria-label=\"Interests\" href=\"/workspace/interests\">…</a>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div id=\"_R_ubtb_\" tabindex=\"-1\" role=\"dialog\" class=\"ws-drawer\" aria-modal=\"true\" aria-label=\"Queue & controls\">…</div> intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div id=\"_R_ubtb_\" tabindex=\"-1\" role=\"dialog\" class=\"ws-drawer\" aria-modal=\"true\" aria-label=\"Queue & controls\">…</div> intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    56 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is visible, enabled and stable\u001b[22m\n\u001b[2m       - scrolling into view if needed\u001b[22m\n\u001b[2m       - done scrolling\u001b[22m\n\u001b[2m       - <div id=\"_R_ubtb_\" tabindex=\"-1\" role=\"dialog\" class=\"ws-drawer\" aria-modal=\"true\" aria-label=\"Queue & controls\">…</div> intercepts pointer events\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n\n    at /private/tmp/arxiv-agent-eng-workspace-controller/planning/12-workspace-controller-revamp/evidence/after/p6-supporting-workflow/navigation-focus.cjs:4:1328"
+}

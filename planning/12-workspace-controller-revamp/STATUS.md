@@ -1,6 +1,6 @@
 # STATUS: workspace controller revamp
 
-Updated: **2026-11-04 UTC**. State: **G5 Radar and Library verified; stopped for owner experience review before P6.**
+Updated: **2026-11-04 UTC**. State: **G6 supporting screens and owner-authorized paper/navigation refinement verified under E27. G7 consolidation remains pending.**
 
 The implementing agent updates this file at every gate (G0–G8). Numbers are
 pasted from command output and never typed by hand.
@@ -51,11 +51,11 @@ pasted from command output and never typed by hand.
 |---|---|---|---|---|
 | G0 Setup & baseline | `83bea0a` (verified app code unchanged from `82d538f` / `916f038`) | 2026-11-03 09:55 UTC | PASS | [Before captures](evidence/before/p0-macos/); logs and deviations below |
 | G1 Foundations | `1bf1a0c816c74eaff7ac53735d6ae8990ef94ee3` (verified application tree) | 2026-11-03 10:25 UTC | PASS under E27 | [G1 captures](evidence/after/g1-foundations/); CSS-only interim overrun recorded below |
-| G2 Shell | | | | |
-| G3 Today controller | | | | |
-| G4 Reader | | | | |
-| G5 Radar & Library | | | | |
-| G6 Interests · Sources · Review | | | | |
+| G2 Shell | `235f676` (verified source; evidence attribution below) | 2026-11-04 02:42 UTC | PASS under E27 | See phase evidence and measurements below |
+| G3 Today controller | `d4f5855` (verified source; evidence attribution below) | 2026-11-04 03:10 UTC | PASS under E27 | See phase evidence and measurements below |
+| G4 Reader | `a933a71` (verified source; evidence attribution below) | 2026-11-04 06:05 UTC | PASS under E27 | See phase evidence and measurements below |
+| G5 Radar & Library | `ade234b` (verified source; evidence attribution below) | 2026-11-04 07:19 UTC | PASS under E27 | See phase evidence and measurements below |
+| G6 Interests · Sources · Review | `fda9d7616e8cbd0d882bcc41510a997ade117bf9` (verified application tree; source binding below) | 2026-11-04 | PASS under E27 | [P6 preview, browser walkthrough and recordings](evidence/after/p6-supporting-workflow/README.md); local checks below |
 | G7 Polish | | | | |
 | G8 Verify & ship | | | | |
 
@@ -1057,3 +1057,206 @@ GitHub CI is not triggered by this branch-only push; verified results here are
 local and tied to the application commit, not a green remote CI claim.
 Stop at G5 for owner experience review. P6 is not started; broader G7/G8 visual
 and browser matrices, CSS consolidation and paid quality evidence remain later.
+
+
+## G6: supporting workflows and owner-authorized paper navigation
+
+### Source and gate attribution
+
+This checkpoint validates application commit `fda9d7616e8cbd0d882bcc41510a997ade117bf9`
+on `claude/youthful-dirac-69v19d`, built on the G5 application rebased onto
+`origin/main` at `17f9221`; the incoming main change is README-only. Four bounded
+commits cover navigation/paper refinement, Interests, Operations and Review.
+The application source froze after the Reader queue split and successful
+production build; all 601 frozen web-file hashes remain unchanged through the
+source commits. [Source binding](evidence/after/p6-supporting-workflow/source-binding.json)
+records the exact application commit, web tree, build identity and file manifest.
+No PR or merge is part of this phase. The earlier G5 stop is historical; the
+owner subsequently authorized P6 and the paper/navigation refinement here.
+
+### Delivered behavior and preserved contracts
+
+Interests has a sidebar section index, grouped native form, Save/Discard in the
+bar through the original form association, and a separately loaded topic
+catalogue. Account-specific browser draft recovery retains raw multiline text,
+base revision and retry identity. Opening the editor does not save preferences.
+Failed/conflicting writes and mismatched acknowledged/reloaded revisions retain
+the local draft for review. Unreadable recovery originals are preserved; when
+storage is unavailable, the page warns and guards ordinary link/unload exits.
+
+Sources & checks has an ordered queue with explicit status words and one focused
+source receipt. Native schedule controls and the always-visible form-associated
+save action retain the original request contract and force `enabled: false`.
+Unknown focus falls back without a write; selecting sources does not refetch.
+Synthetic-preview source-check buttons are disabled. Unit fixtures exercise the
+explicit single-source/all-source refresh bodies without external contacts.
+
+Review keeps every candidate form mounted in packet order under E05. The queue,
+Previous/Next and keys 1/2/3 select the current candidate; number keys choose a
+native radio without saving. Only the explicit Save judgment action submits a
+label. Packet switches/preparation, leaving through ordinary links and pending
+writes are guarded; explicit discard is required before replacing dirty forms.
+Failures/conflicts retain drafts, revision and retry identity. No usefulness
+judgments are inferred or automatically seeded into the preview account.
+
+Today, Radar and Library use a neutral focused-paper surface. Shared navigation
+settles the paper/route content at the requested inset using the actual desktop
+main scroll container or mobile window, then applies a content-only transition.
+The player and shell stay fixed. Reduced motion skips animation. Short documents
+reserve only missing scroll extent in an aria-hidden tail. Route-ready history
+restoration preserves Next history metadata and recorded positions; Reader entry
+and exact passage targets retain priority. Deferred-runtime capture checkpoints
+the outgoing source synchronously and cannot replay that position into a newer
+destination. Native event cleanup occurs after dispatch rather than in a
+microtask, preserving allowed Next link events and draft guard prevention.
+
+Reader uses lazy Review-only neighbour lookup and a lazy sidebar queue to keep
+the existing JS ceiling. Original source/version identities, API bodies, exact
+saved-entry/passage anchoring, notes and native controls remain covered by the
+existing suites. No runtime dependencies were added.
+
+### Local mechanical verification
+
+All app test/build commands use `ANTHROPIC_API_KEY=local-preview-disabled`,
+`USE_MOCK_DATA=true` and disabled recurrence. Full Vitest runs separately from
+Next production builds. Socket/process access was granted only for the existing
+offline loopback test harness and isolated preview operations.
+
+- `npm run lint`: exit0, zero warnings.
+- `npm run typecheck`: exit0.
+- `npm test -- --coverage`: exit0; unchanged global floors all pass.
+- `npm run build`: exit0, production build; then
+  `node scripts/route-budgets.mjs`: exit1 solely for the E27 CSS exception.
+- Locked Python first proved `src.__file__` resolves to this exact worktree;
+  `python -m pytest tests/test_documented_claims.py tests/test_repo_hygiene.py -q`:
+  exit0. Python application source is unchanged in this phase. This refresh
+  supplements the earlier full Python patch-coverage run; it does not invent a
+  new full-suite result.
+- `git diff --check`: exit0.
+
+Command transcripts (trailing whitespace/progress-control formatting normalized
+for version control): [frontend coverage](evidence/after/p6-supporting-workflow/gate-frontend-coverage.txt),
+[lint](evidence/after/p6-supporting-workflow/gate-lint.txt),
+[typecheck](evidence/after/p6-supporting-workflow/gate-typecheck.txt),
+[production build](evidence/after/p6-supporting-workflow/gate-production-build.txt),
+[budgets](evidence/after/p6-supporting-workflow/gate-budgets.txt),
+[Python claims/hygiene](evidence/after/p6-supporting-workflow/gate-python-claims-hygiene.txt).
+
+Actual frontend output:
+
+```text
+ Test Files  199 passed (199)
+      Tests  4034 passed (4034)
+   Duration  69.68s (transform 14.13s, setup 60.66s, import 19.68s, tests 213.17s, environment 126.29s)
+
+=============================== Coverage summary ===============================
+Statements   : 98.15% ( 5425/5527 )
+Branches     : 94.39% ( 4496/4763 )
+Functions    : 93.07% ( 1800/1934 )
+Lines        : 99.42% ( 4469/4495 )
+================================================================================
+```
+
+Actual fresh Python output:
+
+```text
+..................................................................       [100%]
+66 passed in 11.95s
+```
+
+Production budget output, pasted from the final built tree:
+
+```text
+PASS      `/` first-load JS, excl. polyfill — 166,356 B (162.5 KiB) against 166,912 B (163.0 KiB)
+PASS      `/c/[id]` first-load JS, excl. polyfill — 192,251 B (187.7 KiB) against 192,512 B (188.0 KiB)
+PASS      `/learn` first-load JS, excl. polyfill — 165,068 B (161.2 KiB) against 166,912 B (163.0 KiB)
+PASS      `/learn/paths/[id]` first-load JS, excl. polyfill — 165,987 B (162.1 KiB) against 169,984 B (166.0 KiB)
+PASS      `/learn/sessions/[id]` first-load JS, excl. polyfill — 186,739 B (182.4 KiB) against 188,416 B (184.0 KiB)
+PASS      `/learn/progress` first-load JS, excl. polyfill — 168,393 B (164.4 KiB) against 169,984 B (166.0 KiB)
+PASS      Shared framework/runtime chunk — 134,205 B (131.1 KiB) against 139,264 B (136.0 KiB)
+BREACH    All emitted CSS — 23,797 B (23.2 KiB) against 17,408 B (17.0 KiB)
+PASS      All self-hosted font files (woff2, latin subset) — 103,476 B (101.1 KiB) against 109,568 B (107.0 KiB)
+EXTERNAL  Total transferred JS on a settled report route, incl. lazy chunks — not measured here against 245,760 B (240.0 KiB)
+REPORTED  Derived: total first-load transfer for `/c/[id]`, cold cache — 319,524 B (312.0 KiB) against 319,488 B (312.0 KiB)
+PASS      `/today` first-load JS, excl. polyfill — 153,708 B (150.1 KiB) against 163,840 B (160.0 KiB)
+PASS      `/interests` first-load JS, excl. polyfill — 153,162 B (149.6 KiB) against 163,840 B (160.0 KiB)
+PASS      `/library` first-load JS, excl. polyfill — 152,680 B (149.1 KiB) against 163,840 B (160.0 KiB)
+PASS      `/library/items/[id]` first-load JS, excl. polyfill — 156,389 B (152.7 KiB) against 163,840 B (160.0 KiB)
+PASS      `/workspace/today` first-load JS, excl. polyfill — 166,750 B (162.8 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/radar` first-load JS, excl. polyfill — 166,041 B (162.1 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/interests` first-load JS, excl. polyfill — 167,446 B (163.5 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/library` first-load JS, excl. polyfill — 166,095 B (162.2 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/items/[id]` first-load JS, excl. polyfill — 169,925 B (165.9 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/operations` first-load JS, excl. polyfill — 164,490 B (160.6 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/review` first-load JS, excl. polyfill — 166,818 B (162.9 KiB) against 169,984 B (166.0 KiB)
+```
+
+Every enforced JavaScript row passes. Reader has only 59B of headroom at this
+checkpoint, so G7 changes require another build/budget measurement. Emitted CSS
+is the sole failed enforced row under E27's explicit interim allowance through
+G6; no ceiling, floor, include/exclude list, budget script or assertion was
+weakened. G7 still must consolidate/remove the legacy workspace stylesheet and
+make every enforced row green, using the kit's single ratchet only if needed.
+The `REPORTED` transfer estimate is informational, as in the unchanged script.
+
+### Browser evidence and remaining scope
+
+The final production assets were copied to standalone and only the verified
+isolated preview on3148 restarted. Its API8148/database
+`workspace_controller_p6_preview` and principal `controller-p6-preview` remain
+separate from the browser agent's3149/API8149 verification stack. Owner
+3137/API8137/PG15438 remain untouched. No full process environment was inspected.
+
+Final source-frozen browser acceptance is recorded in the
+[P6 walkthrough and gallery](evidence/after/p6-supporting-workflow/README.md):
+
+- Real loopback API/Postgres live regression: **16 passed (20.8s)** on fresh
+  synthetic verification fixtures.
+- Supporting workflow **10/10**: failed-save recovery, real409 conflict with
+  draft retained, disabled-schedule save, Review drafts and explicit judgment,
+  exact packet return and lazy Reader queue/version links.
+- Read-only **28 cases plus2 tablet cases**: zero axe violations of any severity;
+  all ten preview labels stay blank. Source-check UI **2/2** forwards zero
+  refresh requests; native focus/announcement **2/2** and reduced motion **4/4** pass.
+- Matched before/after **12/12 each**, actual themes and same synthetic
+  work/version. Before captures use a separately reconstructed immutable G5
+  `ade234b` build, never the controller build.
+- Two actual decoded/reviewed WebM recordings: desktop11.60s/mobile10.68s,
+  with exact retainedv1 20-character far passage visible at9.0s above the player.
+  Final recording metrics retain approximately16px insets, rapid7/14ms input,
+  restored Back positions870/1354px and four reversible saved-state-restored
+  reading writes. Real loading frames remain.
+
+Four expected503/409 messages are retained; unexpected console/page/request
+failures are zero in final workflow acceptance. Earlier failed scripts/captures
+remain under `pre-fix/`, excluded from acceptance. Theme-context and hidden-queue
+harness corrections preserved the actual requirements. Verification ports
+3149/8149 and temporary3150 are closed;3150's temporary G5 tree was removed.
+Preview3148/API8148 remain running. The teardown receipt verifies owner
+3137/API8137/PG15438 still running and untouched.
+
+These are Chromium viewport checks with synthetic fixtures, not physical-device,
+real source freshness, personal usefulness or paid model-quality evidence. The
+separately authorized paid qualification is owned outside this frontend task.
+GitHub CI is not triggered by the branch-only workflow; these are exact-source
+local gates, with no green remote-CI claim.
+
+The browser/client Back-Forward **unsaved-draft reliability limitation remains**.
+Scroll/list restoration fixes do not guarantee form recovery over every Next
+history transition. Save/copy draft text if recovery is unavailable. Interest
+recovery is account-specific; it does not imply durable Review or schedule draft
+history. G7 all-route/theme/width accessibility and responsive acceptance,
+stylesheet consolidation and final G8 verification are not claimed here.
+
+Applied P6 corrections include E01/E04/E05/E16/E18/E27/E50/E53: moved controls stay
+reachable through the mobile drawer helper, form submits retain explicit native
+association, all Review forms remain mounted, recurring schedule stays disabled,
+receipt classes and refresh bodies are preserved, and CSS overrun is disclosed.
+The only additional live-spec change opens the moved Review controls before the
+existing packet-preparation assertion; existing product-truth assertions remain.
+The existing topic-search unit assertion now awaits the lazy catalogue rather
+than requiring synchronous mount; its label and interaction assertions remain.
+
+Provider contacts/spend for this frontend task remain zero; recurrence remains
+disabled. No owner data, credentials, qualification checkout, PR or merge was
+accessed. Stop before full P7.

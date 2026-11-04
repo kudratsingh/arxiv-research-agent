@@ -1,0 +1,1 @@
+{"cases":0,"writes":0,"blocked":[],"errors":[],"error":"AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'ci:workspace-agent-evaluation'\n- 'arxiv:2611.99800'\n    at /private/tmp/arxiv-agent-eng-workspace-controller/planning/12-workspace-controller-revamp/evidence/after/p6-supporting-workflow/motion-record.cjs:4:1570"}

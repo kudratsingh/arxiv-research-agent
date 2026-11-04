@@ -1,0 +1,106 @@
+{
+  "principal": "controller-p6",
+  "work": "arxiv:2611.99800",
+  "version": "arxiv:2611.99800:v1",
+  "mode": "CI synthetic walkthrough; only reversible reading writes",
+  "cases": [
+    {
+      "size": "desktop",
+      "theme": "dark",
+      "status": "pass",
+      "savedRestored": true,
+      "midAbstractScroll": 870,
+      "queueInset": {
+        "inset": 16.484375,
+        "scroll": 358,
+        "max": 359
+      },
+      "jInset": {
+        "inset": 16.484375,
+        "scroll": 358,
+        "max": 359
+      },
+      "kInset": {
+        "inset": 16.484375,
+        "scroll": 358,
+        "max": 1704
+      },
+      "rapidMs": 8,
+      "motion": [
+        {
+          "frames": [
+            {
+              "opacity": 0.55,
+              "transform": "translateY(6px)"
+            },
+            {
+              "opacity": 1,
+              "transform": "translateY(0)"
+            }
+          ],
+          "options": {
+            "duration": 170,
+            "easing": "ease-out"
+          }
+        },
+        {
+          "frames": [
+            {
+              "opacity": 0.55,
+              "transform": "translateY(6px)"
+            },
+            {
+              "opacity": 1,
+              "transform": "translateY(0)"
+            }
+          ],
+          "options": {
+            "duration": 170,
+            "easing": "ease-out"
+          }
+        },
+        {
+          "frames": [
+            {
+              "opacity": 0.55,
+              "transform": "translateY(6px)"
+            },
+            {
+              "opacity": 1,
+              "transform": "translateY(0)"
+            }
+          ],
+          "options": {
+            "duration": 170,
+            "easing": "ease-out"
+          }
+        }
+      ],
+      "pageInset": {
+        "inset": 15.765625,
+        "scroll": 346,
+        "max": 346
+      },
+      "beforeReader": 870,
+      "restoredScroll": 870,
+      "readerVersion": "arxiv:2611.99800:v1",
+      "readerAnchor": "#abstract:0",
+      "farRange": "abstract:2500:2520",
+      "farGeometry": {
+        "top": 24.34375,
+        "inset": 16.34375,
+        "bottom": 51.34375,
+        "barTop": 788
+      },
+      "farTextLength": 20,
+      "lowerContent": {
+        "bottom": 453.109375,
+        "barTop": 780
+      },
+      "history": "back/forward/back"
+    }
+  ],
+  "writes": [],
+  "blocked": [],
+  "errors": []
+}

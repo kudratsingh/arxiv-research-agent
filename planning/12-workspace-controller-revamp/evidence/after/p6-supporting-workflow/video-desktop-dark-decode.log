@@ -1,0 +1,34 @@
+ffmpeg version n7.0.1-playwright-build-1011 Copyright (c) 2000-2024 the FFmpeg developers
+  built with Apple clang version 14.0.3 (clang-1403.0.22.14.1)
+  configuration: --pkg-config=pkg-config --pkg-config-flags=--static --extra-cflags=-I//Users/runner/work/playwright-browsers/playwright-browsers/browser_patches/ffmpeg/build/osx_prefix/include --extra-ldflags=-L//Users/runner/work/playwright-browsers/playwright-browsers/browser_patches/ffmpeg/build/osx_prefix/lib --prefix=/Users/runner/work/playwright-browsers/playwright-browsers/browser_patches/ffmpeg/build/osx_prefix --bindir=/Users/runner/work/playwright-browsers/playwright-browsers/browser_patches/ffmpeg/build/ffmpeg/bin --extra-version=playwright-build-1011 --disable-debug --disable-autodetect --disable-everything --enable-ffmpeg --enable-protocol=pipe --enable-protocol=file --enable-parser=mjpeg --enable-decoder=mjpeg --enable-demuxer=image2pipe --enable-filter=pad --enable-filter=crop --enable-filter=scale --enable-muxer=webm --enable-libvpx --enable-static --enable-encoder=libvpx_vp8 --enable-decoder=libvpx_vp8 --enable-demuxer=matroska --enable-encoder=png --enable-zlib --enable-muxer=image2 --disable-iconv --disable-bzlib
+  libavutil      59.  8.100 / 59.  8.100
+  libavcodec     61.  3.100 / 61.  3.100
+  libavformat    61.  1.100 / 61.  1.100
+  libavdevice    61.  1.100 / 61.  1.100
+  libavfilter    10.  1.100 / 10.  1.100
+  libswscale      8.  1.100 /  8.  1.100
+  libswresample   5.  1.100 /  5.  1.100
+[libvpx @ 0x7966c44000] v1.14.1
+Input #0, matroska,webm, from '/private/tmp/arxiv-agent-eng-workspace-controller/planning/12-workspace-controller-revamp/evidence/after/p6-supporting-workflow/recordings/desktop-dark.webm':
+  Metadata:
+    ENCODER         : Lavf61.1.100
+  Duration: 00:00:11.60, start: 0.000000, bitrate: 1402 kb/s
+  Stream #0:0(eng): Video: vp8 (libvpx), yuv420p(tv, progressive), 1440x1000, SAR 1:1 DAR 36:25, 25 fps, 25 tbr, 1k tbn (default)
+      Metadata:
+        ENCODER         : Lavc61.3.100 libvpx
+        DURATION        : 00:00:11.600000000
+[libvpx @ 0x7966c44700] v1.14.1
+Stream mapping:
+  Stream #0:0 -> #0:0 (vp8 (libvpx) -> png (native))
+Press [q] to stop, [?] for help
+[vost#0:0/png @ 0x7966c98000] No filtered frames for output stream, trying to initialize anyway.
+Output #0, image2, to '/private/tmp/p6-final-desktop-dark-13.png':
+  Metadata:
+    encoder         : Lavf61.1.100
+  Stream #0:0(eng): Video: png, rgb24(progressive), 480x333 [SAR 999:1000 DAR 36:25], q=2-31, 200 kb/s, 25 fps, 1k tbn (default)
+      Metadata:
+        DURATION        : 00:00:11.600000000
+        encoder         : Lavc61.3.100 png
+[out#0/image2 @ 0x796704c180] video:0KiB audio:0KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: unknown
+[out#0/image2 @ 0x796704c180] Output file is empty, nothing was encoded(check -ss / -t / -frames parameters if used)
+frame=    0 fps=0.0 q=0.0 Lsize=N/A time=N/A bitrate=N/A speed=N/A

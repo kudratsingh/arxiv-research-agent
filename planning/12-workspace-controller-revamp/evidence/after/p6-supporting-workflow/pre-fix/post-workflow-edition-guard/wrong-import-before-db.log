@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/private/tmp/arxiv-agent-eng-workspace-controller/outputs/controller-session/p6-motion-edition.py", line 6, in <module>
+    assert Path(src.__file__).resolve().is_relative_to(Path.cwd().resolve())
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

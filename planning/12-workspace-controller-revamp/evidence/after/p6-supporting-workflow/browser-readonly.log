@@ -1,0 +1,36 @@
+PASS desktop-light-today axe 0
+PASS desktop-light-radar axe 0
+PASS desktop-light-library axe 0
+PASS desktop-light-reader axe 0
+PASS desktop-light-interests axe 0
+PASS desktop-light-operations axe 0
+PASS desktop-light-review axe 0
+PASS desktop-dark-today axe 0
+PASS desktop-dark-radar axe 0
+PASS desktop-dark-library axe 0
+PASS desktop-dark-reader axe 0
+PASS desktop-dark-interests axe 0
+PASS desktop-dark-operations axe 0
+PASS desktop-dark-review axe 0
+PASS mobile-light-today axe 0
+PASS mobile-light-radar axe 0
+PASS mobile-light-library axe 0
+PASS mobile-light-reader axe 0
+PASS mobile-light-interests axe 0
+PASS mobile-light-operations axe 0
+PASS mobile-light-review axe 0
+PASS mobile-dark-today axe 0
+PASS mobile-dark-radar axe 0
+PASS mobile-dark-library axe 0
+PASS mobile-dark-reader axe 0
+PASS mobile-dark-interests axe 0
+PASS mobile-dark-operations axe 0
+PASS mobile-dark-review axe 0
+{
+  "cases": 28,
+  "tablets": 2,
+  "failed": 0,
+  "violations": [],
+  "blocked": 0,
+  "errors": 0
+}

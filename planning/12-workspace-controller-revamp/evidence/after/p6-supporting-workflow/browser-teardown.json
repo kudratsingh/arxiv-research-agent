@@ -1,0 +1,48 @@
+{
+  "checkedPorts": {
+    "3137": {
+      "listening": true,
+      "listener": "COMMAND   PID        USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME\nnode    12359 kudratsingh   12u  IPv4 0xd90f63bd405ac3f5      0t0  TCP 127.0.0.1:3137 (LISTEN)"
+    },
+    "8137": {
+      "listening": true,
+      "listener": "COMMAND   PID        USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME\nPython  12238 kudratsingh   12u  IPv4 0x26dedd5acd5e2c45      0t0  TCP 127.0.0.1:8137 (LISTEN)"
+    },
+    "15438": {
+      "listening": true,
+      "listener": "COMMAND     PID        USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME\ncom.docke 90818 kudratsingh   86u  IPv4 0x83393665d698d423      0t0  TCP 127.0.0.1:15438 (LISTEN)"
+    },
+    "3148": {
+      "listening": true,
+      "listener": "COMMAND   PID        USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME\nnode    73344 kudratsingh   12u  IPv4 0xeded4208a76d100c      0t0  TCP 127.0.0.1:3148 (LISTEN)"
+    },
+    "8148": {
+      "listening": true,
+      "listener": "COMMAND   PID        USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME\nPython  25818 kudratsingh   12u  IPv4 0x3edd09f1ddd22624      0t0  TCP 127.0.0.1:8148 (LISTEN)"
+    },
+    "3149": {
+      "listening": false,
+      "listener": ""
+    },
+    "8149": {
+      "listening": false,
+      "listener": ""
+    },
+    "3150": {
+      "listening": false,
+      "listener": ""
+    },
+    "8150": {
+      "listening": false,
+      "listener": ""
+    }
+  },
+  "sourceCommitAtEvidenceStart": "b38a38005a6a4e3d11b6cd28de921caea6ef1ffb",
+  "applicationSource": "fda9d7616e8cbd0d882bcc41510a997ade117bf9",
+  "providerConfiguration": "local-preview-disabled only",
+  "ownerWrites": 0,
+  "providerContacts": 0,
+  "recurrenceEnabled": false,
+  "g5TemporaryTreeRemoved": true,
+  "sourceBinding": "source-binding.json"
+}

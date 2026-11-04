@@ -1,0 +1,35 @@
+{
+  "base": "http://127.0.0.1:3149",
+  "mode": "CI-only production-wording; refresh fulfilled in browser",
+  "principal": "controller-p6",
+  "cases": [
+    {
+      "name": "all sources",
+      "status": "pass",
+      "body": {
+        "source_ids": []
+      }
+    },
+    {
+      "name": "single source",
+      "status": "pass",
+      "body": {
+        "source_ids": [
+          "arxiv-cs-lg"
+        ]
+      }
+    }
+  ],
+  "refreshBodies": [
+    {
+      "source_ids": []
+    },
+    {
+      "source_ids": [
+        "arxiv-cs-lg"
+      ]
+    }
+  ],
+  "blocked": [],
+  "errors": []
+}

@@ -1,0 +1,90 @@
+{
+  "sourceHead": "4b83525",
+  "fixture": "P5 synthetic preview before P6",
+  "base": "http://127.0.0.1:3148",
+  "cases": [
+    {
+      "label": "desktop-light",
+      "route": "interests",
+      "status": "pass",
+      "heading": "Follow a field.\nOr your own question."
+    },
+    {
+      "label": "desktop-light",
+      "route": "operations",
+      "status": "pass",
+      "heading": "Know what was checked.\nAnd what wasn’t."
+    },
+    {
+      "label": "desktop-light",
+      "route": "review",
+      "status": "pass",
+      "heading": "What deserves\nyour attention?"
+    },
+    {
+      "label": "desktop-dark",
+      "route": "interests",
+      "status": "pass",
+      "heading": "Follow a field.\nOr your own question."
+    },
+    {
+      "label": "desktop-dark",
+      "route": "operations",
+      "status": "pass",
+      "heading": "Know what was checked.\nAnd what wasn’t."
+    },
+    {
+      "label": "desktop-dark",
+      "route": "review",
+      "status": "pass",
+      "heading": "What deserves\nyour attention?"
+    },
+    {
+      "label": "mobile-light",
+      "route": "interests",
+      "status": "pass",
+      "heading": "Follow a field.\nOr your own question."
+    },
+    {
+      "label": "mobile-light",
+      "route": "operations",
+      "status": "pass",
+      "heading": "Know what was checked.\nAnd what wasn’t."
+    },
+    {
+      "label": "mobile-light",
+      "route": "review",
+      "status": "pass",
+      "heading": "What deserves\nyour attention?"
+    },
+    {
+      "label": "mobile-dark",
+      "route": "interests",
+      "status": "pass",
+      "heading": "Follow a field.\nOr your own question."
+    },
+    {
+      "label": "mobile-dark",
+      "route": "operations",
+      "status": "pass",
+      "heading": "Know what was checked.\nAnd what wasn’t."
+    },
+    {
+      "label": "mobile-dark",
+      "route": "review",
+      "status": "pass",
+      "heading": "What deserves\nyour attention?"
+    }
+  ],
+  "blocked": [],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "requestFailures": [],
+  "fixtureState": {
+    "principal": "controller-p5-preview",
+    "works": 38,
+    "editionItems": 9,
+    "questions": 2,
+    "scheduleEnabled": false
+  }
+}

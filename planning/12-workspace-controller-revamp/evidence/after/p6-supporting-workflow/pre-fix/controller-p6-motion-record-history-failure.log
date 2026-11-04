@@ -1,0 +1,1 @@
+{"cases":0,"writes":2,"blocked":[],"errors":[],"error":"AssertionError [ERR_ASSERTION]: Back scroll 0 vs 870\n    at /private/tmp/arxiv-agent-eng-workspace-controller/planning/12-workspace-controller-revamp/evidence/after/p6-supporting-workflow/motion-record.cjs:7:1808"}

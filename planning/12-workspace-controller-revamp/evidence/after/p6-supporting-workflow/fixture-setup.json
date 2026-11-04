@@ -1,0 +1,63 @@
+{
+  "mode": "offline-synthetic-fixtures",
+  "srcImport": "/private/tmp/arxiv-agent-eng-workspace-controller/src/__init__.py",
+  "live": {
+    "database": "workspace_controller_p6_live",
+    "principal": "controller-p6",
+    "works": 3,
+    "versions": 4,
+    "editionItems": 3,
+    "questions": 0,
+    "reviewCandidates": 0,
+    "feedbackRows": 0,
+    "scheduleEnabled": false
+  },
+  "walkthrough": {
+    "database": "workspace_controller_p6_walk",
+    "principal": "controller-p6",
+    "works": 28,
+    "versions": 29,
+    "editionItems": 9,
+    "questions": 0,
+    "reviewCandidates": 0,
+    "feedbackRows": 0,
+    "scheduleEnabled": false,
+    "oldEdition": "0b10400193af4d91a8feeab0370097a2",
+    "newEdition": "eca0e2ffba5045369e85be5001fcbeea",
+    "navigationFillers": 24
+  },
+  "preview": {
+    "database": "workspace_controller_p6_preview",
+    "principal": "controller-p6-preview",
+    "works": 39,
+    "versions": 40,
+    "editionItems": 9,
+    "questions": 2,
+    "reviewPacket": "review-16b09c0def9049bab7e7bbb7429c401a",
+    "reviewCandidates": 10,
+    "labelled": 0,
+    "feedbackRows": 0,
+    "scheduleEnabled": false,
+    "oldEdition": "ec874e761c1d4fe7bf6c2da4610e10dc",
+    "newEdition": "fd38d60d318645878b33dd43f3a38e34"
+  },
+  "sourceRequests": 0,
+  "providerCalls": 0,
+  "note": "Fresh independent databases; preview RSS supplied by in-memory transport. The Review packet contains synthetic candidates with blank labels, not owner judgments. No browser acceptance is implied.",
+  "longWork": {
+    "id": "arxiv:2611.99800",
+    "version": "arxiv:2611.99800:v1",
+    "abstractLength": 4059,
+    "saved": true
+  },
+  "finalMotionEdition": {
+    "database": "workspace_controller_p6_walk",
+    "principal": "controller-p6",
+    "edition": "2b6ebe5404014ef492e30adced95bb7f",
+    "preservedOriginalLongEdition": "eca0e2ffba5045369e85be5001fcbeea",
+    "workCount": 28,
+    "items": 9,
+    "reason": "append guarded long-first synthetic edition after final supporting workflows; no original edition altered",
+    "provenance": "browser-motion-edition.log"
+  }
+}

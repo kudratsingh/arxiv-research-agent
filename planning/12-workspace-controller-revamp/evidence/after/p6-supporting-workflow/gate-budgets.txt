@@ -1,0 +1,27 @@
+PASS      `/` first-load JS, excl. polyfill — 166,356 B (162.5 KiB) against 166,912 B (163.0 KiB)
+PASS      `/c/[id]` first-load JS, excl. polyfill — 192,251 B (187.7 KiB) against 192,512 B (188.0 KiB)
+PASS      `/learn` first-load JS, excl. polyfill — 165,068 B (161.2 KiB) against 166,912 B (163.0 KiB)
+PASS      `/learn/paths/[id]` first-load JS, excl. polyfill — 165,987 B (162.1 KiB) against 169,984 B (166.0 KiB)
+PASS      `/learn/sessions/[id]` first-load JS, excl. polyfill — 186,739 B (182.4 KiB) against 188,416 B (184.0 KiB)
+PASS      `/learn/progress` first-load JS, excl. polyfill — 168,393 B (164.4 KiB) against 169,984 B (166.0 KiB)
+PASS      Shared framework/runtime chunk — 134,205 B (131.1 KiB) against 139,264 B (136.0 KiB)
+BREACH    All emitted CSS — 23,797 B (23.2 KiB) against 17,408 B (17.0 KiB)
+PASS      All self-hosted font files (woff2, latin subset) — 103,476 B (101.1 KiB) against 109,568 B (107.0 KiB)
+EXTERNAL  Total transferred JS on a settled report route, incl. lazy chunks — not measured here against 245,760 B (240.0 KiB)
+REPORTED  Derived: total first-load transfer for `/c/[id]`, cold cache — 319,524 B (312.0 KiB) against 319,488 B (312.0 KiB)
+PASS      `/today` first-load JS, excl. polyfill — 153,708 B (150.1 KiB) against 163,840 B (160.0 KiB)
+PASS      `/interests` first-load JS, excl. polyfill — 153,162 B (149.6 KiB) against 163,840 B (160.0 KiB)
+PASS      `/library` first-load JS, excl. polyfill — 152,680 B (149.1 KiB) against 163,840 B (160.0 KiB)
+PASS      `/library/items/[id]` first-load JS, excl. polyfill — 156,389 B (152.7 KiB) against 163,840 B (160.0 KiB)
+PASS      `/workspace/today` first-load JS, excl. polyfill — 166,750 B (162.8 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/radar` first-load JS, excl. polyfill — 166,041 B (162.1 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/interests` first-load JS, excl. polyfill — 167,446 B (163.5 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/library` first-load JS, excl. polyfill — 166,095 B (162.2 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/items/[id]` first-load JS, excl. polyfill — 169,925 B (165.9 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/operations` first-load JS, excl. polyfill — 164,490 B (160.6 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/review` first-load JS, excl. polyfill — 166,818 B (162.9 KiB) against 169,984 B (166.0 KiB)
+
+Report written to /private/tmp/arxiv-agent-eng-workspace-controller/web/budget-report.md
+
+Budget breach in 1 row(s): emitted-css.
+Either reduce the payload, or move the ceiling in web/budgets.json in the same commit and say why in the PR body (04-ARCHITECTURE.md §8.4). There is no skip flag.

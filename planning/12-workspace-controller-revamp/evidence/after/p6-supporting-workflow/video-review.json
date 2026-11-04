@@ -1,0 +1,47 @@
+{
+  "mode": "actual Playwright WebM; locally decoded representative frames",
+  "videos": [
+    {
+      "path": "recordings/desktop-dark.webm",
+      "duration": "00:00:11.60",
+      "decodedFramesAtSeconds": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "decodeErrors": []
+    },
+    {
+      "path": "recordings/mobile-light.webm",
+      "duration": "00:00:10.68",
+      "decodedFramesAtSeconds": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "decodeErrors": []
+    }
+  ],
+  "visualInspection": {
+    "status": "reviewed",
+    "frames": "Both actual9.0s frames show exact underlined retained passage above player; contact sheets show paper transition and persistent shell/player. Initial loading frames retained.",
+    "presentationHoldMs": 900
+  }
+}

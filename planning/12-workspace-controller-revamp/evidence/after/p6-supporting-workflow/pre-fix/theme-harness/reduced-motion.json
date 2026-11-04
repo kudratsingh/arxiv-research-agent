@@ -1,0 +1,52 @@
+{
+  "principal": "controller-p6-preview",
+  "mode": "reduced motion",
+  "cases": [
+    {
+      "size": "desktop",
+      "theme": "dark",
+      "styles": {
+        "animationName": "none",
+        "animationDuration": "0s",
+        "transitionDuration": "0s"
+      },
+      "after": "none",
+      "animations": 0
+    },
+    {
+      "size": "desktop",
+      "theme": "light",
+      "styles": {
+        "animationName": "none",
+        "animationDuration": "0s",
+        "transitionDuration": "0s"
+      },
+      "after": "none",
+      "animations": 0
+    },
+    {
+      "size": "mobile",
+      "theme": "dark",
+      "styles": {
+        "animationName": "none",
+        "animationDuration": "0s",
+        "transitionDuration": "0s"
+      },
+      "after": "none",
+      "animations": 0
+    },
+    {
+      "size": "mobile",
+      "theme": "light",
+      "styles": {
+        "animationName": "none",
+        "animationDuration": "0s",
+        "transitionDuration": "0s"
+      },
+      "after": "none",
+      "animations": 0
+    }
+  ],
+  "blocked": [],
+  "errors": []
+}

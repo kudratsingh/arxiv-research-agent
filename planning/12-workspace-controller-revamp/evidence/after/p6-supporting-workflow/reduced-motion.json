@@ -1,0 +1,68 @@
+{
+  "principal": "controller-p6-preview",
+  "mode": "reduced motion",
+  "cases": [
+    {
+      "size": "desktop",
+      "theme": "dark",
+      "resolvedTheme": {
+        "attribute": "dark",
+        "canvas": "rgb(10, 10, 10)"
+      },
+      "styles": {
+        "animationName": "none",
+        "animationDuration": "0s",
+        "transitionDuration": "0s"
+      },
+      "after": "none",
+      "animations": 0
+    },
+    {
+      "size": "desktop",
+      "theme": "light",
+      "resolvedTheme": {
+        "attribute": "light",
+        "canvas": "rgb(245, 245, 245)"
+      },
+      "styles": {
+        "animationName": "none",
+        "animationDuration": "0s",
+        "transitionDuration": "0s"
+      },
+      "after": "none",
+      "animations": 0
+    },
+    {
+      "size": "mobile",
+      "theme": "dark",
+      "resolvedTheme": {
+        "attribute": "dark",
+        "canvas": "rgb(10, 10, 10)"
+      },
+      "styles": {
+        "animationName": "none",
+        "animationDuration": "0s",
+        "transitionDuration": "0s"
+      },
+      "after": "none",
+      "animations": 0
+    },
+    {
+      "size": "mobile",
+      "theme": "light",
+      "resolvedTheme": {
+        "attribute": "light",
+        "canvas": "rgb(245, 245, 245)"
+      },
+      "styles": {
+        "animationName": "none",
+        "animationDuration": "0s",
+        "transitionDuration": "0s"
+      },
+      "after": "none",
+      "animations": 0
+    }
+  ],
+  "blocked": [],
+  "errors": []
+}

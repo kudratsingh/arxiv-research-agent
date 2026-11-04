@@ -1,0 +1,143 @@
+{
+  "application": "G5 ade234b",
+  "base": "http://127.0.0.1:3150",
+  "principal": "controller-p6-preview",
+  "work": "arxiv:2611.99800",
+  "version": "arxiv:2611.99800:v1",
+  "cases": [
+    {
+      "size": "desktop",
+      "theme": "light",
+      "resolvedTheme": {
+        "attribute": "light",
+        "canvas": "rgb(245, 245, 245)"
+      },
+      "route": "today",
+      "title": "CI synthetic long abstract agent navigation study",
+      "version": "arxiv:2611.99800:v1"
+    },
+    {
+      "size": "desktop",
+      "theme": "light",
+      "resolvedTheme": {
+        "attribute": "light",
+        "canvas": "rgb(245, 245, 245)"
+      },
+      "route": "radar",
+      "title": "CI synthetic long abstract agent navigation study",
+      "version": "arxiv:2611.99800:v1"
+    },
+    {
+      "size": "desktop",
+      "theme": "light",
+      "resolvedTheme": {
+        "attribute": "light",
+        "canvas": "rgb(245, 245, 245)"
+      },
+      "route": "library",
+      "title": "CI synthetic long abstract agent navigation study",
+      "version": "arxiv:2611.99800:v1"
+    },
+    {
+      "size": "desktop",
+      "theme": "dark",
+      "resolvedTheme": {
+        "attribute": "dark",
+        "canvas": "rgb(10, 10, 10)"
+      },
+      "route": "today",
+      "title": "CI synthetic long abstract agent navigation study",
+      "version": "arxiv:2611.99800:v1"
+    },
+    {
+      "size": "desktop",
+      "theme": "dark",
+      "resolvedTheme": {
+        "attribute": "dark",
+        "canvas": "rgb(10, 10, 10)"
+      },
+      "route": "radar",
+      "title": "CI synthetic long abstract agent navigation study",
+      "version": "arxiv:2611.99800:v1"
+    },
+    {
+      "size": "desktop",
+      "theme": "dark",
+      "resolvedTheme": {
+        "attribute": "dark",
+        "canvas": "rgb(10, 10, 10)"
+      },
+      "route": "library",
+      "title": "CI synthetic long abstract agent navigation study",
+      "version": "arxiv:2611.99800:v1"
+    },
+    {
+      "size": "mobile",
+      "theme": "light",
+      "resolvedTheme": {
+        "attribute": "light",
+        "canvas": "rgb(245, 245, 245)"
+      },
+      "route": "today",
+      "title": "CI synthetic long abstract agent navigation study",
+      "version": "arxiv:2611.99800:v1"
+    },
+    {
+      "size": "mobile",
+      "theme": "light",
+      "resolvedTheme": {
+        "attribute": "light",
+        "canvas": "rgb(245, 245, 245)"
+      },
+      "route": "radar",
+      "title": "CI synthetic long abstract agent navigation study",
+      "version": "arxiv:2611.99800:v1"
+    },
+    {
+      "size": "mobile",
+      "theme": "light",
+      "resolvedTheme": {
+        "attribute": "light",
+        "canvas": "rgb(245, 245, 245)"
+      },
+      "route": "library",
+      "title": "CI synthetic long abstract agent navigation study",
+      "version": "arxiv:2611.99800:v1"
+    },
+    {
+      "size": "mobile",
+      "theme": "dark",
+      "resolvedTheme": {
+        "attribute": "dark",
+        "canvas": "rgb(10, 10, 10)"
+      },
+      "route": "today",
+      "title": "CI synthetic long abstract agent navigation study",
+      "version": "arxiv:2611.99800:v1"
+    },
+    {
+      "size": "mobile",
+      "theme": "dark",
+      "resolvedTheme": {
+        "attribute": "dark",
+        "canvas": "rgb(10, 10, 10)"
+      },
+      "route": "radar",
+      "title": "CI synthetic long abstract agent navigation study",
+      "version": "arxiv:2611.99800:v1"
+    },
+    {
+      "size": "mobile",
+      "theme": "dark",
+      "resolvedTheme": {
+        "attribute": "dark",
+        "canvas": "rgb(10, 10, 10)"
+      },
+      "route": "library",
+      "title": "CI synthetic long abstract agent navigation study",
+      "version": "arxiv:2611.99800:v1"
+    }
+  ],
+  "blocked": [],
+  "errors": []
+}

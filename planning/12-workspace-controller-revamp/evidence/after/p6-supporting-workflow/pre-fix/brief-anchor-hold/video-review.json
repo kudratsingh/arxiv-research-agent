@@ -1,0 +1,40 @@
+{
+  "mode": "actual Playwright WebM; decoded representative frames",
+  "videos": [
+    {
+      "path": "recordings/desktop-dark.webm",
+      "duration": "00:00:10.96",
+      "decodedFramesAtSeconds": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "decodeErrors": []
+    },
+    {
+      "path": "recordings/mobile-light.webm",
+      "duration": "00:00:09.68",
+      "decodedFramesAtSeconds": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "decodeErrors": []
+    }
+  ]
+}
