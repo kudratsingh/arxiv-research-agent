@@ -14,6 +14,14 @@ order boundaries below are recommendations for implementation with the owner.
 No subscription, paid inference, hosted service or notification delivery is
 enabled by this kit.
 
+## Two-mode direction adopted 2026-11-04
+
+The additive [Explore & Learn / Research kit](../14-explore-and-research-modes/README.md)
+records the next product direction: learning without a required research question
+and persistent project-based investigation, sharing Library, Reader and exact
+source links. It does not change current benchmark freezes or enable everyday
+generation. Controller P7/P8 and the bounded diagnostic report continue separately.
+
 ## Read and use the kit
 
 | File | Purpose |

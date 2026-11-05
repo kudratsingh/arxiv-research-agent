@@ -43,6 +43,11 @@ Living log of enterprise-readiness plans, feature ideas, and roadmap for the arx
     architecture, phased work orders, gates, test impact, a verified local stack
     and a copyable agent prompt.
 
+14. [Explore & Learn and Research](14-explore-and-research-modes/README.md) — the
+    owner-adopted two-mode direction: question-free learning, project-driven
+    investigation, shared Library/Reader/provenance and separately evaluated
+    discovery. Planning only; current controller and benchmark remain intact.
+
 ## How to use this folder
 
 - **Add ideas freely** — new files or new sections in existing files. Keep it a scratchpad, not a spec.
