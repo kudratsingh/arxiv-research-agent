@@ -14,7 +14,6 @@ import { useWorkspace } from "@/lib/workspace/useWorkspace";
 import { useReadingActions } from "@/lib/workspace/useReadingActions";
 import {
   Coverage,
-  GenerationBoundary,
   LoadingState,
   Message,
   ServiceNotice,
@@ -23,10 +22,12 @@ import {
 import { neighbours, readerTarget, resolveFocus, todayEditionQueue, todayQueue } from "@/lib/workspace/queue";
 import { setQueryParam, useQueryParam } from "@/lib/workspace/urlState";
 import { dispatchWorkspaceCommand } from "@/lib/workspace/dispatch";
-import { FocusPaper } from "./FocusPaper";
 import { QueueList } from "./Queue";
 import { PlayerBar } from "./PlayerBar";
 import { ControlBar, SidebarSection, StageHeaderSlot } from "./Slots";
+
+const FocusPaper = lazy(() => import("./FocusPaper").then(paper => ({ default: paper.FocusPaper })));
+import GenerationBoundary from "./GenerationBoundary";
 import { Mascot } from "./Mascot";
 import { Icon } from "./Icon";
 import { useSyntheticPreview } from "./PreviewContext";
@@ -170,7 +171,7 @@ export function LiveToday() {
         </div></div> : !focused ? <div className="daily-empty ws-empty"><Mascot mood="sleepy" size={72} /><div>
           <h2>{state.sources.some((source) => !sourceAvailable(source)) ? "No matching items in the available checks." : "Nothing new matched this reading window."}</h2>
           <p>Review the source coverage above, adjust your interests, or inspect all stored metadata in Radar.</p>
-        </div></div> : <FocusPaper position={{ index: position.index, count: position.count }} item={focused} versionId={pinnedVersion} href={href} />}
+        </div></div> : <Suspense fallback={<p className="daily-muted" aria-busy="true">Opening the selected paper…</p>}><FocusPaper position={{ index: position.index, count: position.count }} item={focused} versionId={pinnedVersion} href={href} /></Suspense>}
         {latest && <p className="daily-muted ws-shortlist-end">That’s this edition’s shortlist. Its source check, profile revision {latest.profile_revision}, and cutoff are retained.</p>}
       </section>
       {latest && <details className="workspace-edition-details" onToggle={(event) => setEditionOpen(event.currentTarget.open)}><summary>Edition details · {latest.work_ids.length} items · about {latest.minutes} minutes</summary>

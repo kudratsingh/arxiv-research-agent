@@ -661,11 +661,9 @@ describe("the committed budgets.json encodes RC-01 in bytes", () => {
     // did not exist then.
     ["route-js-learn-progress", 169_984, null],
     ["shared-framework-runtime", 139_264, null],
-    // WO-W13 ratcheted this one UP, 11,264 -> 12,288: the guided-read
-    // session's two-column margin measured 11,335 B, 71 B over the WO-31
-    // ceiling. 12 KiB is the smallest whole-KiB ceiling above it and keeps
-    // less proportional headroom than the ceiling it replaces.
-    ["emitted-css", 17_408, 4_288],
+    // WO-7.5: consolidated CSS measures 23,941 B. The approved ceil512
+    // (measured * 1.06) ratchet is 25,600 B, below the 26,624 B hard cap.
+    ["emitted-css", 25_600, 4_288],
     ["self-hosted-fonts", 109_568, 0],
     // The one row WO-31 could not ratchet: its `enforcedBy` names a WO-21
     // Playwright transfer assertion that was never written, so there is no
@@ -673,8 +671,8 @@ describe("the committed budgets.json encodes RC-01 in bytes", () => {
     ["total-transferred-js", 245_760, null],
     // Mechanical: this row is defined as route-js-conversation +
     // emitted-css + self-hosted-fonts, so the CSS movement above moves it by
-    // the same delta. Live: 192,512 + 17,408 + 109,568 = 319,488.
-    ["derived-total-first-load", 319_488, null],
+    // the same delta. Live: 192,512 + 25,600 + 109,568 = 327,680.
+    ["derived-total-first-load", 327_680, null],
     ["route-js-daily-today", 163_840, null],
     ["route-js-daily-interests", 163_840, null],
     ["route-js-daily-library", 163_840, null],
@@ -748,6 +746,15 @@ describe("the committed budgets.json encodes RC-01 in bytes", () => {
         );
       });
     }
+  });
+
+  it("keeps the measured P7 CSS ratchet within the approved cap and six percent headroom rule", () => {
+    const movement = budgets.ratchet?.findLast(entry => entry.row === "emitted-css");
+    expect(movement?.measuredBytes).toBe(23_941);
+    expect(movement?.to).toBe(Math.ceil(23_941 * 1.06 / 512) * 512);
+    expect(movement?.to).toBeLessThanOrEqual(26_624);
+    expect(budgets.rows.find(row => row.id === "derived-total-first-load")?.budgetBytes)
+      .toBe(192_512 + 25_600 + 109_568);
   });
 
   it("carries the shared framework/runtime movements with their measured justifications", () => {

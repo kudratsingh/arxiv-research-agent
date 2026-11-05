@@ -51,7 +51,7 @@ beforeEach(() => {
   }));
 });
 afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); });
-async function mount() { const view = render(<WorkspaceShell><LiveRadar /></WorkspaceShell>); await screen.findByRole("button", { name: "Show paper 1 of 4: Alpha" }); return view; }
+async function mount() { const view = render(<WorkspaceShell><LiveRadar /></WorkspaceShell>); await screen.findByRole("button", { name: "Show paper 1 of 4: Alpha" }); await waitFor(() => expect(screen.queryByText("Opening the selected paper…")).not.toBeInTheDocument()); return view; }
 function focused(title: string) { const articles = screen.getAllByRole("article"); expect(articles).toHaveLength(1); expect(within(articles[0]!).getByRole("heading", { level: 3 })).toHaveTextContent(title); }
 
 describe("Radar controller", () => {

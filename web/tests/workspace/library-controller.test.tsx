@@ -47,7 +47,7 @@ beforeEach(() => {
   }));
 });
 afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); });
-async function mount() { const view = render(<WorkspaceShell><LiveLibrary /></WorkspaceShell>); await screen.findByRole("combobox", { name: "Library view" }); return view; }
+async function mount() { const view = render(<WorkspaceShell><LiveLibrary /></WorkspaceShell>); await screen.findByRole("combobox", { name: "Library view" }); await waitFor(() => expect(screen.queryByText("Opening the selected paper…")).not.toBeInTheDocument()); return view; }
 async function openImport(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByText("Import preview notes", { selector: "summary" }));
   await screen.findByRole("button", { name: "Preview browser import" });

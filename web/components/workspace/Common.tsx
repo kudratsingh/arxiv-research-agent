@@ -2,6 +2,7 @@
 
 import type { SourceStatus } from "@/lib/workspace/api";
 import { displayDate } from "@/lib/workspace/api";
+import { Mascot } from "./Mascot";
 import { useSyntheticPreview } from "./PreviewContext";
 
 /** One polite mutation result per live route; errors share this region. */
@@ -12,7 +13,6 @@ export function Message({ children }: { children: React.ReactNode }) {
     </p>
   );
 }
-
 export function LoadingState({
   error,
   retry,
@@ -21,7 +21,7 @@ export function LoadingState({
   retry: () => void;
 }) {
   return error ? (
-    <div className="workspace-alert error">
+    <div className="workspace-alert error" data-workspace-unavailable="">
       <h1>Workspace unavailable</h1>
       <p>{error}</p>
       <p>No fictional items have been substituted.</p>
@@ -39,6 +39,7 @@ export function LoadingState({
 export function ServiceNotice({ error }: { error: string }) {
   return error ? (
     <div className="workspace-alert error">
+      <Mascot mood="alert" />
       <p>{error}</p>
       <p>
         The records below are the last loaded view. Unsaved edits are not
@@ -95,22 +96,5 @@ export function Coverage({ sources, children }: { sources: SourceStatus[]; child
         ))}
       </ul>
     </details>
-  );
-}
-
-export function GenerationBoundary() {
-  return (
-    <div className="daily-generation">
-      <span className="daily-eyebrow">Grounded analysis · later milestone</span>
-      <h3>Follow the source first.</h3>
-      <p>
-        Grounded summaries and guided deep dives need a separately approved
-        source scope, model and spending ceiling. Reading and your notes are
-        available now.
-      </p>
-      <button className="daily-secondary" disabled>
-        Generation awaiting approval
-      </button>
-    </div>
   );
 }

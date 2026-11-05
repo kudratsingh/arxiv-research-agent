@@ -100,7 +100,7 @@ export function LiveOperations() {
         {task.reason != null && <p>{String(task.reason)}</p>}<p className="workspace-note-context">Attempt {String(task.attempts ?? task.attempt ?? "not recorded")}</p></article>)}
     </section>
     <div className="daily-generation"><h3>Generation stays separate.</h3><p>Metadata checks do not construct model clients. Grounded summaries and deep dives remain blocked until a separate source-and-budget approval is recorded.</p></div>
-    <ControlBar><div className="ws-operations-actions">
+    <ControlBar><div className="ws-operations-actions" aria-busy={busy}>
       <button type="button" className="daily-secondary" data-command="prev" aria-label="Previous source" disabled={busy || index <= 0} onClick={() => choose(sources[index - 1]!.source_id)}>Previous</button>
       <span className="ws-operations-position">{focused ? `${index + 1} / ${sources.length}` : "No source"}</span>
       <button type="button" className="daily-secondary" data-command="next" aria-label="Next source" disabled={busy || index < 0 || index >= sources.length - 1} onClick={() => choose(sources[index + 1]!.source_id)}>Next</button>

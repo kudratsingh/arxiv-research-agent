@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { requestPaperNavigation } from "@/lib/workspace/navigation";
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import {
   errorMessage,
   readerHref,
@@ -14,10 +14,11 @@ import { LoadingState, Message, ServiceNotice } from "./Common";
 import { neighbours, readerTarget, resolveFocus } from "@/lib/workspace/queue";
 import { setQueryParam, useQueryParam } from "@/lib/workspace/urlState";
 import { dispatchWorkspaceCommand } from "@/lib/workspace/dispatch";
-import { FocusPaper } from "./FocusPaper";
 import { PlayerBar } from "./PlayerBar";
 import { QueueList } from "./Queue";
 import { ControlBar, SidebarSection, StageHeaderSlot } from "./Slots";
+
+const FocusPaper = lazy(() => import("./FocusPaper").then(paper => ({ default: paper.FocusPaper })));
 import { Mascot } from "./Mascot";
 import { useSyntheticPreview } from "./PreviewContext";
 
@@ -262,7 +263,7 @@ export function LiveRadar() {
     <div className="daily-section-heading ws-focus-section-heading"><h2>Stored source records</h2><span>{loading ? "Loading stored result window…" : page ? `${items.length} on this page · stable observation cutoff` : "No successful result window loaded"}</span></div>
     {loading && <div className="ws-radar-state" aria-busy="true"><Mascot mood="busy" /><p>Loading this stored result window…</p></div>}
     {!loading && !page && <div className="ws-radar-state"><Mascot mood="alert" /><h2>This stored result window could not be loaded.</h2><button type="button" className="daily-secondary" onClick={() => navigate(applied ?? fromURL())}>Retry stored results</button></div>}
-    {focused && retained && <FocusPaper position={{ index: position.index, count: position.count }} item={focused} href={href} />}
+    {focused && retained && <Suspense fallback={<p className="daily-muted" aria-busy="true">Opening the selected paper…</p>}><FocusPaper position={{ index: position.index, count: position.count }} item={focused} href={href} /></Suspense>}
     {focused && !retained && <section className="daily-empty ws-radar-state">
       <h2>This retained source version is unavailable.</h2>
       <p>Your saved reading position remains attached to {target?.version}. A newer version has not been substituted.</p>

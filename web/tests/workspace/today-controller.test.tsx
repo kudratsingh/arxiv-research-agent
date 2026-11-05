@@ -68,6 +68,7 @@ afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 async function mount() {
   const result = render(<WorkspaceShell><LiveToday /></WorkspaceShell>);
   await screen.findByRole("heading", { level: 1, name: /What changed/ });
+  await screen.findByRole("article");
   return result;
 }
 function focused(title: string) {
@@ -197,6 +198,7 @@ describe("Today controller", () => {
   it("keeps synthetic preview source checks disabled with a clear explanation", async () => {
     render(<SyntheticPreviewProvider enabled><WorkspaceShell><LiveToday /></WorkspaceShell></SyntheticPreviewProvider>);
     await screen.findByRole("heading", { level: 1, name: /What changed/ });
+  await screen.findByRole("article");
     await userEvent.setup().click(screen.getByText(/Sample source checks:/));
     expect(screen.getByRole("button", { name: "Check sources now" })).toBeDisabled();
     expect(screen.getByText(/Live source checks are disabled in this synthetic design preview/)).toBeInTheDocument();

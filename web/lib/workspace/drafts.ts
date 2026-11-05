@@ -59,3 +59,5 @@ export function storeDraft(
     throw new Error("Draft storage is full");
   sessionStorage.setItem(DRAFT_KEY, raw);
 }
+
+export const DRAFT_NAVIGATION_NOTICE = "Save or copy your unsaved text before leaving this source version. Browser draft recovery is unavailable.";

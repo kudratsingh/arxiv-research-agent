@@ -169,7 +169,7 @@ function InterestsEditor({ state, setState, error }: { state: WorkspaceState; se
       </div>
       <ServiceNotice error={error} />
       <form id={formId} onSubmit={(event) => void save(event)}>
-        <fieldset className="ws-interest-fields" disabled={busy}>
+        <fieldset className="ws-interest-fields" disabled={busy} aria-busy={busy}>
         <section className="daily-lens">
           <div id="interest-question" tabIndex={-1}>
             <label>

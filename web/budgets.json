@@ -172,6 +172,27 @@
       "pr": "W2-W6 durable live workspace follow-up",
       "measuredBytes": 311507,
       "why": "Reported only, defined as conversationJS192512 + CSS17408 + fonts109568 =319488. Follows CSS allowance by1536B."
+    },
+    {
+      "row": "emitted-css",
+      "from": 17408,
+      "to": 25600,
+      "date": "2026-11-04",
+      "pr": "WO-7.5 \u2014 controller CSS consolidation and scoped command polish",
+      "authority": "Owner-approved P7 ratchet: delete components/workspace/workspace.css; ceil(measuredBytes * 1.06 / 512) * 512, hard cap 26624 B. E58 reuse deviation retains byte-identical daily.css foundations rather than duplicate them.",
+      "measuredBytes": 23941,
+      "headroom": "+6.93% (1659 B)",
+      "why": "The consolidated controller removes legacy workspace.css and dead/overridden scoped declarations while preserving all seven live routes and their existing form/focus foundations. Reusing byte-identical daily.css avoids duplicating identical foundations; this is an explicitly approved E58 architecture deviation, not a budget exception. The actual gzip-6 CSS sum is 23941 B; rounding its 6% headroom upward to 512 B gives 25600 B, below the unchanged 26624 B hard cap. All JavaScript ceilings and coverage floors remain unchanged."
+    },
+    {
+      "row": "derived-total-first-load",
+      "from": 319488,
+      "to": 327680,
+      "date": "2026-11-04",
+      "pr": "WO-7.5 \u2014 controller CSS consolidation and scoped command polish",
+      "measuredBytes": 319743,
+      "headroom": "+2.48% (7937 B)",
+      "why": "This reported row is mechanically the sum of the unchanged conversation JavaScript ceiling (192512 B), the newly measured and ratified CSS ceiling (25600 B), and unchanged fonts ceiling (109568 B). It therefore moves by exactly the same 8192 B CSS delta to 327680 B. It remains reported rather than gated and does not grant any additional JavaScript or font allowance."
     }
   ],
   "rows": [
@@ -269,8 +290,8 @@
       "id": "emitted-css",
       "kind": "emitted-css",
       "label": "All emitted CSS",
-      "budgetBytes": 17408,
-      "budgetLabel": "17 KiB",
+      "budgetBytes": 25600,
+      "budgetLabel": "25 KiB",
       "baselineBytes": 4288,
       "gate": "every PR",
       "enforcement": "gated",
@@ -304,8 +325,8 @@
       "id": "derived-total-first-load",
       "kind": "derived-total-first-load",
       "label": "Derived: total first-load transfer for `/c/[id]`, cold cache",
-      "budgetBytes": 319488,
-      "budgetLabel": "312 KiB",
+      "budgetBytes": 327680,
+      "budgetLabel": "320 KiB",
       "baselineBytes": null,
       "gate": "reported, not gated",
       "enforcement": "reported",

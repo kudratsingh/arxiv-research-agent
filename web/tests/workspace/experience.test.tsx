@@ -115,8 +115,10 @@ beforeEach(() => {
   );
 });
 afterEach(() => vi.unstubAllGlobals());
-const load = async () =>
+const load = async () => {
   expect(await screen.findByRole("heading", { level: 1 })).toBeInTheDocument();
+  await waitFor(() => expect(screen.queryByText("Opening the selected paper…")).not.toBeInTheDocument());
+};
 
 async function openPreviewImport(user: ReturnType<typeof userEvent.setup>) {
   const disclosure = screen.getByText("Import preview notes", { exact: true });
