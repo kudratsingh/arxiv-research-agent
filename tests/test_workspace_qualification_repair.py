@@ -65,7 +65,7 @@ def react(store):
 
 def outside(value, material):
     draft = json.loads(value["content"][0]["text"])
-    draft["claims"][0]["handles"] = [next(iter(evidence_catalog([material], {material.spans[0].span_id})))]
+    draft["claims"][0]["evidence_handle"] = next(iter(evidence_catalog([material], {material.spans[0].span_id})))
     return {**value, "content": [{"type": "text", "text": json.dumps(draft)}]}
 
 
@@ -87,7 +87,7 @@ async def test_page3_only_approval_refuses_valid_page1_reference_at_every_stage(
                     "SELECT data FROM workspace_generation_jobs WHERE id=%s", (job,)
                 ).fetchone()[0]
                 draft = data["adapter"]["steps"][-1]["output"]
-                draft["claims"][0]["handles"] = [next(iter(evidence_catalog([material], {material.spans[0].span_id})))]
+                draft["claims"][0]["evidence_handle"] = next(iter(evidence_catalog([material], {material.spans[0].span_id})))
                 conn.execute(
                     "UPDATE workspace_generation_jobs SET data=%s WHERE id=%s", (Jsonb(data), job)
                 )
@@ -105,7 +105,7 @@ async def test_page3_only_approval_refuses_valid_page1_reference_at_every_stage(
 
             adapter.transport = httpx.MockTransport(changed)
     before = len(transport.calls)
-    with pytest.raises(p.AdmissionError, match="unselected_span"):
+    with pytest.raises(ValueError, match="Input should be"):
         await adapter.advance(job)
     assert len(transport.calls) == before + (0 if stage == "checker_request" else 2)
     assert adapter.snapshot(job)["result"] is None
@@ -163,7 +163,7 @@ async def test_wire_and_local_semantics_reject_the_old_mapping_and_invalid_secti
         with pytest.raises(ValidationError):
             validator.validate(invalid)
         with pytest.raises(ValueError):
-            draft_schema("summary").model_validate(invalid)
+            draft_schema("summary", [json.loads(wire["body"]["messages"][0]["content"])["evidence"][0]["handle"]]).model_validate(invalid)
     resolved = adapter._draft(valid).model_dump(mode="json")
     for sections in (
         [{"name": "overview", "claim_ids": ["missing"]}],

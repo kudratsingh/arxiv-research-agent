@@ -29,7 +29,7 @@ def test_sonnet55_seals_compatible_shape_and_verified_rates(store, kind, cap):
     )
     body = adapter.request()["body"]
     assert inputs.model_id == body["model"] == "claude-sonnet-5-5"
-    assert inputs.prompt_revision == "workspace-qualification-adapter-v7-stage-scoped-context"
+    assert inputs.prompt_revision == "workspace-qualification-adapter-v8-single-selected-evidence"
     assert body["thinking"] == {"type": "between_tools"}
     assert body["output_config"]["effort"] == settings["effort"] == "medium"
     assert body["max_tokens"] == cap
@@ -59,7 +59,7 @@ def test_changed_thinking_effort_refused_as_sealed_drift(store, change):
 
 def test_v2_and_old_model_approval_cannot_authorize_new_requests(store):
     packet = measurement.fixture(store)
-    with pytest.raises(AdmissionError, match="bounded_v7_stage_context_packet_required"):
+    with pytest.raises(AdmissionError, match="bounded_v8_single_evidence_packet_required"):
         qualification_run.bound_jobs(store, "a", {**packet, "revision": "workspace-qualification-packet-v2"})
     _, inputs = qualification_run.bound_jobs(store, "a", packet)[0]
     support.admission.policy(

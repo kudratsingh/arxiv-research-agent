@@ -86,7 +86,7 @@ class Transport:
                 "abstention": None,
                 "title": "Mock transport draft",
                 "claims": [{"claim_id": "c1", "text": "The retained source reports a fixed evaluation.",
-                            "handles": [context["evidence"][0]["handle"]], "section": "overview"}],
+                            "evidence_handle": context["evidence"][0]["handle"], "section": "overview"}],
                 "question": "Which evaluation setting limits this finding?",
                 "limitation": "Retained excerpts only; omitted pages were not reviewed.",
                 "proposal": "Propose a fixed-baseline replication." if self.inputs.kind == "deep_dive" else None,
@@ -94,7 +94,7 @@ class Transport:
         schema = body["output_config"]["format"]["schema"]
         Draft202012Validator.check_schema(schema)
         Draft202012Validator(schema).validate(json.loads(json.dumps(output)))
-        (p.Checks if context["stage"] == "check" else draft_schema(self.inputs.kind)).model_validate(output)
+        (p.Checks if context["stage"] == "check" else draft_schema(self.inputs.kind, [e["handle"] for e in context["evidence"]])).model_validate(output)
         value = {
             "id": "msg_synthetic_" + str(len(self.calls)),
             "model": p.MODEL,

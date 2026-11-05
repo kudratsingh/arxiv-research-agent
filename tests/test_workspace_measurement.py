@@ -234,7 +234,7 @@ async def test_runner_modes_packet_binding_restart_and_experiment_round_trip(
     first, inputs = run.bound_jobs(store, "a", packet)[0]
     with pytest.raises(AdmissionError, match="qualification_mode"):
         await run.execute(store, "a", packet, "wrong")
-    with pytest.raises(AdmissionError, match="bounded_v7"):
+    with pytest.raises(AdmissionError, match="bounded_v8"):
         run.bound_jobs(store, "a", {**packet, "jobs": []})
     duplicate = {**packet, "jobs": [packet["jobs"][0]] * 4}
     with pytest.raises(AdmissionError, match="distinct"):

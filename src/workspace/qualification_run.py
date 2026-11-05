@@ -24,8 +24,9 @@ from src.workspace.admission import (
     SourceRef,
     _digest,
 )
+from src.workspace.evidence_contract import evidence_catalog
 from src.workspace.measurement import MeasurementAdapter
-from src.workspace.provider_adapter import QualificationAdapter
+from src.workspace.provider_adapter import QualificationAdapter, response_schemas
 from src.workspace.store import WorkspaceStore
 
 
@@ -34,10 +35,10 @@ def bound_jobs(
 ) -> list[tuple[dict[str, Any], GenerationInput]]:
     jobs = []
     if (
-        packet.get("revision") != "workspace-qualification-packet-v7-stage-scoped-context"
+        packet.get("revision") != "workspace-qualification-packet-v8-single-selected-evidence"
         or not 1 <= len(packet.get("jobs", [])) <= 20
     ):
-        raise AdmissionError("bounded_v7_stage_context_packet_required")
+        raise AdmissionError("bounded_v8_single_evidence_packet_required")
     for job in packet["jobs"]:
         raw = job["sealed_input"]
         inputs = GenerationInput(
@@ -53,9 +54,13 @@ def bound_jobs(
         )
         wire = adapter.request()
         count = {k: v for k, v in wire["body"].items() if k not in {"max_tokens", "temperature"}}
+        _, materials = adapter._context()
+        schemas = response_schemas(inputs.kind, tuple(evidence_catalog(
+            materials, set(inputs.settings["selection"]["span_ids"]))))
         digest = _digest(inputs.snapshot())
         if (
-            job["input_digest"] != digest
+            job.get("schemas") != schemas
+            or job["input_digest"] != digest
             or job["initial_generation"] != wire
             or job["initial_count_request"] != count
             or job["count_request_digest"] != _digest(count)

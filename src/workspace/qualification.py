@@ -18,10 +18,10 @@ from anthropic import transform_schema
 
 from src.tools.postgres_pool import close_pool, get_pool
 from src.workspace.admission import _digest
-from src.workspace.evidence_contract import ExcerptStudyDraft, SummaryDraft
+from src.workspace.evidence_contract import ExcerptStudyDraft, SummaryDraft, evidence_catalog
 from src.workspace.grounding import ClaimKind, ResearchClaim, evidence_ref
 from src.workspace.material import SourceMaterial
-from src.workspace.provider_adapter import Checks, QualificationAdapter, prepare
+from src.workspace.provider_adapter import QualificationAdapter, prepare, response_schemas
 from src.workspace.store import WorkspaceStore
 
 
@@ -96,6 +96,9 @@ def packet(store: WorkspaceStore, owner: str, proposal: dict[str, Any]) -> dict[
         )
         initial = adapter.request()
         count = {k: v for k, v in initial["body"].items() if k not in {"max_tokens", "temperature"}}
+        _, materials = adapter._context()
+        schemas = response_schemas(inputs.kind, tuple(evidence_catalog(
+            materials, set(inputs.settings["selection"]["span_ids"]))))
         jobs.append(
             {
                 "proposed_request_id": "qualification-" + _digest(inputs.snapshot())[:40],
@@ -106,15 +109,15 @@ def packet(store: WorkspaceStore, owner: str, proposal: dict[str, Any]) -> dict[
                 "count_request_digest": _digest(count),
                 "measurement_request_id": "measurement-" + _digest(inputs.snapshot())[:40],
                 "measured_tokens": None,
+                "schemas": schemas,
                 "dynamic_stages": ["check", "optional repair", "mandatory repair recheck"],
                 "status": "unapproved; no provider contact",
             }
         )
-        _, materials = adapter._context()
         if item["job_kind"] == "summary":
             selected.append(materials[0])
     return {
-        "revision": "workspace-qualification-packet-v7-stage-scoped-context",
+        "revision": "workspace-qualification-packet-v8-single-selected-evidence",
         "approved": False,
         "provider_contacts": 0,
         "actual_usd": "0",
@@ -122,15 +125,17 @@ def packet(store: WorkspaceStore, owner: str, proposal: dict[str, Any]) -> dict[
         "claim_span_review": review_cases(selected),
         "everyday_generation": False,
         "checker_qualified": False,
-        "schemas": {
+        "schema_templates": {
             name: {
+                "dispatched": False,
+                "basis": "Generic template only; exact catalog-bound schemas are exported per job.",
                 "local": model.model_json_schema(),
                 "wire": transform_schema(model),
                 "local_digest": _digest(model.model_json_schema()),
                 "wire_digest": _digest(transform_schema(model)),
             }
             for name, model in (("summary_draft_and_repair", SummaryDraft),
-                                ("study_draft_and_repair", ExcerptStudyDraft), ("checker", Checks))
+                                ("study_draft_and_repair", ExcerptStudyDraft))
         },
         "measurement_only": {
             "purpose": "workspace-measurement-only",

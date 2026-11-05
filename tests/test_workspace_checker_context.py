@@ -89,6 +89,8 @@ async def test_exact_stage_wires_keep_original_selection_and_only_cited_checker_
             expected = [{"claim": asdict(claim), "input_digest": claim_input_digest(claim, materials)}
                         for claim in draft.claims if claim.kind == ClaimKind.FACTUAL]
             assert context["claims"] == json.loads(json.dumps(expected))
+            assert all(len(item["claim"]["evidence"]) == 1 and
+                       len(item["claim"]["evidence"][0]["quote"]) <= 240 for item in context["claims"])
             check_digests.append(context["claims"][0]["input_digest"])
         else:
             assert wire["body"]["system"] == p.SYSTEM
@@ -131,7 +133,7 @@ async def test_repair_projection_cannot_hide_corrupt_checker_feedback(store, fie
     assert len(transport.calls) == calls
 
 
-def test_v7_context_seal_and_strict_v6_packet_rejection(store):
+def test_v8_context_seal_and_strict_v7_packet_rejection(store):
     inputs = support.prepared(store)
     assert inputs.settings["context_revision"] == p.CONTEXT_REVISION
     assert inputs.settings["checker_system_digest"] == _digest(p.CHECKER_SYSTEM)
@@ -141,8 +143,8 @@ def test_v7_context_seal_and_strict_v6_packet_rejection(store):
         with pytest.raises(AdmissionError, match="sealed_execution_drift"):
             p.QualificationAdapter(store, "a", changed, transport=httpx.MockTransport(lambda _: pytest.fail("no contact")))
     packet = qualification.packet(store, "a", {"sources": [{"material_id": inputs.sources[0].material_id, "job_kind": "summary"}]})
-    assert packet["revision"] == "workspace-qualification-packet-v7-stage-scoped-context"
+    assert packet["revision"] == "workspace-qualification-packet-v8-single-selected-evidence"
     never_read = Mock(side_effect=AssertionError("reject stale revision before source binding"))
-    with pytest.raises(AdmissionError, match="bounded_v7_stage_context"):
-        qualification_run.bound_jobs(never_read, "a", {**packet, "revision": "workspace-qualification-packet-v6-typed-summary-handles"})
+    with pytest.raises(AdmissionError, match="bounded_v8_single_evidence"):
+        qualification_run.bound_jobs(never_read, "a", {**packet, "revision": "workspace-qualification-packet-v7-stage-scoped-context"})
     never_read.assert_not_called()

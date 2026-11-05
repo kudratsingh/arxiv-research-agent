@@ -9,26 +9,30 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import asdict
-from typing import Literal
+from enum import StrEnum
+from types import GenericAlias
+from typing import Literal, cast
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, create_model, model_validator
 
 from src.workspace.grounding import EvidenceRef, evidence_ref
 from src.workspace.material import SourceMaterial
 
-CONTRACT_REVISION = "sealed-evidence-handles-v1"
+CONTRACT_REVISION = "sealed-single-selected-evidence-handle-v2"
 SLICE_CHARS = 240
 MAX_HANDLES = 200
 
 
 class HandleClaim(BaseModel):
+    """Generic non-dispatched template; the request factory closes its handle enum."""
+
     model_config = ConfigDict(extra="forbid", frozen=True)
     # The SDK strips regex patterns from the wire. This finite enum survives.
     claim_id: Literal["c1", "c2", "c3"]
     text: str = Field(min_length=1, max_length=240)
-    handles: tuple[str, ...] = Field(min_length=1, max_length=2)
+    evidence_handle: str
     section: Literal["overview", "method", "assumptions", "comparison"] = "overview"
 
 
@@ -53,8 +57,8 @@ class CompactDraft(BaseModel):
             or any(c.section != "overview" for c in self.claims)
         ):
             raise ValueError("summary_bounds_or_sections")
-        if any(len(set(c.handles)) != len(c.handles) or not c.text.strip() for c in self.claims):
-            raise ValueError("invalid_claim_or_duplicate_handle")
+        if any(not c.text.strip() for c in self.claims):
+            raise ValueError("invalid_claim_text")
         limit = 1800 if self.kind == "summary" else 2800
         if len(json.dumps(self.model_dump(mode="json"), ensure_ascii=False).encode()) > limit:
             raise ValueError("compact_response_byte_limit")
@@ -78,12 +82,31 @@ class ExcerptStudyDraft(CompactDraft):
     kind: Literal["deep_dive"] = Field(json_schema_extra={"enum": ["deep_dive"]})
 
 
-def draft_schema(kind: str) -> type[CompactDraft]:
-    if kind == "summary":
-        return SummaryDraft
-    if kind == "deep_dive":
-        return ExcerptStudyDraft
-    raise ValueError("invalid_draft_kind")
+def draft_schema(kind: str, selected_handles: Sequence[str]) -> type[CompactDraft]:
+    """Exact local/wire response model, closed over this request's selected IDs.
+
+    Base draft/claim classes are non-dispatched templates. Sorted enum members
+    and catalog-derived names make schema identity independent of call order.
+    Even a one-element enum remains an enum after the SDK's const stripping.
+    """
+    bases: dict[str, tuple[type[CompactDraft], type[HandleClaim], int]] = {"summary": (SummaryDraft, SummaryClaim, 2),
+             "deep_dive": (ExcerptStudyDraft, HandleClaim, 3)}
+    if kind not in bases:
+        raise ValueError("invalid_draft_kind")
+    if any(not isinstance(h, str) or not h.strip() for h in selected_handles):
+        raise ValueError("invalid_selected_handle_enum")
+    handles = tuple(sorted(set(selected_handles)))
+    if not handles or len(handles) > MAX_HANDLES:
+        raise ValueError("invalid_selected_handle_enum")
+    identity = hashlib.sha256(json.dumps([kind, handles]).encode()).hexdigest()[:20]
+    # Dynamic catalog values cannot be declared as a static enum class.
+    enum_factory = cast(Callable[[str, dict[str, str]], type[StrEnum]], StrEnum)
+    handle_type = enum_factory("SelectedEvidence_" + identity, {f"E{i}": h for i, h in enumerate(handles)})
+    draft_base, claim_base, maximum = bases[kind]
+    claim_model = create_model("SelectedClaim_" + identity, __base__=claim_base,
+                               evidence_handle=(handle_type, ...))
+    return create_model("SelectedDraft_" + identity, __base__=draft_base,
+                        claims=(GenericAlias(tuple, (claim_model, Ellipsis)), Field(max_length=maximum)))
 
 
 def evidence_catalog(

@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import copy
 import json
 from unittest.mock import Mock
 
 import pytest
 
 from src.workspace import qualification as q
+from src.workspace import qualification_run
+from src.workspace.admission import AdmissionError, _digest
 from src.workspace.material import extract_text
 from tests import test_workspace_executor as support
 
@@ -74,6 +77,12 @@ def test_exact_requests_read_only_and_cli_never_contact_or_approve(
         body = job["initial_generation"]["body"]
         assert body["model"] == "claude-sonnet-5-5" and "output_config" in body
         assert job["measured_tokens"] is None
+        schemas = job["schemas"]
+        assert schemas["draft_and_repair"]["wire"] == body["output_config"]["format"]["schema"]
+        assert schemas["draft_and_repair"]["local_digest"] == _digest(schemas["draft_and_repair"]["local"])
+        settings = job["sealed_input"]["settings"]
+        assert settings["schema_digest"] == _digest([schemas["draft_and_repair"]["local"], schemas["checker"]["local"]])
+        assert settings["wire_schema_digest"] == _digest([schemas["draft_and_repair"]["wire"], schemas["checker"]["wire"]])
         assert job["initial_count_request"] == {
             k: v for k, v in body.items() if k not in {"max_tokens", "temperature"}
         }
@@ -115,3 +124,19 @@ def test_packet_really_is_read_only_even_when_bootstrap_would_be_attempted(store
     assert result["provider_contacts"] == 0 and not result["approved"]
     with pytest.raises(ValueError, match="invalid_owner"):
         q.packet(store, "x" * 121, {"sources": [{"material_id": material, "job_kind": "summary"}]})
+
+
+@pytest.mark.parametrize("part", ["local", "wire", "local_digest", "wire_digest"])
+def test_exact_exported_schema_drift_refuses_packet_binding(store, part):
+    _, material, _ = support.source(store)
+    packet = q.packet(store, "a", {"sources": [{"material_id": material, "job_kind": "summary"}]})
+    assert all(template["dispatched"] is False for template in packet["schema_templates"].values())
+    assert "schemas" not in packet
+    qualification_run.bound_jobs(store, "a", packet)
+    changed = copy.deepcopy(packet)
+    changed["jobs"][0]["schemas"]["draft_and_repair"][part] = "wrong"
+    with pytest.raises(AdmissionError, match="packet_request_drift"):
+        qualification_run.bound_jobs(store, "a", changed)
+    del changed["jobs"][0]["schemas"]
+    with pytest.raises(AdmissionError, match="packet_request_drift"):
+        qualification_run.bound_jobs(store, "a", changed)
