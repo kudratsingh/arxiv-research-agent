@@ -4,6 +4,7 @@ import { LiveReader } from "@/components/workspace/Reader";
 import { storeDraft } from "@/lib/workspace/drafts";
 import { WORKSPACE_URL_EVENT } from "@/lib/workspace/urlState";
 import { workspace, work } from "./fixtures";
+import { MAT, retained, available } from "./materialFixtures";
 import type { WorkspaceState } from "@/lib/workspace/api";
 
 vi.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams(location.search) }));
@@ -43,6 +44,30 @@ describe("one exact Reader editor across product context reads", () => {
     await screen.findByLabelText("Project for this source");
     fireEvent.click(screen.getByRole("button", { name: "Learn this prerequisite" }));
     expect(await screen.findByLabelText("Thread title")).toHaveValue("");
+  });
+
+  it("carries the exact retained-material identity into evidence links without converting it to abstract scope", async () => {
+    const state = snapshot("research"), current = state.works[0]!, document = { ...retained(), work_id: current.work_id, version_id: version };
+    const material = available({ version_id: version });
+    Object.assign(current.versions[0]!, { retained_materials: [material] });
+    const projectDetail = { id: project, revision: 1, data: { title: "Exact material project", question: "What does this passage say?", scope: "", constraints: "", next_actions: [], status: "active" }, sources: [], entries: [], artifacts: [], threads: [] };
+    const writes: Record<string, unknown>[] = [];
+    history.replaceState(null, "", `${location.pathname}?version=${encodeURIComponent(version)}&mode=research&project=${project}#material:${MAT}:page:7:10:20`);
+    vi.stubGlobal("fetch", vi.fn(async (url: string, init?: RequestInit) => {
+      if (init?.body) { writes.push(JSON.parse(String(init.body))); return Response.json({ ...projectDetail, revision: 2 }); }
+      if (url.includes("/materials/")) return Response.json(document);
+      if (url.endsWith("/context")) return Response.json({ principal_key_id: state.principal_key_id, preferences: { revision: 1, data: { default_mode: "learn", learning_background: "", learning_goals: [] } }, projects: [projectDetail], threads: [] });
+      return Response.json(state);
+    }));
+    render(<LiveReader id={current.work_id} />);
+    await screen.findByRole("textbox", { name: "Your question" });
+    const disclosure = screen.getByText("Investigate this · learning and project links").closest("details")!;
+    act(() => { disclosure.open = true; disclosure.dispatchEvent(new Event("toggle")); });
+    fireEvent.change(await screen.findByLabelText("Link role"), { target: { value: "evidence" } });
+    fireEvent.click(screen.getByRole("button", { name: "Attach source to project" }));
+    await screen.findByText(/Exact source link saved/);
+    expect(writes).toHaveLength(1);
+    expect(writes[0]).toMatchObject({ role: "evidence", reference: { work_id: current.work_id, version_id: version, material_id: MAT, source_scope: "excerpt", anchor: `material:${MAT}:page:7:10:20` } });
   });
 
   it.each([false, true])("preserves the mounted textarea, text and anchor with storageUnavailable=%s", async unavailable => {
