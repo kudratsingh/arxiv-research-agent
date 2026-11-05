@@ -114,7 +114,7 @@ def packet(store: WorkspaceStore, owner: str, proposal: dict[str, Any]) -> dict[
         if item["job_kind"] == "summary":
             selected.append(materials[0])
     return {
-        "revision": "workspace-qualification-packet-v5-budgeted-handles",
+        "revision": "workspace-qualification-packet-v6-typed-summary-handles",
         "approved": False,
         "provider_contacts": 0,
         "actual_usd": "0",
@@ -146,7 +146,7 @@ def packet(store: WorkspaceStore, owner: str, proposal: dict[str, Any]) -> dict[
             ],
             "approval_record": None,
         },
-        "small_sample_caveat": "Four jobs and 24 unlabelled review cases cannot certify a false-pass bound. Human review and a separately scoped larger checker experiment may be needed.",
+        "small_sample_caveat": "This bounded packet and its unlabelled review cases cannot certify a false-pass bound. Human review and a separately scoped larger checker experiment may be needed.",
     }
 
 

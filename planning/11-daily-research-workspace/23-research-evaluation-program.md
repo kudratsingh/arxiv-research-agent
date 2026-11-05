@@ -131,3 +131,32 @@ Ruff passes and strict mypy passes168 source files. No assertions, floors or
 source/provenance checks were weakened. Raw logs are retained under
 `outputs/qualification-contract-repair/v5-*`. Remote CI is unrun for this
 local continuation.
+
+## V6 wire/local summary section repair (dispatch stopped)
+
+The V5 development attempt returned another complete `end_turn` JSON response
+(2302 input /346 output tokens), but one summary claim selected `comparison`.
+The exported schema allowed this while local summary semantics required
+`overview`. This is a response-contract defect, not model-quality acceptance.
+Its exact response is retained as `sonnet55-summary-section-mismatch.json`;
+the original request/job remains failed and its approval is inactive.
+Validated usage adds $0.008064 workflow; cumulative known program cost is
+$0.041219 with $0 unresolved,3 Messages/7 counts and2 new jobs consumed.
+No checker ran, no partial output was accepted, and q02–q10 remain uncollected.
+
+V6 narrows the summary claim wire section to its actual supported value and
+binds a new contract/schema identity. The SDK removes single-value Literal
+constants into descriptions, so explicit supported enums must survive its
+transformation. Regression fixtures verify exact transformed-wire and local
+refusal together; bounds/provenance are not weakened to accept a failed output.
+The unchanged selected source/question and scorer V3 are retained. Fresh
+development execution is conditional on offline/full gates; stopped attempts
+are never replayed or retroactively promoted.
+
+V6 final local full gate: **6130 passed,54 existing skips,53 deselected**,
+coverage94.67%, patch98% (59 missing /4183 changed-source lines). Ruff and
+strict mypy168 pass; zero-spend workflow53 pass; scripted research20/20
+succeeds at$0; registry parity260/0. The first V6 run passed6129 tests and
+failed only a stale expected V5 error-name regex; its log is preserved. The
+assertion now expects the exact V6 refusal and the complete gate was rerun.
+No assertion or coverage floor was weakened. Remote CI remains unrun.

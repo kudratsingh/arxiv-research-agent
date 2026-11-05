@@ -25,7 +25,8 @@ MAX_HANDLES = 200
 
 class HandleClaim(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
-    claim_id: str = Field(pattern=r"^c[1-3]$")
+    # The SDK strips regex patterns from the wire. This finite enum survives.
+    claim_id: Literal["c1", "c2", "c3"]
     text: str = Field(min_length=1, max_length=240)
     handles: tuple[str, ...] = Field(min_length=1, max_length=2)
     section: Literal["overview", "method", "assumptions", "comparison"] = "overview"
@@ -60,13 +61,21 @@ class CompactDraft(BaseModel):
         return self
 
 
+class SummaryClaim(HandleClaim):
+    # A single Literal emits const, which the SDK also strips. Keep its supported
+    # enum explicit so the provider cannot validly choose a study-only section.
+    section: Literal["overview"] = Field(
+        default="overview", json_schema_extra={"enum": ["overview"]}
+    )
+
+
 class SummaryDraft(CompactDraft):
-    kind: Literal["summary"]
-    claims: tuple[HandleClaim, ...] = Field(max_length=2)
+    kind: Literal["summary"] = Field(json_schema_extra={"enum": ["summary"]})
+    claims: tuple[SummaryClaim, ...] = Field(max_length=2)
 
 
 class ExcerptStudyDraft(CompactDraft):
-    kind: Literal["deep_dive"]
+    kind: Literal["deep_dive"] = Field(json_schema_extra={"enum": ["deep_dive"]})
 
 
 def draft_schema(kind: str) -> type[CompactDraft]:

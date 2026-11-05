@@ -1,0 +1,43 @@
+{
+  "basis": "Actual public-context development q01 V5 response. Failed content; never accepted. No private owner context.",
+  "request_id": "qualification-f02c906d983a4db40bae5532a0ff0eba192fe78b",
+  "source_receipt": "outputs/research-evaluation-program/continuation-v5/q01-result.json",
+  "generation_code_commit": "68f8e4bfd11aec997110d26516ea76f962bf0a36",
+  "response": {
+    "id": "msg_011CgiwaefsAKtWYErkHJW4k",
+    "role": "assistant",
+    "type": "message",
+    "model": "claude-sonnet-5-5",
+    "usage": {
+      "speed": "standard",
+      "input_tokens": 2302,
+      "service_tier": "standard",
+      "inference_geo": "global",
+      "output_tokens": 346,
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 0
+      },
+      "output_tokens_details": {
+        "thinking_tokens": 0
+      },
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0
+    },
+    "content": [
+      {
+        "text": "{\"kind\":\"summary\",\"title\":\"KEEPER: self-consistency bias in recursive textual memory\",\"claims\":[{\"claim_id\":\"c1\",\"text\":\"Recursive textual memory can carry earlier errors into later updates; self-consistency bias is the persistence of incorrect claims already in the incoming memory.\",\"handles\":[\"e29b67df25e19\"],\"section\":\"overview\"},{\"claim_id\":\"c2\",\"text\":\"KEEPER compares four auxiliary objectives on information-content and update-sensitivity axes; reward-related prediction scored highest on task performance, ahead of joint supervision.\",\"handles\":[\"ee9ac94587a9c\",\"e1de130720b5a\"],\"section\":\"comparison\"}],\"abstention\":null,\"question\":null,\"proposal\":\"Before use, seed your agent's memory with a known-wrong claim, feed corrective observations, and check whether the error persists and valid information is retained.\",\"limitation\":\"Only the abstract was retained; the persistence analysis covers one baseline trajectory, so no method details, tables or generalization are shown.\"}",
+        "type": "text"
+      }
+    ],
+    "container": null,
+    "diagnostics": null,
+    "stop_reason": "end_turn",
+    "stop_details": null,
+    "stop_sequence": null
+  },
+  "local_failure": "summary_bounds_or_sections",
+  "provider_schema_accepted": true,
+  "result_accepted": false,
+  "human_labels": null
+}

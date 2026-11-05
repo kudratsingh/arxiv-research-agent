@@ -13,7 +13,12 @@ from psycopg.types.json import Jsonb
 from pydantic import TypeAdapter
 
 from src.workspace import provider_adapter as p
-from src.workspace.evidence_contract import draft_schema, evidence_catalog, resolve_handles
+from src.workspace.evidence_contract import (
+    CompactDraft,
+    draft_schema,
+    evidence_catalog,
+    resolve_handles,
+)
 from src.workspace.executor import _material
 from src.workspace.grounding import GroundingError, ResearchClaim, validate_claims
 from src.workspace.material import extract_text
@@ -257,3 +262,107 @@ def test_checker_display_allowance_preserves_hard_payload_budget_and_wire_shape(
     invalid = {"checks": [{**v, "reason": "🙂" * 240} for v in valid["checks"]]}
     with pytest.raises(ValueError, match="checker_response_byte_limit"):
         p.Checks.model_validate(invalid)
+
+
+@pytest.mark.parametrize("section", ["overview", "method", "assumptions", "comparison"])
+def test_summary_section_is_overview_only_in_local_and_exact_wire_schema(section):
+    data = compact("summary", ["e0123456789ab"])
+    data["claims"][0]["section"] = section
+    model = draft_schema("summary")
+    wire = transform_schema(model)
+    claim_ref = wire["properties"]["claims"]["items"]["$ref"].rsplit("/", 1)[-1]
+    assert wire["$defs"][claim_ref]["properties"]["section"]["enum"] == ["overview"]
+    validator = Draft202012Validator(wire)
+    if section == "overview":
+        assert model.model_validate(data).claims[0].section == "overview"
+        validator.validate(data)
+    else:
+        with pytest.raises(ValueError):
+            model.model_validate(data)
+        assert list(validator.iter_errors(data))
+        # Preserve the original semantic guard for generic CompactDraft callers.
+        with pytest.raises(ValueError, match="summary_bounds_or_sections"):
+            CompactDraft.model_validate(data)
+
+
+@pytest.mark.parametrize("section", ["overview", "method", "assumptions", "comparison"])
+def test_study_section_vocabulary_remains_available_locally_and_on_wire(section):
+    data = compact("deep_dive", ["e0123456789ab"])
+    data["claims"][0]["section"] = section
+    model = draft_schema("deep_dive")
+    assert model.model_validate(data).claims[0].section == section
+    Draft202012Validator(transform_schema(model)).validate(data)
+
+
+def test_retained_v5_complete_comparison_response_stays_unaccepted_by_summary_contract():
+    raw = (FIXTURES / "sonnet55-summary-section-mismatch.json").read_bytes()
+    manifest = json.loads((FIXTURES / "receipt-manifest.json").read_text())
+    assert hashlib.sha256(raw).hexdigest() == manifest["sonnet55_summary_section_mismatch_sha256"]
+    retained = json.loads(raw)
+    assert retained["result_accepted"] is False and retained["human_labels"] is None
+    response = retained["response"]
+    assert response["stop_reason"] == "end_turn" and response["usage"]["output_tokens"] == 346
+    output = p.response_output(response, "claude-sonnet-5-5")
+    assert [claim["section"] for claim in output["claims"]] == ["overview", "comparison"]
+    with pytest.raises(ValueError):
+        draft_schema("summary").model_validate(output)
+    errors = list(Draft202012Validator(transform_schema(draft_schema("summary"))).iter_errors(output))
+    assert any(list(error.path) == ["claims", 1, "section"] for error in errors)
+
+
+@pytest.mark.parametrize("kind", ["summary", "deep_dive"])
+def test_exact_wire_retains_kind_and_finite_claim_id_constraints(kind):
+    model = draft_schema(kind)
+    wire = transform_schema(model)
+    assert wire["properties"]["kind"]["enum"] == [kind]
+    claim_ref = wire["properties"]["claims"]["items"]["$ref"].rsplit("/", 1)[-1]
+    assert wire["$defs"][claim_ref]["properties"]["claim_id"]["enum"] == ["c1", "c2", "c3"]
+    validator = Draft202012Validator(wire)
+    for claim_id in ["c1", "c2", "c3"]:
+        data = compact(kind, ["e0123456789ab"])
+        data["claims"][0]["claim_id"] = claim_id
+        model.model_validate(data)
+        validator.validate(data)
+    for wrong_kind in ["deep_dive" if kind == "summary" else "summary", "invented"]:
+        data = compact(wrong_kind, ["e0123456789ab"])
+        with pytest.raises(ValueError):
+            model.model_validate(data)
+        assert list(validator.iter_errors(data))
+    for wrong_id in ["c0", "c4", "invented", "", "c1\n"]:
+        data = compact(kind, ["e0123456789ab"])
+        data["claims"][0]["claim_id"] = wrong_id
+        with pytest.raises(ValueError):
+            model.model_validate(data)
+        assert list(validator.iter_errors(data))
+
+
+def test_runtime_only_semantic_limits_remain_strict_when_wire_cannot_express_them():
+    # The SDK describes unsupported cardinality/length constraints rather than
+    # enforcing them. Cross-field conditions and UTF8 byte caps also stay local.
+    model = draft_schema("summary")
+    wire = Draft202012Validator(transform_schema(model))
+    missing_abstention = compact("summary", ["e0123456789ab"])
+    missing_abstention["claims"] = []
+    wire.validate(missing_abstention)
+    with pytest.raises(ValueError, match="claims_or_explicit_abstention_required"):
+        model.model_validate(missing_abstention)
+    duplicate = compact("summary", ["e0123456789ab"])
+    duplicate["claims"] *= 2
+    wire.validate(duplicate)
+    with pytest.raises(ValueError, match="duplicate_claim_id"):
+        model.model_validate(duplicate)
+    duplicate_handles = compact("summary", ["e0123456789ab"])
+    duplicate_handles["claims"][0]["handles"] *= 2
+    wire.validate(duplicate_handles)
+    with pytest.raises(ValueError, match="invalid_claim_or_duplicate_handle"):
+        model.model_validate(duplicate_handles)
+    too_many_handles = compact("summary", ["e0123456789ab"])
+    too_many_handles["claims"][0]["handles"] = ["e0123456789ab", "e123456789abc", "e23456789abc0"]
+    wire.validate(too_many_handles)
+    with pytest.raises(ValueError):
+        model.model_validate(too_many_handles)
+    blank_claim = compact("summary", ["e0123456789ab"])
+    blank_claim["claims"][0]["text"] = " "
+    wire.validate(blank_claim)
+    with pytest.raises(ValueError, match="invalid_claim_or_duplicate_handle"):
+        model.model_validate(blank_claim)
