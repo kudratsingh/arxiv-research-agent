@@ -11,7 +11,7 @@ vi.mock("next/navigation", () => ({ usePathname: () => "/workspace/interests" })
 let current: WorkspaceState;
 let calls: { path: string; body: Record<string, unknown> }[];
 let profileFailure: number;
-let failStage: "edition" | "state" | "";
+let failStage: "edition" | "context/state" | "";
 let mismatch: boolean;
 let acknowledged: { id: string; revision: number; data: ProfileData } | null;
 let pending: { resolve?: (response: Response) => void } | null;
@@ -24,8 +24,8 @@ beforeEach(() => {
   vi.stubGlobal("fetch", vi.fn(async (url: string, init?: RequestInit) => {
     const path = new URL(url, "http://localhost").pathname.replace("/api/workspace/", "");
     const body = init?.body ? JSON.parse(String(init.body)) as Record<string, unknown> : {}; calls.push({ path, body });
-    if (path === "state") {
-      if (acknowledged && failStage === "state") return new Response(null, { status: 503 });
+    if (path === "context/state") {
+      if (acknowledged && failStage === "context/state") return new Response(null, { status: 503 });
       if (acknowledged && mismatch) return Response.json({ ...current, profile: { revision: acknowledged.revision + 1, data: { ...current.profile.data, research_question: "Remote update" } } });
       return Response.json(current);
     }
@@ -63,7 +63,7 @@ describe("Interests controller", () => {
     await mount();
     expect(screen.getByText(/15 min · 0 exploration items/)).toBeInTheDocument();
     expect(screen.getByText(/among 3 selected \(0%\).*Requested cap: 30%/)).toBeInTheDocument();
-    expect(calls.every((call) => call.path === "state")).toBe(true);
+    expect(calls.every((call) => call.path === "context/state")).toBe(true);
   });
   it("retains the private draft when explicit discard cannot reload the saved profile", async () => {
     const user = userEvent.setup(); await mount(); changeQuestion("Retain my draft");
@@ -75,15 +75,15 @@ describe("Interests controller", () => {
     await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("retry when the service is available"));
     expect(screen.getByRole("textbox", { name: "Your current research question" })).toHaveValue("Retain my draft");
     expect(loadInterestDraft("owner-a")?.data.research_question).toBe("Retain my draft");
-    expect(calls.every((call) => call.path === "state")).toBe(true);
+    expect(calls.every((call) => call.path === "context/state")).toBe(true);
   });
   it("opens and navigates the section index without any writes and keeps the native save form association", async () => {
     const user = userEvent.setup(); await mount();
-    expect(calls.map((call) => call.path)).toEqual(["state"]);
+    expect(calls.map((call) => call.path)).toEqual(["context/state"]);
     const nav = screen.getByRole("navigation", { name: "Interest sections" });
     expect(within(nav).getAllByRole("link")).toHaveLength(5);
     await user.click(within(nav).getByRole("link", { name: "Topics" }));
-    expect(calls.map((call) => call.path)).toEqual(["state"]);
+    expect(calls.map((call) => call.path)).toEqual(["context/state"]);
     const input = screen.getByRole("textbox", { name: "Your current research question" });
     const save = screen.getByRole("button", { name: "Save interests and question" });
     expect((save as HTMLButtonElement).form).toBe(input.closest("form"));
@@ -103,7 +103,7 @@ describe("Interests controller", () => {
     expect(screen.getByRole("textbox", { name: /Custom interests or watch terms/ })).toHaveValue(raw);
     expect(screen.getByRole("textbox", { name: /Exclude these terms/ })).toHaveValue(exclusions);
     expect(loadInterestDraft("owner-b")?.data.research_question).toBe("Account B draft");
-    expect(calls.every((call) => call.path === "state")).toBe(true);
+    expect(calls.every((call) => call.path === "context/state")).toBe(true);
   });
   it("normalizes raw terms only on confirmed save and keeps the submitted revision", async () => {
     const user = userEvent.setup(); await mount();
@@ -168,7 +168,7 @@ describe("Interests controller", () => {
     await waitFor(() => expect(screen.getByRole("textbox", { name: "Your current research question" })).toHaveValue("Remote saved question"));
     expect(loadInterestDraft("owner-a")).toBeNull();
   });
-  it.each(["edition", "state"] as const)("keeps the draft and request identity if %s fails after profile acknowledgment", async (failed) => {
+  it.each(["edition", "context/state"] as const)("keeps the draft and request identity if %s fails after profile acknowledgment", async (failed) => {
     const user = userEvent.setup(); const view = await mount(); changeQuestion("Acknowledged but unfinished"); failStage = failed;
     await user.click(screen.getByRole("button", { name: "Save interests and question" }));
     await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("retry when the service is available"));
@@ -220,7 +220,7 @@ describe("Interests controller", () => {
     const assign = vi.fn(); vi.stubGlobal("location", { ...window.location, assign });
     const search = await screen.findByRole("searchbox", { name: "Search stored papers" }); fireEvent.change(search, { target: { value: "unsafe interest query" } }); fireEvent.submit(search.closest("form")!);
     expect(assign).not.toHaveBeenCalled(); expect(search).toHaveValue("unsafe interest query");
-    expect(calls.every((call) => call.path === "state")).toBe(true);
+    expect(calls.every((call) => call.path === "context/state")).toBe(true);
     await userEvent.setup().click(screen.getByRole("button", { name: "Discard draft and reload saved profile" }));
     await waitFor(() => expect(sessionStorage.getItem(key("owner-a"))).toBeNull());
   });
@@ -240,7 +240,7 @@ describe("Interests controller", () => {
     const event = new MouseEvent("click", { bubbles: true, cancelable: true });
     act(() => { screen.getByRole("link", { name: "Library" }).dispatchEvent(event); });
     expect(event.defaultPrevented).toBe(true);
-    expect(calls.every((call) => call.path === "state")).toBe(true);
+    expect(calls.every((call) => call.path === "context/state")).toBe(true);
   });
   it("closes the mobile drawer when choosing a section without writing preferences", async () => {
     vi.stubGlobal("matchMedia", vi.fn((query: string) => ({ media: query, matches: query.includes("767"), onchange: null,
@@ -250,6 +250,6 @@ describe("Interests controller", () => {
     await user.click(within(screen.getByRole("navigation", { name: "Interest sections" })).getByRole("link", { name: "Terms & boundaries" }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     await waitFor(() => expect(document.getElementById("interest-terms")).toHaveFocus());
-    expect(calls.map((call) => call.path)).toEqual(["state"]);
+    expect(calls.map((call) => call.path)).toEqual(["context/state"]);
   });
 });

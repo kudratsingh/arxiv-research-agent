@@ -487,6 +487,20 @@ describe("the committed OpenAPI snapshot", () => {
       "/research/{job_id}/export",
       "/research/{job_id}/review",
       "/research/{job_id}/stream",
+      "/workspace/context",
+      "/workspace/context/entries",
+      "/workspace/context/items",
+      "/workspace/context/preferences",
+      "/workspace/context/projects",
+      "/workspace/context/projects/{project_id}",
+      "/workspace/context/projects/{project_id}/artifacts",
+      "/workspace/context/projects/{project_id}/entries",
+      "/workspace/context/projects/{project_id}/sources",
+      "/workspace/context/projects/{project_id}/unlink",
+      "/workspace/context/reading",
+      "/workspace/context/state",
+      "/workspace/context/threads",
+      "/workspace/context/threads/{thread_id}",
       "/workspace/edition",
       "/workspace/entries",
       "/workspace/export",
@@ -512,6 +526,32 @@ describe("the committed OpenAPI snapshot", () => {
       "/workspace/schedule",
       "/workspace/state",
     ]);
+  });
+
+  it("records the exact methods for workspace context routes", () => {
+    const paths = snapshot.paths as Record<string, Record<string, unknown>>;
+    const methods = Object.fromEntries(
+      Object.entries(paths)
+        .filter(([route]) => route === "/workspace/context" || route.startsWith("/workspace/context/"))
+        .map(([route, operations]) => [route, Object.keys(operations).sort()])
+        .sort(([a], [b]) => (a as string).localeCompare(b as string)),
+    );
+    expect(methods).toEqual({
+      "/workspace/context": ["get"],
+      "/workspace/context/entries": ["post"],
+      "/workspace/context/items": ["get"],
+      "/workspace/context/preferences": ["post"],
+      "/workspace/context/projects": ["post"],
+      "/workspace/context/projects/{project_id}": ["get"],
+      "/workspace/context/projects/{project_id}/artifacts": ["post"],
+      "/workspace/context/projects/{project_id}/entries": ["post"],
+      "/workspace/context/projects/{project_id}/sources": ["post"],
+      "/workspace/context/projects/{project_id}/unlink": ["post"],
+      "/workspace/context/reading": ["post"],
+      "/workspace/context/state": ["get"],
+      "/workspace/context/threads": ["post"],
+      "/workspace/context/threads/{thread_id}": ["get"],
+    });
   });
 
   it("is the only source the generated types are built from", () => {

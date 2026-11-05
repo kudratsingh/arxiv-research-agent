@@ -10,13 +10,11 @@
  *
  * THE REDACTION IS A WHITELIST, NOT A SCRUB. `pathTemplate` never sees a
  * header, never sees a body and never sees the query string, and it emits a
- * segment only when that exact segment is a LITERAL in the API contract.
- * Anything else becomes `{id}`. So a job id, a conversation id, an export
- * filename or a value somebody puts in a path one day cannot reach the log
- * by being unusual — it can only reach it by being one of the contract words in
- * `LITERAL_SEGMENTS`, and `web/tests/proxyLogging.test.ts` derives that set
- * from `contract/openapi.json` so a new endpoint fails the test rather than
- * silently widening the whitelist.
+ * segment only when that exact segment is a LITERAL in the API contract and
+ * is not at a contract parameter position.
+ * Anything else becomes `{id}`. The tests derive literals and parameter
+ * positions from `contract/openapi.json`, including IDs that match a literal,
+ * so changes to the contract require an explicit update to this module.
  *
  * WHY THERE IS NO LOGGER LIBRARY. The Next server already writes to stdout
  * and Compose already collects it (`docker-compose.yml`); 04 §9.2 is explicit
@@ -27,7 +25,7 @@
 /**
  * Every literal path segment in `web/contract/openapi.json`.
  *
- * Transcribed from the fifteen contract paths rather than imported from them:
+ * Transcribed from the contract paths rather than imported from them:
  * importing the contract JSON would pull the whole document
  * into the server bundle to answer a small-set question. The transcription
  * is not trusted — `web/tests/proxyLogging.test.ts` rebuilds this set from
@@ -46,18 +44,25 @@
  * that look harmless.
  */
 export const LITERAL_SEGMENTS: ReadonlySet<string> = new Set([
+  "artifacts",
+  "context",
   "conversations",
   "export",
   "healthz",
   "learn",
   "paths",
+  "preferences",
+  "projects",
   "profile",
   "progress",
   "research",
   "review",
   "sessions",
+  "sources",
   "stream",
+  "threads",
   "turn",
+  "unlink",
   "workspace",
   "state",
   "reading",
@@ -84,26 +89,31 @@ export const LITERAL_SEGMENTS: ReadonlySet<string> = new Set([
 /** What an unrecognised segment is replaced by. Never the value itself. */
 export const REDACTED_SEGMENT = "{id}";
 
-/**
- * Reduce the catch-all's path segments to a loggable template.
- *
- * Args:
- *   segments: The `[...path]` segments, exactly as Next parsed them — no
- *     query string, because `URL.search` is deliberately never passed in.
- *
- * Returns:
- *   `/research/{id}/stream` for `["research", "abc-123", "stream"]`. An empty
- *   segment list renders `/`, which is not a route the proxy serves but is
- *   the honest rendering of "nothing was addressed".
- *
- * A segment is kept only if it is a literal in the contract. That rule is
- * positional-blind on purpose: a positional rule would need a route table
- * kept in step with the backend by hand, and the failure mode of a stale
- * route table is a raw id in a log line.
- */
+/** Prefixes whose next segment is an opaque contract parameter. */
+const PARAMETER_PREFIXES: readonly (readonly string[])[] = [
+  ["conversations"],
+  ["research"],
+  ["learn", "paths"],
+  ["learn", "sessions"],
+  ["workspace", "generation", "jobs"],
+  ["workspace", "materials"],
+  ["workspace", "context", "projects"],
+  ["workspace", "context", "threads"],
+];
+
+/** Render only contract literals, always redacting parameter positions. */
 export function pathTemplate(segments: readonly string[]): string {
+  const parameterPositions = new Set(
+    PARAMETER_PREFIXES.filter((prefix) =>
+      prefix.every((segment, index) => segments[index] === segment),
+    ).map((prefix) => prefix.length),
+  );
   const rendered = segments
-    .map((segment) => (LITERAL_SEGMENTS.has(segment) ? segment : REDACTED_SEGMENT))
+    .map((segment, index) =>
+      !parameterPositions.has(index) && LITERAL_SEGMENTS.has(segment)
+        ? segment
+        : REDACTED_SEGMENT,
+    )
     .join("/");
   return `/${rendered}`;
 }

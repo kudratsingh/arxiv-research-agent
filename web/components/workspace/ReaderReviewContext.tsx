@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect } from "react";
 import { workspaceRequest, type ReviewIndex, type WorkItem } from "@/lib/workspace/api";
 

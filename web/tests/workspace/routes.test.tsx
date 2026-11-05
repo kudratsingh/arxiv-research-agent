@@ -98,7 +98,7 @@ describe("live route admission and identity contracts", () => {
         await screen.findByRole("heading", { level: 1 }),
       ).toHaveTextContent(heading);
       expect(fetch).toHaveBeenCalledWith(
-        "/api/workspace/state",
+        "/api/workspace/context/state",
         expect.objectContaining({ method: "GET", cache: "no-store" }),
       );
     },

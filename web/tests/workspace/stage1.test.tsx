@@ -82,7 +82,7 @@ beforeEach(() => {
         : {};
       calls.push({ path, body });
       if (failures[path]) return new Response(null, { status: failures[path] });
-      if (path === "state") return Response.json(current);
+      if (path === "context/state") return Response.json(current);
       if (path === "profile") {
         current.profile = {
           revision: current.profile.revision + 1,
@@ -90,7 +90,7 @@ beforeEach(() => {
         };
         return Response.json(current.profile);
       }
-      if (path === "entries") {
+      if (path === "context/entries") {
         const saved = {
           ...(body.data as EntryRevision),
           id: String(body.id),
@@ -107,7 +107,7 @@ beforeEach(() => {
         ];
         return Response.json(saved);
       }
-      if (path === "reading")
+      if (path === "context/reading")
         return Response.json({
           ...(body.data as object),
           revision: Number(body.revision) + 1,
@@ -171,6 +171,7 @@ describe("durable activity and exact reading continuity", () => {
     current.latest_activity = activity(value);
     const user = userEvent.setup();
     render(<LiveToday />);
+    await user.click(await screen.findByText("Source and pin options"));
     await user.click(
       await screen.findByRole("button", { name: "Pin this question" }),
     );
@@ -193,6 +194,7 @@ describe("durable activity and exact reading continuity", () => {
     failures.profile = 409;
     const user = userEvent.setup();
     render(<LiveToday />);
+    await user.click(await screen.findByText("Source and pin options"));
     await user.click(
       await screen.findByRole("button", { name: "Pin this question" }),
     );
@@ -269,14 +271,14 @@ describe("durable activity and exact reading continuity", () => {
       textarea,
       "Edited earlier question after checking its baseline",
     );
-    failures.entries = 409;
+    failures["context/entries"] = 409;
     await user.click(screen.getByRole("button", { name: "Save question" }));
     expect(textarea).toHaveValue(
       "Edited earlier question after checking its baseline",
     );
-    delete failures.entries;
+    delete failures["context/entries"];
     await user.click(screen.getByRole("button", { name: "Save question" }));
-    expect(calls.find((call) => call.path === "entries")!.body).toMatchObject({
+    expect(calls.find((call) => call.path === "context/entries")!.body).toMatchObject({
       id: "entry-a",
       revision: 2,
       data: { version_id: value.version_id, anchor: value.anchor },

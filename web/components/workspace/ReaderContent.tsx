@@ -1,21 +1,25 @@
 "use client";
+import { loadContextEditors } from "./contextModules";
+
 import Link from "next/link";
 import { settleReaderTarget } from "@/lib/workspace/navigation";
-import { blockWorkspaceNavigation } from "@/lib/workspace/navigationGuard";
+import { allowWorkspaceNavigation, blockWorkspaceNavigation } from "@/lib/workspace/navigationGuard";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import {
   displayDate, errorMessage, readerHref, requestId, readingMaterial, workspaceRequest,
   type EntryRevision, type ReadingRevision, type WorkItem, type WorkspaceState,
 } from "@/lib/workspace/api";
-import { DRAFT_NAVIGATION_NOTICE, loadDraft, storeDraft, type ReaderDraft } from "@/lib/workspace/drafts";
-import { libraryQueue, neighbours, readerTarget, todayQueue } from "@/lib/workspace/queue";
+import { DRAFT_NAVIGATION_NOTICE, recoverDraft, storeDraft, type ReaderDraft } from "@/lib/workspace/drafts";
+import { contextHref, resumeContext, useProductContext } from "@/lib/workspace/productContext";
+import { activeEdition, libraryQueue, neighbours, readerTarget, todayQueue } from "@/lib/workspace/queue";
 import { ControlBar, SidebarSection, StageHeaderSlot } from "./Slots";
 import ReaderControls from "./ReaderControls";
+import ReaderQueue from "./ReaderQueue";
 import { parseMaterialAnchor, RetainedSourceReader } from "./RetainedSource";
 import { Message, ServiceNotice } from "./Common";
 import GenerationBoundary from "./GenerationBoundary";
 
-const ReaderQueue = lazy(() => import("./ReaderQueue"));
+const ReaderContextActions = lazy(() => loadContextEditors().then(module => ({ default: module.ReaderContextActions })));
 const SyntheticWorkbench = lazy(() => import("./SyntheticWorkbench").then(workbench => ({ default: workbench.SyntheticWorkbench })));
 
 const emptyDraft = (scope = "abstract"): ReaderDraft => ({
@@ -40,6 +44,8 @@ export default function ReaderContent({
   requestedVersion,
   requestedEntry,
   returnTo,
+  contextPending = false,
+  onContextRetry,
   reviewWorks,
 }: {
   item: WorkItem;
@@ -49,9 +55,12 @@ export default function ReaderContent({
   requestedVersion: string | null;
   requestedEntry: string | null;
   returnTo: string;
+  contextPending?: boolean;
+  onContextRetry?: () => void;
   reviewWorks: WorkItem[];
 }) {
   const owner = state.principal_key_id;
+  const context = useProductContext();
   const [initial] = useState(() => {
     const entry = requestedEntry
       ? item.entries.find((candidate) => candidate.id === requestedEntry)
@@ -76,7 +85,7 @@ export default function ReaderContent({
         ? selected.retained_materials?.find((value) => value.format === "pdf")?.first_anchor ?? undefined
         : undefined;
     try {
-      const recovered = loadDraft(owner, item.work_id, version);
+      const recovery = recoverDraft(owner, item.work_id, version), recovered = recovery.draft;
       return {
         version,
         fragment,
@@ -85,9 +94,9 @@ export default function ReaderContent({
         sourceAnchor:
           entry?.anchor || (/^(abstract|excerpt|full_text|material):/.test(fragment) ? fragment : recovered?.body ? recovered.anchor : preferredAnchor),
         draft: recovered ?? emptyDraft(scope),
-        recovery: true,
+        recovery: recovery.available,
         notice: recovered
-          ? "Recovered your unsaved draft for this account and source version. It has not been saved to the server."
+          ? `Recovered your unsaved draft for this account and source version. It has not been saved to the server.${recovery.available ? "" : " Browser storage is unavailable; copy text before a full reload or closing this tab."}`
           : "",
       };
     } catch {
@@ -120,6 +129,8 @@ export default function ReaderContent({
   const [draftStorage, setDraftStorage] = useState(initial.recovery);
   const [selection, setSelection] = useState("");
   const [pdfActive, setPdfActive] = useState(false);
+  const [contextActionsOpen, setContextActionsOpen] = useState(false);
+  const [contextActionsRevision, setContextActionsRevision] = useState(0);
   const [sourceAnchor, setSourceAnchor] = useState(
     initial.sourceAnchor ||
       (/^(abstract|excerpt|full_text|material):/.test(initial.fragment)
@@ -173,10 +184,10 @@ export default function ReaderContent({
     : returnTo.startsWith("/workspace/review") ? reviewWorks : [];
   const position = neighbours(queue, item.work_id);
   const targets = queue.map((work) => {
-    const target = readerTarget(work, isToday ? state.editions[0]?.work_versions[work.work_id] : returnTo.startsWith("/workspace/review") ? work.version_id : undefined);
+    const target = readerTarget(work, isToday ? activeEdition(state)?.work_versions[work.work_id] : returnTo.startsWith("/workspace/review") ? work.version_id : undefined);
     const version = readingMaterial(work, target.version).version;
     return { workId: work.work_id, title: version.title || work.title,
-      href: readerHref(work, target.version, target.anchor, undefined, isToday ? `/workspace/today?focus=${encodeURIComponent(work.work_id)}` : returnTo) };
+      href: contextHref(readerHref(work, target.version, target.anchor, undefined, isToday ? contextHref(`/workspace/today?focus=${encodeURIComponent(work.work_id)}`, context) : returnTo), context) };
   });
   function guardNavigation() {
     if (!navigationBlocked) return false;
@@ -269,6 +280,7 @@ export default function ReaderContent({
     if (passage) settleReaderTarget(passage, false, true);
   }, [active, sourceAnchor]);
   async function pin(entryId: string | null) {
+    if (contextPending) { setNotice("Wait for the selected context to load before saving."); return; }
     const input = {
       revision: state.profile.revision,
       data: { ...state.profile.data, pinned_entry_id: entryId },
@@ -356,10 +368,11 @@ export default function ReaderContent({
     status: ReadingRevision["status"],
     anchor = sourceAnchor,
   ) {
-    if (busy) return;
+    if (busy || contextPending) return;
     const input = {
       work_id: item.work_id,
       revision: item.reading.revision,
+      context: resumeContext(context, returnTo),
       data: {
         status,
         anchor,
@@ -372,7 +385,7 @@ export default function ReaderContent({
     attempts.current.set(fingerprint, id);
     setBusy(true);
     try {
-      const next = await workspaceRequest<ReadingRevision>("reading", {
+      const next = await workspaceRequest<ReadingRevision>("context/reading", {
         ...input,
         request_id: id,
       });
@@ -393,10 +406,11 @@ export default function ReaderContent({
   }
   async function save(event: React.FormEvent) {
     event.preventDefault();
-    if (busy) return;
+    if (busy || contextPending) return;
     const input = {
       id: draft.id,
       revision: draft.revision,
+      context: resumeContext(context, returnTo),
       data: {
         work_id: item.work_id,
         version_id: material.version_id,
@@ -411,7 +425,7 @@ export default function ReaderContent({
     setBusy(true);
     setSavingDraft(true);
     try {
-      const entry = await workspaceRequest<EntryRevision>("entries", {
+      const entry = await workspaceRequest<EntryRevision>("context/entries", {
         ...input,
         request_id: id,
       });
@@ -469,13 +483,13 @@ export default function ReaderContent({
     );
   }
   function viewVersion(value: string) {
-    if (guardNavigation()) return;
+    if (guardNavigation() || !allowWorkspaceNavigation(location.href)) return;
     setVersionId(value);
     setPdfActive(false);
     const selected = versions.find((candidate) => candidate.version_id === value) ?? material;
     let nextAnchor = readingMaterial(item, value).pdf?.first_anchor ?? `${scopeOf(selected)}:0`;
     try {
-      const recovered = loadDraft(owner, item.work_id, value);
+      const recovery = recoverDraft(owner, item.work_id, value), recovered = recovery.draft;
       setDraft(
         recovered ??
           emptyDraft(
@@ -486,7 +500,7 @@ export default function ReaderContent({
           ),
       );
       if (recovered?.body) nextAnchor = recovered.anchor;
-      setDraftStorage(true);
+      setDraftStorage(recovery.available);
       setNotice(
         recovered
           ? "Recovered your unsaved draft for this source version. It is not a server save."
@@ -499,7 +513,7 @@ export default function ReaderContent({
     window.history.replaceState(
       window.history.state,
       "",
-      `${window.location.pathname}?version=${encodeURIComponent(value)}&return_to=${encodeURIComponent(returnTo)}#${active}`,
+      contextHref(`${window.location.pathname}?version=${encodeURIComponent(value)}&return_to=${encodeURIComponent(returnTo)}#${active}`, context),
     );
     setSelection("");
     setSourceAnchor(nextAnchor);
@@ -550,13 +564,13 @@ export default function ReaderContent({
       <StageHeaderSlot position={position.index >= 0 ? { n: position.index + 1, N: position.count } : undefined} />
       <SidebarSection label="Reader queue">
         <h2>Reading queue</h2>
-        {targets.length ? <Suspense fallback={<p className="daily-muted" aria-busy="true">Opening queued papers…</p>}><ReaderQueue targets={targets} currentId={item.work_id} blocked={navigationBlocked} /></Suspense> : <p className="daily-muted">Return to the originating page to choose another source.</p>}
+        {targets.length ? <ReaderQueue targets={targets} currentId={item.work_id} blocked={navigationBlocked} /> : <p className="daily-muted">Return to the originating page to choose another source.</p>}
       </SidebarSection>
       <SidebarSection label="Retained version details">
         <h2>Retained version</h2><p>{material.version_label} · {material.access_state.replaceAll("_", " ")}</p>
         <p className="ws-reader-digest">{material.content_hash || "No retained content hash available."}</p>
       </SidebarSection>
-      <ControlBar><ReaderControls saved={item.reading.status === "saved"} busy={busy}
+      <ControlBar><ReaderControls saved={item.reading.status === "saved"} busy={busy || contextPending}
         onReading={(status) => void reading(status)} navigationBlocked={navigationBlocked}
         previousHref={position.index > 0 ? targets[position.index - 1]?.href : undefined}
         nextHref={position.index >= 0 ? targets[position.index + 1]?.href : undefined}
@@ -578,6 +592,18 @@ export default function ReaderContent({
         </span>
       </div>
       <ServiceNotice error={error} />
+      {contextPending && <p className="workspace-version-notice" aria-busy={!error}>{error ? "The selected context could not be loaded." : "Loading the selected context."} Your exact source and draft stay open; saving resumes after it loads.{error && onContextRetry && <button type="button" onClick={onContextRetry}>Retry selected context</button>}</p>}
+      <details onToggle={event => { if (event.currentTarget.open) setContextActionsOpen(true); }}><summary>Investigate this · learning and project links</summary>
+        <button type="button" disabled={contextPending} onClick={() => { if (allowWorkspaceNavigation(location.href)) setContextActionsRevision(value => value + 1); }}>Use current viewed source context</button>
+        {contextActionsOpen && <Suspense fallback={<p aria-busy="true">Opening exact-source actions…</p>}><ReaderContextActions key={contextActionsRevision} blocked={contextPending}
+          owner={owner} returnTo={returnTo} entries={entries} source={{ work_id: item.work_id, version_id: material.version_id,
+            anchor: /^(abstract|excerpt|full_text|material):/.test(sourceAnchor) ? sourceAnchor : `${sourceScope}:0`,
+            version_hash: material.content_hash || null,
+            ...(parseMaterialAnchor(sourceAnchor) ? (() => {
+              const retained = material.retained_materials?.find(value => value.material_id === parseMaterialAnchor(sourceAnchor)?.materialId);
+              return { material_id: parseMaterialAnchor(sourceAnchor)!.materialId, ...(retained ? { source_scope: retained.scope } : {}) };
+            })() : { source_scope: sourceScope === "metadata" || sourceScope === "abstract" || sourceScope === "excerpt" || sourceScope === "full_text" ? sourceScope : undefined }) }} /></Suspense>}
+      </details>
       {requestedEntry && !initial.entryId && (
         <p className="workspace-version-notice">
           That saved item is unavailable in this account. No different question
@@ -863,7 +889,7 @@ export default function ReaderContent({
             <div className="daily-form-footer">
               <button
                 className="daily-button"
-                disabled={busy || !draft.body.trim()}
+                disabled={busy || contextPending || !draft.body.trim()}
               >
                 {busy ? "Saving…" : `Save ${draft.kind.replaceAll("-", " ")}`}
               </button>

@@ -50,8 +50,8 @@ beforeEach(() => {
   })));
   vi.stubGlobal("fetch", vi.fn(async (url: string, init?: RequestInit) => {
     const path = new URL(url, "http://localhost").pathname.replace("/api/workspace/", "");
-    if (path === "state") return Response.json(current);
-    if (path === "reading") {
+    if (path === "context/state") return Response.json(current);
+    if (path === "context/reading") {
       const body = JSON.parse(String(init?.body)) as Record<string, unknown>;
       calls.push(body);
       if (failReading) return new Response(null, { status: 503 });
@@ -82,6 +82,14 @@ async function select(user: ReturnType<typeof userEvent.setup>, index: number) {
 }
 
 describe("Today controller", () => {
+  it("starts with the focused paper without an empty continuation or required question", async () => {
+    current.profile.data.research_question = "";
+    current.latest_activity = null;
+    await mount();
+    expect(screen.getByRole("article")).toBeInTheDocument();
+    expect(screen.queryByText("No saved activity yet")).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Continue reading" })).not.toBeInTheDocument();
+  });
   it("opens the frozen allocation receipt on demand without changing the focused paper or requesting a new edition", async () => {
     const user = userEvent.setup(); await mount();
     focused(titles[0]!);
@@ -201,7 +209,7 @@ describe("Today controller", () => {
   await screen.findByRole("article");
     await userEvent.setup().click(screen.getByText(/Sample source checks:/));
     expect(screen.getByRole("button", { name: "Check sources now" })).toBeDisabled();
-    expect(screen.getByText(/Live source checks are disabled in this synthetic design preview/)).toBeInTheDocument();
+    expect(screen.getByText(/Source checks are disabled in synthetic preview. Examples prove neither freshness nor coverage./)).toBeInTheDocument();
   });
 
   it.each([
@@ -213,7 +221,7 @@ describe("Today controller", () => {
     current.profile.data.research_question = "";
     await mount();
     expect(screen.getByText(header)).toBeInTheDocument();
-    expect(screen.getByText("Add your current research question in Interests.")).toBeInTheDocument();
+    expect(screen.getByText("Add an optional question in Interests.")).toBeInTheDocument();
   });
 
   it("omits a source count when no checks exist", async () => {
@@ -256,7 +264,7 @@ describe("Today controller", () => {
       const path = new URL(String(url), "http://localhost").pathname.replace("/api/workspace/", "");
       const body = init?.body ? JSON.parse(String(init.body)) as Record<string, unknown> : {};
       requests.push({ path, body });
-      if (path !== "reading") throw new Error(`Unexpected mutation: ${path}`);
+      if (path !== "context/reading") throw new Error(`Unexpected mutation: ${path}`);
       return new Promise<Response>((resolve) => { pending.release = resolve; });
     });
     await user.click(screen.getByRole("button", { name: /^Save Alpha paper/ }));

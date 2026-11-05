@@ -4,6 +4,7 @@ import { cleanup } from "@testing-library/react";
 
 import { uninstallFakeEventSource } from "./tests/support/FakeEventSource";
 import { clearTestTheme } from "./tests/support/render";
+import { resetDraftMemory } from "./lib/workspace/draftMemory";
 
 // Testing Library doesn't auto-cleanup with Vitest's globals; do it
 // explicitly so tests are isolated from one another.
@@ -14,6 +15,7 @@ import { clearTestTheme } from "./tests/support/render";
 // attributes `tests/support/render.tsx` writes onto `<html>`.
 afterEach(() => {
   cleanup();
+  resetDraftMemory();
   uninstallFakeEventSource();
   clearTestTheme();
 });

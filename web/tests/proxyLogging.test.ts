@@ -120,6 +120,18 @@ describe("the path template is a whitelist, so an id cannot leak by being unusua
     }
   });
 
+  it("redacts parameter values even when they equal contract literals", () => {
+    for (const contractPath of Object.keys(CONTRACT.paths)) {
+      const parts = contractPath.split("/").filter(Boolean);
+      if (!parts.some((part) => part.startsWith("{"))) continue;
+      for (const literal of LITERAL_SEGMENTS) {
+        const segments = parts.map((part) => part.startsWith("{") ? literal : part);
+        const expected = `/${parts.map((part) => part.startsWith("{") ? REDACTED_SEGMENT : part).join("/")}`;
+        expect(pathTemplate(segments), `${contractPath} with id ${literal}`).toBe(expected);
+      }
+    }
+  });
+
   it("whitelists exactly the literal segments the contract contains", () => {
     const fromContract = new Set<string>();
     for (const contractPath of Object.keys(CONTRACT.paths)) {
@@ -414,7 +426,7 @@ describe("byte counting does not buffer the stream", () => {
         controller.close();
       },
     });
-    let counted: number[] = [];
+    const counted: number[] = [];
     const out = countStreamedBytes(source, new AbortController().signal, (bytes) => {
       counted.push(bytes);
     });

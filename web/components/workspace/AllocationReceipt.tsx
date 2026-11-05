@@ -1,5 +1,3 @@
-"use client";
-
 /** Display the frozen server receipt; never infer an allocation from a percentage. */
 export function AllocationReceipt({
   allocation,

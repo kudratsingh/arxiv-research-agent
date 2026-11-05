@@ -6,10 +6,12 @@ import { Icon } from "./Icon";
 import { useQueryParam } from "@/lib/workspace/urlState";
 import { useSidebarViewport } from "./useSidebarPreference";
 import { navigateWorkspace } from "@/lib/workspace/navigation";
+import { contextHref, useProductContext } from "@/lib/workspace/productContext";
 
-const CommandSuggestions = lazy(() => import("./CommandSuggestions"));
+const CommandSuggestions = lazy(() => import("./WorkspaceDialogs").then(module => ({ default: module.CommandSuggestions })));
 
 export function Composer(): React.ReactElement {
+  const context = useProductContext();
   const queryFromURL = useQueryParam("q");
   const [help, setHelp] = useState("");
   const [prefix, setPrefix] = useState("");
@@ -48,12 +50,12 @@ export function Composer(): React.ReactElement {
       return;
     }
     const current = window.location.pathname === "/workspace/radar" ? new URLSearchParams(window.location.search) : new URLSearchParams();
-    const params = new URLSearchParams({ q: query, days: current.get("days") ?? "7" });
+    const params = new URLSearchParams({ q: query, days: current.get("days") ?? (context.mode === "research" ? "0" : "7") });
     for (const key of ["source_id", "access_state", "status"]) {
       const value = current.get(key);
       if (value !== null) params.set(key, value);
     }
-    if (!navigateWorkspace(`/workspace/radar?${params.toString()}`, "paper")) {
+    if (!navigateWorkspace(contextHref(`/workspace/radar?${params.toString()}`, context), "paper")) {
       setHelp("Search stayed here. Finish your save or save/copy your draft before leaving.");
     }
   }

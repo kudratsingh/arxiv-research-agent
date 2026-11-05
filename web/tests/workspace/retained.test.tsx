@@ -44,20 +44,20 @@ beforeEach(() => {
       calls.push({ path, body });
       if (responses[path])
         return new Response(null, { status: responses[path] });
-      if (path === "state") return Response.json(state);
+      if (path === "context/state") return Response.json(state);
       if (path === "materials") return Response.json([documentValue]);
       if (path.startsWith("materials/")) return Response.json(documentValue);
       if (path === "generation/preview") return Response.json(preview());
       if (path === "generation/jobs")
         return Response.json({ ...job("ready", 5), cached: true });
-      if (path === "reading")
+      if (path === "context/reading")
         return Response.json({
           revision: Number(body.revision) + 1,
           ...(body.data as object),
           updated_at: "2026-11-02T17:00:00Z",
           activity_sequence: 5,
         });
-      if (path === "entries")
+      if (path === "context/entries")
         return Response.json({
           id: body.id,
           revision: 1,
@@ -236,12 +236,12 @@ describe("retained document reading", () => {
     ).toBeInTheDocument();
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "Mark read" }));
-    expect(calls.find((call) => call.path === "reading")?.body).toMatchObject({
+    expect(calls.find((call) => call.path === "context/reading")?.body).toMatchObject({
       data: { anchor, status: "read", version_id: work().version_id },
     });
     await user.click(screen.getByRole("link", { name: "Understand" }));
     expect(
-      calls.filter((call) => call.path === "reading").at(-1)?.body,
+      calls.filter((call) => call.path === "context/reading").at(-1)?.body,
     ).toMatchObject({ data: { anchor } });
     expect(screen.getAllByRole("status")).toHaveLength(1);
   });
@@ -269,7 +269,7 @@ describe("retained document reading", () => {
     );
     expect(document.querySelector("mark")).toHaveTextContent("🧭 A retrieval");
     await user.click(screen.getByRole("button", { name: "Save question" }));
-    expect(calls.find((call) => call.path === "entries")?.body).toMatchObject({
+    expect(calls.find((call) => call.path === "context/entries")?.body).toMatchObject({
       data: { anchor, body: "My own question", version_id: work().version_id },
     });
   });
@@ -414,7 +414,7 @@ describe("retained document reading", () => {
       within(page).getByText("A retrieval", { selector: "mark" }),
     ).toBeInTheDocument();
     expect(
-      calls.filter((call) => call.path === "reading").at(-1)!.body,
+      calls.filter((call) => call.path === "context/reading").at(-1)!.body,
     ).toMatchObject({
       data: {
         anchor: `material:${MAT}:page:3:2:13`,
@@ -525,7 +525,7 @@ describe("retained document reading", () => {
       screen.getByRole("button", { name: "Remove from saved items" }),
     );
     expect(
-      calls.filter((call) => call.path === "reading").at(-1)!.body,
+      calls.filter((call) => call.path === "context/reading").at(-1)!.body,
     ).toMatchObject({
       data: {
         status: "unread",

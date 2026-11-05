@@ -28,7 +28,7 @@ beforeEach(() => {
     const path = new URL(url, "http://localhost").pathname.replace("/api/workspace/", "");
     const body = init?.body ? JSON.parse(String(init.body)) as Record<string, unknown> : {};
     calls.push({ path, body });
-    if (path === "state") return Response.json(workspace());
+    if (path === "context/state") return Response.json(workspace());
     if (path === "review") return Response.json({ packet, packet_ids: [packetId, otherId] });
     if (path === "review/prepare") return Response.json(packet);
     if (path === "review/feedback") {

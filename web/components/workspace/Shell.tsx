@@ -1,4 +1,6 @@
 "use client";
+import { loadContextReadouts } from "./contextModules";
+
 
 import Link from "next/link";
 import { useWorkspaceNavigation } from "@/lib/workspace/navigation";
@@ -16,9 +18,12 @@ import { setSidebarCollapsed, useSidebarPreference, useSidebarViewport } from ".
 import "@/components/daily/daily.css";
 import "./controller.css";
 import { ThemeToggle } from "@/components/patterns/ThemeToggle";
+import { ModeSwitch } from "./ModeSwitch";
+import { contextHref, useProductContext } from "@/lib/workspace/productContext";
 
 const Composer = lazy(() => import("./Composer").then(composer => ({ default: composer.Composer })));
 const WorkspaceDialogs = lazy(() => import("./WorkspaceDialogs"));
+const ProjectSelector = lazy(() => loadContextReadouts().then(module => ({ default: module.ProjectSelector })));
 
 const NAVIGATION: readonly [string, string, IconName, string][] = [
   ["today", "Today", "today", "T"], ["radar", "Radar", "radar", "R"],
@@ -29,6 +34,7 @@ const FOCUSABLE = 'a[href], button:not(:disabled), input:not(:disabled), select:
 
 export function WorkspaceShell({ children }: { children: ReactNode }) {
   const path = usePathname();
+  const context = useProductContext();
   const syntheticPreview = useSyntheticPreview();
   const viewport = useSidebarViewport();
   const collapsed = useSidebarPreference();
@@ -46,7 +52,8 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
   const overlayOpen = viewport !== "desktop" && open;
   const rail = viewport === "tablet" ? !open : viewport === "desktop" && collapsed;
   const drawerHidden = mobile && !open;
-  const route = NAVIGATION.find(([slug]) => path.startsWith(`/workspace/${slug}`))?.[1] ?? "Reader";
+  const route = NAVIGATION.find(([slug]) => path.startsWith(`/workspace/${slug}`))?.[1] ?? (path.startsWith("/workspace/projects") ? "Projects" : path.startsWith("/workspace/threads/") ? "Learning thread" : "Reader");
+  const projectControl = context.mode === "research" && <Suspense fallback={<p className="daily-muted" aria-busy="true">Opening project controls…</p>}><ProjectSelector /></Suspense>;
   useWorkspaceShortcuts();
   useWorkspaceNavigation(path);
 
@@ -116,7 +123,7 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
       <aside ref={sidebarRef} className="ws-sidebar" aria-label="Workspace controls"
         role={overlayOpen && !mobile ? "dialog" : undefined} aria-modal={overlayOpen && !mobile ? true : undefined} tabIndex={-1}>
         <div className="ws-brand-row" inert={mobile && overlayOpen}>
-          <Link href="/workspace/today" prefetch={false} scroll={false} className="ws-brand" title="Research workspace · Jazzy">
+          <Link href={contextHref("/workspace/today", context)} prefetch={false} scroll={false} className="ws-brand" title="Research workspace · Jazzy">
             <Mascot /><span className="ws-brand-name">Research workspace</span>
           </Link>
           <button ref={toggleRef} className="ws-sidebar-toggle" type="button" data-command="toggle-sidebar"
@@ -126,8 +133,9 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
           </button>
           <button type="button" className="ws-theme-cycle" aria-label="Cycle color theme" onClick={cycleTheme}><Icon name="theme" /></button>
         </div>
+        <div className="ws-mode-sidebar" inert={mobile || rail}><ModeSwitch path={path} />{!mobile && !rail && projectControl}</div>
         <nav className="ws-navigation" aria-label="Research workspace" inert={mobile && overlayOpen}>
-          {NAVIGATION.map(([slug, label, icon, shortcut]) => <Link key={slug} href={`/workspace/${slug}`} prefetch={false} scroll={false}
+          {NAVIGATION.map(([slug, label, icon, shortcut]) => <Link key={slug} data-workspace-route={`/workspace/${slug}`} href={contextHref(`/workspace/${slug}`, context)} prefetch={false} scroll={false}
             title={label} aria-label={label} aria-current={path.startsWith(`/workspace/${slug}`) ? "page" : undefined}>
             <Icon name={icon} /><span className="ws-nav-label">{label}</span><kbd aria-hidden="true">G {shortcut}</kbd>
           </Link>)}
@@ -151,6 +159,7 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
       </aside>
       <main id="main" tabIndex={-1} className="daily-main ws-stage" inert={overlayOpen}>
         <header className="ws-stage-header">
+          <div className="ws-mode-heading"><ModeSwitch path={path} />{(mobile || rail) && projectControl}</div>
           <div className="ws-stage-topline"><span className="ws-breadcrumb">workspace <span aria-hidden="true">›</span> {route.toLowerCase()}</span><div ref={setHeaderNode} className="ws-header-slot" /></div>
           <div className="ws-status-line">{syntheticPreview
             ? <><strong>Design preview · synthetic sample papers</strong><span>Sample source checks · private server saves · generation off</span></>

@@ -21,11 +21,13 @@ import { Coverage, LoadingState, Message, ServiceNotice } from "./Common";
 import { ControlBar, SidebarSection, StageHeaderSlot } from "./Slots";
 import { Mascot } from "./Mascot";
 import { dispatchWorkspaceCommand } from "@/lib/workspace/dispatch";
+import { contextHref, useProductContext } from "@/lib/workspace/productContext";
 
 type DraftReport = { changed: boolean; busy: boolean };
 const DRAFT_WARNING = "Save or explicitly discard your unsaved judgments before changing candidate sets.";
 
 export function CandidateReview() {
+  const context = useProductContext();
   const { state, error: stateError, reload } = useWorkspace();
   const selectedPacket = useSearchParams().get("packet");
   const [index, setIndex] = useState<ReviewIndex | null>(null);
@@ -70,7 +72,7 @@ export function CandidateReview() {
 
   useEffect(() => {
     if (packetRef.current && selectedPacket !== packetRef.current && Object.values(reportRef.current).some((report) => report.changed || report.busy)) {
-      window.history.replaceState(window.history.state, "", `/workspace/review?packet=${encodeURIComponent(packetRef.current)}`);
+      window.history.replaceState(window.history.state, "", contextHref(`/workspace/review?packet=${encodeURIComponent(packetRef.current)}`, context));
       setNotice(DRAFT_WARNING);
       return;
     }
@@ -97,7 +99,7 @@ export function CandidateReview() {
           );
       });
     return () => { controller.abort(); if (packetRead.current === controller) packetRead.current = null; };
-  }, [selectedPacket]);
+  }, [selectedPacket, context]);
   if (!state)
     return <div className="ws-review-state"><Mascot mood={stateError ? "alert" : "busy"} size={72} /><LoadingState error={stateError} retry={() => void reload()} /></div>;
   const packet = index?.packet;
@@ -141,7 +143,7 @@ export function CandidateReview() {
       window.history.replaceState(
         null,
         "",
-        `/workspace/review?packet=${encodeURIComponent(packet.id)}`,
+        contextHref(`/workspace/review?packet=${encodeURIComponent(packet.id)}`, context),
       );
       setError("");
       setNotice(
@@ -208,7 +210,7 @@ export function CandidateReview() {
         <span className="daily-eyebrow">
           Your usefulness judgments · no automatic labels
         </span>
-        <Link className="daily-link" href="/workspace/today" prefetch={false}>
+        <Link className="daily-link" href={contextHref("/workspace/today", context)} prefetch={false}>
           Back to Today →
         </Link>
       </div>
@@ -258,7 +260,7 @@ export function CandidateReview() {
                 window.history.pushState(
                   null,
                   "",
-                  `/workspace/review?packet=${encodeURIComponent(event.target.value)}`,
+                  contextHref(`/workspace/review?packet=${encodeURIComponent(event.target.value)}`, context),
                 );
                 closeDrawer();
               }}
@@ -385,6 +387,7 @@ function CandidateFeedback({
   current: boolean; blocked: boolean; onActivate: () => void;
   onReport: (key: string, report: DraftReport | null) => void;
 }) {
+  const context = useProductContext();
   const [saved, setSaved] = useState(candidate.feedback);
   const [label, setLabel] = useState(candidate.feedback.label);
   const [reason, setReason] = useState(candidate.feedback.reason);
@@ -450,13 +453,13 @@ function CandidateFeedback({
       </div>
       <h2 id={`candidate-title-${position}`}>
         <Link
-          href={readerHref(
+          href={contextHref(readerHref(
             item,
             item.version_id,
             `${candidate.evidence_scope}:0`,
             undefined,
-            `/workspace/review?packet=${packetId}`,
-          )}
+            contextHref(`/workspace/review?packet=${packetId}`, context),
+          ), context)}
           prefetch={false}
         >
           {item.title}
@@ -479,13 +482,13 @@ function CandidateFeedback({
       </p>
       <Link
         className="daily-link"
-        href={readerHref(
+        href={contextHref(readerHref(
           item,
           item.version_id,
           `${candidate.evidence_scope}:0`,
           undefined,
-          `/workspace/review?packet=${packetId}`,
-        )}
+          contextHref(`/workspace/review?packet=${packetId}`, context),
+        ), context)}
         prefetch={false}
       >
         Inspect retained source →

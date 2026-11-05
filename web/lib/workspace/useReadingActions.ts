@@ -9,12 +9,14 @@ import {
   type WorkItem,
   type WorkspaceState,
 } from "./api";
+import { resumeContext, useProductContext } from "./productContext";
 
 export function useReadingActions(
   state: WorkspaceState | null,
   setState: (state: WorkspaceState) => void,
   announce: (text: string) => void,
 ) {
+  const context = useProductContext();
   const [busy, setBusy] = useState(false);
   const [undo, setUndo] = useState<{
     work: WorkItem;
@@ -27,13 +29,14 @@ export function useReadingActions(
       work_id: item.work_id,
       revision: item.reading.revision,
       data,
+      context: resumeContext(context, `${location.pathname}${location.search}`),
     };
     const fingerprint = JSON.stringify(input);
     const id = attempts.current.get(fingerprint) ?? requestId();
     attempts.current.set(fingerprint, id);
     setBusy(true);
     try {
-      const reading = await workspaceRequest<ReadingRevision>("reading", {
+      const reading = await workspaceRequest<ReadingRevision>("context/reading", {
         ...input,
         request_id: id,
       });

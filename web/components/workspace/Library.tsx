@@ -1,4 +1,6 @@
 "use client";
+import { loadContextEditors, loadContextReadouts } from "./contextModules";
+
 import Link from "next/link";
 import { requestPaperNavigation } from "@/lib/workspace/navigation";
 import { useSearchParams } from "next/navigation";
@@ -15,9 +17,11 @@ import { PlayerBar } from "./PlayerBar";
 import { ControlBar, SidebarSection, StageHeaderSlot } from "./Slots";
 
 import { FocusPaper } from "./FocusPaper";
+import { contextHref, useProductContext } from "@/lib/workspace/productContext";
 import { Mascot } from "./Mascot";
 
-const PreviewImport = lazy(() => import("./Import").then((module) => ({ default: module.PreviewImport })));
+const PreviewImport = lazy(() => loadContextEditors().then((module) => ({ default: module.PreviewImport })));
+const LearningThreadList = lazy(() => loadContextReadouts().then(module => ({ default: module.LearningThreadList })));
 
 const FOCUS_EVENT = "workspace:library-focus";
 function focusKey(owner: string, view: string) {
@@ -31,12 +35,14 @@ function subscribeFocus(callback: () => void) {
 function serverFocus(): null { return null; }
 
 export function LiveLibrary() {
+  const context = useProductContext();
   const { state, setState, error, reload } = useWorkspace();
   const [notice, setNotice] = useState("");
   const [manual, setManual] = useState("");
   const [busy, setBusy] = useState(false);
   const [importBusy, setImportBusy] = useState(false);
   const [importOpened, setImportOpened] = useState(false);
+  const [threadsOpen, setThreadsOpen] = useState(false);
   const routerView = useSearchParams().get("view");
   const view = useQueryParam("view") ?? routerView;
   const focusId = useQueryParam("focus");
@@ -52,8 +58,10 @@ export function LiveLibrary() {
   const focused = resolveFocus(works, state.works.map((work) => work.work_id), focusId ?? storedFocus);
   const position = neighbours(works, focused?.work_id ?? null);
   const target = focused ? readerTarget(focused) : null;
-  const returnTo = `/workspace/library?view=${filter}`;
-  const href = focused && target ? readerHref(focused, target.version, target.anchor, undefined, returnTo) : "";
+  const resume = focused?.reading.context;
+  const readerContext = resume ? { mode: resume.mode, project: resume.project_id, thread: resume.thread_id, explicit: true, invalid: false } : context;
+  const returnTo = contextHref(`/workspace/library?view=${filter}${focused ? `&focus=${encodeURIComponent(focused.work_id)}` : ""}`, context);
+  const href = focused && target ? contextHref(readerHref(focused, target.version, target.anchor, undefined, resume?.return_to ?? returnTo), readerContext) : "";
   const available = focused && target && (focused.versions.length
     ? focused.versions.some((version) => version.version_id === target.version) : focused.version_id === target.version);
   const notebook = filter === "notes"
@@ -101,7 +109,7 @@ export function LiveLibrary() {
     <ServiceNotice error={error} />
     <SidebarSection label="Library view"><h2>Your library</h2><label>Library view<select value={filter} disabled={actionBusy} onChange={(event) => {
       if (actionBusy) return;
-      window.history.pushState(window.history.state, "", `/workspace/library?view=${encodeURIComponent(event.target.value)}`);
+      window.history.pushState(window.history.state, "", contextHref(`/workspace/library?view=${encodeURIComponent(event.target.value)}`, context));
       window.dispatchEvent(new Event(WORKSPACE_URL_EVENT));
       closeDrawer();
     }}><option value="saved">Saved</option><option value="notes">With notes or questions</option><option value="read">Read</option><option value="archived">Archived</option><option value="all">All personal state</option></select></label>
@@ -123,10 +131,11 @@ export function LiveLibrary() {
         {notebook.flatMap((item) => item.entries.map((entry) => <article key={entry.id} className="daily-notebook-entry">
           <span className="daily-eyebrow">Your {entry.kind.replaceAll("-", " ")}</span><p>{entry.body}</p>
           <p className="workspace-note-context">{item.title} · Source {entry.version_id} · {entry.anchor}</p>
-          <Link href={readerHref(item, entry.version_id, entry.anchor, entry.id, returnTo)} prefetch={false} className="daily-link">Resume this question →</Link>
+          <Link href={contextHref(readerHref(item, entry.version_id, entry.anchor, entry.id, entry.context?.return_to ?? returnTo), entry.context ? { mode: entry.context.mode, project: entry.context.project_id, thread: entry.context.thread_id, explicit: true, invalid: false } : context)} prefetch={false} className="daily-link">Resume this question →</Link>
         </article>))}
       </section>}
-    </> : <section className="daily-empty ws-empty"><Mascot mood="sleepy" size={72} /><div><h2>{filter === "saved" ? "Save something worth returning to." : "No items in this view."}</h2><p>Your notes and reading state will appear here after a successful server save.</p><Link href="/workspace/today" className="daily-link" prefetch={false}>Back to Today →</Link></div></section>}
+    </> : <section className="daily-empty ws-empty"><Mascot mood="sleepy" size={72} /><div><h2>{filter === "saved" ? "Save something worth returning to." : "No items in this view."}</h2><p>Your notes and reading state will appear here after a successful server save.</p><Link href={contextHref("/workspace/today", context)} className="daily-link" prefetch={false}>Back to Today →</Link></div></section>}
+    <details id="learning-threads" onToggle={event => setThreadsOpen(event.currentTarget.open)}><summary>Your saved learning threads</summary>{threadsOpen && <Suspense fallback={<p aria-busy="true">Opening learning threads…</p>}><LearningThreadList owner={owner} /></Suspense>}</details>
     <ControlBar>{focused && !available && <Link href={href} prefetch={false} className="daily-link" data-command="open">Open retained source context →</Link>}{focused && available && <PlayerBar item={focused} href={href} index={position.index} count={position.count}
       busy={actionBusy} onPrevious={position.previous && !actionBusy ? () => choose(position.previous!.work_id) : undefined}
       onNext={position.next && !actionBusy ? () => choose(position.next!.work_id) : undefined}>

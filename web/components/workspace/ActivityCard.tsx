@@ -3,10 +3,11 @@
 import Link from "next/link";
 import {
   displayDate,
-  readerHref,
   type WorkItem,
   type WorkspaceState,
 } from "@/lib/workspace/api";
+import { useProductContext } from "@/lib/workspace/productContext";
+import { activityDestination } from "@/lib/workspace/activity";
 
 /** The server chooses the activity using its durable mutation sequence. */
 export function ActivityCard({
@@ -24,6 +25,7 @@ export function ActivityCard({
   onPin: (entryId: string | null) => void;
   compact?: boolean;
 }) {
+  const current = useProductContext();
   if (!activity)
     return (
       <div className={compact ? "daily-thread workspace-activity workspace-continuation" : "daily-thread"}>
@@ -37,14 +39,7 @@ export function ActivityCard({
         </div>
       </div>
     );
-  const source = work?.versions.find(
-    (version) => version.version_id === activity.version_id,
-  );
-  const sourceTitle =
-    source?.title ||
-    (work?.version_id === activity.version_id
-      ? work.title
-      : "Earlier retained source version");
+  const { sourceTitle, href } = activityDestination(activity, work, current);
   const options = <>
     <time className="workspace-note-context" dateTime={activity.updated_at}>
       Saved {displayDate(activity.updated_at)}
@@ -75,13 +70,7 @@ export function ActivityCard({
         {work ? (
           <Link
             className="workspace-activity-link"
-            href={readerHref(
-              work,
-              activity.version_id,
-              activity.anchor,
-              activity.entry_id ?? undefined,
-              "/workspace/today",
-            )}
+            href={href!}
             prefetch={false}
           >
             {sourceTitle} →

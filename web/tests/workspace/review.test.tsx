@@ -67,7 +67,7 @@ beforeEach(() => {
         : {};
       calls.push({ path, body });
       if (failures[path]) return new Response(null, { status: failures[path] });
-      if (path === "state") return Response.json(workspace());
+      if (path === "context/state") return Response.json(workspace());
       if (path === "review") {
         const selected = new URL(url, "http://localhost").searchParams.get(
           "packet_id",
@@ -123,7 +123,7 @@ describe("finite personal usefulness review", () => {
         .getAllByRole("radio")
         .every((radio) => !(radio as HTMLInputElement).checked),
     ).toBe(true);
-    expect(calls.every((call) => ["state", "review"].includes(call.path))).toBe(
+    expect(calls.every((call) => ["context/state", "review"].includes(call.path))).toBe(
       true,
     );
     const first = screen.getByRole("article", { name: "Stored candidate 1" });
@@ -335,7 +335,7 @@ describe("finite personal usefulness review", () => {
       screen.getByRole("heading", { name: "1 candidates · 0 labelled" }),
     ).toBeInTheDocument();
     expect(window.location.search).toBe(`?packet=${earlier.id}`);
-    expect(calls.every((call) => ["state", "review"].includes(call.path))).toBe(
+    expect(calls.every((call) => ["context/state", "review"].includes(call.path))).toBe(
       true,
     );
     expect(

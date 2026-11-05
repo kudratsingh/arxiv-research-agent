@@ -1,4 +1,5 @@
 import type { ProfileData } from "./api";
+import { forgetDraft, recallDraft, rememberDraft } from "./draftMemory";
 
 export interface InterestDraft {
   version: 1;
@@ -34,12 +35,20 @@ export function loadInterestDraft(owner: string): InterestDraft | null {
 }
 /** Preserve an unreadable original rather than replacing private authored text. */
 export function storeInterestDraft(owner: string, draft: InterestDraft | null) {
+  if (draft) parse(JSON.stringify(draft));
+  rememberDraft(key(owner), { draft, persisted: false });
   const raw = sessionStorage.getItem(key(owner));
   if (raw !== null) parse(raw);
-  if (draft === null) { sessionStorage.removeItem(key(owner)); return; }
+  if (draft === null) { sessionStorage.removeItem(key(owner)); forgetDraft(key(owner)); return; }
   const next = JSON.stringify(draft);
   parse(next);
   sessionStorage.setItem(key(owner), next);
+  rememberDraft(key(owner), { draft, persisted: true });
+}
+export function recoverInterestDraft(owner: string) {
+  const memory = recallDraft<{ draft: InterestDraft | null; persisted: boolean }>(key(owner));
+  try { const stored = loadInterestDraft(owner); return { value: memory ? memory.draft : stored, available: memory?.persisted ?? true }; }
+  catch (failure) { if (memory) return { value: memory.draft, available: false }; throw failure; }
 }
 /** Only the explicit discard action may remove an unreadable local original. */
-export function discardInterestDraft(owner: string) { sessionStorage.removeItem(key(owner)); }
+export function discardInterestDraft(owner: string) { forgetDraft(key(owner)); sessionStorage.removeItem(key(owner)); }

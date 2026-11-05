@@ -480,6 +480,32 @@
       "enforcement": "gated",
       "enforcedBy": "npm run budgets (this script)",
       "note": "New finite owner usefulness review; initial166KiB cap matches other live routes. Measured result recorded before push; all existing JavaScript ceilings unchanged."
+    },
+    {
+      "id": "route-js-live-projects",
+      "kind": "route-first-load-js",
+      "route": "/workspace/projects",
+      "label": "`/workspace/projects` first-load JS, excl. polyfill",
+      "budgetBytes": 169984,
+      "budgetLabel": "166 KiB",
+      "baselineBytes": null,
+      "gate": "every PR",
+      "enforcement": "gated",
+      "enforcedBy": "npm run budgets (this script)",
+      "note": "D1\u2013D4 manual context route. Same 169,984-byte absolute allowance as every existing live workspace route; no old ceiling changes."
+    },
+    {
+      "id": "route-js-live-threads",
+      "kind": "route-first-load-js",
+      "route": "/workspace/threads/[id]",
+      "label": "`/workspace/threads/[id]` first-load JS, excl. polyfill",
+      "budgetBytes": 169984,
+      "budgetLabel": "166 KiB",
+      "baselineBytes": null,
+      "gate": "every PR",
+      "enforcement": "gated",
+      "enforcedBy": "npm run budgets (this script)",
+      "note": "D1\u2013D4 manual context route. Same 169,984-byte absolute allowance as every existing live workspace route; no old ceiling changes."
     }
   ]
 }

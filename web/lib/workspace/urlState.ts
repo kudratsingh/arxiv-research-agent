@@ -7,9 +7,11 @@ export const WORKSPACE_URL_EVENT = "workspace:url";
 function subscribe(listener: () => void) {
   window.addEventListener("popstate", listener);
   window.addEventListener(WORKSPACE_URL_EVENT, listener);
+  window.addEventListener("hashchange", listener);
   return () => {
     window.removeEventListener("popstate", listener);
     window.removeEventListener(WORKSPACE_URL_EVENT, listener);
+    window.removeEventListener("hashchange", listener);
   };
 }
 
@@ -19,6 +21,14 @@ export function serverQueryParam(): null { return null; }
 export function useQueryParam(name: string): string | null {
   return useSyncExternalStore(subscribe,
     () => new URLSearchParams(window.location.search).get(name), serverQueryParam);
+}
+
+export function useWorkspaceHref(path: string): string {
+  return useSyncExternalStore(subscribe,
+    () => `${window.location.pathname}${window.location.search}${window.location.hash}`, () => path);
+}
+export function useWorkspaceSearch(): string {
+  return useSyncExternalStore(subscribe, () => window.location.search, () => "");
 }
 
 /** Local selection replaces history by default; filters may explicitly push. */

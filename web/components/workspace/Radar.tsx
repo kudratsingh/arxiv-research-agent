@@ -12,7 +12,8 @@ import { useWorkspace } from "@/lib/workspace/useWorkspace";
 import { useReadingActions } from "@/lib/workspace/useReadingActions";
 import { LoadingState, Message, ServiceNotice } from "./Common";
 import { neighbours, readerTarget, resolveFocus } from "@/lib/workspace/queue";
-import { setQueryParam, useQueryParam } from "@/lib/workspace/urlState";
+import { setQueryParam, useQueryParam, WORKSPACE_URL_EVENT } from "@/lib/workspace/urlState";
+import { contextHref, useProductContext } from "@/lib/workspace/productContext";
 import { dispatchWorkspaceCommand } from "@/lib/workspace/dispatch";
 import { PlayerBar } from "./PlayerBar";
 import { QueueList } from "./Queue";
@@ -21,6 +22,7 @@ import { ControlBar, SidebarSection, StageHeaderSlot } from "./Slots";
 import { FocusPaper } from "./FocusPaper";
 import { Mascot } from "./Mascot";
 import { useSyntheticPreview } from "./PreviewContext";
+import { ContextUnavailable } from "./ContextUnavailable";
 
 interface WorkPage {
   items: WorkItem[];
@@ -41,13 +43,14 @@ const EMPTY_FILTERS: Filters = {
   status: "",
   days: "7",
 };
-function fromURL() {
+function fromURL(fallback: "learn" | "research" = "learn") {
   const params = new URLSearchParams(window.location.search);
+  const research = params.get("mode") === "research" || !params.has("mode") && fallback === "research";
   return {
     filters: Object.fromEntries(
       Object.entries(EMPTY_FILTERS).map(([key, value]) => [
         key,
-        params.get(key) ?? value,
+        params.get(key) ?? (key === "days" && research ? "0" : value),
       ]),
     ) as unknown as Filters,
     cursor: params.get("cursor"),
@@ -59,6 +62,9 @@ export function LiveRadar() {
   const { state, setState, error, reload } = useWorkspace();
   const synthetic = useSyntheticPreview();
   const focusId = useQueryParam("focus");
+  const context = useProductContext();
+  const mode = useQueryParam("mode"), project = useQueryParam("project"), thread = useQueryParam("thread");
+  const contextKey = JSON.stringify([mode, project, thread, context.mode]);
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [applied, setApplied] = useState<ReturnType<typeof fromURL> | null>(null);
   const appliedKey = useRef("");
@@ -71,8 +77,8 @@ export function LiveRadar() {
   const actions = useReadingActions(actionState, setState, setNotice);
   useEffect(() => {
     const loadURL = () => {
-      const value = fromURL();
-      const key = JSON.stringify(value);
+      const value = fromURL(context.mode);
+      const key = JSON.stringify([value, contextKey]);
       // Browser history may change only focus: the stored page remains valid.
       if (key === appliedKey.current) return;
       appliedKey.current = key;
@@ -84,20 +90,24 @@ export function LiveRadar() {
     };
     loadURL();
     window.addEventListener("popstate", loadURL);
-    return () => window.removeEventListener("popstate", loadURL);
-  }, []);
+    window.addEventListener(WORKSPACE_URL_EVENT, loadURL);
+    return () => { window.removeEventListener("popstate", loadURL); window.removeEventListener(WORKSPACE_URL_EVENT, loadURL); };
+  }, [contextKey, context.mode]);
   useEffect(() => {
     if (!applied) return;
     const controller = new AbortController();
     const params = new URLSearchParams({ ...applied.filters, limit: "20" });
     if (applied.cursor) params.set("cursor", applied.cursor);
     if (applied.asOf) params.set("as_of", applied.asOf);
-    workspaceRequest<WorkPage>(`items?${params}`, undefined, controller.signal)
+    if (mode !== null) params.set("mode", mode === "research" ? "research" : "learn");
+    if (project !== null) params.set("project", project);
+    if (thread !== null) params.set("thread", thread);
+    workspaceRequest<WorkPage>(`context/items?${params}`, undefined, controller.signal)
       .then((result) => {
         if (controller.signal.aborted) return;
         // Pin the server snapshot for Reader return and pagination without refetching.
+        appliedKey.current = JSON.stringify([{ ...applied, asOf: result.as_of }, contextKey]);
         setQueryParam("as_of", result.as_of);
-        appliedKey.current = JSON.stringify({ ...applied, asOf: result.as_of });
         setPage(result);
         setNotice("");
       })
@@ -108,8 +118,9 @@ export function LiveRadar() {
         if (!controller.signal.aborted) setLoading(false);
       });
     return () => controller.abort();
-  }, [applied]);
+  }, [applied, mode, project, thread, contextKey]);
   if (!state) return <LoadingState error={error} retry={() => void reload()} />;
+  if (state.context?.unavailable_reason) return <div className="ws-radar"><ContextUnavailable reason={state.context.unavailable_reason} context={context} /></div>;
   const items = page?.items.map((item) => {
     const current = state.works.find((work) => work.work_id === item.work_id);
     return current ? { ...item, reading: current.reading, entries: current.entries } : item;
@@ -121,7 +132,7 @@ export function LiveRadar() {
     ? focused.versions.some((version) => version.version_id === target.version)
     : focused.version_id === target.version);
   const returnTo = typeof window === "undefined" ? "/workspace/radar" : `${window.location.pathname}${window.location.search}`;
-  const href = focused && target ? readerHref(focused, target.version, target.anchor, undefined, returnTo) : "";
+  const href = focused && target ? contextHref(readerHref(focused, target.version, target.anchor, undefined, contextHref(returnTo, context)), context) : "";
   function closeDrawer() {
     if (document.querySelector('.workspace-app [role="dialog"][aria-modal="true"]')) dispatchWorkspaceCommand("escape");
   }
@@ -137,9 +148,9 @@ export function LiveRadar() {
     const params = new URLSearchParams(next.filters as unknown as Record<string, string>);
     if (next.cursor) params.set("cursor", next.cursor);
     if (next.asOf) params.set("as_of", next.asOf);
-    window.history.pushState(window.history.state, "", `/workspace/radar?${params}`);
+    window.history.pushState(window.history.state, "", contextHref(`/workspace/radar?${params}`, context));
     setQueryParam("focus", null);
-    appliedKey.current = JSON.stringify(next);
+    appliedKey.current = JSON.stringify([next, contextKey]);
     setFilters(next.filters);
     setPage(null);
     setNotice("");
@@ -195,7 +206,7 @@ export function LiveRadar() {
             </select>
           </label>
           <label>
-            Date window
+            Date window (known publication/update)
             <select
               value={filters.days}
               onChange={(event) =>
@@ -205,7 +216,7 @@ export function LiveRadar() {
               <option value="1">Past day</option>
               <option value="7">Past seven days</option>
               <option value="30">Past thirty days</option>
-              <option value="0">All stored dates</option>
+              <option value="0">All stored dates, including undated</option>
             </select>
           </label>
           <label>
@@ -247,12 +258,13 @@ export function LiveRadar() {
             </select>
           </label>
         </div>
+        <p className="daily-muted">A selected date window excludes records without a known publication or update date. All stored dates includes undated records; fetch time is not a publication date.</p>
         <button className="daily-secondary" disabled={loading || actions.busy}>
           Apply filters
         </button>
       </form>
 
-      <p className="workspace-review-link"><Link href="/workspace/review" className="daily-link" prefetch={false}>Review a finite candidate set →</Link></p>
+      <p className="workspace-review-link"><Link href={contextHref("/workspace/review", context)} className="daily-link" prefetch={false}>Review a finite candidate set →</Link></p>
     </SidebarSection>
     <SidebarSection label="Radar results"><h2>Results</h2>
       <QueueList items={items} focusId={focused?.work_id ?? null} onSelect={choose} label="Radar results" />
@@ -262,7 +274,7 @@ export function LiveRadar() {
     </SidebarSection>
     <div className="daily-section-heading ws-focus-section-heading"><h2>Stored source records</h2><span>{loading ? "Loading stored result window…" : page ? `${items.length} on this page · stable observation cutoff` : "No successful result window loaded"}</span></div>
     {loading && <div className="ws-radar-state" aria-busy="true"><Mascot mood="busy" /><p>Loading this stored result window…</p></div>}
-    {!loading && !page && <div className="ws-radar-state"><Mascot mood="alert" /><h2>This stored result window could not be loaded.</h2><button type="button" className="daily-secondary" onClick={() => navigate(applied ?? fromURL())}>Retry stored results</button></div>}
+    {!loading && !page && <div className="ws-radar-state"><Mascot mood="alert" /><h2>This stored result window could not be loaded.</h2><button type="button" className="daily-secondary" onClick={() => navigate(applied ?? fromURL(context.mode))}>Retry stored results</button></div>}
     {focused && retained && <FocusPaper position={{ index: position.index, count: position.count }} item={focused} href={href} />}
     {focused && !retained && <section className="daily-empty ws-radar-state">
       <h2>This retained source version is unavailable.</h2>

@@ -77,8 +77,10 @@ describe("criterion 2 — the route group adds no URL segment", () => {
       "/workspace/items/[id]",
       "/workspace/library",
       "/workspace/operations",
+      "/workspace/projects",
       "/workspace/radar",
       "/workspace/review",
+      "/workspace/threads/[id]",
       "/workspace/today",
     ]);
   });

@@ -1,16 +1,18 @@
 "use client";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { lazy, Suspense, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { normalizeReaderReturnTo, type WorkItem } from "@/lib/workspace/api";
 import { useWorkspace } from "@/lib/workspace/useWorkspace";
 import { readerModule, type ReaderContentComponent } from "@/lib/workspace/readerModule";
 import { LoadingState } from "./Common";
+import { contextHref, useProductContext } from "@/lib/workspace/productContext";
 
-const ReaderReviewContext = lazy(() => import("./ReaderReviewContext"));
+import ReaderReviewContext from "./ReaderReviewContext";
 
 export function LiveReader({ id }: { id: string }) {
-  const { state, setState, error, reload } = useWorkspace();
+  const context = useProductContext();
+  const { state, setState, error, reload, contextPending } = useWorkspace({ retainDuringContextChange: true });
   const params = useSearchParams();
   const requestedVersion = params.get("version");
   const requestedEntry = params.get("entry");
@@ -18,7 +20,7 @@ export function LiveReader({ id }: { id: string }) {
   const [review, setReview] = useState<{ returnTo: string; works: WorkItem[] } | null>(null);
   const reviewWorks = review?.returnTo === returnTo ? review.works : [];
   const reviewContext = returnTo.startsWith("/workspace/review")
-    ? <Suspense fallback={null}><ReaderReviewContext returnTo={returnTo} onReady={setReview} /></Suspense> : null;
+    ? <ReaderReviewContext returnTo={returnTo} onReady={setReview} /> : null;
 
   const item = state?.works.find((work) => work.work_id === id);
   const hasItem = Boolean(item);
@@ -42,7 +44,7 @@ export function LiveReader({ id }: { id: string }) {
           No fictional source was substituted. Save the source URL in Library or
           return to Radar.
         </p>
-        <Link href="/workspace/library" className="daily-link" prefetch={false} scroll={false}>
+        <Link href={contextHref("/workspace/library", context)} className="daily-link" prefetch={false} scroll={false}>
           Open Library →
         </Link>
       </div>
@@ -62,5 +64,7 @@ export function LiveReader({ id }: { id: string }) {
       requestedEntry={requestedEntry}
       returnTo={returnTo}
       reviewWorks={reviewWorks}
+      contextPending={contextPending}
+      onContextRetry={() => void reload()}
     />}</>;
 }

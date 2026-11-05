@@ -43,7 +43,7 @@ beforeEach(() => {
         : {};
       calls.push({ path: String(url).replace("/api/workspace/", ""), body });
       if (failures[path]) return new Response(null, { status: failures[path] });
-      if (path === "state" || path === "refresh") return Response.json(current);
+      if (path === "context/state" || path === "refresh") return Response.json(current);
       if (path === "profile") {
         current.profile = {
           revision: current.profile.revision + 1,
@@ -52,7 +52,7 @@ beforeEach(() => {
         return Response.json(current.profile);
       }
       if (path === "edition") return Response.json(current.editions[0]);
-      if (path === "reading") {
+      if (path === "context/reading") {
         const item = current.works.find(
           (entry) => entry.work_id === body.work_id,
         )!;
@@ -62,7 +62,7 @@ beforeEach(() => {
         };
         return Response.json(item.reading);
       }
-      if (path === "entries") {
+      if (path === "context/entries") {
         const entry = {
           ...(body.data as EntryRevision),
           id: String(body.id),
@@ -104,7 +104,7 @@ beforeEach(() => {
         };
         return Response.json(current.schedule);
       }
-      if (path === "items")
+      if (path === "context/items")
         return Response.json({
           items: current.works,
           next_cursor: nextCursor,
@@ -196,7 +196,7 @@ describe("real source briefing", () => {
     current = workspace({ works: [] });
     const partial = render(<LiveToday />);
     expect(
-      await screen.findByText("No matching items in the available checks."),
+      await screen.findByText("No matches in available checks."),
     ).toBeInTheDocument();
     partial.unmount();
     current.sources = current.sources.map((source) => ({
@@ -205,28 +205,28 @@ describe("real source briefing", () => {
     }));
     const success = render(<LiveToday />);
     expect(
-      await screen.findByText("Nothing new matched this reading window."),
+      await screen.findByText("No matches in this reading window."),
     ).toBeInTheDocument();
     success.unmount();
-    failures.state = 503;
+    failures["context/state"] = 503;
     render(<LiveToday />);
     expect(
       await screen.findByText("No fictional items have been substituted."),
     ).toBeInTheDocument();
-    delete failures.state;
+    delete failures["context/state"];
     await userEvent.click(
       screen.getByRole("button", { name: "Retry connection" }),
     );
     await load();
   });
   it("does not silently retry a conflicting reading state", async () => {
-    failures.reading = 409;
+    failures["context/reading"] = 409;
     const user = userEvent.setup();
     render(<LiveToday />);
     await load();
     await user.click(screen.getByRole("button", { name: /^Dismiss/ }));
     expect(screen.getByRole("status")).toHaveTextContent("another tab");
-    expect(calls.filter((call) => call.path === "reading")).toHaveLength(1);
+    expect(calls.filter((call) => call.path === "context/reading")).toHaveLength(1);
   });
   it("shows committed partial source results as available with a limited window", async () => {
     current.sources = [
@@ -278,7 +278,7 @@ describe("real source briefing", () => {
     render(<LiveToday />);
     await load();
     expect(
-      screen.getByText(/Their newer versions have not been substituted/),
+      screen.getByText(/Newer versions were not substituted/),
     ).toBeInTheDocument();
     expect(screen.queryByRole("article")).not.toBeInTheDocument();
   });
@@ -305,16 +305,16 @@ describe("durable notes and version continuity", () => {
     await load();
     const text = screen.getByRole("textbox", { name: "Your question" });
     await user.type(text, "Which baseline is controlled?");
-    failures.entries = 503;
+    failures["context/entries"] = 503;
     await user.click(screen.getByRole("button", { name: "Save question" }));
     expect(text).toHaveValue("Which baseline is controlled?");
     expect(screen.getByRole("status")).toHaveTextContent("still here");
     expect(sessionStorage.getItem(DRAFT_KEY)).toContain("Which baseline");
-    delete failures.entries;
+    delete failures["context/entries"];
     await user.click(screen.getByRole("button", { name: "Save question" }));
     expect(screen.getByRole("status")).toHaveTextContent("saved on the server");
     expect(text).toHaveValue("");
-    const attempts = calls.filter((call) => call.path === "entries");
+    const attempts = calls.filter((call) => call.path === "context/entries");
     expect(attempts[0]!.body.request_id).toBe(attempts[1]!.body.request_id);
     expect(attempts[0]!.body.id).toBe(attempts[1]!.body.id);
     expect(sessionStorage.getItem(DRAFT_KEY)).not.toContain("Which baseline");
@@ -371,7 +371,7 @@ describe("durable notes and version continuity", () => {
     await user.click(screen.getByRole("button", { name: "Save note" }));
     expect(
       (
-        calls.find((call) => call.path === "entries")!.body
+        calls.find((call) => call.path === "context/entries")!.body
           .data as EntryRevision
       ).version_id,
     ).toBe(entry.version_id);
@@ -414,7 +414,7 @@ describe("durable notes and version continuity", () => {
     await user.click(screen.getByRole("button", { name: "Save question" }));
     expect(
       (
-        calls.find((call) => call.path === "entries")!.body
+        calls.find((call) => call.path === "context/entries")!.body
           .data as EntryRevision
       ).anchor,
     ).toBe(`abstract:0:${SOURCE_TEXT.length}`);
@@ -501,7 +501,7 @@ describe("durable notes and version continuity", () => {
       screen.getByText(/No abstract or full text was acquired/),
     ).toBeInTheDocument();
     await user.click(screen.getByRole("link", { name: "Your notes" }));
-    expect(calls.some((call) => call.path === "reading")).toBe(true);
+    expect(calls.some((call) => call.path === "context/reading")).toBe(true);
     await user.selectOptions(
       screen.getByRole("combobox", { name: "Save as" }),
       "next-action",
@@ -510,7 +510,7 @@ describe("durable notes and version continuity", () => {
       screen.getByRole("textbox", { name: "Your next action" }),
       "Read the original",
     );
-    failures.entries = 409;
+    failures["context/entries"] = 409;
     await user.click(screen.getByRole("button", { name: "Save next action" }));
     expect(screen.getByRole("textbox")).toHaveValue("Read the original");
     expect(screen.getByRole("status")).toHaveTextContent("another tab");
@@ -730,7 +730,7 @@ describe("Radar and local operations", () => {
       "arxiv-cs-lg",
     );
     await user.selectOptions(
-      screen.getByRole("combobox", { name: "Date window" }),
+      screen.getByRole("combobox", { name: "Date window (known publication/update)" }),
       "30",
     );
     await user.selectOptions(
@@ -740,7 +740,7 @@ describe("Radar and local operations", () => {
     await user.click(screen.getByRole("button", { name: "Apply filters" }));
     await waitFor(() =>
       expect(
-        calls.filter((call) => call.path.startsWith("items?")).at(-1)!.path,
+        calls.filter((call) => call.path.startsWith("context/items?")).at(-1)!.path,
       ).toContain("days=30"),
     );
     await user.click(screen.getByRole("button", { name: "Next page →" }));
@@ -897,7 +897,7 @@ describe("recovery paths that must not erase authored data", () => {
     expect(
       screen.getByText(/Draft recovery is unavailable. Copy your text/),
     ).toBeInTheDocument();
-    failures.reading = 409;
+    failures["context/reading"] = 409;
     await user.click(screen.getByRole("button", { name: "Save to Library" }));
     expect(screen.getByRole("status")).toHaveTextContent("another tab");
     expect(text).toHaveValue("Keep my question even when both stores fail");
@@ -910,7 +910,7 @@ describe("recovery paths that must not erase authored data", () => {
     expect(
       screen.getByText(/Draft recovery is unavailable. Copy your text/),
     ).toBeInTheDocument();
-    delete failures.reading;
+    delete failures["context/reading"];
     await user.click(screen.getByRole("button", { name: "Discard unsaved draft" }));
     await user.selectOptions(
       screen.getByRole("combobox", { name: "Source version" }),
@@ -1138,7 +1138,7 @@ describe("the visible personal controls round trip their actual data", () => {
     expect(current.schedule.timezone).toBe("Europe/London");
   });
   it("keeps a failed Radar request explicit, restores filters on browser back, and does not require a saved state to browse", async () => {
-    failures.items = 503;
+    failures["context/items"] = 503;
     const user = userEvent.setup();
     render(<LiveRadar />);
     await load();
@@ -1147,7 +1147,7 @@ describe("the visible personal controls round trip their actual data", () => {
         "retry when the service is available",
       ),
     );
-    delete failures.items;
+    delete failures["context/items"];
     current.works = [];
     await user.selectOptions(
       screen.getByRole("combobox", { name: "Reading state" }),
@@ -1169,7 +1169,7 @@ describe("the visible personal controls round trip their actual data", () => {
       ).toHaveValue("memory"),
     );
     expect(
-      calls.filter((call) => call.path.startsWith("items?")).at(-1)!.path,
+      calls.filter((call) => call.path.startsWith("context/items?")).at(-1)!.path,
     ).toContain("status=read");
   });
 });

@@ -1,14 +1,19 @@
 "use client";
+import { loadContextEditors } from "./contextModules";
+
 import Link from "next/link";
 import { lazy, Suspense, useEffect, useId, useRef, useState } from "react";
 import { STREAMS } from "@/lib/daily/profile";
 import {
   errorMessage,
+  contextRequest,
   requestId,
   workspaceRequest,
   type ProfileData,
   type WorkspaceState,
+  type ProjectDetail,
 } from "@/lib/workspace/api";
+import { contextHref, contextQuery, useProductContext } from "@/lib/workspace/productContext";
 import { useWorkspace } from "@/lib/workspace/useWorkspace";
 import { blockWorkspaceNavigation } from "@/lib/workspace/navigationGuard";
 import { LoadingState, Message, ServiceNotice } from "./Common";
@@ -17,9 +22,11 @@ import { InterestCoverage } from "./InterestCoverage";
 import { ControlBar, SidebarSection } from "./Slots";
 import { Mascot } from "./Mascot";
 import { dispatchWorkspaceCommand } from "@/lib/workspace/dispatch";
-import { loadInterestDraft, storeInterestDraft, discardInterestDraft, type InterestDraft } from "@/lib/workspace/interestDrafts";
+import { recoverInterestDraft, storeInterestDraft, discardInterestDraft, type InterestDraft } from "@/lib/workspace/interestDrafts";
 
-const InterestTopics = lazy(() => import("./InterestTopics"));
+const InterestTopics = lazy(() => loadContextEditors().then(module => ({ default: module.InterestTopics })));
+const LearningPreferences = lazy(() => loadContextEditors().then(module => ({ default: module.LearningPreferences })));
+const ProjectEditor = lazy(() => loadContextEditors().then(module => ({ default: module.ProjectEditor })));
 function lines(value: string) {
   return value
     .split("\n")
@@ -30,13 +37,14 @@ function lines(value: string) {
 export function LiveInterests() {
   const { state, setState, error, reload } = useWorkspace();
   if (!state) return <div className="ws-interests-state"><Mascot mood={error ? "alert" : "busy"} /><LoadingState error={error} retry={() => void reload()} /></div>;
-  return <InterestsEditor key={state.principal_key_id} state={state} setState={setState} error={error} />;
+  return <InterestsEditor key={state.principal_key_id} state={state} setState={setState} error={error} onContextSaved={() => void reload()} />;
 }
 
-function InterestsEditor({ state, setState, error }: { state: WorkspaceState; setState: (value: WorkspaceState) => void; error: string }) {
+function InterestsEditor({ state, setState, error, onContextSaved }: { state: WorkspaceState; setState: (value: WorkspaceState) => void; error: string; onContextSaved: () => void }) {
   const owner = state.principal_key_id;
+  const context = useProductContext();
   const [recovery] = useState(() => {
-    try { const value = loadInterestDraft(owner); return { value, available: true }; }
+    try { return recoverInterestDraft(owner); }
     catch { return { value: null, available: false }; }
   });
   const [draft, setDraft] = useState<ProfileData | null>(recovery.value?.data ?? null);
@@ -47,6 +55,8 @@ function InterestsEditor({ state, setState, error }: { state: WorkspaceState; se
   const [draftStorage, setDraftStorage] = useState(recovery.available);
   const formId = `workspace-interests-${useId()}`;
   const [busy, setBusy] = useState(false);
+  const [learningOpen, setLearningOpen] = useState(false);
+  const [projectOpen, setProjectOpen] = useState(false), [createdProject, setCreatedProject] = useState<ProjectDetail | null>(null);
   const [customRaw, setCustomRaw] = useState<string | null>(recovery.value?.customRaw ?? null);
   const [exclusionsRaw, setExclusionsRaw] = useState<string | null>(recovery.value?.exclusionsRaw ?? null);
   const attempts = useRef(new Map<string, string>(recovery.value?.attempt ? [[recovery.value.attempt.fingerprint, recovery.value.attempt.id]] : []));
@@ -91,7 +101,7 @@ function InterestsEditor({ state, setState, error }: { state: WorkspaceState; se
     if (busy) return;
     setBusy(true);
     try {
-      const fresh = await workspaceRequest<WorkspaceState>("state");
+      const fresh = await contextRequest<WorkspaceState>(`/state?${contextQuery(context)}`);
       discardInterestDraft(owner);
       setState(fresh); setDraft(null); setBaseRevision(null); setCustomRaw(null); setExclusionsRaw(null); setDraftStorage(true);
       setNotice("Draft discarded at your request. Loading the saved server profile.");
@@ -123,7 +133,7 @@ function InterestsEditor({ state, setState, error }: { state: WorkspaceState; se
     try {
       const acknowledged = await workspaceRequest<WorkspaceState["profile"]>("profile", { ...payload, request_id: id });
       await workspaceRequest("edition", {});
-      const fresh = await workspaceRequest<WorkspaceState>("state");
+      const fresh = await contextRequest<WorkspaceState>(`/state?${contextQuery(context)}`);
       setState(fresh);
       if (fresh.profile.revision !== acknowledged.revision) {
         setNotice("A different profile revision is now saved. Your local draft has been kept for review; no saved preferences were overwritten by reloading.");
@@ -153,7 +163,7 @@ function InterestsEditor({ state, setState, error }: { state: WorkspaceState; se
         <span className="daily-eyebrow">
           Your research lens · revision {state.profile.revision}
         </span>
-        <Link className="daily-link" href="/workspace/today" prefetch={false}>
+        <Link className="daily-link" href={contextHref("/workspace/today", context)} prefetch={false}>
           Back to Today →
         </Link>
       </div>
@@ -315,6 +325,14 @@ function InterestsEditor({ state, setState, error }: { state: WorkspaceState; se
         </fieldset>
       </form>
       {!draftStorage && <p className="workspace-version-notice">Browser recovery is unavailable. A confirmed server save is durable; local draft text is not. Save or copy it before browser history navigation.</p>}
+      <details onToggle={event => { if (event.currentTarget.open) setLearningOpen(true); }}><summary>Learning preferences · optional background and goals</summary>
+        {learningOpen && <Suspense fallback={<p aria-busy="true">Opening learning preferences…</p>}><LearningPreferences onSaved={onContextSaved} /></Suspense>}
+      </details>
+      <details onToggle={event => { if (event.currentTarget.open) setProjectOpen(true); }}><summary>Use the saved organizing question for a project</summary>
+        <p>Saved profile revision {state.profile.revision}. This is an explicit new project; opening this section changes nothing.</p>
+        {projectOpen && !createdProject && <Suspense fallback={<p aria-busy="true">Opening explicit project form…</p>}><ProjectEditor owner={owner} question={state.profile.data.research_question} onSaved={value => setCreatedProject(value)} /></Suspense>}
+        {createdProject && <Link className="daily-link" href={contextHref("/workspace/projects", { ...context, mode: "research", project: createdProject.id, thread: null, explicit: true })} prefetch={false}>Open saved project →</Link>}
+      </details>
       <ControlBar><div className="workspace-toolbar ws-interests-actions">
         <span className="ws-unsaved" aria-live="polite">{draft ? "Unsaved interest changes" : `Saved profile · revision ${state.profile.revision}`}</span>
           <button className="daily-button" type="submit" form={formId} disabled={busy}>

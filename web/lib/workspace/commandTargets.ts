@@ -1,4 +1,5 @@
 import { ROUTE_COMMANDS, type WorkspaceCommand } from "./commands";
+import { contextHref, parseProductContext } from "./productContext";
 
 export function enabledWorkspaceControl(element: HTMLElement): boolean {
   return element.isConnected && !element.matches(":disabled, [aria-disabled='true']") &&
@@ -23,8 +24,9 @@ export function resolveWorkspaceCommand(command: WorkspaceCommand): CommandTarge
   const scope = document.querySelector<HTMLElement>(".workspace-app");
   if (!scope) return null;
   if (command in ROUTE_COMMANDS) {
-    const href = ROUTE_COMMANDS[command as keyof typeof ROUTE_COMMANDS];
-    const link = scope.querySelector<HTMLElement>(`.ws-navigation a[href="${href}"]`);
+    const route = ROUTE_COMMANDS[command as keyof typeof ROUTE_COMMANDS];
+    const href = contextHref(route, parseProductContext(new URLSearchParams(location.search)));
+    const link = scope.querySelector<HTMLElement>(`.ws-navigation a[data-workspace-route="${route}"], .ws-navigation a[href="${href}"]`);
     return link ? usableWorkspaceControl(link) ? { element: link, action: "click" } : null : { href };
   }
   if (command === "focus-composer") {

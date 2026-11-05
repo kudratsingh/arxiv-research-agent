@@ -31,7 +31,7 @@ beforeEach(() => {
     const path = new URL(url, "http://localhost").pathname.replace("/api/workspace/", "");
     const body = init?.body ? JSON.parse(String(init.body)) as Record<string, unknown> : {};
     calls.push({ path, body });
-    if (path === "state") return Response.json(current);
+    if (path === "context/state") return Response.json(current);
     if (path === "refresh") return refreshFailure ? new Response(null, { status: refreshFailure }) : Response.json(current);
     if (path === "schedule") {
       if (gate) return new Promise<Response>((resolve) => { gate!.resolve = resolve; });
@@ -48,7 +48,7 @@ async function mount() { const view = render(<WorkspaceShell><LiveOperations /><
 describe("Sources and checks controller", () => {
   it("opens without a mutation and shows one focused source with explicit queue status and receipt", async () => {
     const user = userEvent.setup(); await mount();
-    expect(calls.map((call) => call.path)).toEqual(["state"]);
+    expect(calls.map((call) => call.path)).toEqual(["context/state"]);
     expect(screen.getAllByRole("article").filter((article) => article.classList.contains("workspace-source"))).toHaveLength(1);
     const queue = screen.getByRole("list", { name: "Source checks queue" });
     expect(within(queue).getAllByRole("button")).toHaveLength(4);
@@ -94,7 +94,7 @@ describe("Sources and checks controller", () => {
     await user.click(screen.getByRole("button", { name: "Show source 2 of 4: Second source · failed" }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Second source" })).toBeInTheDocument();
-    expect(calls.map((call) => call.path)).toEqual(["state"]);
+    expect(calls.map((call) => call.path)).toEqual(["context/state"]);
   });
   it("sends only the explicitly requested source or all sources and never calls a model", async () => {
     const user = userEvent.setup(); await mount();
@@ -105,7 +105,7 @@ describe("Sources and checks controller", () => {
     await user.click(screen.getByRole("button", { name: "Check sources now" }));
     await waitFor(() => expect(calls.filter((call) => call.path === "refresh")).toHaveLength(2));
     expect(calls.filter((call) => call.path === "refresh")[1]?.body).toEqual({ source_ids: [] });
-    expect(calls.every((call) => ["state", "refresh"].includes(call.path))).toBe(true);
+    expect(calls.every((call) => ["context/state", "refresh"].includes(call.path))).toBe(true);
   });
   it("uses a native associated form, disables controls during a save and forces recurrence off", async () => {
     const user = userEvent.setup(); await mount(); gate = {};
@@ -184,7 +184,7 @@ describe("Sources and checks controller", () => {
     expect(screen.getByText(/No queued or recorded scheduled tasks/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Previous source" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Next source" })).toBeDisabled();
-    expect(calls.map((call) => call.path)).toEqual(["state"]);
+    expect(calls.map((call) => call.path)).toEqual(["context/state"]);
   });
   it("shows missing task metadata as unrecorded rather than inventing a result", async () => {
     current.tasks = [{ id: "minimal-task" }, { id: "legacy-task", kind: "source scan", state: "waiting", attempt: 2 }];
@@ -195,7 +195,7 @@ describe("Sources and checks controller", () => {
     expect(articles[0]).toHaveTextContent("Attempt not recorded");
     expect(articles[1]).toHaveTextContent("source scan · waiting");
     expect(articles[1]).toHaveTextContent("Attempt 2");
-    expect(calls.map((call) => call.path)).toEqual(["state"]);
+    expect(calls.map((call) => call.path)).toEqual(["context/state"]);
   });
   it("disables live source checks in the synthetic design preview", async () => {
     current.tasks = [];
@@ -206,6 +206,6 @@ describe("Sources and checks controller", () => {
     expect(screen.getByText(/Live source checks are disabled in this synthetic design preview/)).toBeInTheDocument();
     expect(screen.getByText(/Source checks disabled in this synthetic preview/)).toBeInTheDocument();
     expect(screen.queryByText(/Manual source checks remain available/)).not.toBeInTheDocument();
-    expect(calls.map((call) => call.path)).toEqual(["state"]);
+    expect(calls.map((call) => call.path)).toEqual(["context/state"]);
   });
 });

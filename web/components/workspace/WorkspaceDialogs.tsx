@@ -76,3 +76,5 @@ export default function WorkspaceDialogs({ request, onClose, onCommand }: { requ
     </>}
   </dialog>;
 }
+
+export { default as CommandSuggestions } from "./CommandSuggestions";

@@ -1,8 +1,14 @@
 import { readingMaterial, type WorkItem, type WorkspaceState } from "./api";
 
+export function activeEdition(state: WorkspaceState) {
+  return "active_edition" in state
+    ? (state as WorkspaceState & { active_edition: WorkspaceState["editions"][number] | null }).active_edition
+    : state.editions[0];
+}
+
 /** Edition order with exact retained versions, before reading-status filtering. */
 export function todayEditionQueue(state: WorkspaceState): WorkItem[] {
-  const edition = state.editions[0];
+  const edition = activeEdition(state);
   if (!edition) return [];
   return edition.work_ids.flatMap((id) => {
     const work = state.works.find((item) => item.work_id === id);

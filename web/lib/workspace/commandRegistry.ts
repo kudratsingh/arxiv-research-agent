@@ -22,7 +22,7 @@ export function enabledWorkspaceCommands(): CommandEntry[] {
       group: "This page", context, keys: target.getAttribute("aria-keyshortcuts") || "" });
   }
   Object.entries(ROUTE_COMMANDS).forEach(([id, href], index) => {
-    const link = scope.querySelector<HTMLElement>(`.ws-navigation a[href="${href}"]`);
+    const link = scope.querySelector<HTMLElement>(`.ws-navigation a[data-workspace-route="${href}"], .ws-navigation a[href="${href}"]`);
     if (!link || usableWorkspaceControl(link)) rows.push({ id: id as keyof typeof ROUTE_COMMANDS,
       label: `Go to ${ROUTE_LABELS[index]}`, group: "Go to", context: "", keys: `G ${["T", "R", "L", "I", "S", "V"][index]}` });
   });

@@ -9,9 +9,10 @@ import type { WorkspaceState } from "@/lib/workspace/api";
 import { work, workspace } from "./fixtures";
 import { MAT, retained, text as retainedText } from "./materialFixtures";
 
+const router = vi.hoisted(() => ({ search: null as string | null }));
 vi.mock("next/navigation", () => ({
   usePathname: () => window.location.pathname,
-  useSearchParams: () => new URLSearchParams(window.location.search),
+  useSearchParams: () => new URLSearchParams(router.search ?? window.location.search),
 }));
 const ids = [1, 2, 3, 4].map((n) => `arxiv:2610.0000${n}`);
 const titles = ["Alpha", "Beta", "Gamma", "Delta"];
@@ -51,6 +52,7 @@ async function mount(index = 1) {
   return result;
 }
 beforeEach(() => {
+  router.search = null;
   current = fixture(); calls = []; pending = {}; holdReading = false; returnedPacketId = packetId; packetFailure = false; packetWorks = [current.works[3]!, current.works[1]!, current.works[0]!];
   localStorage.clear(); sessionStorage.clear(); openPath(1, `/workspace/today?focus=${encodeURIComponent(ids[1]!)}`);
   vi.stubGlobal("matchMedia", vi.fn((query: string) => ({ media: query, matches: false, onchange: null,
@@ -59,12 +61,12 @@ beforeEach(() => {
     const path = new URL(url, "http://localhost").pathname.replace("/api/workspace/", "");
     const body = init?.body ? JSON.parse(String(init.body)) as Record<string, unknown> : {};
     calls.push({ path, body });
-    if (path === "state") return Response.json(current);
+    if (path === "context/state") return Response.json(current);
     if (path === "review") {
       if (packetFailure) return new Response(null, { status: 503 });
       return Response.json({ packet: returnedPacketId ? { id: returnedPacketId, items: packetWorks.map((candidate) => ({ work: candidate })) } : null, packet_ids: [] });
     }
-    if (path === "reading") {
+    if (path === "context/reading") {
       if (holdReading) return new Promise<Response>((resolve) => { pending.resolve = resolve; });
       const item = current.works.find((entry) => entry.work_id === body.work_id);
       if (!item) throw new Error("Unknown work");
@@ -79,7 +81,7 @@ describe("Reader controller", () => {
   it("vetoes ordinary and slash search during a real pending entry save with working recovery, then permits search after acknowledgement", async () => {
     const original = vi.mocked(fetch).getMockImplementation()!; let finish!: (response: Response) => void;
     vi.mocked(fetch).mockImplementation(async (url, init) => {
-      if (String(url).endsWith("/entries")) { calls.push({ path: "entries", body: JSON.parse(String(init?.body)) }); return new Promise<Response>(resolve => { finish = resolve; }); }
+      if (String(url).endsWith("/entries")) { calls.push({ path: "context/entries", body: JSON.parse(String(init?.body)) }); return new Promise<Response>(resolve => { finish = resolve; }); }
       return original(url, init);
     });
     const user = userEvent.setup(); await mount(); await user.click(screen.getByRole("link", { name: "Your notes" }));
@@ -99,12 +101,12 @@ describe("Reader controller", () => {
     expect(history.state).toEqual(before); expect(sessionStorage.getItem(NAVIGATION_INTENT_KEY)).toBeNull();
     expect(navigationState.pending?.filter(action => action.type === "request").length ?? 0).toBe(requests);
     expect(loadDraft(current.principal_key_id, ids[1]!, `${ids[1]}:v2`)).toEqual(draft);
-    const request = calls.find(call => call.path === "entries")!;
+    const request = calls.find(call => call.path === "context/entries")!;
     await act(async () => finish(Response.json({ id: request.body.id, revision: 1, ...(request.body.data as object), updated_at: "2026-11-02T17:00:00Z", activity_sequence: 99 })));
     await waitFor(() => expect(screen.getByRole("textbox", { name: "Your question" })).not.toHaveAttribute("readonly"));
     fireEvent.change(input, { target: { value: "permitted query" } }); fireEvent.submit(input.closest("form")!);
     expect(assign).toHaveBeenCalledOnce(); expect(assign).toHaveBeenCalledWith("/workspace/radar?q=permitted+query&days=7");
-    expect(sessionStorage.getItem(NAVIGATION_INTENT_KEY)).not.toContain("permitted query"); expect(calls.filter(call => call.path === "entries")).toHaveLength(1);
+    expect(sessionStorage.getItem(NAVIGATION_INTENT_KEY)).not.toContain("permitted query"); expect(calls.filter(call => call.path === "context/entries")).toHaveLength(1);
   });
   it.each(["source", "understand", "abstract:10:15"])("keeps the initial saved entry above conflicting #%s while allowing later explicit hashes", async fragment => {
     const frames: FrameRequestCallback[] = [];
@@ -121,7 +123,7 @@ describe("Reader controller", () => {
     expect(screen.getByText("Keep this exact saved-entry context")).toBeInTheDocument();
     act(() => { history.replaceState(null, "", `${location.pathname}${location.search}#source`); window.dispatchEvent(new HashChangeEvent("hashchange")); });
     expect(document.getElementById("source")).toHaveAttribute("data-active", "true");
-    expect(calls.filter(call => call.path !== "state")).toHaveLength(0);
+    expect(calls.filter(call => call.path !== "context/state")).toHaveLength(0);
   });
 
   it("synchronizes typed same-document material anchors and retains exact work/version refusal without writes", async () => {
@@ -141,7 +143,7 @@ describe("Reader controller", () => {
     act(() => { history.replaceState(null, "", `${location.pathname}${location.search}#material:wrong:page:7:10:20`); window.dispatchEvent(new HashChangeEvent("hashchange")); });
     expect(await screen.findByText(/Retained material could not be opened/)).toBeInTheDocument();
     expect(screen.queryByText(retainedText)).not.toBeInTheDocument();
-    expect(calls.filter(call => !["state", "materials"].includes(call.path))).toHaveLength(0);
+    expect(calls.filter(call => !["context/state", "materials"].includes(call.path))).toHaveLength(0);
   });
 
   it("synchronizes same-document Unicode ranges without remounting or changing a pending note's anchor", async () => {
@@ -151,7 +153,7 @@ describe("Reader controller", () => {
     let finish: ((response: Response) => void) | undefined;
     vi.stubGlobal("fetch", vi.fn(async (url: string, init?: RequestInit) => {
       if (String(url).endsWith("/entries")) {
-        calls.push({ path: "entries", body: JSON.parse(String(init?.body)) });
+        calls.push({ path: "context/entries", body: JSON.parse(String(init?.body)) });
         return new Promise<Response>(resolve => { finish = resolve; });
       }
       return original(url, init);
@@ -163,7 +165,7 @@ describe("Reader controller", () => {
     const before = loadDraft(current.principal_key_id, ids[1]!, `${ids[1]}:v2`)!;
     await user.click(screen.getByRole("button", { name: "Save question" }));
     expect(textarea).toHaveAttribute("readonly");
-    const entryRequest = calls.find(call => call.path === "entries")!;
+    const entryRequest = calls.find(call => call.path === "context/entries")!;
     const version = new URLSearchParams(location.search).get("version");
     for (const [start, end, event] of [[2500, 2520, "hashchange"], [50, 70, "popstate"], [2500, 2520, "popstate"]] as const) {
       act(() => {
@@ -182,7 +184,7 @@ describe("Reader controller", () => {
     expect(loadDraft(current.principal_key_id, ids[1]!, `${ids[1]}:v2`)).toEqual(before);
     expect((entryRequest.body.data as Record<string, unknown>).anchor).toBe(before.anchor);
     expect((entryRequest.body.data as Record<string, unknown>).version_id).toBe(`${ids[1]}:v2`);
-    expect(calls.filter(call => call.path === "entries")).toHaveLength(1);
+    expect(calls.filter(call => call.path === "context/entries")).toHaveLength(1);
     const data = entryRequest.body.data as Record<string, unknown>;
     await act(async () => finish!(Response.json({ id: entryRequest.body.id, revision: 1, ...data,
       updated_at: "2026-11-02T17:00:00Z", activity_sequence: 99 })));
@@ -200,11 +202,13 @@ describe("Reader controller", () => {
     history.replaceState(null, "", `${location.pathname}${location.search}#abstract:10:15`);
     act(() => { for (const callback of frames.splice(0)) callback(0); });
     expect(document.getElementById("source-anchor")).toHaveAttribute("data-source-anchor", "abstract:10:15");
-    expect(calls.filter(call => call.path !== "state")).toHaveLength(0);
+    expect(calls.filter(call => call.path !== "context/state")).toHaveLength(0);
   });
 
   it("refuses invented hash ranges and ignores malformed/cross-work/cross-version events", async () => {
     await mount();
+    // Keep routed props fixed while sending mismatched fragment-only events.
+    router.search = location.search;
     function hash(fragment: string, path = location.pathname, version = `${ids[1]}:v2`) {
       act(() => { history.replaceState(null, "", `${path}?version=${encodeURIComponent(version)}#${fragment}`); window.dispatchEvent(new HashChangeEvent("hashchange")); });
     }
@@ -219,7 +223,7 @@ describe("Reader controller", () => {
     hash("abstract:5:10", `/workspace/items/${encodeURIComponent(ids[1]!)}`, `${ids[1]}:missing`); expect(document.getElementById("source-anchor")).toBe(mark);
     hash("notes"); expect(document.getElementById("notes")).toHaveAttribute("data-active", "true");
     hash("understand"); expect(document.getElementById("understand")).toHaveAttribute("data-active", "true");
-    expect(calls.filter(call => call.path !== "state")).toHaveLength(0);
+    expect(calls.filter(call => call.path !== "context/state")).toHaveLength(0);
   });
 
   it("keeps Source, Understand and Your notes links in main and preserves native note form order and unique controls", async () => {
@@ -373,7 +377,7 @@ describe("Reader controller", () => {
     await user.click(screen.getByRole("link", { name: "Your notes" }));
     expect(screen.getByRole("textbox", { name: "Your question" })).toHaveValue("Beta unsaved thought");
     expect(screen.getByText(/Only a successful server response confirms a durable save/)).toBeInTheDocument();
-    expect(calls.filter(({ path }) => path === "entries")).toHaveLength(0);
+    expect(calls.filter(({ path }) => path === "context/entries")).toHaveLength(0);
     expect(sessionStorage.getItem(DRAFT_KEY)).toContain("Gamma separate draft");
   });
 
@@ -514,7 +518,7 @@ describe("Reader controller", () => {
   it("blocks navigation and actions during a pending server write and does not claim a save prematurely", async () => {
     holdReading = true; const user = userEvent.setup(); await mount();
     await user.click(screen.getByRole("button", { name: "Mark read" }));
-    await waitFor(() => expect(calls.filter(({ path }) => path === "reading")).toHaveLength(1));
+    await waitFor(() => expect(calls.filter(({ path }) => path === "context/reading")).toHaveLength(1));
     expect(screen.getByRole("button", { name: "Next paper" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Previous paper" })).toBeDisabled();
     expect(screen.getByRole("combobox", { name: "Source version" })).toBeDisabled();
@@ -545,7 +549,7 @@ describe("Reader controller", () => {
     document.body.append(ordinaryButton); fireEvent.click(ordinaryButton); ordinaryButton.remove();
     expect(clicked).toHaveBeenCalledOnce();
     fireEvent.keyDown(document.body, { key: "j" });
-    expect(calls.filter(({ path }) => path === "reading")).toHaveLength(1);
+    expect(calls.filter(({ path }) => path === "context/reading")).toHaveLength(1);
     const complete = pending.resolve; if (!complete) throw new Error("Pending request not captured");
     await act(async () => complete(Response.json({ ...current.works[1]!.reading, status: "read", revision: 3 })));
     await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent(/Reading state saved on the server/));

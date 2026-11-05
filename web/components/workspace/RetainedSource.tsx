@@ -10,19 +10,8 @@ import {
   type RetainedSpan,
 } from "@/lib/workspace/api";
 
-export function parseMaterialAnchor(value: string) {
-  const match = /^material:([^:]+):page:(\d+):(\d+):(\d+)$/.exec(value);
-  if (!match) return null;
-  const page = Number(match[2]),
-    start = Number(match[3]),
-    end = Number(match[4]);
-  return [page, start, end].every(Number.isSafeInteger) &&
-    page > 0 &&
-    start >= 0 &&
-    end > start
-    ? { materialId: match[1]!, page, start, end }
-    : null;
-}
+import { parseMaterialAnchor } from "@/lib/workspace/materialAnchors";
+export { parseMaterialAnchor } from "@/lib/workspace/materialAnchors";
 
 function originalPDF(provenance: Record<string, unknown>) {
   const acquisition = provenance.acquisition;

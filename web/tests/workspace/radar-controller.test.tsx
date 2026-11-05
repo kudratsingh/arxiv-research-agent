@@ -32,14 +32,14 @@ beforeEach(() => {
     addEventListener: vi.fn(), removeEventListener: vi.fn(), addListener: vi.fn(), removeListener: vi.fn(), dispatchEvent: vi.fn() })));
   vi.stubGlobal("fetch", vi.fn(async (url: string, init?: RequestInit) => {
     const parsed = new URL(url, "http://localhost"); const path = parsed.pathname.replace("/api/workspace/", "");
-    if (path === "state") return Response.json(current);
-    if (path === "items") {
+    if (path === "context/state") return Response.json(current);
+    if (path === "context/items") {
       itemsRequests.push(parsed.search);
       if (failItems) return new Response(null, { status: 503 });
       if (holdSearch) return new Promise<Response>((resolve) => { searches.set(parsed.searchParams.get("q") ?? "", resolve); });
       return Response.json(parsed.searchParams.has("cursor") ? page([3], null) : page());
     }
-    if (path === "reading") {
+    if (path === "context/reading") {
       const body = JSON.parse(String(init?.body)) as Record<string, unknown>; writes.push(body);
       if (failWrite) return new Response(null, { status: 503 });
       const item = current.works.find((entry) => entry.work_id === body.work_id) ?? catalogue.find((entry) => entry.work_id === body.work_id);

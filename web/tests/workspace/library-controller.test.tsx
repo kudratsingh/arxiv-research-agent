@@ -34,10 +34,10 @@ beforeEach(() => {
   vi.stubGlobal("fetch", vi.fn(async (url: string, init?: RequestInit) => {
     const path = new URL(url, "http://localhost").pathname.replace("/api/workspace/", "");
     const body = init?.body ? JSON.parse(String(init.body)) as Record<string, unknown> : {}; calls.push({ path, body });
-    if (path === "state") return Response.json(current);
+    if (path === "context/state") return Response.json(current);
     if (path === "manual") { if (failManual) return new Response(null, { status: 503 }); return Response.json(work({ title: "Manual source", access_state: "metadata", abstract: "" })); }
     if (path === "import/preview" || path === "import/apply") return Response.json({ digest: "preview-digest", entries_new: 1, entries_existing: 0, conflicts: [], profile_will_change: false, original_retained: true });
-    if (path === "reading") {
+    if (path === "context/reading") {
       if (failReading) return new Response(null, { status: 503 });
       const item = current.works.find((entry) => entry.work_id === body.work_id); if (!item) throw new Error("Unexpected work");
       item.reading = { ...item.reading, ...(body.data as ReadingData), revision: item.reading.revision + 1 };
@@ -74,7 +74,7 @@ describe("Library controller", () => {
     expect(resume.getAttribute("href")).toContain(`version=${encodeURIComponent(`${ids[1]}:v2`)}`);
     expect(resume.getAttribute("href")).toContain("entry=entry-1");
     expect(resume.getAttribute("href")).toContain("return_to=%2Fworkspace%2Flibrary%3Fview%3Dnotes");
-    expect(resume.getAttribute("href")).not.toContain("focus%3D");
+    expect(new URL(resume.getAttribute("href")!, location.origin).searchParams.get("return_to")).toContain("focus=arxiv%3A2610.00003");
     expect(resume.getAttribute("href")).toContain("#abstract%3A2%3A7");
   });
   it("restores focus on Reader return per account and view without changing the exact return URL", async () => {
@@ -106,13 +106,13 @@ describe("Library controller", () => {
   it.each([["Dismiss", "dismissed"], ["Snooze one day", "snoozed"]] as const)("persists %s and restores the original reading state on Undo", async (label, status) => {
     const user = userEvent.setup(); await mount();
     await user.click(screen.getByRole("button", { name: new RegExp(`^${label} Beta`) }));
-    await waitFor(() => expect(calls.filter(({ path }) => path === "reading")).toHaveLength(1));
-    const first = calls.find(({ path }) => path === "reading")!.body;
+    await waitFor(() => expect(calls.filter(({ path }) => path === "context/reading")).toHaveLength(1));
+    const first = calls.find(({ path }) => path === "context/reading")!.body;
     expect(first.work_id).toBe(ids[1]); expect(first.data).toMatchObject({ status, version_id: `${ids[1]}:v2`, anchor: "abstract:2:7" });
     if (status === "snoozed") expect((first.data as ReadingData).snoozed_until).toEqual(expect.any(String));
     await user.click(screen.getByRole("button", { name: "Undo last change" }));
-    await waitFor(() => expect(calls.filter(({ path }) => path === "reading")).toHaveLength(2));
-    expect(calls.filter(({ path }) => path === "reading")[1]?.body.data).toMatchObject({ status: "unread", anchor: "abstract:2:7" });
+    await waitFor(() => expect(calls.filter(({ path }) => path === "context/reading")).toHaveLength(2));
+    expect(calls.filter(({ path }) => path === "context/reading")[1]?.body.data).toMatchObject({ status: "unread", anchor: "abstract:2:7" });
   });
   it("accepts a matching top-level retained version when no version list is available", async () => {
     current.works[1]!.versions = [];
@@ -148,11 +148,11 @@ describe("Library controller", () => {
   it("preserves failed reading actions and idempotent retry, with a working Undo", async () => {
     const user = userEvent.setup(); await mount(); failReading = true;
     await user.click(screen.getByRole("button", { name: /^Save Beta/ }));
-    await waitFor(() => expect(calls.filter(({ path }) => path === "reading")).toHaveLength(1)); focused("Beta");
+    await waitFor(() => expect(calls.filter(({ path }) => path === "context/reading")).toHaveLength(1)); focused("Beta");
     await waitFor(() => expect(screen.getByRole("button", { name: /^Save Beta/ })).toBeEnabled());
     failReading = false; await user.click(screen.getByRole("button", { name: /^Save Beta/ }));
     await waitFor(() => expect(screen.getByRole("button", { name: /^Unsave Beta/ })).toBeInTheDocument());
-    const writes = calls.filter(({ path }) => path === "reading"); expect(writes[1]?.body.request_id).toBe(writes[0]?.body.request_id);
+    const writes = calls.filter(({ path }) => path === "context/reading"); expect(writes[1]?.body.request_id).toBe(writes[0]?.body.request_id);
     await user.click(screen.getByRole("button", { name: "Undo last change" }));
     await waitFor(() => expect(screen.getByRole("button", { name: /^Save Beta/ })).toBeInTheDocument());
   });

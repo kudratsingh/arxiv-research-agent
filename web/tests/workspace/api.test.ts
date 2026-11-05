@@ -18,7 +18,7 @@ import {
 describe("controller reader return focus", () => {
   it("retains Today focus, encoding it as data and dropping unrelated parameters", () => {
     expect(normalizeReaderReturnTo("/workspace/today?focus=arxiv%3A2610.00001&extra=1#notes"))
-      .toBe("/workspace/today?focus=arxiv%3A2610.00001");
+      .toBe("/workspace/today?focus=arxiv%3A2610.00001#notes");
     expect(normalizeReaderReturnTo(`/workspace/today?focus=${"a".repeat(500)}`))
       .toBe(`/workspace/today?focus=${"a".repeat(500)}`);
     expect(normalizeReaderReturnTo("/workspace/today?focus=a%26return_to%3Dhttps%3A%2F%2Fevil.example"))
@@ -29,7 +29,7 @@ describe("controller reader return focus", () => {
       expect(normalizeReaderReturnTo(`/workspace/today?focus=${focus}`)).toBe("/workspace/today");
     });
   it("keeps exact Library and Review returns and retains Radar focus", () => {
-    expect(normalizeReaderReturnTo("/workspace/library?view=notes&focus=a")).toBe("/workspace/library?view=notes");
+    expect(normalizeReaderReturnTo("/workspace/library?view=notes&focus=a")).toBe("/workspace/library?view=notes&focus=a");
     const packet = `review-${"a".repeat(32)}`;
     expect(normalizeReaderReturnTo(`/workspace/review?packet=${packet}&focus=a`)).toBe(`/workspace/review?packet=${packet}`);
     expect(normalizeReaderReturnTo("/workspace/radar?q=test&focus=a")).toBe("/workspace/radar?q=test&focus=a");
@@ -40,7 +40,7 @@ describe("controller reader return focus", () => {
     params.delete("extra");
     expect(result.pathname).toBe("/workspace/radar");
     expect(result.searchParams.toString()).toBe(params.toString());
-    expect(result.hash).toBe("");
+    expect(result.hash).toBe("#notes");
   });
   it.each([["cursor", 2048], ["as_of", 80], ["focus", 500]] as const)("bounds Radar %s and rejects encoded control data", (key, limit) => {
     const accepted = new URLSearchParams({ [key]: "a".repeat(limit) });
@@ -175,8 +175,12 @@ describe("unsaved draft recovery", () => {
     expect(() => loadDraft("a", "w", "v")).toThrow("full");
   });
   it("validates recovered data and bounds aggregate drafts", () => {
-    storeDraft("a", "w", "v", { ...draft, body: "x".repeat(10001) });
+    expect(() => storeDraft("a", "w", "v", { ...draft, body: "x".repeat(10001) })).toThrow("Malformed");
+    expect(loadDraft("a", "w", "v")).toBeNull();
+    const corrupted = JSON.stringify({ version: 1, entries: { [JSON.stringify(["a", "w", "v"])]: { ...draft, body: "x".repeat(10001) } } });
+    sessionStorage.setItem(DRAFT_KEY, corrupted);
     expect(() => loadDraft("a", "w", "v")).toThrow("Malformed");
+    expect(sessionStorage.getItem(DRAFT_KEY)).toBe(corrupted);
     sessionStorage.clear();
     for (let index = 0; index < 40; index++)
       storeDraft("a", `w${index}`, "v", draft);
