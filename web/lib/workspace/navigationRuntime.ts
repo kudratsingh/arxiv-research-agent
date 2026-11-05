@@ -1,4 +1,4 @@
-import { navigationState as bridge } from "./navigation";
+import { navigationState as bridge, NAVIGATION_INTENT_KEY } from "./navigation";
 
 export type NavigationAction =
   | { type: "request"; href: string; kind: "paper" | "route"; base: string }
@@ -6,7 +6,7 @@ export type NavigationAction =
   | { type: "reader"; target: HTMLElement; explicit: boolean }
   | { type: "event"; event: Event; base: string; prevented: boolean };
 type Intent = { exactReader?: boolean; kind: "paper" | "route" | "history"; path: string; at: number; top?: number };
-const INTENT_KEY = "arxiv.workspace.navigation-intent.v1";
+const INTENT_KEY = NAVIGATION_INTENT_KEY;
 const state = { intent: null as Intent | null };
 function clearIntent() {
   state.intent = null;

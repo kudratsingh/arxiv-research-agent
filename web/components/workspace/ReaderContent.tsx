@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { settleReaderTarget } from "@/lib/workspace/navigation";
+import { blockWorkspaceNavigation } from "@/lib/workspace/navigationGuard";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import {
   displayDate, errorMessage, readerHref, requestId, readingMaterial, workspaceRequest,
@@ -141,6 +142,8 @@ export default function ReaderContent({
   const navigationBlocked = busy || unsafeDraft;
   useEffect(() => {
     if (!navigationBlocked) return;
+    const refuse = () => setNotice(unsafeDraft ? DRAFT_NAVIGATION_NOTICE : "Wait for the current save to finish before leaving this source version.");
+    const release = blockWorkspaceNavigation(refuse);
     function guardLink(event: MouseEvent) {
       if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
       const target = event.target instanceof Element ? event.target.closest("a[href]") : null;
@@ -149,7 +152,7 @@ export default function ReaderContent({
       if (!destination || destination.startsWith("#") || target.target.toLowerCase() === "_blank") return;
       event.preventDefault();
       event.stopPropagation();
-      if (unsafeDraft) setNotice(DRAFT_NAVIGATION_NOTICE);
+      refuse();
     }
     function warnBeforeUnload(event: BeforeUnloadEvent) {
       if (!unsafeDraft) return;
@@ -159,6 +162,7 @@ export default function ReaderContent({
     document.addEventListener("click", guardLink, true);
     window.addEventListener("beforeunload", warnBeforeUnload);
     return () => {
+      release();
       document.removeEventListener("click", guardLink, true);
       window.removeEventListener("beforeunload", warnBeforeUnload);
     };

@@ -5,6 +5,7 @@ import { dispatchWorkspaceCommand, dispatchWorkspacePrefix } from "@/lib/workspa
 import { Icon } from "./Icon";
 import { useQueryParam } from "@/lib/workspace/urlState";
 import { useSidebarViewport } from "./useSidebarPreference";
+import { navigateWorkspace } from "@/lib/workspace/navigation";
 
 const CommandSuggestions = lazy(() => import("./CommandSuggestions"));
 
@@ -52,12 +53,12 @@ export function Composer(): React.ReactElement {
       const value = current.get(key);
       if (value !== null) params.set(key, value);
     }
-    // Full navigation preserves the existing route contract without a router dependency.
-    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
-    location.assign(`/workspace/radar?${params.toString()}`);
+    if (!navigateWorkspace(`/workspace/radar?${params.toString()}`, "paper")) {
+      setHelp("Search stayed here. Finish your save or save/copy your draft before leaving.");
+    }
   }
   return (
-    <form role="search" className="ws-composer ws-composer-shell" data-expanded={expanded} onSubmit={submit}>
+    <form role="search" className="ws-composer ws-composer-shell" data-guarded-navigation="" data-expanded={expanded} onSubmit={submit}>
       <button ref={toggleRef} className="ws-composer-toggle" type="button" hidden={!mobile}
         aria-label={expanded ? "Close search" : "Open search"} aria-expanded={expanded} aria-controls={fieldsId}
         data-command={mobile && expanded ? "escape" : undefined} onClick={toggle}>

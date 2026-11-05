@@ -44,6 +44,20 @@ async function mount() { const view = render(<WorkspaceShell><LiveInterests /></
 function changeQuestion(value: string) { fireEvent.change(screen.getByRole("textbox", { name: "Your current research question" }), { target: { value } }); }
 
 describe("Interests controller", () => {
+  it("vetoes ordinary and slash search during a pending profile save with working recovery and permits the unchanged query contract afterward", async () => {
+    const user = userEvent.setup(); await mount(); changeQuestion("Keep this pending profile question"); pending = {};
+    const draft = loadInterestDraft("owner-a"); await user.click(screen.getByRole("button", { name: "Save interests and question" }));
+    await waitFor(() => expect(pending?.resolve).toBeDefined()); expect(window.dispatchEvent(new Event("beforeunload", { cancelable: true }))).toBe(true);
+    const assign = vi.fn(); vi.stubGlobal("location", { ...window.location, assign }); const search = await screen.findByRole("searchbox", { name: "Search stored papers" });
+    for (const query of ["pending profile query", "/library"]) { fireEvent.change(search, { target: { value: query } }); fireEvent.submit(search.closest("form")!); expect(search).toHaveValue(query); }
+    expect(assign).not.toHaveBeenCalled(); expect(screen.getByRole("status")).toHaveTextContent("Wait for this preference save");
+    expect(loadInterestDraft("owner-a")?.data).toEqual(draft?.data); expect(calls.filter(call => call.path === "profile")).toHaveLength(1);
+    const request = calls.find(call => call.path === "profile")!; current.profile = { revision: 2, data: request.body.data as ProfileData };
+    await act(async () => pending!.resolve!(Response.json(current.profile)));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Save interests and question" })).toBeEnabled());
+    fireEvent.change(search, { target: { value: "accepted profile query" } }); fireEvent.submit(search.closest("form")!);
+    expect(assign).toHaveBeenCalledOnce(); expect(assign).toHaveBeenCalledWith("/workspace/radar?q=accepted+profile+query&days=7");
+  });
   it("shows the server's saved reading-window allocation without recalculating it", async () => {
     current.allocation_previews = [{ minutes: 15, slots: 3, requested_fraction: 0.3, planned_max_exploration_slots: 0, max_exploration_slots: 0, actual_exploration_slots: 0, actual_items: 3, actual_fraction: 0, unused_slots: 0 }];
     await mount();
@@ -203,6 +217,9 @@ describe("Interests controller", () => {
     const link = screen.getByRole("link", { name: "Library" }); const event = new MouseEvent("click", { bubbles: true, cancelable: true });
     act(() => { link.dispatchEvent(event); }); expect(event.defaultPrevented).toBe(true);
     expect(window.dispatchEvent(new Event("beforeunload", { cancelable: true }))).toBe(false);
+    const assign = vi.fn(); vi.stubGlobal("location", { ...window.location, assign });
+    const search = await screen.findByRole("searchbox", { name: "Search stored papers" }); fireEvent.change(search, { target: { value: "unsafe interest query" } }); fireEvent.submit(search.closest("form")!);
+    expect(assign).not.toHaveBeenCalled(); expect(search).toHaveValue("unsafe interest query");
     expect(calls.every((call) => call.path === "state")).toBe(true);
     await userEvent.setup().click(screen.getByRole("button", { name: "Discard draft and reload saved profile" }));
     await waitFor(() => expect(sessionStorage.getItem(key("owner-a"))).toBeNull());

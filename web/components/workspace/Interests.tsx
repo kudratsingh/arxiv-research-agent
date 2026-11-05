@@ -10,6 +10,7 @@ import {
   type WorkspaceState,
 } from "@/lib/workspace/api";
 import { useWorkspace } from "@/lib/workspace/useWorkspace";
+import { blockWorkspaceNavigation } from "@/lib/workspace/navigationGuard";
 import { LoadingState, Message, ServiceNotice } from "./Common";
 import { AllocationReceipt } from "./AllocationReceipt";
 import { InterestCoverage } from "./InterestCoverage";
@@ -53,16 +54,18 @@ function InterestsEditor({ state, setState, error }: { state: WorkspaceState; se
   const unsafeDraft = draft !== null && !draftStorage;
   useEffect(() => {
     if (!unsafeDraft && !busy) return;
+    const refuse = () => setNotice(unsafeDraft ? "Save or copy your interest changes before leaving. Browser draft recovery is unavailable." : "Wait for this preference save to finish before leaving.");
+    const release = blockWorkspaceNavigation(refuse);
     const click = (event: MouseEvent) => {
       if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
       const link = event.target instanceof Element ? event.target.closest<HTMLAnchorElement>("a[href]") : null;
       if (!link || link.hasAttribute("download") || link.target === "_blank" || link.getAttribute("href")?.startsWith("#")) return;
       event.preventDefault(); event.stopPropagation();
-      setNotice(unsafeDraft ? "Save or copy your interest changes before leaving. Browser draft recovery is unavailable." : "Wait for this preference save to finish before leaving.");
+      refuse();
     };
     const unload = (event: BeforeUnloadEvent) => { if (unsafeDraft) { event.preventDefault(); event.returnValue = ""; } };
     document.addEventListener("click", click, true); window.addEventListener("beforeunload", unload);
-    return () => { document.removeEventListener("click", click, true); window.removeEventListener("beforeunload", unload); };
+    return () => { release(); document.removeEventListener("click", click, true); window.removeEventListener("beforeunload", unload); };
   }, [unsafeDraft, busy]);
   function cache(value: InterestDraft | null) {
     try { storeInterestDraft(owner, value); setDraftStorage(true); return true; }

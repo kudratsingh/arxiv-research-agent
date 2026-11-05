@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { WorkspaceShell } from "@/components/workspace/Shell";
 import { LiveReader } from "@/components/workspace/Reader";
 import { DRAFT_KEY, loadDraft } from "@/lib/workspace/drafts";
+import { navigationState, NAVIGATION_INTENT_KEY } from "@/lib/workspace/navigation";
 import type { WorkspaceState } from "@/lib/workspace/api";
 import { work, workspace } from "./fixtures";
 import { MAT, retained, text as retainedText } from "./materialFixtures";
@@ -75,6 +76,36 @@ beforeEach(() => {
 afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 
 describe("Reader controller", () => {
+  it("vetoes ordinary and slash search during a real pending entry save with working recovery, then permits search after acknowledgement", async () => {
+    const original = vi.mocked(fetch).getMockImplementation()!; let finish!: (response: Response) => void;
+    vi.mocked(fetch).mockImplementation(async (url, init) => {
+      if (String(url).endsWith("/entries")) { calls.push({ path: "entries", body: JSON.parse(String(init?.body)) }); return new Promise<Response>(resolve => { finish = resolve; }); }
+      return original(url, init);
+    });
+    const user = userEvent.setup(); await mount(); await user.click(screen.getByRole("link", { name: "Your notes" }));
+    await user.type(screen.getByRole("textbox", { name: "Your question" }), "Pending exact-version question");
+    const draft = loadDraft(current.principal_key_id, ids[1]!, `${ids[1]}:v2`)!;
+    await user.click(screen.getByRole("button", { name: "Save question" }));
+    expect(window.dispatchEvent(new Event("beforeunload", { cancelable: true }))).toBe(true);
+    const assign = vi.fn(); vi.stubGlobal("location", { ...window.location, assign });
+    const input = await screen.findByRole("searchbox"); const before = history.state;
+    const requests = navigationState.pending?.filter(action => action.type === "request").length ?? 0; sessionStorage.removeItem(NAVIGATION_INTENT_KEY);
+    fireEvent.change(input, { target: { value: "keep pending query" } }); fireEvent.submit(input.closest("form")!);
+    expect(assign).not.toHaveBeenCalled(); expect(input).toHaveValue("keep pending query");
+    expect(screen.getByText("Search stayed here. Finish your save or save/copy your draft before leaving.")).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("Wait for the current save");
+    fireEvent.change(input, { target: { value: "/radar" } }); fireEvent.submit(input.closest("form")!);
+    expect(input).toHaveValue("/radar"); expect(assign).not.toHaveBeenCalled();
+    expect(history.state).toEqual(before); expect(sessionStorage.getItem(NAVIGATION_INTENT_KEY)).toBeNull();
+    expect(navigationState.pending?.filter(action => action.type === "request").length ?? 0).toBe(requests);
+    expect(loadDraft(current.principal_key_id, ids[1]!, `${ids[1]}:v2`)).toEqual(draft);
+    const request = calls.find(call => call.path === "entries")!;
+    await act(async () => finish(Response.json({ id: request.body.id, revision: 1, ...(request.body.data as object), updated_at: "2026-11-02T17:00:00Z", activity_sequence: 99 })));
+    await waitFor(() => expect(screen.getByRole("textbox", { name: "Your question" })).not.toHaveAttribute("readonly"));
+    fireEvent.change(input, { target: { value: "permitted query" } }); fireEvent.submit(input.closest("form")!);
+    expect(assign).toHaveBeenCalledOnce(); expect(assign).toHaveBeenCalledWith("/workspace/radar?q=permitted+query&days=7");
+    expect(sessionStorage.getItem(NAVIGATION_INTENT_KEY)).not.toContain("permitted query"); expect(calls.filter(call => call.path === "entries")).toHaveLength(1);
+  });
   it.each(["source", "understand", "abstract:10:15"])("keeps the initial saved entry above conflicting #%s while allowing later explicit hashes", async fragment => {
     const frames: FrameRequestCallback[] = [];
     vi.stubGlobal("requestAnimationFrame", vi.fn(callback => { frames.push(callback); return frames.length; }));
@@ -363,6 +394,10 @@ describe("Reader controller", () => {
     expect(back).toHaveAttribute("aria-disabled", "true");
     const click = new MouseEvent("click", { bubbles: true, cancelable: true });
     act(() => { back.dispatchEvent(click); }); expect(click.defaultPrevented).toBe(true);
+    expect(screen.getByRole("textbox", { name: "Your question" })).toHaveValue("Keep this text");
+    const assign = vi.fn(); vi.stubGlobal("location", { ...window.location, assign });
+    const search = await screen.findByRole("searchbox"); fireEvent.change(search, { target: { value: "preserve unsafe draft" } }); fireEvent.submit(search.closest("form")!);
+    expect(assign).not.toHaveBeenCalled(); expect(search).toHaveValue("preserve unsafe draft");
     expect(screen.getByRole("textbox", { name: "Your question" })).toHaveValue("Keep this text");
   });
 

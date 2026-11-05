@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { blockWorkspaceNavigation } from "@/lib/workspace/navigationGuard";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   displayDate,
@@ -53,16 +54,18 @@ export function CandidateReview() {
   const locked = preparing || reloading || saving;
   useEffect(() => {
     if (!dirtyCount && !locked) return;
+    const refuse = () => setNotice(dirtyCount ? "Save or discard your unsaved judgments before leaving this review. You can open sources in a new tab to keep this review open." : "Wait for the current review request to finish before leaving.");
+    const release = blockWorkspaceNavigation(refuse);
     const click = (event: MouseEvent) => {
       if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
       const link = event.target instanceof Element ? event.target.closest<HTMLAnchorElement>("a[href]") : null;
       if (!link || link.hasAttribute("download") || link.target === "_blank" || link.getAttribute("href")?.startsWith("#")) return;
       event.preventDefault(); event.stopPropagation();
-      setNotice(dirtyCount ? "Save or discard your unsaved judgments before leaving this review. You can open sources in a new tab to keep this review open." : "Wait for the current review request to finish before leaving.");
+      refuse();
     };
     const unload = (event: BeforeUnloadEvent) => { if (dirtyCount) { event.preventDefault(); event.returnValue = ""; } };
     document.addEventListener("click", click, true); window.addEventListener("beforeunload", unload);
-    return () => { document.removeEventListener("click", click, true); window.removeEventListener("beforeunload", unload); };
+    return () => { release(); document.removeEventListener("click", click, true); window.removeEventListener("beforeunload", unload); };
   }, [dirtyCount, locked]);
 
   useEffect(() => {

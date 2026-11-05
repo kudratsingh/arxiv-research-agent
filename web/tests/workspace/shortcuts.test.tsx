@@ -22,12 +22,13 @@ function Fixture({ next, disabled = false, onLight }: { next: () => void; disabl
 function key(target: Element | Document | Window, keyName: string, options: Record<string, unknown> = {}): void {
   fireEvent.keyDown(target, { key: keyName, ...options });
 }
-beforeEach(() => { assign.mockReset(); vi.stubGlobal("location", { assign }); });
+beforeEach(() => { assign.mockReset(); history.replaceState(null, "", "/workspace/today"); vi.stubGlobal("location", { ...window.location, assign }); });
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 
 describe("workspace shortcuts and composer", () => {
   it("binds the Radar query while preserving filters and starting a new observation window", () => {
-    const current = { assign, pathname: "/workspace/radar", search: "?q=old&days=30&source_id=arxiv-cs-lg&access_state=excerpt&status=saved&cursor=old-page&as_of=old-cutoff&focus=old-work" };
+    const url = new URL("/workspace/radar?q=old&days=30&source_id=arxiv-cs-lg&access_state=excerpt&status=saved&cursor=old-page&as_of=old-cutoff&focus=old-work", location.href);
+    const current = { ...location, assign, href: url.href, origin: url.origin, pathname: url.pathname, search: url.search };
     vi.stubGlobal("location", current);
     render(<Fixture next={vi.fn()} />);
     const input = screen.getByRole("searchbox", { name: "Search stored papers" });

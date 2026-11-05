@@ -45,6 +45,15 @@ async function mount() { render(<WorkspaceShell><CandidateReview /></WorkspaceSh
 function candidate(n: number) { return screen.getByRole("article", { name: `Frozen source ${n}` }); }
 
 describe("Review controller", () => {
+  it("vetoes ordinary and slash navigation for dirty judgments without changing the query, labels or reason", async () => {
+    const user = userEvent.setup(); await mount(); const reason = within(candidate(1)).getByRole("textbox"); await user.type(reason, "Keep this unsaved judgment reason");
+    const assign = vi.fn(); vi.stubGlobal("location", { ...window.location, assign }); const search = await screen.findByRole("searchbox");
+    for (const query of ["review query", "/radar"]) { fireEvent.change(search, { target: { value: query } }); fireEvent.submit(search.closest("form")!); expect(search).toHaveValue(query); }
+    expect(assign).not.toHaveBeenCalled(); expect(reason).toHaveValue("Keep this unsaved judgment reason");
+    expect(screen.getByRole("status")).toHaveTextContent("Save or discard your unsaved judgments");
+    expect(within(candidate(1)).getAllByRole("radio").every(radio => !(radio as HTMLInputElement).checked)).toBe(true);
+    expect(calls.filter(call => call.path === "review/feedback")).toHaveLength(0);
+  });
   it("keeps an unsaved judgment when browser history selects another packet", async () => {
     const user = userEvent.setup();
     const view = render(<WorkspaceShell><CandidateReview /></WorkspaceShell>);

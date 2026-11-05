@@ -1,6 +1,7 @@
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { navigationState, requestPaperNavigation, requestWorkspaceNavigation, settleReaderTarget, settleWorkspaceContent, useWorkspaceNavigation } from "@/lib/workspace/navigation";
+import { navigationState, navigateWorkspace, NAVIGATION_INTENT_KEY, requestPaperNavigation, requestWorkspaceNavigation, settleReaderTarget, settleWorkspaceContent, useWorkspaceNavigation } from "@/lib/workspace/navigation";
+import { blockWorkspaceNavigation } from "@/lib/workspace/navigationGuard";
 
 let frames: Map<number, FrameRequestCallback>;
 let frameId: number;
@@ -9,6 +10,7 @@ let reduced: boolean;
 let animate: ReturnType<typeof vi.fn>;
 let cancelAnimation: ReturnType<typeof vi.fn>;
 let order: string[];
+let navigationGuards: (() => void)[];
 function Paper({ id }: { id: string }) {
   return <article data-paper-key={id} className="ws-focus" data-paper-announcement={`Paper 2 of 4: ${id}`}><div className="ws-focus-heading" data-top="260"><h3>{id}</h3></div><p>{"Long actual abstract text. ".repeat(300)}</p></article>;
 }
@@ -31,7 +33,7 @@ async function flush() {
   await act(async () => { const pending = [...frames.values()]; frames.clear(); pending.forEach((callback) => callback(0)); await Promise.resolve(); });
 }
 beforeEach(() => {
-  frames = new Map(); frameId = 0; mobile = false; reduced = false; order = [];
+  frames = new Map(); frameId = 0; mobile = false; reduced = false; order = []; navigationGuards = [];
   history.replaceState(null, "", "/workspace/today"); sessionStorage.clear();
   vi.stubGlobal("requestAnimationFrame", vi.fn((callback: FrameRequestCallback) => { frames.set(++frameId, callback); return frameId; }));
   vi.stubGlobal("cancelAnimationFrame", vi.fn((id: number) => { frames.delete(id); }));
@@ -43,6 +45,7 @@ beforeEach(() => {
   Object.defineProperty(HTMLElement.prototype, "animate", { configurable: true, value: animate });
 });
 afterEach(async () => {
+  navigationGuards.forEach(release => release());
   // Complete any intent before removing the host, matching a committed route.
   if (navigationState.engine) settleWorkspaceContent(document.body);
   await flush(); await flush();
@@ -50,6 +53,34 @@ afterEach(async () => {
 });
 
 describe("shared workspace navigation", () => {
+  it("leaves early managed Search button clicks and submissions without checkpoints or intent when vetoed", async () => {
+    render(<Harness />); const container = wireScroll();
+    const form = container.querySelector<HTMLFormElement>(".ws-composer")!; form.dataset.guardedNavigation = "";
+    const button = document.createElement("button"); button.type = "submit"; button.textContent = "Search"; form.append(button);
+    form.addEventListener("submit", event => { event.preventDefault(); navigateWorkspace("/workspace/radar?q=private+early+query", "paper"); });
+    const assign = vi.fn(); vi.stubGlobal("location", { ...window.location, assign }); const unblock = blockWorkspaceNavigation(vi.fn()); navigationGuards.push(unblock);
+    expect(navigationState.engine).toBeNull(); history.replaceState({ __NA: true, retained: "metadata" }, "", location.href);
+    fireEvent.click(button);
+    expect(assign).not.toHaveBeenCalled(); expect(history.state).toEqual({ __NA: true, retained: "metadata" }); expect(sessionStorage.getItem(NAVIGATION_INTENT_KEY)).toBeNull();
+    await flush(); await flush(); expect(container.scrollTo).not.toHaveBeenCalled(); expect(sessionStorage.getItem(NAVIGATION_INTENT_KEY)).toBeNull(); unblock();
+  });
+  it("records managed search intent and history only after the shared navigation veto succeeds", async () => {
+    render(<Harness />); const container = wireScroll(); await flush();
+    const assign = vi.fn(); vi.stubGlobal("location", { ...window.location, assign });
+    const form = container.querySelector<HTMLFormElement>(".ws-composer")!; form.dataset.guardedNavigation = "";
+    form.addEventListener("submit", event => { event.preventDefault(); navigateWorkspace("/workspace/radar?q=private+question&days=30&status=saved", "paper"); });
+    history.replaceState({ __NA: true, workspaceScroll: 123 }, "", location.href); navigationState.readerHistory = true;
+    const notify = vi.fn(), unblock = blockWorkspaceNavigation(notify); navigationGuards.push(unblock);
+    fireEvent.submit(form); await flush();
+    expect(assign).not.toHaveBeenCalled(); expect(notify).toHaveBeenCalledOnce(); expect(navigationState.readerHistory).toBe(true);
+    expect(history.state).toEqual({ __NA: true, workspaceScroll: 123 }); expect(sessionStorage.getItem(NAVIGATION_INTENT_KEY)).toBeNull();
+    expect(container.scrollTo).not.toHaveBeenCalled();
+    unblock(); fireEvent.submit(form);
+    expect(assign).toHaveBeenCalledOnce(); expect(assign).toHaveBeenCalledWith("/workspace/radar?q=private+question&days=30&status=saved");
+    expect(history.state).toMatchObject({ __NA: true, workspaceScroll: 900 });
+    expect(JSON.parse(sessionStorage.getItem(NAVIGATION_INTENT_KEY)!)).toMatchObject({ kind: "paper", path: "/workspace/radar" });
+    expect(sessionStorage.getItem(NAVIGATION_INTENT_KEY)).not.toContain("private");
+  });
   it("positions a new paper header from a long abstract before a content-only 170ms transition, retaining player focus", async () => {
     const view = render(<Harness />); const container = wireScroll();
     const player = screen.getByRole("button", { name: "Next paper" }); player.focus();
