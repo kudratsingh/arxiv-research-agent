@@ -879,3 +879,20 @@
 @media (prefers-reduced-motion: no-preference) { .workspace-app:has([aria-busy="true"]) .ws-brand .ws-mascot { animation: ws-jazzy-hop 400ms alternate infinite; } }
 @media (max-width: 767px) { .workspace-app .ws-today-intro p, .workspace-app .ws-palette-trigger > span { display: none; } .workspace-app .ws-status-line > span { order: 2; flex-basis: 100%; } }
 /* == end P7 commands == */
+
+/* Authored context is a reading-stage form, not the multi-column Radar filter. */
+.workspace-app form.workspace-controls, .workspace-app section.workspace-controls {
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.workspace-app .workspace-controls fieldset {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+}
+.workspace-app :is(form, section).workspace-controls label { display: grid; gap: 6px; min-width: 0; }
+.workspace-app .workspace-controls :is(textarea, select, input:not([type="checkbox"]):not([type="radio"])) { box-sizing: border-box; width: 100%; min-width: 0; max-width: 100%; }
