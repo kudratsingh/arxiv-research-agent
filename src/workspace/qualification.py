@@ -114,7 +114,7 @@ def packet(store: WorkspaceStore, owner: str, proposal: dict[str, Any]) -> dict[
         if item["job_kind"] == "summary":
             selected.append(materials[0])
     return {
-        "revision": "workspace-qualification-packet-v4-handles",
+        "revision": "workspace-qualification-packet-v5-budgeted-handles",
         "approved": False,
         "provider_contacts": 0,
         "actual_usd": "0",

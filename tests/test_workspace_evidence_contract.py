@@ -13,7 +13,7 @@ from psycopg.types.json import Jsonb
 from pydantic import TypeAdapter
 
 from src.workspace import provider_adapter as p
-from src.workspace.evidence_contract import draft_schema, evidence_catalog
+from src.workspace.evidence_contract import draft_schema, evidence_catalog, resolve_handles
 from src.workspace.executor import _material
 from src.workspace.grounding import GroundingError, ResearchClaim, validate_claims
 from src.workspace.material import extract_text
@@ -96,8 +96,8 @@ def test_unicode_and_repeated_text_are_resolved_by_handle_not_substring_search()
 def test_realistic_maximal_compact_outputs_validate_local_and_exact_transformed_wire(kind, count, budget):
     data = compact(kind, ["e0123456789ab"])
     data.update(title="T" * 96, question="Q" * 120, limitation="L" * 160,
-                proposal="Propose a fixed baseline." if kind == "deep_dive" else None)
-    data["claims"] = [{"claim_id": f"c{i+1}", "text": "F" * 180,
+                proposal="P" * 240)
+    data["claims"] = [{"claim_id": f"c{i+1}", "text": "F" * 240,
                        "handles": ["e0123456789ab", "e123456789abc"], "section": "overview"}
                       for i in range(count)]
     model = draft_schema(kind)
@@ -199,3 +199,61 @@ async def test_missing_checker_verdict_is_not_accepted_as_support(store):
         await adapter.advance(job)
     result = adapter.snapshot(job)
     assert result["state"] == "failed" and result["result"] is None
+
+
+def test_retained_complete_development_response_fits_whole_budget_without_token_raise(store):
+    raw = (FIXTURES / "sonnet55-complete-display-overflow.json").read_bytes()
+    manifest = json.loads((FIXTURES / "receipt-manifest.json").read_text())
+    assert hashlib.sha256(raw).hexdigest() == manifest["sonnet55_complete_display_overflow_sha256"]
+    response = json.loads(raw)
+    output = p.response_output(response, "claude-sonnet-5-5")
+    assert response["usage"]["output_tokens"] == 352 < 1200
+    assert len(json.dumps(output, ensure_ascii=False).encode()) == 1040 < 1800
+    assert [len(c["text"]) for c in output["claims"]] == [166, 182]
+    assert len(output["proposal"]) == 177
+    draft_schema("summary").model_validate(output)
+    Draft202012Validator(transform_schema(draft_schema("summary"))).validate(output)
+    original = _material(json.loads((FIXTURES / "source-material.json").read_text()))
+    item = support.support.support.ingest(store, work_id=original.work_id, version_id=original.version_id,
+        abstract=original.pages[0], access_state="abstract")
+    with store.pool.connection() as conn:
+        conn.execute("INSERT INTO workspace_material VALUES (%s,%s,%s,%s,%s) ON CONFLICT DO NOTHING",
+            (original.material_id, item["version_id"], original.content_hash, original.scope, Jsonb(asdict(original))))
+    inputs = p.prepare(store, "a", "summary", [original.material_id])
+    adapter = p.QualificationAdapter(store, "a", inputs, transport=httpx.MockTransport(lambda _: None))
+    draft = adapter._draft(output)
+    report = validate_claims(draft.claims, [original])
+    assert all(a.identity_resolved for a in report.assessments)
+    assert report.checked == report.supported == 0  # No checker, no accepted summary.
+    assert inputs.settings["output_tokens"] == 1200
+
+
+def test_whole_payload_guard_stays_hard_when_individual_fields_fit():
+    data = compact("summary", ["e0123456789ab"])
+    data["claims"] = [{"claim_id": f"c{i+1}", "text": "🙂" * 240,
+                       "handles": ["e0123456789ab"], "section": "overview"} for i in range(2)]
+    with pytest.raises(ValueError, match="compact_response_byte_limit"):
+        draft_schema("summary").model_validate(data)
+
+
+def test_adjacent_handles_merge_exactly_without_weakening_duplicate_parent_or_gap_checks():
+    material = extract_text("αβ🙂 repeated evidence. " * 80, work_id="work", version_id="v1", scope="abstract")
+    catalog = evidence_catalog([material], {s.span_id for s in material.spans})
+    keys = list(catalog)
+    refs = resolve_handles(catalog, [keys[1], keys[0]], [material])
+    assert len(refs) == 1 and refs[0].start == 0 and refs[0].end == 480
+    assert refs[0].quote == catalog[keys[0]].quote + catalog[keys[1]].quote
+    with pytest.raises(ValueError, match="noncontiguous_or_overlapping"):
+        resolve_handles(catalog, [keys[0], keys[2]], [material])
+    with pytest.raises(ValueError, match="noncontiguous_or_overlapping"):
+        resolve_handles(catalog, [keys[0], keys[0]], [material])
+
+
+def test_checker_display_allowance_preserves_hard_payload_budget_and_wire_shape():
+    valid = {"checks": [{"claim_id": f"c{i+1}", "input_digest": "sha256:" + "a" * 64,
+                         "decision": "supported", "reason": "R" * 240} for i in range(3)]}
+    p.Checks.model_validate(valid)
+    Draft202012Validator(transform_schema(p.Checks)).validate(valid)
+    invalid = {"checks": [{**v, "reason": "🙂" * 240} for v in valid["checks"]]}
+    with pytest.raises(ValueError, match="checker_response_byte_limit"):
+        p.Checks.model_validate(invalid)

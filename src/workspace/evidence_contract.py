@@ -26,7 +26,7 @@ MAX_HANDLES = 200
 class HandleClaim(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
     claim_id: str = Field(pattern=r"^c[1-3]$")
-    text: str = Field(min_length=1, max_length=180)
+    text: str = Field(min_length=1, max_length=240)
     handles: tuple[str, ...] = Field(min_length=1, max_length=2)
     section: Literal["overview", "method", "assumptions", "comparison"] = "overview"
 
@@ -38,7 +38,7 @@ class CompactDraft(BaseModel):
     claims: tuple[HandleClaim, ...] = Field(max_length=3)
     abstention: str | None = Field(default=None, max_length=160)
     question: str | None = Field(default=None, max_length=120)
-    proposal: str | None = Field(default=None, max_length=160)
+    proposal: str | None = Field(default=None, max_length=240)
     limitation: str = Field(min_length=1, max_length=160)
 
     @model_validator(mode="after")
@@ -101,8 +101,37 @@ def evidence_catalog(
 
 def catalog_wire(catalog: dict[str, EvidenceRef]) -> list[dict[str, object]]:
     # Source identities are supplied once in the request's source metadata.
+    groups = {key: "g" + str(i+1) for i, key in enumerate(dict.fromkeys(
+        (ref.material_id, ref.span_id) for ref in catalog.values()))}
     return [
         {"handle": key, "text": ref.quote, "material_id": ref.material_id,
-         "scope": ref.scope, "page": ref.page}
+         "scope": ref.scope, "page": ref.page,
+         "group": groups[(ref.material_id, ref.span_id)], "start": ref.start, "end": ref.end}
         for key, ref in catalog.items()
     ]
+
+
+def resolve_handles(catalog: dict[str, EvidenceRef], handles: Sequence[str],
+                    materials: Sequence[SourceMaterial]) -> tuple[EvidenceRef, ...]:
+    """Coalesce only adjacent slices of one parent span; never bridge a gap.
+
+    The generic grounding validator correctly forbids duplicate parent-span
+    refs. A pair of contiguous model-selected handles is one exact quotation,
+    not duplicate evidence and not permission to expand the selected text.
+    """
+    groups: dict[tuple[str, str], list[EvidenceRef]] = {}
+    for handle in handles:
+        ref = catalog[handle]
+        groups.setdefault((ref.material_id, ref.span_id), []).append(ref)
+    result = []
+    for (material_id, span_id), refs in groups.items():
+        refs.sort(key=lambda r: r.start)
+        if any(a.end != b.start for a, b in zip(refs, refs[1:], strict=False)):
+            raise ValueError("noncontiguous_or_overlapping_evidence_handles")
+        material = next(m for m in materials if m.material_id == material_id)
+        span = next(s for s in material.spans if s.span_id == span_id)
+        combined = evidence_ref(material, span, start=refs[0].start, end=refs[-1].end)
+        if combined.quote != "".join(ref.quote for ref in refs):
+            raise ValueError("selected_handle_quote_drift")
+        result.append(combined)
+    return tuple(result)

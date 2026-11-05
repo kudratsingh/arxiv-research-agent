@@ -8,5 +8,20 @@
   "input_tokens": 2443,
   "output_tokens": 1200,
   "workflow_usd": "0.025329",
-  "original_journal_sha256": "49bfdff0fc2f2d89639622999b223f90d37265841ffa94d3956e3412f4decca0"
+  "original_journal_sha256": "49bfdff0fc2f2d89639622999b223f90d37265841ffa94d3956e3412f4decca0",
+  "sonnet55_complete_display_overflow_sha256": "e92b115081ecde82f7a02e0311ccc3f0a60c8c44356cc4d43154e5b7622a4746",
+  "sonnet55_first_attempt": {
+    "provider_input_tokens": 2153,
+    "provider_output_tokens": 352,
+    "raw_json_bytes": 1011,
+    "claim_lengths": [
+      166,
+      182
+    ],
+    "proposal_length": 177,
+    "workflow_usd": "0.007826",
+    "local_content_state": "failed",
+    "unknown_usd": "0",
+    "not_a_human_judgment": true
+  }
 }

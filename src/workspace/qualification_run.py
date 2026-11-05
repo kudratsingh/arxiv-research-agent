@@ -34,10 +34,10 @@ def bound_jobs(
 ) -> list[tuple[dict[str, Any], GenerationInput]]:
     jobs = []
     if (
-        packet.get("revision") != "workspace-qualification-packet-v4-handles"
+        packet.get("revision") != "workspace-qualification-packet-v5-budgeted-handles"
         or not 1 <= len(packet.get("jobs", [])) <= 20
     ):
-        raise AdmissionError("bounded_v4_handles_packet_required")
+        raise AdmissionError("bounded_v5_handles_packet_required")
     for job in packet["jobs"]:
         raw = job["sealed_input"]
         inputs = GenerationInput(

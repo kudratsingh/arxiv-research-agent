@@ -1,0 +1,33 @@
+{
+  "id": "msg_011CgisV54vsmEJEUbZARpbi",
+  "role": "assistant",
+  "type": "message",
+  "model": "claude-sonnet-5-5",
+  "usage": {
+    "speed": "standard",
+    "input_tokens": 2153,
+    "service_tier": "standard",
+    "inference_geo": "global",
+    "output_tokens": 352,
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 0,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "output_tokens_details": {
+      "thinking_tokens": 0
+    },
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 0
+  },
+  "content": [
+    {
+      "text": "{\"kind\":\"summary\",\"title\":\"KEEPER: recursive memory error persistence and auxiliary objectives\",\"claims\":[{\"claim_id\":\"c1\",\"text\":\"Recursive textual memory can carry earlier errors into later updates; self-consistency bias is the persistence of incorrect claims already present in incoming memory.\",\"handles\":[\"e29b67df25e19\"],\"section\":\"overview\"},{\"claim_id\":\"c2\",\"text\":\"KEEPER compares four auxiliary objectives on information-content and update-sensitivity axes; reward-related prediction scored highest on task performance among evaluated conditions.\",\"handles\":[\"ee9ac94587a9c\",\"e1de130720b5a\"],\"section\":\"overview\"}],\"abstention\":null,\"question\":null,\"proposal\":\"Proposed, not a finding: seed your memory with a known false claim, feed corrective observations, and check whether it persists, alongside whether valid information is retained.\",\"limitation\":\"Only the abstract was retained; the error-persistence analysis covers one baseline trajectory, so methods, tables and generality are unavailable.\"}",
+      "type": "text"
+    }
+  ],
+  "container": null,
+  "diagnostics": null,
+  "stop_reason": "end_turn",
+  "stop_details": null,
+  "stop_sequence": null
+}

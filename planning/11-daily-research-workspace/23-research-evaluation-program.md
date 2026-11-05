@@ -95,3 +95,39 @@ The pilot's own synthetic verification questions stay in its isolated account.
 Focused prerequisite results, full-gate results and failures are recorded in
 STATUS and output logs. Mechanical tests and browser sessions do not constitute
 owner usefulness review, scientific extraction validation or checker calibration.
+
+## V5 development-contract continuation (before held-out collection)
+
+The first fresh Sonnet5.5 q01 attempt returned complete JSON (`end_turn`,
+2153 input /352 output tokens, 1011 raw bytes), but was correctly rejected
+because two short display strings exceeded the earlier local field limits.
+It stays failed and its response/receipts are preserved. Validated metering
+accounts for $0.007826 workflow, $0 checker, $0 unresolved; cumulative known
+program usage is $0.033155, 2 Messages and6 counts. No held-out question has
+been collected. These are sealed-rate estimates, not invoice reconciliation.
+
+V5 targets160-character claims/proposals and permits240 characters, preserving
+the whole summary1800-byte /study2800-byte bounds, 2/3 factual-claim limits and
+1200/2400 output-token envelopes. It never promotes recovered failed content.
+Adjacent handle slices of the same original selected span coalesce into one
+exact server-derived reference; gaps, overlaps and duplicate handles refuse.
+The checker has explicit entailment/abstention instructions and a1600-byte
+whole-response bound. SDK-transformed string descriptions are not hard grammar
+limits: local semantic and whole-response validation remains mandatory.
+
+A fresh V5 request uses the identical development question/public spans and
+a new sealed contract/schema/input identity. The stopped V4 request is never
+replayed. The next packet archives both prior failures and the unchanged
+cumulative ledger. q01 still must complete draft/evidence/check processing
+before q02–q10; that software outcome does not establish factual/human quality.
+The scorer's corrected V3 freeze remains `d93527414923047db8292ba933b0e36c21659bbd1016e00f5725440b2576fe86`.
+Human judgments remain blank; chronology's41 missing dates stay an explicit
+limited diagnostic. The five same-day pilot runs are automated mechanical
+sessions, not owner usefulness or longitudinal daily-use evidence.
+
+V5 local full patch gate: **6118 passed, 54 existing skips, 53 deselected**,
+coverage **94.65%**, patch **98%** (64 missing /4183 changed-source lines).
+Ruff passes and strict mypy passes168 source files. No assertions, floors or
+source/provenance checks were weakened. Raw logs are retained under
+`outputs/qualification-contract-repair/v5-*`. Remote CI is unrun for this
+local continuation.
