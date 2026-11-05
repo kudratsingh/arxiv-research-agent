@@ -557,6 +557,24 @@ def test_new_text_extraction_does_not_invalidate_an_older_exact_material_link(st
     assert preserved["available"] and preserved["material_id"] == bound["material_id"]
     assert preserved["parser_revision"] == bound["parser_revision"]
     assert preserved["quote"] == bound["quote"]
+    second = repo.source(
+        "a",
+        PID,
+        ProjectSourceWrite(
+            revision=2,
+            request_id="explicit-second-material",
+            role="evidence",
+            reference=ref(
+                value,
+                material_id=alternate.material_id,
+                material_hash=alternate.content_hash,
+                parser_revision=alternate.parser_revision,
+            ),
+        ),
+    )
+    assert len(second["sources"]) == 2
+    original = next(link for link in second["sources"] if link["id"] == first["sources"][0]["id"])
+    assert original["reference"]["material_id"] == bound["material_id"]
 
 
 def test_links_and_artifacts_preserve_types_and_validate_owned_passages(store):

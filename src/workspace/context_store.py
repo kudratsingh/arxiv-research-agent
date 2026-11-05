@@ -469,9 +469,8 @@ class WorkspaceContext:
         label: str = "",
     ) -> None:
         bound = cls._bound(conn, owner, reference, evidence=role == "evidence")
-        id_ = (
-            "link-" + digest([role, reference.work_id, reference.version_id, reference.anchor])[:32]
-        )
+        identity = {key: bound[key] for key in SourceReference.model_fields}
+        id_ = "link-" + digest([role, identity])[:32]
         data = {"id": id_, "role": role, "status": "active", "label": label, "reference": bound}
         conn.execute(
             "INSERT INTO workspace_project_sources VALUES (%s,%s,%s,%s,%s,%s) ON CONFLICT(owner,project_id,id) DO UPDATE SET data=EXCLUDED.data",
