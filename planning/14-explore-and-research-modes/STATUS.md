@@ -42,3 +42,17 @@ consequential finding was fixed: a later paid set explicitly requires fresh
 owner approval; unused headroom cannot broaden q04–q10. No frontend/backend
 source, frozen input, service, preference or human label changed. No remote CI
 or product acceptance is claimed for these planning documents.
+
+## Diagnostic update, 2026-11-05 UTC / Nov4Pacific
+
+The prospectively sealed V8 continuation stopped onq04 after the checker abstained
+on one claim and the permitted repair count6765exceeded6400usable input tokens.
+q04 remains failed/resultNone; q05–q10 were not dispatched. No replay or further
+adaptive paid continuation. The scoped approval is closed.
+
+Audited cumulative estimate$0.109967(workflow$0.094655/checker$0.015312),unknown
+liability$0,9Messages/15counts/6newgenerationjobs. Original nine-primary scope
+remains0completed,3failed,6unrun; human quality/usefulness is unmeasured. This
+changes no mode implementation status or benchmark threshold. The separate
+offline ranking followup informs future Research policy, not owner learning
+usefulness. Later paid validation requires fresh explicit owner approval.
