@@ -63,6 +63,8 @@ def resolve(principal: str, mode: ProductMode | None, project: str, thread: str)
         unavailable = "project_unavailable"
     elif thread and selected_thread is None:
         unavailable = "learning_thread_unavailable"
+    elif selected and selected_thread and selected_thread["data"]["origin"]["project_id"] != selected["id"]:
+        unavailable = "learning_thread_project_context_mismatch"
     elif resolved_mode == "research" and selected is None:
         unavailable = "select_or_create_project"
     elif resolved_mode == "research" and selected and selected["data"]["status"] == "archived":

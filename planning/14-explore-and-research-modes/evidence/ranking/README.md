@@ -1,15 +1,22 @@
 # D3 deterministic mode ranking evidence
 
+Latest implementation validation: **46 focused tests passed**, ranking-module
+statement/branch coverage100%, Ruff/mypy/whitespace passed. See the
+[date-window correction](DATE-WINDOW-CORRECTION.md), [latest source manifest](final-source-manifest-v2-date-window.json)
+and `date-window-{focused-check,mypy,ruff}.log`. The ranking module is unchanged;
+the comparator now matches the API's explicit date-window eligibility. No new
+public-pool comparison was run, and the original days-zero reports remain intact.
+
 Implementation policy: `workspace-modes-lexical-v1`, from the predeclared
 [policy07](../../07-ranking-policy-v1.md). This package is offline development
 evidence. It does not change or rerun the historical paid benchmark.
 
-The final [source manifest](final-source-manifest.json) binds the ranking module,
+The pre-date-correction [source manifest](final-source-manifest.json) binds the ranking module,
 focused tests and local JSON-only comparator. No provider/source/database contact
 or durable project creation was performed by these commands. No private profile
 or complete private organizing-question text is copied into this package.
 
-## Final validation
+## Initial validation before date-window correction
 
 - [Focused checks](final-focused-check.log): 38 passed; ranking module 100% statement
   and branch coverage (87 statements, 36 branches), unchanged configured floor89.

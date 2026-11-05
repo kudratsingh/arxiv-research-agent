@@ -1,0 +1,34 @@
+{
+  "revision": "workspace-mode-ranking-date-window-correction-v1",
+  "recorded_at_utc": "2026-11-05T12:45:18.055343+00:00",
+  "before_any_new_public_pool_comparison": true,
+  "reason": "Explicit days>0 filtering in the app requires a known aware publication/update date; offline comparator incorrectly retained unknown dates. Align eligibility only.",
+  "changed_semantics": "days>0 requires known aware update-before-publication date within the window; days0 keeps unknown dates.",
+  "score_formula_changed": false,
+  "mode_policy_changed": false,
+  "existing_days0_reports_changed": false,
+  "existing_v1_v2_reports_untouched": true,
+  "new_public_pool_comparison_required": false,
+  "archive": [
+    {
+      "original_path": "tools/workspace_mode_ranking_report.py",
+      "archive_path": "planning/14-explore-and-research-modes/evidence/ranking/archive/pre-date-window-correction/tools/workspace_mode_ranking_report.py.txt",
+      "sha256": "0a54725f7ad7c0db88c9f3b8fb716d3f6b1b47ff22ba2882634d67f76604b5b7"
+    },
+    {
+      "original_path": "tests/test_workspace_mode_ranking.py",
+      "archive_path": "planning/14-explore-and-research-modes/evidence/ranking/archive/pre-date-window-correction/tests/test_workspace_mode_ranking.py.txt",
+      "sha256": "a13a247ebb7512029cac7bd5d0b4a7afd073d7eb48ce529252ebd0c09e64515d"
+    },
+    {
+      "original_path": "planning/14-explore-and-research-modes/evidence/ranking/PROTOCOL.md",
+      "archive_path": "planning/14-explore-and-research-modes/evidence/ranking/archive/pre-date-window-correction/planning/14-explore-and-research-modes/evidence/ranking/PROTOCOL.md",
+      "sha256": "d43be915f623d3585f6fc365f74a57db56f251573d4be5bb7aa12c97d7dbe603"
+    },
+    {
+      "original_path": "planning/14-explore-and-research-modes/evidence/ranking/final-source-manifest.json",
+      "archive_path": "planning/14-explore-and-research-modes/evidence/ranking/archive/pre-date-window-correction/planning/14-explore-and-research-modes/evidence/ranking/final-source-manifest.json",
+      "sha256": "0de240ffddb70338f77c3a1d0897aa8d1339415db27b2d6d7b13bcedcadade5d"
+    }
+  ]
+}

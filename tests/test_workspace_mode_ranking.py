@@ -258,22 +258,44 @@ def test_comparator_date_diagnostic_never_credits_missing_or_announcement_dates(
     assert unknown["rank_changes_from_question_only"]["chronological_diagnostic"] == 1
 
 
-def test_comparator_filters_once_unknown_dates_stay_eligible_and_duplicates_are_counted() -> None:
+def test_comparator_filters_once_explicit_window_requires_known_dates_and_duplicates_are_counted() -> None:
     base = {"source_id": "chosen", "available_scopes": ["excerpt"], "reading": {"status": "saved"}}
-    values = [item("chosen", "Memory", **base), item("chosen", "Memory", version_id="chosen:v2", **base),
+    values = [item("chosen", "Memory", published_at="2026-11-05T12:00:00Z", **base),
+              item("chosen", "Memory", version_id="chosen:v2", published_at="2026-11-05T12:00:00Z", **base),
               item("source", "Memory", **{**base, "source_id": "other"}),
               item("access", "Memory", **{**base, "available_scopes": ["metadata"]}),
               item("status", "Memory", **{**base, "reading": {"status": "read"}}),
               item("old", "Memory", published_at="2020-01-01T00:00:00Z", **base),
               item("fresh", "Memory", published_at="2026-11-05T12:00:00Z", **base),
-              item("banned", "Memory advertisement", **base)]
+              item("unknown", "Memory", **base),
+              item("banned", "Memory advertisement", published_at="2026-11-05T12:00:00Z", **base)]
     report = compare_modes(values, {"exclusions": ["advertisement"]}, {"question": "memory"}, now=NOW,
                            filters={"source_id": "chosen", "access_state": "excerpt", "status": "saved", "days": 7})
     assert all(set(ranking) == {"chosen", "fresh"} for ranking in report["rankings"].values())
     assert report["counts"]["duplicate_records"] == 1
     assert report["duplicate_work_ids"] == {"chosen": 2}
     assert next(row for row in report["items"] if row["work_id"] == "chosen")["version_id"] == "chosen:v1"
-    assert report["denominators"]["research_chronology"]["missing"] == 1
+    assert report["denominators"]["research_chronology"]["missing"] == 0
+
+
+@pytest.mark.parametrize("date_fields,eligible", [
+    ({"published_at": "2026-11-05T12:00:00Z"}, True),
+    ({"updated_at": "2026-11-05T05:00:00-07:00", "published_at": "2020-01-01T00:00:00Z"}, True),
+    ({}, False),
+    ({"announced_at": "2026-11-05T12:00:00Z", "fetched_at": "2026-11-05T12:00:00Z"}, False),
+    ({"published_at": "invalid"}, False),
+    ({"published_at": "2026-11-05T12:00:00"}, False),
+    ({"updated_at": "invalid", "published_at": "2026-11-05T12:00:00Z"}, False),
+    ({"published_at": "2020-01-01T00:00:00Z"}, False),
+])
+def test_comparator_date_window_matches_api_known_aware_date_eligibility(date_fields: dict[str, Any], eligible: bool) -> None:
+    values = [item("a", "Memory", **date_fields)]
+    all_dates = compare_modes(values, {}, {"question": "memory"}, now=NOW, filters={"days": 0})
+    window = compare_modes(values, {}, {"question": "memory"}, now=NOW, filters={"days": 7})
+    assert all_dates["rankings"]["combined_research"] == ["a"]
+    assert window["rankings"]["combined_research"] == (["a"] if eligible else [])
+    assert all(ranking == (["a"] if eligible else []) for ranking in window["rankings"].values())
+    assert values[0].get("published_at") == date_fields.get("published_at")
 
 
 def test_comparator_empty_denominators_and_escaped_reports() -> None:

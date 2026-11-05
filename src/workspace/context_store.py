@@ -60,6 +60,9 @@ class WorkspaceContext:
             if context.project_id and selected_thread["data"]["origin"]["project_id"] != context.project_id:
                 raise ValueError("learning_thread_project_context_mismatch")
         params = parse_qs(urlsplit(context.return_to).query)
+        return_path = urlsplit(context.return_to).path
+        if return_path.startswith("/workspace/threads/") and return_path.rsplit("/", 1)[1] != context.thread_id:
+            raise ValueError("return_context_thread_identity_mismatch")
         for key, expected in (("mode", context.mode), ("project", context.project_id), ("thread", context.thread_id)):
             if key in params and (len(params[key]) != 1 or params[key][0] != expected):
                 raise ValueError("return_context_identity_mismatch")

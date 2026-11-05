@@ -26,7 +26,7 @@ from src.workspace.mode_ranking import (
 )
 from src.workspace.ranking import _tokens
 
-REPORT_VERSION = "workspace-mode-ranking-development-report-v1"
+REPORT_VERSION = "workspace-mode-ranking-development-report-v2-date-window"
 ARMS = ("question_only", "profile_only", "combined_research", "chronological_diagnostic")
 
 
@@ -59,7 +59,7 @@ def _filtered(items: Sequence[Mapping[str, Any]], filters: Mapping[str, Any], no
         if filters.get("status") and (item.get("reading") or {}).get("status", "unread") != filters["status"]:
             continue
         date = known_mode_date(item)
-        if days and date is not None and date < now - timedelta(days=days):
+        if days and (date is None or date < now - timedelta(days=days)):
             continue
         result.append(item)
     return result
@@ -72,8 +72,9 @@ def compare_modes(
     """Research arms share the same Q/S-eligible pool; Learn remains separate.
 
     Source/access/status/date filters are applied once. Missing dates stay in
-    the pool; chronological positions for them are explicitly unscored. All
-    owner judgments stay blank, so no retrieval-quality estimate is computed.
+    the all-dates pool; an explicit date window requires a known date, matching
+    the app. Unknown chronological positions are unscored. Owner judgments stay
+    blank, so no retrieval-quality estimate is computed.
     """
     if now.tzinfo is None:
         raise ValueError("timezone_required")
@@ -119,7 +120,7 @@ def compare_modes(
         "evidence_kind": "offline_development_mechanics_not_owner_usefulness_or_factual_quality",
         "clock": now.isoformat(), "project": dict(project), "hard_filters": hard_filters,
         "pool_policy": "Same hard-filtered Q/S-eligible candidates for all four Research arms; Learn uses the full hard-filtered visible pool separately.",
-        "date_policy": "Aware update-before-publication dates only; invalid/missing dates stay unknown; announcement/acquisition/id dates are not substituted; unknown dates remain eligible and last in chronological diagnostic.",
+        "date_policy": "Aware update-before-publication dates only; invalid/missing dates stay unknown; announcement/acquisition/id dates are not substituted; days>0 requires a known date within the window, while days0 retains unknown dates last in the chronological diagnostic.",
         "duplicate_policy": "Ranking retains first occurrence of each work id after the shared explicit filters.",
         "counts": {"input_records": len(items), "unique_input_work_ids": len(duplicate_ids),
                    "duplicate_records": sum(n - 1 for n in duplicate_ids.values()),

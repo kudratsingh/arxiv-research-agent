@@ -324,6 +324,9 @@ def test_thread_context_and_linked_entry_must_agree(store):
         repo.write_reading("a", ContextReadingWrite(work_id=value["work_id"], revision=0, request_id="wrong-context", data=ReadingData(version_id=value["version_id"]), context=mismatched))
     # An owned thread alone is a valid learning context without manufacturing a project.
     assert repo.write_reading("a", ContextReadingWrite(work_id=value["work_id"], revision=0, request_id="thread-reading", data=ReadingData(version_id=value["version_id"]), context=ResumeContext(mode="learn", thread_id=TID)))["context"]["thread_id"] == TID
+    wrong_thread_path = ResumeContext(mode="learn", thread_id=TID, return_to="/workspace/threads/thread-" + "f" * 32)
+    with pytest.raises(ValueError, match="return_context_thread_identity"):
+        repo.write_reading("a", ContextReadingWrite(work_id=value["work_id"], revision=1, request_id="wrong-thread-path", data=ReadingData(version_id=value["version_id"]), context=wrong_thread_path))
     other = support.ingest(store, work_id="other", version_id="other:v1")
     note = store.write_entry("a", support.entry(other))
     with pytest.raises(ValueError, match="entry_source_version"):

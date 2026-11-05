@@ -86,6 +86,13 @@ async def test_all_context_writes_and_exact_shared_resume_through_api(client, st
     assert saved_thread.status_code == 200, saved_thread.text
     assert (await client.get(f"/workspace/context/threads/{TID}")).json()["source"]["anchor"] == "abstract:0:8"
     assert (await client.get(f"/workspace/context/threads/{TID}", headers={"X-API-Key": "key-b"})).status_code == 404
+    second = "project-" + "c" * 32
+    assert (await client.post("/workspace/context/projects", json={**project_body(), "id": second, "request_id": "project-second"})).status_code == 200
+    mismatched = f"mode=research&project={second}&thread={TID}"
+    invalid = (await client.get(f"/workspace/context/state?{mismatched}")).json()
+    assert invalid["context"]["unavailable_reason"] == "learning_thread_project_context_mismatch"
+    assert invalid["active_edition"] is None
+    assert (await client.get(f"/workspace/context/items?{mismatched}")).status_code == 422
     reading = {"work_id": value["work_id"], "revision": 0, "request_id": "reading", "data": {"version_id": value["version_id"], "anchor": "abstract:0:8", "status": "saved"}, "context": context}
     assert (await client.post("/workspace/context/reading", json=reading)).json()["context"]["project_id"] == PID
     snapshot = (await client.get("/workspace/context/state?mode=learn")).json()

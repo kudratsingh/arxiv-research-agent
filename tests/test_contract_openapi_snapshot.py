@@ -92,6 +92,16 @@ def test_snapshot_covers_every_route_the_frontend_calls() -> None:
         "/workspace/generation/preview", "/workspace/generation/jobs",
         "/workspace/generation/jobs/{job_id}", "/workspace/generation/jobs/{job_id}/advance",
         "/workspace/generation/jobs/{job_id}/cancel", "/workspace/generation/jobs/{job_id}/recover",
+        # D0–D4: manual owned context adds routes; legacy methods stay pinned.
+        "/workspace/context", "/workspace/context/preferences",
+        "/workspace/context/projects", "/workspace/context/projects/{project_id}",
+        "/workspace/context/projects/{project_id}/sources",
+        "/workspace/context/projects/{project_id}/unlink",
+        "/workspace/context/projects/{project_id}/entries",
+        "/workspace/context/projects/{project_id}/artifacts",
+        "/workspace/context/threads", "/workspace/context/threads/{thread_id}",
+        "/workspace/context/entries", "/workspace/context/reading",
+        "/workspace/context/state", "/workspace/context/items",
         # WO-W07: the learner progress ledger. Present in the document
         # whatever `enable_learner_profile` says — the flag is runtime
         # behaviour (404 when off), not schema shape, so the contract
@@ -114,6 +124,10 @@ def test_snapshot_covers_every_route_the_frontend_calls() -> None:
     }
     assert set(paths["/conversations"]) == {"get", "post"}
     assert set(paths["/conversations/{conversation_id}"]) == {"get", "delete"}
+    assert set(paths["/workspace/context"]) == {"get"}
+    assert set(paths["/workspace/context/projects"]) == {"post"}
+    assert set(paths["/workspace/context/projects/{project_id}"]) == {"get"}
+    assert set(paths["/workspace/context/threads"]) == {"post"}
     # WO-W02 / ADR 0058. The profile routes are mounted unconditionally
     # — SR-07 keeps feature gating backend-only, so the document is the
     # same in both positions of `enable_learner_profile` and the
