@@ -87,6 +87,9 @@ describe("native keyboard ownership", () => {
     expect(commandForKey(key("k", { target, metaKey: true }))).toEqual(none);
     expect(commandForKey(key("Escape", { target })).command).toBe("escape");
     holder.firstElementChild!.setAttribute("data-workspace-palette", "");
-    expect(commandForKey(key("k", { target, metaKey: true })).command).toBe("command-palette");
+    expect(commandForKey(key("k", { target, metaKey: true })).command).toBeNull();
+    for (const value of ["s", "d", "j", "1", "2", "3", "g"]) {
+      expect(commandForKey(key(value, { target })).command).toBeNull();
+    }
   });
 });

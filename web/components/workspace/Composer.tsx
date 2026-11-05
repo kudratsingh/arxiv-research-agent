@@ -1,14 +1,17 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type FormEvent } from "react";
-import { dispatchWorkspacePrefix } from "@/lib/workspace/dispatch";
+import { lazy, Suspense, useEffect, useId, useRef, useState, type FormEvent } from "react";
+import { dispatchWorkspaceCommand, dispatchWorkspacePrefix } from "@/lib/workspace/dispatch";
 import { Icon } from "./Icon";
 import { useQueryParam } from "@/lib/workspace/urlState";
 import { useSidebarViewport } from "./useSidebarPreference";
 
+const CommandSuggestions = lazy(() => import("./CommandSuggestions"));
+
 export function Composer(): React.ReactElement {
   const queryFromURL = useQueryParam("q");
   const [help, setHelp] = useState("");
+  const [prefix, setPrefix] = useState("");
   const [open, setOpen] = useState(false);
   const mobile = useSidebarViewport() === "mobile";
   const expanded = !mobile || open;
@@ -30,9 +33,14 @@ export function Composer(): React.ReactElement {
     const query = input.value.trim();
     if (!query) return;
     if (query.startsWith("/")) {
-      if (dispatchWorkspacePrefix(query.slice(1))) {
+      const suggestions = event.currentTarget.querySelector<HTMLElement>("[data-slash-query]");
+      const shown = suggestions?.dataset.slashQuery === query
+        ? suggestions.querySelector<HTMLElement>("[data-slash-command]") : null;
+      const ran = shown ? shown.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true })) : dispatchWorkspacePrefix(query.slice(1));
+      if (ran) {
         input.value = "";
         setHelp("");
+        setPrefix("");
       } else {
         setHelp("No available command matches. Try another command.");
       }
@@ -57,10 +65,12 @@ export function Composer(): React.ReactElement {
       </button>
       <div className="ws-composer-fields" id={fieldsId} hidden={!expanded}>
       <input key={queryFromURL ?? ""} defaultValue={queryFromURL ?? ""} ref={inputRef} className="ws-composer-input" type="search" name="q" aria-label="Search stored papers" aria-keyshortcuts="/"
+        onChange={(event) => setPrefix(event.currentTarget.value.startsWith("/") ? event.currentTarget.value : "")}
         placeholder="Search stored papers, or /command" aria-describedby={help ? "ws-composer-help" : undefined} />
       <button className="ws-composer-submit" type="submit" title="Search stored papers or run a local /command">Search</button>
       {help && <span className="ws-composer-hint" id="ws-composer-help">{help}</span>}
       </div>
+      {expanded && prefix && <Suspense fallback={null}><CommandSuggestions onCommand={dispatchWorkspaceCommand} query={prefix} onChoose={command => { setPrefix(""); if (inputRef.current) { inputRef.current.value = ""; if (command !== "escape") inputRef.current.focus(); } }} /></Suspense>}
     </form>
   );
 }

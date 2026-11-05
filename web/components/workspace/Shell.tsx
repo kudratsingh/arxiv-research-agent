@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { useWorkspaceNavigation } from "@/lib/workspace/navigation";
 import { usePathname } from "next/navigation";
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { dispatchWorkspaceCommand } from "@/lib/workspace/dispatch";
+import type { WorkspaceDialogRequest } from "./WorkspaceDialogs";
 import { SkipLink } from "@/components/primitives/SkipLink";
-import { Composer } from "./Composer";
 import { Icon, type IconName } from "./Icon";
 import { Mascot } from "./Mascot";
 import { WorkspaceSlots } from "./Slots";
@@ -13,9 +14,11 @@ import { useSyntheticPreview } from "./PreviewContext";
 import { useWorkspaceShortcuts } from "./useWorkspaceShortcuts";
 import { setSidebarCollapsed, useSidebarPreference, useSidebarViewport } from "./useSidebarPreference";
 import "@/components/daily/daily.css";
-import "./workspace.css";
 import "./controller.css";
 import { ThemeToggle } from "@/components/patterns/ThemeToggle";
+
+const Composer = lazy(() => import("./Composer").then(composer => ({ default: composer.Composer })));
+const WorkspaceDialogs = lazy(() => import("./WorkspaceDialogs"));
 
 const NAVIGATION: readonly [string, string, IconName, string][] = [
   ["today", "Today", "today", "T"], ["radar", "Radar", "radar", "R"],
@@ -30,6 +33,7 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
   const viewport = useSidebarViewport();
   const collapsed = useSidebarPreference();
   const [open, setOpen] = useState(false);
+  const [dialog, setDialog] = useState<WorkspaceDialogRequest | null>(null);
   const [sidebarNode, setSidebarNode] = useState<HTMLDivElement | null>(null);
   const [headerNode, setHeaderNode] = useState<HTMLDivElement | null>(null);
   const [barNode, setBarNode] = useState<HTMLDivElement | null>(null);
@@ -60,6 +64,7 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
     const toggleButton = toggleRef.current;
     closeRef.current?.focus();
     const trap = (event: KeyboardEvent) => {
+      if (event.target instanceof Element && event.target.closest(".ws-command-dialog")) return;
       if (event.key === "Escape") {
         event.preventDefault();
         setOpen(false);
@@ -89,6 +94,9 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
     };
   }, [overlayOpen, mobile]);
 
+  function showDialog(kind: "palette" | "shortcuts") {
+    setDialog({ kind, invoker: document.activeElement instanceof HTMLElement ? document.activeElement : null });
+  }
   function toggle() {
     if (viewport === "desktop") setSidebarCollapsed(!collapsed);
     else setOpen(!open);
@@ -134,6 +142,7 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
             <a href="/api/workspace/export" download="research-notes.md">Export notes as Markdown ↗</a>
             <Link href="/today" prefetch={false}>Fictional preview ↗</Link>
             <Link href="/" prefetch={false}>Research a question ↗</Link>
+            <button type="button" className="ws-sidebar-toggle ws-shortcuts-button" data-command="shortcuts" aria-keyshortcuts="?" onClick={() => showDialog("shortcuts")}>Keyboard shortcuts <kbd aria-hidden="true">?</kbd></button>
             <ThemeToggle />
             <p className="ws-storage">Notes belong to your local account. A failed save stays a draft; it is never labelled saved.</p>
           </footer>
@@ -144,11 +153,12 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
           <div className="ws-stage-topline"><span className="ws-breadcrumb">workspace <span aria-hidden="true">›</span> {route.toLowerCase()}</span><div ref={setHeaderNode} className="ws-header-slot" /></div>
           <div className="ws-status-line">{syntheticPreview
             ? <><strong>Design preview · synthetic sample papers</strong><span>Sample source checks · private server saves · generation off</span></>
-            : <><strong>Local workspace</strong><span>Real source metadata · private server saves · generation off</span></>}</div>
+            : <><strong>Local workspace</strong><span>Real source metadata · private server saves · generation off</span></>}<button type="button" className="ws-sidebar-toggle ws-palette-trigger" data-command="command-palette" aria-label="Open command palette" aria-keyshortcuts="Meta+K Control+K" onClick={() => showDialog("palette")}><kbd aria-hidden="true">⌘K</kbd><span>Commands</span></button></div>
         </header>
         {children}
-        <div className="ws-bar"><Composer /><div ref={setBarNode} className="ws-bar-slot" /></div>
+        <div className="ws-bar"><Suspense fallback={<div className="ws-composer" aria-busy="true"><button type="button" className="ws-composer-toggle" disabled>Opening search…</button></div>}><Composer /></Suspense><div ref={setBarNode} className="ws-bar-slot" /></div>
       </main>
+      {dialog && <Suspense fallback={null}><WorkspaceDialogs onCommand={dispatchWorkspaceCommand} request={dialog} onClose={() => setDialog(null)} /></Suspense>}
     </div>
   </WorkspaceSlots>;
 }

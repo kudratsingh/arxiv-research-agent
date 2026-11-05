@@ -16,7 +16,7 @@ export const ROUTE_COMMANDS = {
 
 export const GLOBAL_COMMANDS = [
   "focus-composer", "command-palette", "shortcuts", "toggle-sidebar", "escape",
-  "theme-light", "theme-dark", "theme-system", "export",
+  "theme-light", "theme-dark", "theme-system", "export", "go-preview", "go-research",
 ] as const;
 export type WorkspaceCommand = typeof PAGE_COMMANDS[number] | keyof typeof ROUTE_COMMANDS | typeof GLOBAL_COMMANDS[number];
 export type KeySequence = { key: "g"; at: number };
@@ -38,15 +38,16 @@ type CommandKeyEvent = Pick<KeyboardEvent,
 export interface KeyCommandResult { command: WorkspaceCommand | null; sequence: KeySequence | null }
 
 /** Pure interpretation: Shell owns the sequence ref, preventDefault and execution.
- * Palette dialogs identify themselves with data-workspace-palette; all other open
- * dialogs own their keys. Escape remains available for dialog/drawer dismissal.
+ * Every open modal owns its keys. Palette input navigation is handled locally;
+ * Escape remains available for dialog/drawer dismissal.
  */
 export function commandForKey(event: CommandKeyEvent, sequence: KeySequence | null = null): KeyCommandResult {
   const none: KeyCommandResult = { command: null, sequence: null };
   if (event.defaultPrevented || event.isComposing) return none;
   const target = event.target instanceof Element ? event.target : null;
   if (event.key === "Escape") return { ...none, command: "escape" };
-  if (target?.closest('dialog[open]:not([data-workspace-palette]), [role="dialog"][aria-modal="true"]:not([data-workspace-palette])')) return none;
+  const modal = 'dialog[open], [role="dialog"][aria-modal="true"]';
+  if (target?.closest(modal) || document.querySelector(modal)) return none;
   if ((event.metaKey || event.ctrlKey) && !event.altKey && !event.shiftKey && event.key.toLowerCase() === "k") {
     return { ...none, command: "command-palette" };
   }
@@ -61,4 +62,20 @@ export function commandForKey(event: CommandKeyEvent, sequence: KeySequence | nu
   }
   if (event.key === "g") return { command: null, sequence: { key: "g", at: event.timeStamp } };
   return { ...none, command: KEYS[event.key] ?? null };
+}
+
+
+/** One slash resolver for both the displayed choices and the submitted action. */
+export function commandsForPrefix(line: string): WorkspaceCommand[] {
+  const [name, argument, ...extra] = line.trim().toLowerCase().split(/\s+/);
+  if (!name || extra.length) return [];
+  if (name === "theme") return argument === "light" || argument === "dark" || argument === "system" ? [`theme-${argument}`] : [];
+  if (name === "time") return argument === "5" || argument === "15" || argument === "45" ? [`time-${argument}`] : [];
+  if (argument !== undefined) return [];
+  const aliases: Readonly<Record<string, WorkspaceCommand>> = {
+    today: "go-today", radar: "go-radar", library: "go-library", interests: "go-interests", sources: "go-sources", review: "go-review", preview: "go-preview", research: "go-research",
+  };
+  if (Object.hasOwn(aliases, name)) return [aliases[name]!];
+  return [...PAGE_COMMANDS, ...Object.keys(ROUTE_COMMANDS) as (keyof typeof ROUTE_COMMANDS)[], ...GLOBAL_COMMANDS]
+    .filter(command => command.startsWith(name));
 }
