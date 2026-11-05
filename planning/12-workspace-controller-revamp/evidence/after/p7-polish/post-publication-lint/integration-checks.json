@@ -1,0 +1,65 @@
+{
+  "application_commit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+  "pre_style_commit": "7cb0fe0f27bdf82d08ebd43855e4d0bb08c7c7af",
+  "handoff_hashes_sha256": "795e93440f79f166454487a04d0b14b425b4b233b15d66cb067e8cb40afcb052",
+  "original_handoff_files_unchanged": [
+    {
+      "path": "README.md",
+      "sha256": "71c8980fb320a480cb7392bdd46483519120176e5bf4e4216100e2c79d4e337e"
+    },
+    {
+      "path": "summary.json",
+      "sha256": "69bd105049bcb1a661ff86af16554018cbb91b8954383e442df1eadb05dec59a"
+    },
+    {
+      "path": "browser-artifact-hashes.json",
+      "sha256": "00a3a2b3012b9c22961523234dcf4fbad4e78ae56a1d6dd6802fd6a71b602225"
+    },
+    {
+      "path": "final/source-binding.json",
+      "sha256": "cc81ca54df299796ba85df1cbc754fc0fc179df3b50da9c066787de4b41dd9bc"
+    },
+    {
+      "path": "final/static-asset-manifest.json",
+      "sha256": "89486bdda473bf048b22cdc4f55ff0868afdbf1aff2d6abdfdfe50a0ca69ac23"
+    },
+    {
+      "path": "final/video-inspection/report.json",
+      "sha256": "91df1c36f7d048f775c858fe8fcfce7e576523bdbe9427d659e9be9badc778e1"
+    },
+    {
+      "path": "ci/teardown.json",
+      "sha256": "b1697937cb9bd4c125f5ac8c502c19cfa1c0bccf1bf70a5bc1fe879872316d39"
+    }
+  ],
+  "py_compile_files": 8,
+  "py_compile_exit_code": 0,
+  "ruff_check_all_exit_code": 0,
+  "no_execution": "No helper import/execution, source acquisition, provider, DB or service changes. Only compiler/AST/bytes checks run.",
+  "markdown_links": {
+    "files": 28,
+    "local_targets_checked": 288,
+    "missing": [],
+    "historical_snapshot_base": "pre-fix/readme-before-final.md resolves from original p7-polish/ base"
+  },
+  "trees": {
+    "web": {
+      "application": "e4f4f72d1b49f1647fb116e52105c90b03c0335c",
+      "current": "e4f4f72d1b49f1647fb116e52105c90b03c0335c"
+    },
+    "src": {
+      "application": "4ba84bf2287f911ef2f07184aebd453238b02b35",
+      "current": "4ba84bf2287f911ef2f07184aebd453238b02b35"
+    },
+    "tests": {
+      "application": "45733db270918707018747c63ff989d7959f187e",
+      "current": "45733db270918707018747c63ff989d7959f187e"
+    }
+  },
+  "application_working_diff_empty": true,
+  "documented_claims_and_hygiene": {
+    "passed": 66,
+    "duration_seconds": 9.15,
+    "log": "documented-claims-and-hygiene.log"
+  }
+}

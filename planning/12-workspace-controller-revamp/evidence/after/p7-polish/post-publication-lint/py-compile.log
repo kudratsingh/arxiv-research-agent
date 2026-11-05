@@ -1,0 +1,2 @@
+python -X pycache_prefix=/private/tmp/controller-p7-post-lint-pycache -m py_compile <7 active helpers + read-only verifier>
+8 files compiled; exit 0. No helper imported or executed.

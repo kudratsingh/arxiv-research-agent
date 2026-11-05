@@ -1513,3 +1513,20 @@ counted in that receipt.
 **G7 is PASS. G8 is locally verified and ready for root integration; publication,
 rebase checks and exact pushed-head remote CI remain pending.** No push, PR,
 merge, P9 or mode implementation is claimed here.
+
+
+### Publication-lint correction — application unchanged
+
+A subsequent repository-wide Ruff check found 128 style errors in inherited P6
+and new P7 evidence helpers. The [separate style-correction receipt](evidence/after/p7-polish/post-publication-lint/README.md)
+preserves all eight captured originals as byte-exact `.py.txt` archives, maps
+every original browser manifest entry to its original bytes, and records seven
+active normalized-AST matches. The failed captured harness is archival only.
+All 1,244 original browser entries and all seven handoff-bound files still match.
+No original manifest, browser README, summary or runtime receipt was rewritten.
+
+Repository-wide `ruff check .` passes without exclusions/rule changes; compiler
+checks pass for seven active helpers and the read-only verifier. Fresh docs/hygiene
+checks pass **66/66 in 9.15 s**. No helper was imported/executed or service/database
+action taken. Application `6b2eccf` and web/backend/test trees are unchanged; G7
+remains PASS and G8 publication/exact pushed-head CI remains pending root.
