@@ -163,7 +163,7 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
           <div className="ws-stage-topline"><span className="ws-breadcrumb">workspace <span aria-hidden="true">›</span> {route.toLowerCase()}</span><div ref={setHeaderNode} className="ws-header-slot" /></div>
           <div className="ws-status-line">{syntheticPreview
             ? <><strong>Design preview · synthetic sample papers</strong><span>Sample source checks · private server saves · generation off</span></>
-            : <><strong>Local workspace</strong><span>Real source metadata · private server saves · generation off</span></>}<button type="button" className="ws-sidebar-toggle ws-palette-trigger" data-command="command-palette" aria-label="Open command palette" aria-keyshortcuts="Meta+K Control+K" onClick={() => showDialog("palette")}><kbd aria-hidden="true">⌘K</kbd><span>Commands</span></button></div>
+            : <><strong className="ws-local-workspace-label">Local workspace</strong><span>Real source metadata · private server saves · generation off</span></>}<button type="button" className="ws-sidebar-toggle ws-palette-trigger" data-command="command-palette" aria-label="Open command palette" aria-keyshortcuts="Meta+K Control+K" onClick={() => showDialog("palette")}><kbd aria-hidden="true">⌘K</kbd><span>Commands</span></button></div>
         </header>
         {children}
         <div className="ws-bar"><Suspense fallback={<div className="ws-composer" aria-busy="true"><button type="button" className="ws-composer-toggle" disabled>Opening search…</button></div>}><Composer /></Suspense><div ref={setBarNode} className="ws-bar-slot" /></div>
