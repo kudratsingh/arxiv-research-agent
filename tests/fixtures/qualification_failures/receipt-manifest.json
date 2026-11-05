@@ -1,0 +1,12 @@
+{
+  "original_response_sha256": "8adf71647e0badc18577ea81cf68b4e3ef078d422dd6e75c55c34f947b80a13a",
+  "source_material_digest": "105e7ec95cf358ad3864abc0e767bd1a3b509f4c9a1e5c9288c5fb9e0af4ce52",
+  "classification": "retained real public-context experimental response; incomplete and unaccepted; no human quality labels",
+  "original_code": "06c593f1dc3d01fb980b6d7fbd454d0ee1f0dd7a",
+  "provider_contact_counts": 5,
+  "provider_messages": 1,
+  "input_tokens": 2443,
+  "output_tokens": 1200,
+  "workflow_usd": "0.025329",
+  "original_journal_sha256": "49bfdff0fc2f2d89639622999b223f90d37265841ffa94d3956e3412f4decca0"
+}

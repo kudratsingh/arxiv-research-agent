@@ -18,6 +18,63 @@ Paid services require a separate, concrete approval before activation.
 | W8–W9 | Real grounded summaries and guided deep dives | Exact source/model/usage envelope and separate owner spending approval; actual retained-source/provider walkthrough required |
 | W10–W12 | Questions, assumptions and experiment proposals; daily-use pilot; optional expansion | Follow observed owner workflow. No automatic code execution, publishing or external delivery |
 
+## Research evaluation prerequisites and Milestone A (2026-11-05 UTC)
+
+The owner authorized a $10 cumulative evaluation program, at most20 new jobs,
+and80 total Messages/80 total counts including the prior1/5. This supersedes
+$1.25 for this isolated program only. Actual saved owner preferences/question
+were read locally, not the preview profile; owner notes/history/judgments were
+not copied. All new provider dispatch remains stopped pending the corrected
+scorer freeze and exact request-plan/code binding.
+
+The [compact contract/accounting note](23-research-evaluation-program.md)
+records sealed short handles, server-derived Unicode quotations/offsets, bounded
+claims/optional output, explicit abstention, unchanged output token caps,
+complete checker digests and one repair/recheck. Retained original response
+fixtures reproduce both1200-token truncation and4 quote/offset mismatches.
+Wrong versions, unselected handles, mutated material and missing checks refuse.
+
+An audited isolated-DB reconciliation preserves $0.025329 known workflow cost,
+releases $0.224671 unused hold, and keeps the old content failed/result absent.
+The old1 Message/5 counts and all original receipts remain. A new linked program
+ledger cumulatively enforces known/reserved/unknown cost across models and
+principals. Membership cannot fall back to a legacy/generic approval; owner→
+program lock order makes enrollment/reservation atomic. Four potential call pairs
+are reserved before job admission, including mandatory checker/recheck capacity.
+
+Independent review fixed membership bypass, metadata scope, count-only financial
+closure, enrollment lock order and a wire-optional/local-required kind mismatch
+before any new contact. Scorer review found a separate required quote/offset
+factual-gate bug; its fix/new versioned freeze is being prepared on the benchmark
+branch and is not used as q01 acceptance evidence. Heldout results remain absent.
+
+Exact local root code gate output, pasted from saved logs:
+
+```text
+Required test coverage of 89.0% reached. Total coverage: 94.64%
+6114 passed, 54 skipped, 53 deselected in 426.18s (0:07:06)
+Total:   4131 lines
+Missing: 63 lines
+Coverage: 98%
+===================== 53 passed, 6168 deselected in 14.25s =====================
+Success: no issues found in 168 source files
+All checks passed!
+```
+
+Registry parity260objects/0mismatches. Existing54skips and53workflow deselections
+remain explicit; workflow tier ran separately above. The first full run had6113
+passes/one intake-governor environment failure because a shared-rate override
+was set for a test that explicitly exercises the local file governor. Corrected
+hermetic environment removes only that override; all database tests retain the
+disposable DB, and no assertions/floors/tiers were weakened. Failed logs remain.
+
+Benchmark source/scoring, offline source expansion and real-data browser pilot
+remain in separate reviewable local commits. The pilot is FIVE AUTOMATED
+MECHANICAL SESSIONS on retained real data, not owner usefulness or longitudinal
+validation; all owner labels blank. Owner3137 and controller3148 remain intact;
+isolated real-data pilot3158 remains runnable. No recurrence, everyday
+qualification/generation, PR merge, deployment or new provider contact occurred.
+
 ## Sonnet5.5 model choice (2026-11-04)
 
 The owner selected `claude-sonnet-5-5` for subsequent API requests. Offline

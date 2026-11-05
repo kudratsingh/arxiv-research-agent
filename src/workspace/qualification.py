@@ -18,9 +18,10 @@ from anthropic import transform_schema
 
 from src.tools.postgres_pool import close_pool, get_pool
 from src.workspace.admission import _digest
+from src.workspace.evidence_contract import ExcerptStudyDraft, SummaryDraft
 from src.workspace.grounding import ClaimKind, ResearchClaim, evidence_ref
 from src.workspace.material import SourceMaterial
-from src.workspace.provider_adapter import Checks, QualificationAdapter, StudyDraft, prepare
+from src.workspace.provider_adapter import Checks, QualificationAdapter, prepare
 from src.workspace.store import WorkspaceStore
 
 
@@ -87,7 +88,8 @@ def packet(store: WorkspaceStore, owner: str, proposal: dict[str, Any]) -> dict[
 
     for item in proposal["sources"]:
         inputs = prepare(
-            store, owner, item["job_kind"], [item["material_id"]], span_ids=item.get("span_ids", [])
+            store, owner, item["job_kind"], item.get("material_ids") or [item["material_id"]], span_ids=item.get("span_ids", []),
+            question=item.get("question", ""),
         )
         adapter = QualificationAdapter(
             store, owner, inputs, transport=httpx.MockTransport(no_contact)
@@ -112,7 +114,7 @@ def packet(store: WorkspaceStore, owner: str, proposal: dict[str, Any]) -> dict[
         if item["job_kind"] == "summary":
             selected.append(materials[0])
     return {
-        "revision": "workspace-qualification-packet-v3-sonnet55",
+        "revision": "workspace-qualification-packet-v4-handles",
         "approved": False,
         "provider_contacts": 0,
         "actual_usd": "0",
@@ -127,7 +129,8 @@ def packet(store: WorkspaceStore, owner: str, proposal: dict[str, Any]) -> dict[
                 "local_digest": _digest(model.model_json_schema()),
                 "wire_digest": _digest(transform_schema(model)),
             }
-            for name, model in (("draft_and_repair", StudyDraft), ("checker", Checks))
+            for name, model in (("summary_draft_and_repair", SummaryDraft),
+                                ("study_draft_and_repair", ExcerptStudyDraft), ("checker", Checks))
         },
         "measurement_only": {
             "purpose": "workspace-measurement-only",

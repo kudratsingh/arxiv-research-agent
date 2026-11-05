@@ -140,10 +140,20 @@ class GenerationAdmission:
     @staticmethod
     def _request_id(policy: dict[str, Any], request_id: str, inputs: dict[str, Any]) -> None:
         """Extension point for a qualification approval's single named job."""
+        if policy.get("program_id") and (
+            policy.get("request_id") != request_id or policy.get("request_digest") != _digest(inputs)
+        ):
+            raise AdmissionError("approved_program_request_required")
 
     @staticmethod
     def _valid_amount(amount: Decimal) -> bool:
         return amount > 0
+
+    def _admit_reservation(self, conn: Any, owner: str, policy: dict[str, Any], amount: Decimal) -> None:
+        """Specialized cumulative limits, under the same reservation lock."""
+        from src.workspace.qualification_budget import guard
+
+        guard(conn, owner, policy, reserve_usd=amount)
 
     def _lock(self, conn: Any, owner: str) -> None:
         self.store._owner(owner)
@@ -300,6 +310,7 @@ class GenerationAdmission:
                 raise AdmissionError("day_cap_exceeded")
             if month + amount > _money(policy["month_usd"]):
                 raise AdmissionError("month_cap_exceeded")
+            self._admit_reservation(conn, owner, policy, amount)
             data = {
                 "sealed_input": sealed,
                 "policy_digest": _digest(policy),
@@ -448,7 +459,7 @@ class GenerationAdmission:
                 "budget_stopped"
                 if overshot
                 else state
-                if state in {"cancelled", "budget_stopped"}
+                if state in {"cancelled", "budget_stopped", "failed"}
                 else "uncertain"
                 if unknown or (state == "uncertain" and not final)
                 else "ready"

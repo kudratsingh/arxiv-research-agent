@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import asyncio
 import json
-from dataclasses import asdict, replace
+from dataclasses import replace
 from unittest.mock import Mock
 
 import httpx
@@ -16,7 +16,8 @@ from jsonschema import Draft202012Validator
 
 from src.workspace import provider_adapter as p
 from src.workspace.admission import AdmissionError, _digest
-from src.workspace.grounding import ClaimKind, ResearchClaim, evidence_ref
+from src.workspace.evidence_contract import draft_schema
+from src.workspace.qualification_budget import census, register_trial
 from tests import test_workspace_admission as admission
 from tests import test_workspace_executor as support
 
@@ -33,13 +34,16 @@ def prepared(store, kind="summary"):
 
 
 def approve(store, inputs, **changes):
-    return admission.policy(
-        store,
-        model_ids=[p.MODEL],
-        purpose="workspace-qualification",
-        request_digest=_digest(inputs.snapshot()),
-        **{"transport_mode": "mock", "everyday_generation": False, "request_id": "one", **changes},
-    )
+    if changes.get("transport_mode") == "provider":
+        with store.pool.connection() as conn:
+            history = census(conn, "a")
+        register_trial(store, "a", "synthetic-trial", history["history_digest"])
+        changes["trial_id"] = "synthetic-trial"
+    return admission.policy(store, **{
+        "model_ids": [p.MODEL], "purpose": "workspace-qualification",
+        "request_digest": _digest(inputs.snapshot()), "transport_mode": "mock",
+        "everyday_generation": False, "request_id": "one", **changes,
+    })
 
 
 class Transport:
@@ -77,34 +81,22 @@ class Transport:
                 ]
             }
         else:
-            with self.store.pool.connection() as conn:
-                materials = p.FakeExecutor(self.store)._sources(
-                    conn, "a", [s.material_id for s in self.inputs.sources]
-                )
-            selected = set(self.inputs.settings["selection"]["span_ids"])
-            span = next(s for s in materials[0].spans if s.span_id in selected)
-            claim = ResearchClaim(
-                "c1", span.text, ClaimKind.FACTUAL, (evidence_ref(materials[0], span),)
-            )
             output = {
                 "kind": self.inputs.kind,
+                "abstention": None,
                 "title": "Mock transport draft",
-                "claims": [asdict(claim)],
-                "sections": [{"name": "overview", "claim_ids": ["c1"]}],
-                "questions": ["Which evaluation setting limits this finding?"],
-                "limitations": ["Retained excerpts only; omitted pages were not reviewed."],
-                "proposed_actions": ["Propose a fixed-baseline replication; not a reported result."],
+                "claims": [{"claim_id": "c1", "text": "The retained source reports a fixed evaluation.",
+                            "handles": [context["evidence"][0]["handle"]], "section": "overview"}],
+                "question": "Which evaluation setting limits this finding?",
+                "limitation": "Retained excerpts only; omitted pages were not reviewed.",
+                "proposal": "Propose a fixed-baseline replication." if self.inputs.kind == "deep_dive" else None,
             }
-            if self.inputs.kind == "deep_dive":
-                output["sections"] += [
-                    {"name": name, "claim_ids": ["c1"]}
-                    for name in ("method", "assumptions", "comparison")
-                ]
         schema = body["output_config"]["format"]["schema"]
         Draft202012Validator.check_schema(schema)
         Draft202012Validator(schema).validate(json.loads(json.dumps(output)))
-        (p.Checks if context["stage"] == "check" else p.StudyDraft).model_validate(output)
+        (p.Checks if context["stage"] == "check" else draft_schema(self.inputs.kind)).model_validate(output)
         value = {
+            "id": "msg_synthetic_" + str(len(self.calls)),
             "model": p.MODEL,
             "stop_reason": "end_turn",
             "usage": {"input_tokens": 110, "output_tokens": 90},
@@ -192,7 +184,7 @@ async def test_gate_binding_and_separate_qualification_approval_before_client(st
 @pytest.mark.parametrize(
     "change,error",
     [
-        (lambda v: {**v, "model": "wrong"}, "model_drift"),
+        (lambda v: {**v, "model": "wrong"}, "invalid_or_unpriced"),
         (lambda v: {**v, "stop_reason": "max_tokens"}, "incomplete_output"),
         (
             lambda v: {**v, "usage": {"input_tokens": True, "output_tokens": 0}},
@@ -220,8 +212,10 @@ async def test_invalid_or_incomplete_billed_output_is_fenced_never_replayed(stor
     adapter, transport, job = setup(store, change=change)
     with pytest.raises((AdmissionError, ValueError), match=error):
         await adapter.advance(job)
-    assert adapter.snapshot(job)["state"] == "uncertain"
-    assert admission.row(store, job)[4] > 0
+    unknown = "invalid_or_unpriced" in error
+    assert adapter.snapshot(job)["state"] == ("uncertain" if unknown else "failed")
+    assert (admission.row(store, job)[4] > 0) is unknown
+    assert adapter.snapshot(job)["result"] is None
     with pytest.raises(AdmissionError):
         await adapter.advance(job)
     assert len(transport.calls) == 2
@@ -270,7 +264,11 @@ async def test_counting_contact_failures_no_generation_or_implicit_retries(store
     job = adapter.start("fault", "0.5")["id"]
     with pytest.raises((AdmissionError, httpx.HTTPError)):
         await adapter.advance(job)
-    assert len(calls) == 1 and adapter.snapshot(job)["state"] == "uncertain"
+    assert len(calls) == 1
+    assert adapter.snapshot(job)["state"] == ("failed" if fault == "count_large" else "uncertain")
+    if fault == "count_large":
+        assert admission.row(store, job)[4] == 0
+        assert adapter.snapshot(job)["result"] is None
 
 
 async def test_cancel_restart_and_competing_contact_are_fenced(store):

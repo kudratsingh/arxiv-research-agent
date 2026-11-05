@@ -1,0 +1,30 @@
+{
+  "id": "msg_011CghkUCQ7VWEmXPH4p4bJy",
+  "role": "assistant",
+  "type": "message",
+  "model": "claude-sonnet-4-6",
+  "usage": {
+    "speed": "standard",
+    "input_tokens": 2443,
+    "service_tier": "standard",
+    "inference_geo": "global",
+    "output_tokens": 1200,
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 0,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 0
+  },
+  "content": [
+    {
+      "text": "{\"kind\":\"summary\",\"title\":\"KEEPER: Recursive Textual Memory, Self-Consistency Bias, and Auxiliary Objective Evaluation in Agents\",\"claims\":[{\"claim_id\":\"c1\",\"text\":\"Recursive textual memory can carry earlier errors into later updates, creating a risk of error propagation over time.\",\"kind\":\"factual\",\"evidence\":[{\"material_id\":\"mat-54f2f6e0645f499458d5030d06e35a59\",\"span_id\":\"span-3fd278aadaa92873179ed21c075ab368\",\"work_id\":\"arxiv:2610.41482\",\"version_id\":\"arxiv:2610.41482:v1:metadata-e5c832a06d88973f\",\"source_hash\":\"sha256:2b307ec864315d90d5e828786c2505fff1feda8837559b7e8601961ea9717759\",\"scope\":\"abstract\",\"parser_revision\":\"workspace-plain-text-v1\",\"page\":null,\"start\":0,\"end\":875,\"quote\":\"Recursive textual memory can carry earlier errors into later updates\"}],\"required_scope\":\"abstract\",\"required_section\":null,\"inference_label\":null},{\"claim_id\":\"c2\",\"text\":\"The paper defines 'self-consistency bias' as the persistence of incorrect claims already present in the incoming memory.\",\"kind\":\"factual\",\"evidence\":[{\"material_id\":\"mat-54f2f6e0645f499458d5030d06e35a59\",\"span_id\":\"span-3fd278aadaa92873179ed21c075ab368\",\"work_id\":\"arxiv:2610.41482\",\"version_id\":\"arxiv:2610.41482:v1:metadata-e5c832a06d88973f\",\"source_hash\":\"sha256:2b307ec864315d90d5e828786c2505fff1feda8837559b7e8601961ea9717759\",\"scope\":\"abstract\",\"parser_revision\":\"workspace-plain-text-v1\",\"page\":null,\"start\":0,\"end\":875,\"quote\":\"We define self-consistency bias as the persistence of incorrect claims already present in the incoming memory.\"}],\"required_scope\":\"abstract\",\"required_section\":null,\"inference_label\":null},{\"claim_id\":\"c3\",\"text\":\"KEEPER is a comparative analysis of four auxiliary objectives evaluated along information-content and update-sensitivity axes within a shared recursive interface.\",\"kind\":\"factual\",\"evidence\":[{\"material_id\":\"mat-54f2f6e0645f499458d5030d06e35a59\",\"span_id\":\"span-3fd278aadaa92873179ed21c075ab368\",\"work_id\":\"arxiv:2610.41482\",\"version_id\":\"arxiv:2610.41482:v1:metadata-e5c832a06d88973f\",\"source_hash\":\"sha256:2b307ec864315d90d5e828786c2505fff1feda8837559b7e8601961ea9717759\",\"scope\":\"abstract\",\"parser_revision\":\"workspace-plain-text-v1\",\"page\":null,\"start\":0,\"end\":875,\"quote\":\"We present KEEPER, a comparative analysis of four auxiliary objectives along information-content and update-sensitivity axes within a shared recursive interface\"}],\"required_scope\":\"abstract\",\"required_section\":null,\"inference_label\":null},{\"claim_id\":\"c4\",\"text\":\"Reward-related prediction achieves the highest task performance both before and after offline reinforcement learning, outperforming joint supervision.\",\"kind\":\"factual\",\"evidence\":[{\"material_id\":\"mat-54f2f6e0645f499458d5030d06e35a59\",\"span_id\":\"span-3fd278aadaa92873179ed21c075ab368\",\"work_id\":\"arxiv:2610.41482\",\"version_id\":\"arxiv:2610.41482:v1:metadata-e5c832a06d88973f\",\"source_hash\":\"sha256:2b307ec864315d90d5e828786c2505fff1feda8837559b7e8601961ea9717759\",\"scope\":\"abstract\",\"parser_revision\":\"workspace-plain-text-v1\",\"page\":null,\"start\":0,\"end\":875,\"quote\":\"reward-related prediction achieve the highest task performance before and after offline reinforcement learning, outperforming joint supervision.\"}],\"required_scope\":\"abstract\",\"required_section\":null,\"inference_label\":null},{\"claim_id\":\"c5\",\"text\":\"A claim-level analysis of one baseline trajectory documents error persistence despite the agent receiving corrective observations.\",\"kind\":\"factual\",\"evidence\":[{\"material_id\":\"mat-54f2f6e0645f499458d5030d06e35a59\",\"span_id\":\"span-3fd278aadaa92873179ed21c075ab368\",\"work_id\":\"arxiv:2610.41482\",\"version_id\":\"arxiv:2610.41482:v1:metadata-e5c832a06d88973f\",\"source_hash\":\"sha256:2b307ec864315d90d5e828786c2505fff1feda8837559b7e8601",
+      "type": "text"
+    }
+  ],
+  "container": null,
+  "diagnostics": null,
+  "stop_reason": "max_tokens",
+  "stop_details": null,
+  "stop_sequence": null
+}

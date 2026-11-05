@@ -34,10 +34,10 @@ def bound_jobs(
 ) -> list[tuple[dict[str, Any], GenerationInput]]:
     jobs = []
     if (
-        packet.get("revision") != "workspace-qualification-packet-v3-sonnet55"
-        or len(packet.get("jobs", [])) != 4
+        packet.get("revision") != "workspace-qualification-packet-v4-handles"
+        or not 1 <= len(packet.get("jobs", [])) <= 20
     ):
-        raise AdmissionError("four_request_v3_sonnet55_packet_required")
+        raise AdmissionError("bounded_v4_handles_packet_required")
     for job in packet["jobs"]:
         raw = job["sealed_input"]
         inputs = GenerationInput(
@@ -64,8 +64,8 @@ def bound_jobs(
         ):
             raise AdmissionError("packet_request_drift")
         jobs.append((job, inputs))
-    if len({job["input_digest"] for job, _ in jobs}) != 4:
-        raise AdmissionError("four_distinct_requests_required")
+    if len({job["input_digest"] for job, _ in jobs}) != len(jobs):
+        raise AdmissionError("distinct_requests_required")
     return jobs
 
 
@@ -84,6 +84,10 @@ async def execute(
         raise AdmissionError("qualification_mode_required")
     jobs = bound_jobs(store, owner, packet)
     if mode == "measurement":
+        if packet.get("program_id"):
+            raise AdmissionError("evaluation_uses_paired_counts_only")
+        if len(jobs) != 4:
+            raise AdmissionError("measurement_runs_four_named_counts")
         if request_id is not None:
             raise AdmissionError("measurement_runs_four_named_counts")
     else:

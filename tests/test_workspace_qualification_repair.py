@@ -13,6 +13,7 @@ from psycopg.types.json import Jsonb
 from reportlab.pdfgen import canvas
 
 from src.workspace import provider_adapter as p
+from src.workspace.evidence_contract import draft_schema, evidence_catalog
 from src.workspace.grounding import evidence_ref
 from src.workspace.material import extract_pdf
 from tests import test_workspace_provider_adapter as support
@@ -64,7 +65,7 @@ def react(store):
 
 def outside(value, material):
     draft = json.loads(value["content"][0]["text"])
-    draft["claims"][0]["evidence"] = [asdict(evidence_ref(material, material.spans[0]))]
+    draft["claims"][0]["handles"] = [next(iter(evidence_catalog([material], {material.spans[0].span_id})))]
     return {**value, "content": [{"type": "text", "text": json.dumps(draft)}]}
 
 
@@ -86,7 +87,7 @@ async def test_page3_only_approval_refuses_valid_page1_reference_at_every_stage(
                     "SELECT data FROM workspace_generation_jobs WHERE id=%s", (job,)
                 ).fetchone()[0]
                 draft = data["adapter"]["steps"][-1]["output"]
-                draft["claims"][0]["evidence"] = [asdict(evidence_ref(material, material.spans[0]))]
+                draft["claims"][0]["handles"] = [next(iter(evidence_catalog([material], {material.spans[0].span_id})))]
                 conn.execute(
                     "UPDATE workspace_generation_jobs SET data=%s WHERE id=%s", (Jsonb(data), job)
                 )
@@ -119,7 +120,8 @@ async def test_selected_page_still_requires_exact_version_offsets_and_quote(stor
 
     def change(value):
         draft = json.loads(value["content"][0]["text"])
-        ref = draft["claims"][0]["evidence"][0]
+        ref = asdict(evidence_ref(material, next(s for s in material.spans if s.page == 3)))
+        draft["claims"][0]["evidence"] = [ref]
         if alter == "version":
             ref["version_id"] += ":wrong"
         elif alter == "offset":
@@ -161,13 +163,15 @@ async def test_wire_and_local_semantics_reject_the_old_mapping_and_invalid_secti
         with pytest.raises(ValidationError):
             validator.validate(invalid)
         with pytest.raises(ValueError):
-            p.StudyDraft.model_validate(invalid)
+            draft_schema("summary").model_validate(invalid)
+    resolved = adapter._draft(valid).model_dump(mode="json")
     for sections in (
         [{"name": "overview", "claim_ids": ["missing"]}],
         [{"name": "method", "claim_ids": ["c1"]}],
         [{"name": "overview", "claim_ids": ["c1"]}] * 2,
     ):
-        invalid = {**valid, "sections": sections}
-        validator.validate(invalid)  # Semantic cross-references remain a local check.
+        invalid = {**resolved, "sections": sections}
+        # Model-authored sections are no longer accepted on the wire; the
+        # internal resolved result still enforces all original cross-references.
         with pytest.raises(ValueError):
             p.StudyDraft.model_validate(invalid)

@@ -1,0 +1,34 @@
+{
+  "material_id": "mat-54f2f6e0645f499458d5030d06e35a59",
+  "work_id": "arxiv:2610.41482",
+  "version_id": "arxiv:2610.41482:v1:metadata-e5c832a06d88973f",
+  "source_hash": "sha256:2b307ec864315d90d5e828786c2505fff1feda8837559b7e8601961ea9717759",
+  "content_hash": "sha256:a1e2d03e8e9d1c84b615b075c16a309c69499e3fa466b8502a8ae63cc36aca32",
+  "scope": "abstract",
+  "parser_revision": "workspace-plain-text-v1",
+  "quality": "text_extracted",
+  "warnings": [],
+  "complete": true,
+  "page_count": null,
+  "pages": [
+    "Recursive textual memory can carry earlier errors into later updates, yet task performance alone does not establish memory reliability. We define self-consistency bias as the persistence of incorrect claims already present in the incoming memory. We present KEEPER, a comparative analysis of four auxiliary objectives along information-content and update-sensitivity axes within a shared recursive interface, examining how supervision targets relate to agent performance. Among evaluated conditions, reward-related prediction achieve the highest task performance before and after offline reinforcement learning, outperforming joint supervision. A claim-level analysis of one baseline trajectory documents error persistence despite corrective observations. Together, these analyses motivate evaluating error persistence and valid-information retention alongside task outcomes."
+  ],
+  "spans": [
+    {
+      "span_id": "span-3fd278aadaa92873179ed21c075ab368",
+      "work_id": "arxiv:2610.41482",
+      "version_id": "arxiv:2610.41482:v1:metadata-e5c832a06d88973f",
+      "material_id": "mat-54f2f6e0645f499458d5030d06e35a59",
+      "source_hash": "sha256:2b307ec864315d90d5e828786c2505fff1feda8837559b7e8601961ea9717759",
+      "scope": "abstract",
+      "parser_revision": "workspace-plain-text-v1",
+      "page": null,
+      "section": "abstract",
+      "start": 0,
+      "end": 875,
+      "text": "Recursive textual memory can carry earlier errors into later updates, yet task performance alone does not establish memory reliability. We define self-consistency bias as the persistence of incorrect claims already present in the incoming memory. We present KEEPER, a comparative analysis of four auxiliary objectives along information-content and update-sensitivity axes within a shared recursive interface, examining how supervision targets relate to agent performance. Among evaluated conditions, reward-related prediction achieve the highest task performance before and after offline reinforcement learning, outperforming joint supervision. A claim-level analysis of one baseline trajectory documents error persistence despite corrective observations. Together, these analyses motivate evaluating error persistence and valid-information retention alongside task outcomes."
+    }
+  ],
+  "offset_basis": "page-local Unicode code points; end exclusive",
+  "page_numbers": null
+}
