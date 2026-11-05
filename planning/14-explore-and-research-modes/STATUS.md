@@ -9,7 +9,7 @@ checkpoint. **No product-mode implementation or owner data migration yet.**
 | Planning docs | Written locally in this kit | Linked direction, experience, data/ranking, ordered work and separate evaluations |
 | Controller baseline | P0–P6 complete; G7/G8 pending at kit start | Controllerdff860e / G6appfda9d; G6 CSS exception remains, not a final green budget |
 | Frontend continuation | Separate Sol High P7 implementation and verification | Do not count pending polish as mode implementation |
-| Diagnostic benchmark | Existing frozen program continues separately | q01development; q02/q03failed retained; prospective q04–q10; unchanged targets |
+| Diagnostic benchmark | Stopped diagnostic; scoped approval closed | q01 development; q02/q03/q04 failed; q05–q10 unrun; unchanged targets and original aggregate |
 | Mode switch / project context | Planned D1/D2 | No fake persistence or silent organizing-question import |
 | Split discovery policies | Planned D3 | Existing ranker topic-gates profile-question terms; new Research must not |
 | Reader cross-mode tools | Planned D4 | Exact source/version/passage, draft recovery and owned shared records |

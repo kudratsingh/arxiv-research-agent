@@ -33,16 +33,19 @@ never derive dates from identifiers or acquisition timestamps.
 
 ## Current bounded evaluation remains historical evidence
 
-The already authorized program is capped at cumulative $10 with all prior
+The authorized program had a cumulative $10 ceiling with all prior
 receipts/contacts/holds preserved. q01 is development. q02/q03 are historical
-held-out failures and must not be replayed. The prospective continuation is
-separately frozen for q04–q10 with changed producer/schema bindings. Preserve
+held-out failures and must not be replayed. The continuation was prospectively
+frozen for q04–q10 with changed producer/schema bindings, then stopped on q04's
+repair-admission refusal. q04 is failed, q05–q10 are unrun, and its scoped
+approval is closed. Preserve
 original aggregate and producer/protocol cohorts rather than presenting all
 cases as one uniform implementation.
 
-Even if all seven remaining cases complete,7/9 is below the frozen90% completion
-target and the maximum16 substantive claims is below the20-item minimum.
-Those gates remain HOLD. The new product direction cannot change denominators,
+Before collection, even seven completions could reach only 7/9, below the frozen
+90% target; the maximum 16 substantive claims was below the 20-item minimum.
+The stopped run has zero completed primary cases, three failed and six unrun;
+those gates remain HOLD. The new product direction cannot change denominators,
 thresholds, old outputs or the corpus to manufacture acceptance. Actual results,
 accounting and active handoff are maintained in the benchmark/qualification lane.
 This kit adds no provider approval, contacts or experiment jobs.
@@ -64,8 +67,8 @@ checks or relabel unsupported facts as inference to improve a score.
 
 Any later paid validation set requires **fresh explicit owner approval**, plus
 its own sealed exact request/envelope and cumulative budget checks. The present
-continuation is only q04–q10 and stops on any new failure; unused money is not
-permission to add or repair-and-replay cases. Everyday generation separately
+q04–q10 continuation has stopped; unused money is not permission to resume, add
+or repair-and-replay cases. Everyday generation separately
 requires approval and quality evidence. Reserve mandatory checking/recheck capacity and
 stop on new contract, accounting or admission failure. Unknown liability stays
 conservative and distinct from rejected content.

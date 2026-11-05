@@ -26,8 +26,9 @@ Keep Jazzy, the single-paper stage, readable mobile layout and shared controller
 
 ## Sequence and authority
 
-Finish the current bounded diagnostic benchmark without altering its frozen
-questions, rankings, corpus, thresholds or historical failures. Continue the
+Use the completed, stopped diagnostic benchmark without altering its frozen
+questions, rankings, corpus, thresholds or historical failures. q04 stopped at
+repair admission; q05–q10 remain unrun, and the scoped approval is closed. Continue the
 controller's already assigned P7 and P8 gates. The next feature batch establishes
 the mode switch, question-specific retrieval and persistent project context,
 then richer teaching and research tools in working increments.
