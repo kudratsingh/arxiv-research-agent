@@ -180,9 +180,9 @@
       "date": "2026-11-04",
       "pr": "WO-7.5 \u2014 controller CSS consolidation and scoped command polish",
       "authority": "Owner-approved P7 ratchet: delete components/workspace/workspace.css; ceil(measuredBytes * 1.06 / 512) * 512, hard cap 26624 B. E58 reuse deviation retains byte-identical daily.css foundations rather than duplicate them.",
-      "measuredBytes": 23941,
-      "headroom": "+6.93% (1659 B)",
-      "why": "The consolidated controller removes legacy workspace.css and dead/overridden scoped declarations while preserving all seven live routes and their existing form/focus foundations. Reusing byte-identical daily.css avoids duplicating identical foundations; this is an explicitly approved E58 architecture deviation, not a budget exception. The actual gzip-6 CSS sum is 23941 B; rounding its 6% headroom upward to 512 B gives 25600 B, below the unchanged 26624 B hard cap. All JavaScript ceilings and coverage floors remain unchanged."
+      "measuredBytes": 23940,
+      "headroom": "+6.93% (1660 B)",
+      "why": "The consolidated controller removes legacy workspace.css and dead/overridden scoped declarations while preserving all seven live routes and their existing form/focus foundations. Reusing byte-identical daily.css avoids duplicating identical foundations; this is an explicitly approved E58 architecture deviation, not a budget exception. The actual gzip-6 CSS sum is 23940 B; rounding its 6% headroom upward to 512 B gives 25600 B, below the unchanged 26624 B hard cap. All JavaScript ceilings and coverage floors remain unchanged."
     },
     {
       "row": "derived-total-first-load",
@@ -190,8 +190,8 @@
       "to": 327680,
       "date": "2026-11-04",
       "pr": "WO-7.5 \u2014 controller CSS consolidation and scoped command polish",
-      "measuredBytes": 319743,
-      "headroom": "+2.48% (7937 B)",
+      "measuredBytes": 319745,
+      "headroom": "+2.48% (7935 B)",
       "why": "This reported row is mechanically the sum of the unchanged conversation JavaScript ceiling (192512 B), the newly measured and ratified CSS ceiling (25600 B), and unchanged fonts ceiling (109568 B). It therefore moves by exactly the same 8192 B CSS delta to 327680 B. It remains reported rather than gated and does not grant any additional JavaScript or font allowance."
     }
   ],

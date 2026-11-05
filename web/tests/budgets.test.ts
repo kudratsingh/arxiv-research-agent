@@ -661,7 +661,7 @@ describe("the committed budgets.json encodes RC-01 in bytes", () => {
     // did not exist then.
     ["route-js-learn-progress", 169_984, null],
     ["shared-framework-runtime", 139_264, null],
-    // WO-7.5: consolidated CSS measures 23,941 B. The approved ceil512
+    // WO-7.5: consolidated CSS measures 23,940 B. The approved ceil512
     // (measured * 1.06) ratchet is 25,600 B, below the 26,624 B hard cap.
     ["emitted-css", 25_600, 4_288],
     ["self-hosted-fonts", 109_568, 0],
@@ -750,8 +750,8 @@ describe("the committed budgets.json encodes RC-01 in bytes", () => {
 
   it("keeps the measured P7 CSS ratchet within the approved cap and six percent headroom rule", () => {
     const movement = budgets.ratchet?.findLast(entry => entry.row === "emitted-css");
-    expect(movement?.measuredBytes).toBe(23_941);
-    expect(movement?.to).toBe(Math.ceil(23_941 * 1.06 / 512) * 512);
+    expect(movement?.measuredBytes).toBe(23_940);
+    expect(movement?.to).toBe(Math.ceil(23_940 * 1.06 / 512) * 512);
     expect(movement?.to).toBeLessThanOrEqual(26_624);
     expect(budgets.rows.find(row => row.id === "derived-total-first-load")?.budgetBytes)
       .toBe(192_512 + 25_600 + 109_568);

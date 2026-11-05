@@ -491,7 +491,7 @@
 .workspace-app.ws-app { --ws-sidebar-width: 340px; display: grid; grid-template-columns: var(--ws-sidebar-width) minmax(0, 1fr); gap: 8px; height: 100dvh; min-height: 100dvh; padding: 8px; overflow: hidden; background: var(--color-canvas); color: var(--color-ink); }
 .workspace-app.ws-app[data-rail="true"] { --ws-sidebar-width: 64px; }
 .workspace-app .ws-sidebar, .workspace-app .ws-stage { min-width: 0; min-height: 0; border-radius: var(--ws-radius-lg); background: var(--color-surface); }
-.workspace-app .ws-sidebar { display: flex; flex-direction: column; overflow: auto; overscroll-behavior: contain; padding: 12px; }
+.workspace-app .ws-sidebar { position: relative; display: flex; flex-direction: column; overflow: auto; overscroll-behavior: contain; padding: 12px; }
 .workspace-app .ws-brand-row { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
 .workspace-app .ws-brand { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; color: var(--color-ink); text-decoration: none; font: 650 14px/1.2 var(--font-ui); }
 .workspace-app .ws-brand-name { max-width: 110px; }
