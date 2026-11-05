@@ -66,7 +66,8 @@ export function LiveRadar() {
   const mode = useQueryParam("mode"), project = useQueryParam("project"), thread = useQueryParam("thread");
   const contextKey = JSON.stringify([mode, project, thread, context.mode]);
   const [filters, setFilters] = useState(EMPTY_FILTERS);
-  const [applied, setApplied] = useState<ReturnType<typeof fromURL> | null>(null);
+  const [appliedState, setApplied] = useState<{ value: ReturnType<typeof fromURL>; contextKey: string } | null>(null);
+  const applied = appliedState?.value ?? null, appliedContextKey = appliedState?.contextKey;
   const appliedKey = useRef("");
   const [page, setPage] = useState<WorkPage | null>(null);
   const [notice, setNotice] = useState("");
@@ -83,7 +84,7 @@ export function LiveRadar() {
       if (key === appliedKey.current) return;
       appliedKey.current = key;
       setFilters(value.filters);
-      setApplied(value);
+      setApplied({ value, contextKey });
       setPage(null);
       setNotice("");
       setLoading(true);
@@ -94,7 +95,7 @@ export function LiveRadar() {
     return () => { window.removeEventListener("popstate", loadURL); window.removeEventListener(WORKSPACE_URL_EVENT, loadURL); };
   }, [contextKey, context.mode]);
   useEffect(() => {
-    if (!applied) return;
+    if (!applied || appliedContextKey !== contextKey) return;
     const controller = new AbortController();
     const params = new URLSearchParams({ ...applied.filters, limit: "20" });
     if (applied.cursor) params.set("cursor", applied.cursor);
@@ -118,7 +119,7 @@ export function LiveRadar() {
         if (!controller.signal.aborted) setLoading(false);
       });
     return () => controller.abort();
-  }, [applied, mode, project, thread, contextKey]);
+  }, [applied, appliedContextKey, mode, project, thread, contextKey]);
   if (!state) return <LoadingState error={error} retry={() => void reload()} />;
   if (state.context?.unavailable_reason) return <div className="ws-radar"><ContextUnavailable reason={state.context.unavailable_reason} context={context} /></div>;
   const items = page?.items.map((item) => {
@@ -155,7 +156,7 @@ export function LiveRadar() {
     setPage(null);
     setNotice("");
     setLoading(true);
-    setApplied({ ...next });
+    setApplied({ value: { ...next }, contextKey });
     closeDrawer();
   }
   async function undo() {
