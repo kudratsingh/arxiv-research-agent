@@ -6,7 +6,7 @@
     "command": ".venv/bin/python -c \"import json; from src.api.app import create_app; print(json.dumps(create_app().openapi(), indent=2))\" > web/contract/openapi.json  # then re-add this x-provenance header",
     "consumers": "web/lib/api/generated/schema.d.ts via `npm run generate:types`.",
     "note": "JSON has no comment syntax, so this OpenAPI 3.1 x- extension carries the header. Strip the 'x-provenance' key before comparing against a freshly generated create_app().openapi().",
-    "workspace_update": "2026-11-03 derived exact-version retained availability; immutable metadata unchanged; no provider client"
+    "workspace_update": "2026-11-05 D0-D4 manual product context; migration010, no provider contacts; base 10b4260"
   },
   "openapi": "3.1.0",
   "info": {
@@ -1813,6 +1813,764 @@
           }
         }
       }
+    },
+    "/workspace/context": {
+      "get": {
+        "tags": [
+          "workspace-context"
+        ],
+        "summary": "Get Index",
+        "operationId": "get_index_workspace_context_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContextIndex"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/context/preferences": {
+      "post": {
+        "tags": [
+          "workspace-context"
+        ],
+        "summary": "Save Preferences",
+        "operationId": "save_preferences_workspace_context_preferences_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContextPreferencesWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContextPreferences"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/context/projects/{project_id}": {
+      "get": {
+        "tags": [
+          "workspace-context"
+        ],
+        "summary": "Get Project",
+        "operationId": "get_project_workspace_context_projects__project_id__get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/context/projects": {
+      "post": {
+        "tags": [
+          "workspace-context"
+        ],
+        "summary": "Save Project",
+        "operationId": "save_project_workspace_context_projects_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/context/projects/{project_id}/sources": {
+      "post": {
+        "tags": [
+          "workspace-context"
+        ],
+        "summary": "Save Source",
+        "operationId": "save_source_workspace_context_projects__project_id__sources_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectSourceWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/context/projects/{project_id}/unlink": {
+      "post": {
+        "tags": [
+          "workspace-context"
+        ],
+        "summary": "Unlink Source",
+        "operationId": "unlink_source_workspace_context_projects__project_id__unlink_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectUnlink"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/context/projects/{project_id}/entries": {
+      "post": {
+        "tags": [
+          "workspace-context"
+        ],
+        "summary": "Link Entry",
+        "operationId": "link_entry_workspace_context_projects__project_id__entries_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectEntryWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/context/projects/{project_id}/artifacts": {
+      "post": {
+        "tags": [
+          "workspace-context"
+        ],
+        "summary": "Save Artifact",
+        "operationId": "save_artifact_workspace_context_projects__project_id__artifacts_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectArtifactWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/context/threads/{thread_id}": {
+      "get": {
+        "tags": [
+          "workspace-context"
+        ],
+        "summary": "Get Thread",
+        "operationId": "get_thread_workspace_context_threads__thread_id__get",
+        "parameters": [
+          {
+            "name": "thread_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Thread Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LearningThread"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/context/threads": {
+      "post": {
+        "tags": [
+          "workspace-context"
+        ],
+        "summary": "Save Thread",
+        "operationId": "save_thread_workspace_context_threads_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LearningThreadWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LearningThread"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/context/entries": {
+      "post": {
+        "tags": [
+          "workspace-context"
+        ],
+        "summary": "Save Entry",
+        "operationId": "save_entry_workspace_context_entries_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContextEntryWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContextEntryRevision"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/context/reading": {
+      "post": {
+        "tags": [
+          "workspace-context"
+        ],
+        "summary": "Save Reading",
+        "operationId": "save_reading_workspace_context_reading_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContextReadingWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContextReadingRevision"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/context/state": {
+      "get": {
+        "tags": [
+          "workspace-context"
+        ],
+        "summary": "Get State",
+        "operationId": "get_state_workspace_context_state_get",
+        "parameters": [
+          {
+            "name": "mode",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "learn",
+                    "research"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Mode"
+            }
+          },
+          {
+            "name": "project",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 80,
+              "default": "",
+              "title": "Project"
+            }
+          },
+          {
+            "name": "thread",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 80,
+              "default": "",
+              "title": "Thread"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContextWorkspaceState"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/context/items": {
+      "get": {
+        "tags": [
+          "workspace-context"
+        ],
+        "summary": "Get Items",
+        "operationId": "get_items_workspace_context_items_get",
+        "parameters": [
+          {
+            "name": "mode",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "learn",
+                    "research"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Mode"
+            }
+          },
+          {
+            "name": "project",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 80,
+              "default": "",
+              "title": "Project"
+            }
+          },
+          {
+            "name": "thread",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 80,
+              "default": "",
+              "title": "Thread"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 500,
+              "default": "",
+              "title": "Q"
+            }
+          },
+          {
+            "name": "source_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 120,
+              "default": "",
+              "title": "Source Id"
+            }
+          },
+          {
+            "name": "access_state",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 30,
+              "default": "",
+              "title": "Access State"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 30,
+              "default": "",
+              "title": "Status"
+            }
+          },
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 365,
+              "minimum": 0,
+              "default": 0,
+              "title": "Days"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 2048,
+              "default": "",
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "as_of",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 80,
+              "default": "",
+              "title": "As Of"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContextWorkPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1896,6 +2654,214 @@
         ],
         "title": "Activity"
       },
+      "ArtifactData": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "observation",
+              "assumption",
+              "hypothesis",
+              "comparison",
+              "proposed-experiment"
+            ],
+            "title": "Kind"
+          },
+          "body": {
+            "type": "string",
+            "maxLength": 10000,
+            "title": "Body",
+            "default": ""
+          },
+          "entry": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EntryReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "evidence_link_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 50,
+            "title": "Evidence Link Ids"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "kind"
+        ],
+        "title": "ArtifactData"
+      },
+      "BoundSource": {
+        "properties": {
+          "work_id": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Work Id"
+          },
+          "version_id": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Version Id"
+          },
+          "anchor": {
+            "type": "string",
+            "maxLength": 500,
+            "title": "Anchor",
+            "default": "abstract:0"
+          },
+          "version_hash": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version Hash"
+          },
+          "material_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^mat-[a-f0-9]{32}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Material Id"
+          },
+          "material_hash": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Material Hash"
+          },
+          "parser_revision": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parser Revision"
+          },
+          "source_scope": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "metadata",
+                  "abstract",
+                  "excerpt",
+                  "full_text"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Scope"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "source_url": {
+            "type": "string",
+            "title": "Source Url"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page"
+          },
+          "start": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start"
+          },
+          "end": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End"
+          },
+          "quote": {
+            "type": "string",
+            "title": "Quote",
+            "default": ""
+          },
+          "offset_basis": {
+            "type": "string",
+            "title": "Offset Basis",
+            "default": "page-local Unicode code points; end exclusive"
+          },
+          "available": {
+            "type": "boolean",
+            "title": "Available",
+            "default": true
+          },
+          "unavailable_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unavailable Reason"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "work_id",
+          "version_id",
+          "title",
+          "source_url"
+        ],
+        "title": "BoundSource"
+      },
       "ClaimKind": {
         "type": "string",
         "enum": [
@@ -1903,6 +2869,718 @@
           "inference"
         ],
         "title": "ClaimKind"
+      },
+      "ContextEdition": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          },
+          "profile_revision": {
+            "type": "integer",
+            "title": "Profile Revision"
+          },
+          "minutes": {
+            "type": "integer",
+            "title": "Minutes"
+          },
+          "work_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Work Ids"
+          },
+          "work_versions": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Work Versions"
+          },
+          "coverage": {
+            "items": {
+              "$ref": "#/components/schemas/SourceStatus"
+            },
+            "type": "array",
+            "title": "Coverage"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "allocation": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Allocation"
+          },
+          "context": {
+            "$ref": "#/components/schemas/ResolvedContext"
+          },
+          "context_preferences_revision": {
+            "type": "integer",
+            "title": "Context Preferences Revision"
+          },
+          "candidate_digest": {
+            "type": "string",
+            "title": "Candidate Digest"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "created_at",
+          "profile_revision",
+          "minutes",
+          "work_ids",
+          "coverage",
+          "status",
+          "context",
+          "context_preferences_revision",
+          "candidate_digest"
+        ],
+        "title": "ContextEdition"
+      },
+      "ContextEntryRevision": {
+        "properties": {
+          "work_id": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Work Id"
+          },
+          "version_id": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Version Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "question",
+              "note",
+              "next-action"
+            ],
+            "title": "Kind"
+          },
+          "body": {
+            "type": "string",
+            "maxLength": 10000,
+            "minLength": 1,
+            "title": "Body"
+          },
+          "anchor": {
+            "type": "string",
+            "maxLength": 500,
+            "title": "Anchor",
+            "default": "abstract:0"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "revision": {
+            "type": "integer",
+            "title": "Revision"
+          },
+          "updated_at": {
+            "type": "string",
+            "title": "Updated At",
+            "default": ""
+          },
+          "activity_sequence": {
+            "type": "integer",
+            "title": "Activity Sequence",
+            "default": 0
+          },
+          "context": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResumeContext"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "work_id",
+          "version_id",
+          "kind",
+          "body",
+          "id",
+          "revision"
+        ],
+        "title": "ContextEntryRevision"
+      },
+      "ContextEntryWrite": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Id"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Revision"
+          },
+          "request_id": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Request Id"
+          },
+          "data": {
+            "$ref": "#/components/schemas/EntryData"
+          },
+          "context": {
+            "$ref": "#/components/schemas/ResumeContext"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "revision",
+          "request_id",
+          "data",
+          "context"
+        ],
+        "title": "ContextEntryWrite"
+      },
+      "ContextIndex": {
+        "properties": {
+          "principal_key_id": {
+            "type": "string",
+            "title": "Principal Key Id"
+          },
+          "preferences": {
+            "$ref": "#/components/schemas/ContextPreferences"
+          },
+          "projects": {
+            "items": {
+              "$ref": "#/components/schemas/ResearchProject"
+            },
+            "type": "array",
+            "title": "Projects"
+          },
+          "threads": {
+            "items": {
+              "$ref": "#/components/schemas/LearningThread"
+            },
+            "type": "array",
+            "title": "Threads"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "principal_key_id",
+          "preferences",
+          "projects",
+          "threads"
+        ],
+        "title": "ContextIndex"
+      },
+      "ContextPreferences": {
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "title": "Revision",
+            "default": 0
+          },
+          "data": {
+            "$ref": "#/components/schemas/ContextPreferencesData"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ContextPreferences"
+      },
+      "ContextPreferencesData": {
+        "properties": {
+          "default_mode": {
+            "type": "string",
+            "enum": [
+              "learn",
+              "research"
+            ],
+            "title": "Default Mode",
+            "default": "learn"
+          },
+          "learning_background": {
+            "type": "string",
+            "maxLength": 3000,
+            "title": "Learning Background",
+            "default": ""
+          },
+          "learning_goals": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 30,
+            "title": "Learning Goals"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ContextPreferencesData"
+      },
+      "ContextPreferencesWrite": {
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Revision"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ContextPreferencesData"
+          },
+          "request_id": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Request Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "revision",
+          "request_id"
+        ],
+        "title": "ContextPreferencesWrite"
+      },
+      "ContextReadingRevision": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "unread",
+              "saved",
+              "read",
+              "archived",
+              "dismissed",
+              "snoozed"
+            ],
+            "title": "Status",
+            "default": "unread"
+          },
+          "anchor": {
+            "type": "string",
+            "maxLength": 500,
+            "title": "Anchor",
+            "default": "abstract:0"
+          },
+          "version_id": {
+            "type": "string",
+            "maxLength": 300,
+            "title": "Version Id",
+            "default": ""
+          },
+          "snoozed_until": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Snoozed Until"
+          },
+          "revision": {
+            "type": "integer",
+            "title": "Revision",
+            "default": 0
+          },
+          "updated_at": {
+            "type": "string",
+            "title": "Updated At",
+            "default": ""
+          },
+          "activity_sequence": {
+            "type": "integer",
+            "title": "Activity Sequence",
+            "default": 0
+          },
+          "context": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResumeContext"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ContextReadingRevision"
+      },
+      "ContextReadingWrite": {
+        "properties": {
+          "work_id": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Work Id"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Revision"
+          },
+          "request_id": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Request Id"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ReadingData"
+          },
+          "context": {
+            "$ref": "#/components/schemas/ResumeContext"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "work_id",
+          "revision",
+          "request_id",
+          "data",
+          "context"
+        ],
+        "title": "ContextReadingWrite"
+      },
+      "ContextWorkItem": {
+        "properties": {
+          "work_id": {
+            "type": "string",
+            "title": "Work Id"
+          },
+          "version_id": {
+            "type": "string",
+            "title": "Version Id"
+          },
+          "source_id": {
+            "type": "string",
+            "title": "Source Id"
+          },
+          "source_record_id": {
+            "type": "string",
+            "title": "Source Record Id",
+            "default": ""
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "authors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Authors"
+          },
+          "abstract": {
+            "type": "string",
+            "title": "Abstract",
+            "default": ""
+          },
+          "access_state": {
+            "type": "string",
+            "title": "Access State",
+            "default": "metadata"
+          },
+          "categories": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Categories"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          },
+          "published_precision": {
+            "type": "string",
+            "title": "Published Precision",
+            "default": "unknown"
+          },
+          "updated_precision": {
+            "type": "string",
+            "title": "Updated Precision",
+            "default": "unknown"
+          },
+          "first_seen_at": {
+            "type": "string",
+            "title": "First Seen At"
+          },
+          "fetched_at": {
+            "type": "string",
+            "title": "Fetched At"
+          },
+          "content_hash": {
+            "type": "string",
+            "title": "Content Hash",
+            "default": ""
+          },
+          "version_label": {
+            "type": "string",
+            "title": "Version Label",
+            "default": "observed"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind",
+            "default": "paper"
+          },
+          "versions": {
+            "items": {
+              "$ref": "#/components/schemas/MaterialVersion"
+            },
+            "type": "array",
+            "title": "Versions"
+          },
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/ContextEntryRevision"
+            },
+            "type": "array",
+            "title": "Entries"
+          },
+          "reading": {
+            "$ref": "#/components/schemas/ContextReadingRevision"
+          },
+          "reasons": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Reasons"
+          },
+          "reading_access_state": {
+            "type": "string",
+            "title": "Reading Access State",
+            "default": "metadata"
+          },
+          "available_scopes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Available Scopes"
+          },
+          "retained_materials": {
+            "items": {
+              "$ref": "#/components/schemas/RetainedAvailability"
+            },
+            "type": "array",
+            "title": "Retained Materials"
+          },
+          "mode_relevance": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Mode Relevance"
+          }
+        },
+        "type": "object",
+        "required": [
+          "work_id",
+          "version_id",
+          "source_id",
+          "title",
+          "url",
+          "first_seen_at",
+          "fetched_at"
+        ],
+        "title": "ContextWorkItem"
+      },
+      "ContextWorkPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ContextWorkItem"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "as_of": {
+            "type": "string",
+            "title": "As Of"
+          },
+          "context": {
+            "$ref": "#/components/schemas/ResolvedContext"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "next_cursor",
+          "as_of",
+          "context"
+        ],
+        "title": "ContextWorkPage"
+      },
+      "ContextWorkspaceState": {
+        "properties": {
+          "principal_key_id": {
+            "type": "string",
+            "title": "Principal Key Id"
+          },
+          "profile": {
+            "$ref": "#/components/schemas/ProfileRevision"
+          },
+          "works": {
+            "items": {
+              "$ref": "#/components/schemas/ContextWorkItem"
+            },
+            "type": "array",
+            "title": "Works"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/SourceStatus"
+            },
+            "type": "array",
+            "title": "Sources"
+          },
+          "editions": {
+            "items": {
+              "$ref": "#/components/schemas/Edition"
+            },
+            "type": "array",
+            "title": "Editions"
+          },
+          "schedule": {
+            "$ref": "#/components/schemas/ScheduleRevision"
+          },
+          "tasks": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Tasks"
+          },
+          "generation": {
+            "type": "string",
+            "const": "approval_required",
+            "title": "Generation",
+            "default": "approval_required"
+          },
+          "as_of": {
+            "type": "string",
+            "title": "As Of"
+          },
+          "activity": {
+            "items": {
+              "$ref": "#/components/schemas/Activity"
+            },
+            "type": "array",
+            "title": "Activity"
+          },
+          "latest_activity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Activity"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "interest_coverage": {
+            "items": {
+              "$ref": "#/components/schemas/InterestCoverage"
+            },
+            "type": "array",
+            "title": "Interest Coverage"
+          },
+          "allocation_previews": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Allocation Previews"
+          },
+          "context": {
+            "$ref": "#/components/schemas/ResolvedContext"
+          },
+          "active_edition": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ContextEdition"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "principal_key_id",
+          "profile",
+          "works",
+          "sources",
+          "editions",
+          "schedule",
+          "as_of",
+          "context"
+        ],
+        "title": "ContextWorkspaceState"
       },
       "ConversationCreateRequest": {
         "properties": {
@@ -2129,6 +3807,28 @@
           "body"
         ],
         "title": "EntryData"
+      },
+      "EntryReference": {
+        "properties": {
+          "entry_id": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Entry Id"
+          },
+          "entry_revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Entry Revision"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "entry_id",
+          "entry_revision"
+        ],
+        "title": "EntryReference"
       },
       "EntryRevision": {
         "properties": {
@@ -4087,6 +5787,198 @@
         "title": "LearnerProgressSummary",
         "description": "`GET /learn/progress` \u2014 the whole ledger view for one principal.\n\nRecomputable by construction: the route reads raw events and folds\nthem with `src.learning.progress_store.summarize`, a pure function\nwith no clock and no store access. There is no cached aggregate\nanywhere, so the displayed record cannot drift from the log."
       },
+      "LearningThread": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "revision": {
+            "type": "integer",
+            "title": "Revision"
+          },
+          "data": {
+            "$ref": "#/components/schemas/LearningThreadData"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BoundSource"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "title": "Updated At"
+          },
+          "activity_sequence": {
+            "type": "integer",
+            "title": "Activity Sequence"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "revision",
+          "data",
+          "created_at",
+          "updated_at",
+          "activity_sequence"
+        ],
+        "title": "LearningThread"
+      },
+      "LearningThreadData": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 240,
+            "minLength": 1,
+            "title": "Title"
+          },
+          "goal": {
+            "type": "string",
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Goal"
+          },
+          "prerequisite": {
+            "type": "string",
+            "maxLength": 2000,
+            "title": "Prerequisite",
+            "default": ""
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "archived"
+            ],
+            "title": "Status",
+            "default": "active"
+          },
+          "origin": {
+            "$ref": "#/components/schemas/ResumeContext"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "entry": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EntryReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "title",
+          "goal",
+          "origin"
+        ],
+        "title": "LearningThreadData"
+      },
+      "LearningThreadWrite": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^thread-[a-f0-9]{32}$",
+            "title": "Id"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Revision"
+          },
+          "request_id": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Request Id"
+          },
+          "data": {
+            "$ref": "#/components/schemas/LearningThreadData"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "revision",
+          "request_id",
+          "data"
+        ],
+        "title": "LearningThreadWrite"
+      },
+      "LinkedEntry": {
+        "properties": {
+          "entry_id": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Entry Id"
+          },
+          "entry_revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Entry Revision"
+          },
+          "entry": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EntryRevision"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "current_revision": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Revision"
+          },
+          "available": {
+            "type": "boolean",
+            "title": "Available",
+            "default": true
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "entry_id",
+          "entry_revision",
+          "entry",
+          "current_revision"
+        ],
+        "title": "LinkedEntry"
+      },
       "ManualRequest": {
         "properties": {
           "value": {
@@ -4898,6 +6790,395 @@
         "title": "ProgressSchedule",
         "description": "Schedule arithmetic for one path. Not a knowledge claim.\n\n01 \u00a74.1 permits \"14 of 21 sessions in this milestone complete\"\nbecause it is arithmetic about sessions, and requires it be\nlabeled as schedule progress rather than knowledge \u2014 hence\n`schedule_label` and the `schedule_progress` field name on the\nsummary. There is deliberately no percentage here, and no field\nthat could carry one."
       },
+      "ProjectArtifact": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "revision": {
+            "type": "integer",
+            "title": "Revision"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ArtifactData"
+          },
+          "authorship": {
+            "type": "string",
+            "const": "manual",
+            "title": "Authorship",
+            "default": "manual"
+          },
+          "verification": {
+            "type": "string",
+            "const": "unverified",
+            "title": "Verification",
+            "default": "unverified"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "revision",
+          "data"
+        ],
+        "title": "ProjectArtifact"
+      },
+      "ProjectArtifactWrite": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^artifact-[a-f0-9]{32}$",
+            "title": "Id"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Revision",
+            "description": "Current project revision"
+          },
+          "artifact_revision": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Artifact Revision",
+            "default": 0
+          },
+          "request_id": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Request Id"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ArtifactData"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "revision",
+          "request_id",
+          "data"
+        ],
+        "title": "ProjectArtifactWrite"
+      },
+      "ProjectData": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 240,
+            "minLength": 1,
+            "title": "Title"
+          },
+          "question": {
+            "type": "string",
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Question"
+          },
+          "scope": {
+            "type": "string",
+            "maxLength": 4000,
+            "title": "Scope",
+            "default": ""
+          },
+          "constraints": {
+            "type": "string",
+            "maxLength": 4000,
+            "title": "Constraints",
+            "default": ""
+          },
+          "next_actions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 30,
+            "title": "Next Actions"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "archived"
+            ],
+            "title": "Status",
+            "default": "active"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "title",
+          "question"
+        ],
+        "title": "ProjectData"
+      },
+      "ProjectDetail": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "revision": {
+            "type": "integer",
+            "title": "Revision"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ProjectData"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "title": "Updated At"
+          },
+          "activity_sequence": {
+            "type": "integer",
+            "title": "Activity Sequence"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/ProjectSource"
+            },
+            "type": "array",
+            "title": "Sources"
+          },
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/LinkedEntry"
+            },
+            "type": "array",
+            "title": "Entries"
+          },
+          "artifacts": {
+            "items": {
+              "$ref": "#/components/schemas/ProjectArtifact"
+            },
+            "type": "array",
+            "title": "Artifacts"
+          },
+          "threads": {
+            "items": {
+              "$ref": "#/components/schemas/LearningThread"
+            },
+            "type": "array",
+            "title": "Threads"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "revision",
+          "data",
+          "created_at",
+          "updated_at",
+          "activity_sequence"
+        ],
+        "title": "ProjectDetail"
+      },
+      "ProjectEntryWrite": {
+        "properties": {
+          "entry_id": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Entry Id"
+          },
+          "entry_revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Entry Revision"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Revision"
+          },
+          "request_id": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Request Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "entry_id",
+          "entry_revision",
+          "revision",
+          "request_id"
+        ],
+        "title": "ProjectEntryWrite"
+      },
+      "ProjectSource": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "source",
+              "evidence"
+            ],
+            "title": "Role"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "default": ""
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "removed"
+            ],
+            "title": "Status",
+            "default": "active"
+          },
+          "reference": {
+            "$ref": "#/components/schemas/BoundSource"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "role",
+          "reference"
+        ],
+        "title": "ProjectSource"
+      },
+      "ProjectSourceWrite": {
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Revision"
+          },
+          "request_id": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Request Id"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "source",
+              "evidence"
+            ],
+            "title": "Role",
+            "default": "source"
+          },
+          "label": {
+            "type": "string",
+            "maxLength": 2000,
+            "title": "Label",
+            "default": ""
+          },
+          "reference": {
+            "$ref": "#/components/schemas/SourceReference"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "revision",
+          "request_id",
+          "reference"
+        ],
+        "title": "ProjectSourceWrite"
+      },
+      "ProjectUnlink": {
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Revision"
+          },
+          "request_id": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Request Id"
+          },
+          "link_id": {
+            "type": "string",
+            "pattern": "^link-[a-f0-9]{32}$",
+            "title": "Link Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "revision",
+          "request_id",
+          "link_id"
+        ],
+        "title": "ProjectUnlink"
+      },
+      "ProjectWrite": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^project-[a-f0-9]{32}$",
+            "title": "Id"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Revision"
+          },
+          "request_id": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Request Id"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ProjectData"
+          },
+          "initial_source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "origin_entry": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EntryReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "revision",
+          "request_id",
+          "data"
+        ],
+        "title": "ProjectWrite"
+      },
       "ReadingData": {
         "properties": {
           "status": {
@@ -5139,6 +7420,44 @@
         ],
         "title": "ResearchClaim"
       },
+      "ResearchProject": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "revision": {
+            "type": "integer",
+            "title": "Revision"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ProjectData"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "title": "Updated At"
+          },
+          "activity_sequence": {
+            "type": "integer",
+            "title": "Activity Sequence"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "revision",
+          "data",
+          "created_at",
+          "updated_at",
+          "activity_sequence"
+        ],
+        "title": "ResearchProject"
+      },
       "ResearchRequest": {
         "properties": {
           "query": {
@@ -5173,6 +7492,119 @@
         ],
         "title": "ResearchRequest",
         "description": "Body for `POST /research`."
+      },
+      "ResolvedContext": {
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "learn",
+              "research"
+            ],
+            "title": "Mode"
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id"
+          },
+          "thread_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thread Id"
+          },
+          "project_revision": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Revision"
+          },
+          "policy_version": {
+            "type": "string",
+            "title": "Policy Version"
+          },
+          "unavailable_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unavailable Reason"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "mode",
+          "policy_version"
+        ],
+        "title": "ResolvedContext"
+      },
+      "ResumeContext": {
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "learn",
+              "research"
+            ],
+            "title": "Mode",
+            "default": "learn"
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^project-[a-f0-9]{32}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id"
+          },
+          "thread_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^thread-[a-f0-9]{32}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thread Id"
+          },
+          "return_to": {
+            "type": "string",
+            "maxLength": 4000,
+            "title": "Return To",
+            "default": "/workspace/today"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ResumeContext"
       },
       "RetainedAvailability": {
         "properties": {
@@ -6044,6 +8476,100 @@
         ],
         "title": "SkillDeclaration",
         "description": "One skill the learner says they have.\n\nNo provenance field by design \u2014 see the section comment above."
+      },
+      "SourceReference": {
+        "properties": {
+          "work_id": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Work Id"
+          },
+          "version_id": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Version Id"
+          },
+          "anchor": {
+            "type": "string",
+            "maxLength": 500,
+            "title": "Anchor",
+            "default": "abstract:0"
+          },
+          "version_hash": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version Hash"
+          },
+          "material_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^mat-[a-f0-9]{32}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Material Id"
+          },
+          "material_hash": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Material Hash"
+          },
+          "parser_revision": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parser Revision"
+          },
+          "source_scope": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "metadata",
+                  "abstract",
+                  "excerpt",
+                  "full_text"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Scope"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "work_id",
+          "version_id"
+        ],
+        "title": "SourceReference"
       },
       "SourceStatus": {
         "properties": {

@@ -1,0 +1,3471 @@
+{
+  "report_version": "workspace-mode-ranking-development-report-v1",
+  "policy_version": "workspace-modes-lexical-v1",
+  "evidence_kind": "offline_development_mechanics_not_owner_usefulness_or_factual_quality",
+  "clock": "2026-11-05T12:00:00+00:00",
+  "project": {
+    "title": "Outside-interest development walkthrough",
+    "question": "What does \"Certified Behavioral Retention for Continual Adaptation with Held-Out Anchors\" investigate?",
+    "scope": ""
+  },
+  "hard_filters": {
+    "source_id": "",
+    "access_state": "",
+    "status": "",
+    "days": 0
+  },
+  "pool_policy": "Same hard-filtered Q/S-eligible candidates for all four Research arms; Learn uses the full hard-filtered visible pool separately.",
+  "date_policy": "Aware update-before-publication dates only; invalid/missing dates stay unknown; announcement/acquisition/id dates are not substituted; unknown dates remain eligible and last in chronological diagnostic.",
+  "duplicate_policy": "Ranking retains first occurrence of each work id after the shared explicit filters.",
+  "counts": {
+    "input_records": 40,
+    "unique_input_work_ids": 40,
+    "duplicate_records": 0,
+    "after_explicit_filters_records": 40,
+    "visible_after_exclusions_unique": 40,
+    "research_eligible_unique": 18,
+    "research_ineligible_unique": 22
+  },
+  "duplicate_work_ids": {},
+  "denominators": {
+    "research_chronology": {
+      "known": 1,
+      "missing": 17,
+      "total": 18
+    },
+    "full_pool_chronology": {
+      "known": 2,
+      "missing": 38,
+      "total": 40
+    },
+    "research_relevance": {
+      "judged": 0,
+      "unjudged": 18,
+      "total": 18,
+      "unjudged_fraction": 1.0
+    },
+    "owner_usefulness": {
+      "judged": 0,
+      "unjudged": 40,
+      "total": 40
+    }
+  },
+  "quality_metrics": {
+    "known_reference_recall": null,
+    "precision": null,
+    "owner_usefulness": null,
+    "reason": "No reference labels or owner judgments were supplied; no quality denominator is invented."
+  },
+  "rankings": {
+    "question_only": [
+      "arxiv:2610.40740",
+      "arxiv:2610.40857",
+      "arxiv:2610.40906",
+      "url:b49ec3bd8394c6fb4c19e7973ae4b411",
+      "arxiv:2610.41482",
+      "arxiv:2610.40700",
+      "arxiv:2610.40728",
+      "arxiv:2610.40758",
+      "arxiv:2610.40798",
+      "arxiv:2610.40930",
+      "arxiv:2610.40939",
+      "arxiv:2610.40946",
+      "arxiv:2610.40992",
+      "arxiv:2610.41012",
+      "arxiv:2610.41014",
+      "arxiv:2610.41025",
+      "arxiv:2610.41076",
+      "arxiv:2610.41435"
+    ],
+    "profile_only": [
+      "arxiv:2610.40930",
+      "arxiv:2610.40798",
+      "arxiv:2610.40906",
+      "arxiv:2610.40939",
+      "arxiv:2610.40992",
+      "arxiv:2610.40857",
+      "arxiv:2610.41435",
+      "arxiv:2610.41482",
+      "arxiv:2610.40700",
+      "arxiv:2610.41012",
+      "arxiv:2610.41014",
+      "arxiv:2610.41025",
+      "arxiv:2610.40758",
+      "arxiv:2610.40946",
+      "arxiv:2610.41076",
+      "arxiv:2610.40728",
+      "url:b49ec3bd8394c6fb4c19e7973ae4b411",
+      "arxiv:2610.40740"
+    ],
+    "combined_research": [
+      "arxiv:2610.40740",
+      "arxiv:2610.40857",
+      "arxiv:2610.40906",
+      "url:b49ec3bd8394c6fb4c19e7973ae4b411",
+      "arxiv:2610.41482",
+      "arxiv:2610.40930",
+      "arxiv:2610.40798",
+      "arxiv:2610.40939",
+      "arxiv:2610.40992",
+      "arxiv:2610.41435",
+      "arxiv:2610.40700",
+      "arxiv:2610.41012",
+      "arxiv:2610.41014",
+      "arxiv:2610.41025",
+      "arxiv:2610.40758",
+      "arxiv:2610.40946",
+      "arxiv:2610.41076",
+      "arxiv:2610.40728"
+    ],
+    "chronological_diagnostic": [
+      "url:b49ec3bd8394c6fb4c19e7973ae4b411",
+      "arxiv:2610.40700",
+      "arxiv:2610.40728",
+      "arxiv:2610.40740",
+      "arxiv:2610.40758",
+      "arxiv:2610.40798",
+      "arxiv:2610.40857",
+      "arxiv:2610.40906",
+      "arxiv:2610.40930",
+      "arxiv:2610.40939",
+      "arxiv:2610.40946",
+      "arxiv:2610.40992",
+      "arxiv:2610.41012",
+      "arxiv:2610.41014",
+      "arxiv:2610.41025",
+      "arxiv:2610.41076",
+      "arxiv:2610.41435",
+      "arxiv:2610.41482"
+    ]
+  },
+  "learn_ranking": [
+    "arxiv:2610.40927",
+    "arxiv:2610.40930",
+    "arxiv:2610.41015",
+    "arxiv:2610.41022",
+    "arxiv:2610.41089",
+    "arxiv:2610.40798",
+    "arxiv:2610.40906",
+    "arxiv:2610.40939",
+    "arxiv:2610.40966",
+    "arxiv:2610.40992",
+    "arxiv:2610.40747",
+    "arxiv:2610.40857",
+    "arxiv:2610.40940",
+    "arxiv:2610.40959",
+    "arxiv:2610.41177",
+    "arxiv:2610.41435",
+    "arxiv:2610.41482",
+    "arxiv:2610.40700",
+    "arxiv:2610.40893",
+    "arxiv:2610.41012",
+    "arxiv:2610.41014",
+    "arxiv:2610.41025",
+    "arxiv:2610.41040",
+    "arxiv:2610.41391",
+    "arxiv:2610.40758",
+    "arxiv:2610.40871",
+    "arxiv:2610.40901",
+    "arxiv:2610.40943",
+    "arxiv:2610.40946",
+    "arxiv:2610.40984",
+    "arxiv:2610.41076",
+    "arxiv:2610.41291",
+    "arxiv:2610.41552",
+    "arxiv:2210.03629",
+    "arxiv:2310.11511",
+    "arxiv:2610.40728",
+    "arxiv:2610.40917",
+    "url:b49ec3bd8394c6fb4c19e7973ae4b411",
+    "arxiv:2610.40740",
+    "url:1d6c5c59e46e52b936cbc7b983785a69"
+  ],
+  "editions": {
+    "learn": {
+      "work_ids": [
+        "arxiv:2610.40927",
+        "arxiv:2610.40871",
+        "arxiv:2610.40930"
+      ],
+      "allocation": {
+        "minutes": 15,
+        "slots": 3,
+        "requested_fraction": 0.15,
+        "planned_max_exploration_slots": 0,
+        "max_exploration_slots": 0,
+        "actual_exploration_slots": 0,
+        "actual_items": 3,
+        "actual_fraction": 0.0,
+        "unused_slots": 0,
+        "rounding": "floor_final_count",
+        "policy_version": "workspace-modes-lexical-v1",
+        "product_mode": "learn",
+        "direct_stream_order": [
+          "core",
+          "spatial"
+        ],
+        "variety": "stable_first_occurrence_stream_round_robin"
+      }
+    },
+    "research": {
+      "work_ids": [
+        "arxiv:2610.40740",
+        "arxiv:2610.40857",
+        "arxiv:2610.40906"
+      ],
+      "allocation": {
+        "policy_version": "workspace-modes-lexical-v1",
+        "product_mode": "research",
+        "minutes": 15,
+        "slots": 3,
+        "actual_items": 3,
+        "unused_slots": 0,
+        "eligible_candidates": 18,
+        "requested_fraction": null,
+        "max_exploration_slots": null,
+        "planned_max_exploration_slots": null,
+        "actual_exploration_slots": null,
+        "actual_fraction": null,
+        "rounding": "finite_question_scope_matches_no_exploration_quota"
+      }
+    }
+  },
+  "items": [
+    {
+      "work_id": "arxiv:2610.40927",
+      "version_id": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+      "title": "Agentic World Modeling for Agent Test-time Scaling without Environment Replica",
+      "source_id": "arxiv-cs-ai",
+      "published_at": null,
+      "updated_at": null,
+      "announced_at": "2026-11-02T05:00:00Z",
+      "legacy_relevance": {
+        "score": 24.0,
+        "keyword_score": 24,
+        "recency": 0.0,
+        "matched_terms": [
+          "agent",
+          "agentic",
+          "simulation",
+          "test-time",
+          "world model",
+          "world models"
+        ],
+        "matched_topics": [
+          "ml:agents-and-tool-use",
+          "ml:embodied-intelligence",
+          "ml:embodied-intelligence/model-based-reinforcement-learning",
+          "ml:machine-learning-for-science",
+          "ml:reasoning-and-inference-time-compute"
+        ],
+        "question_terms": [],
+        "policy_version": "workspace-lexical-v3",
+        "baseline": "relevance"
+      },
+      "mode_relevance": {
+        "policy_version": "workspace-modes-lexical-v1",
+        "product_mode": "research",
+        "eligible": false,
+        "question_score": 0,
+        "scope_score": 0,
+        "profile_keyword_score": 24,
+        "bounded_profile_score": 1,
+        "question_tokens": [
+          "adaptation",
+          "anchors",
+          "behavioral",
+          "certified",
+          "continual",
+          "does",
+          "held-out",
+          "investigate",
+          "retention"
+        ],
+        "scope_tokens": [],
+        "question_title_matches": [],
+        "question_abstract_matches": [],
+        "scope_title_matches": [],
+        "scope_abstract_matches": [],
+        "freshness": 0.0,
+        "known_date": null,
+        "date_basis": null,
+        "read_penalty": 0,
+        "sort_components": [
+          0,
+          0,
+          0,
+          1,
+          0.0
+        ]
+      },
+      "ranks": {
+        "question_only": null,
+        "profile_only": null,
+        "combined_research": null,
+        "chronological_diagnostic": null
+      },
+      "rank_changes_from_question_only": {
+        "question_only": null,
+        "profile_only": null,
+        "combined_research": null,
+        "chronological_diagnostic": null
+      },
+      "chronological_known_date_rank": null,
+      "owner_usefulness": null,
+      "owner_reason": null,
+      "reference_relevance": null
+    },
+    {
+      "work_id": "arxiv:2610.40930",
+      "version_id": "arxiv:2610.40930:v1:metadata-b45059ef8928ae02",
+      "title": "Adaptive Personalization Under Preference Epistemic Uncertainty",
+      "source_id": "arxiv-cs-cl",
+      "published_at": null,
+      "updated_at": null,
+      "announced_at": "2026-11-02T05:00:00Z",
+      "legacy_relevance": {
+        "score": 24.0,
+        "keyword_score": 24,
+        "recency": 0.0,
+        "matched_terms": [
+          "benchmark",
+          "calibration",
+          "generation",
+          "memory",
+          "retrieval",
+          "uncertainty"
+        ],
+        "matched_topics": [
+          "ml:evaluation-and-responsible-ml",
+          "ml:generative-models/controllable-generation",
+          "ml:retrieval-and-memory"
+        ],
+        "question_terms": [],
+        "policy_version": "workspace-lexical-v3",
+        "baseline": "relevance"
+      },
+      "mode_relevance": {
+        "policy_version": "workspace-modes-lexical-v1",
+        "product_mode": "research",
+        "eligible": true,
+        "question_score": 1,
+        "scope_score": 0,
+        "profile_keyword_score": 24,
+        "bounded_profile_score": 1,
+        "question_tokens": [
+          "adaptation",
+          "anchors",
+          "behavioral",
+          "certified",
+          "continual",
+          "does",
+          "held-out",
+          "investigate",
+          "retention"
+        ],
+        "scope_tokens": [],
+        "question_title_matches": [],
+        "question_abstract_matches": [
+          "adaptation"
+        ],
+        "scope_title_matches": [],
+        "scope_abstract_matches": [],
+        "freshness": 0.0,
+        "known_date": null,
+        "date_basis": null,
+        "read_penalty": 0,
+        "sort_components": [
+          1,
+          1,
+          0,
+          1,
+          0.0
+        ]
+      },
+      "ranks": {
+        "question_only": 10,
+        "profile_only": 1,
+        "combined_research": 6,
+        "chronological_diagnostic": 9
+      },
+      "rank_changes_from_question_only": {
+        "question_only": 0,
+        "profile_only": -9,
+        "combined_research": -4,
+        "chronological_diagnostic": -1
+      },
+      "chronological_known_date_rank": null,
+      "owner_usefulness": null,
+      "owner_reason": null,
+      "reference_relevance": null
+    },
+    {
+      "work_id": "arxiv:2610.41015",
+      "version_id": "arxiv:2610.41015:v1:metadata-9d3401c4c7c1014c",
+      "title": "Do Language Models Know What Compelling Scientific Evidence Looks Like?",
+      "source_id": "arxiv-cs-lg",
+      "published_at": null,
+      "updated_at": null,
+      "announced_at": "2026-11-02T05:00:00Z",
+      "legacy_relevance": {
+        "score": 24.0,
+        "keyword_score": 24,
+        "recency": 0.0,
+        "matched_terms": [
+          "autonomous",
+          "benchmark",
+          "calibration",
+          "efficient",
+          "reasoning",
+          "scientific",
+          "uncertainty"
+        ],
+        "matched_topics": [
+          "ml:agents-and-tool-use",
+          "ml:evaluation-and-responsible-ml",
+          "ml:machine-learning-for-science",
+          "ml:ml-systems-and-efficiency",
+          "ml:reasoning-and-inference-time-compute"
+        ],
+        "question_terms": [],
+        "policy_version": "workspace-lexical-v3",
+        "baseline": "relevance"
+      },
+      "mode_relevance": {
+        "policy_version": "workspace-modes-lexical-v1",
+        "product_mode": "research",
+        "eligible": false,
+        "question_score": 0,
+        "scope_score": 0,
+        "profile_keyword_score": 24,
+        "bounded_profile_score": 1,
+        "question_tokens": [
+          "adaptation",
+          "anchors",
+          "behavioral",
+          "certified",
+          "continual",
+          "does",
+          "held-out",
+          "investigate",
+          "retention"
+        ],
+        "scope_tokens": [],
+        "question_title_matches": [],
+        "question_abstract_matches": [],
+        "scope_title_matches": [],
+        "scope_abstract_matches": [],
+        "freshness": 0.0,
+        "known_date": null,
+        "date_basis": null,
+        "read_penalty": 0,
+        "sort_components": [
+          0,
+          0,
+          0,
+          1,
+          0.0
+        ]
+      },
+      "ranks": {
+        "question_only": null,
+        "profile_only": null,
+        "combined_research": null,
+        "chronological_diagnostic": null
+      },
+      "rank_changes_from_question_only": {
+        "question_only": null,
+        "profile_only": null,
+        "combined_research": null,
+        "chronological_diagnostic": null
+      },
+      "chronological_known_date_rank": null,
+      "owner_usefulness": null,
+      "owner_reason": null,
+      "reference_relevance": null
+    },
+    {
+      "work_id": "arxiv:2610.41022",
+      "version_id": "arxiv:2610.41022:v1:metadata-1d7490e908ceb729",
+      "title": "Density-Guided Bootstrap Boundaries for Latent World-Model Reinforcement Learning",
+      "source_id": "arxiv-cs-lg",
+      "published_at": null,
+      "updated_at": null,
+      "announced_at": "2026-11-02T05:00:00Z",
+      "legacy_relevance": {
+        "score": 24.0,
+        "keyword_score": 24,
+        "recency": 0.0,
+        "matched_terms": [
+          "agent",
+          "control",
+          "evaluation",
+          "reinforcement learning",
+          "world model",
+          "world models"
+        ],
+        "matched_topics": [
+          "ml:agents-and-tool-use",
+          "ml:embodied-intelligence",
+          "ml:embodied-intelligence/model-based-reinforcement-learning",
+          "ml:evaluation-and-responsible-ml",
+          "study:22/control-systems"
+        ],
+        "question_terms": [],
+        "policy_version": "workspace-lexical-v3",
+        "baseline": "relevance"
+      },
+      "mode_relevance": {
+        "policy_version": "workspace-modes-lexical-v1",
+        "product_mode": "research",
+        "eligible": false,
+        "question_score": 0,
+        "scope_score": 0,
+        "profile_keyword_score": 24,
+        "bounded_profile_score": 1,
+        "question_tokens": [
+          "adaptation",
+          "anchors",
+          "behavioral",
+          "certified",
+          "continual",
+          "does",
+          "held-out",
+          "investigate",
+          "retention"
+        ],
+        "scope_tokens": [],
+        "question_title_matches": [],
+        "question_abstract_matches": [],
+        "scope_title_matches": [],
+        "scope_abstract_matches": [],
+        "freshness": 0.0,
+        "known_date": null,
+        "date_basis": null,
+        "read_penalty": 0,
+        "sort_components": [
+          0,
+          0,
+          0,
+          1,
+          0.0
+        ]
+      },
+      "ranks": {
+        "question_only": null,
+        "profile_only": null,
+        "combined_research": null,
+        "chronological_diagnostic": null
+      },
+      "rank_changes_from_question_only": {
+        "question_only": null,
+        "profile_only": null,
+        "combined_research": null,
+        "chronological_diagnostic": null
+      },
+      "chronological_known_date_rank": null,
+      "owner_usefulness": null,
+      "owner_reason": null,
+      "reference_relevance": null
+    },
+    {
+      "work_id": "arxiv:2610.41089",
+      "version_id": "arxiv:2610.41089:v1:metadata-6ed2313462efea73",
+      "title": "CIRCE Divines LLM Task Complexity from Constraint Structure",
+      "source_id": "arxiv-cs-ai",
+      "published_at": null,
+      "updated_at": null,
+      "announced_at": "2026-11-02T05:00:00Z",
+      "legacy_relevance": {
+        "score": 24.0,
+        "keyword_score": 24,
+        "recency": 0.0,
+        "matched_terms": [
+          "agent",
+          "benchmark",
+          "compute",
+          "reasoning",
+          "routing",
+          "test-time"
+        ],
+        "matched_topics": [
+          "ml:agents-and-tool-use",
+          "ml:evaluation-and-responsible-ml",
+          "ml:ml-systems-and-efficiency",
+          "ml:reasoning-and-inference-time-compute"
+        ],
+        "question_terms": [],
+        "policy_version": "workspace-lexical-v3",
+        "baseline": "relevance"
+      },
+      "mode_relevance": {
+        "policy_version": "workspace-modes-lexical-v1",
+        "product_mode": "research",
+        "eligible": false,
+        "question_score": 0,
+        "scope_score": 0,
+        "profile_keyword_score": 24,
+        "bounded_profile_score": 1,
+        "question_tokens": [
+          "adaptation",
+          "anchors",
+          "behavioral",
+          "certified",
+          "continual",
+          "does",
+          "held-out",
+          "investigate",
+          "retention"
+        ],
+        "scope_tokens": [],
+        "question_title_matches": [],
+        "question_abstract_matches": [],
+        "scope_title_matches": [],
+        "scope_abstract_matches": [],
+        "freshness": 0.0,
+        "known_date": null,
+        "date_basis": null,
+        "read_penalty": 0,
+        "sort_components": [
+          0,
+          0,
+          0,
+          1,
+          0.0
+        ]
+      },
+      "ranks": {
+        "question_only": null,
+        "profile_only": null,
+        "combined_research": null,
+        "chronological_diagnostic": null
+      },
+      "rank_changes_from_question_only": {
+        "question_only": null,
+        "profile_only": null,
+        "combined_research": null,
+        "chronological_diagnostic": null
+      },
+      "chronological_known_date_rank": null,
+      "owner_usefulness": null,
+      "owner_reason": null,
+      "reference_relevance": null
+    },
+    {
+      "work_id": "arxiv:2610.40798",
+      "version_id": "arxiv:2610.40798:v1:metadata-c1a34fa53cba3d51",
+      "title": "Beyond Plausible Prediction: Safety Sufficiency in Web World Models",
+      "source_id": "arxiv-cs-ai",
+      "published_at": null,
+      "updated_at": null,
+      "announced_at": "2026-11-02T05:00:00Z",
+      "legacy_relevance": {
+        "score": 20.0,
+        "keyword_score": 20,
+        "recency": 0.0,
+        "matched_terms": [
+          "agent",
+          "benchmark",
+          "evaluation",
+          "world model",
+          "world models"
+        ],
+        "matched_topics": [
+          "ml:agents-and-tool-use",
+          "ml:embodied-intelligence",
+          "ml:embodied-intelligence/model-based-reinforcement-learning",
+          "ml:evaluation-and-responsible-ml"
+        ],
+        "question_terms": [],
+        "policy_version": "workspace-lexical-v3",
+        "baseline": "relevance"
+      },
+      "mode_relevance": {
+        "policy_version": "workspace-modes-lexical-v1",
+        "product_mode": "research",
+        "eligible": true,
+        "question_score": 1,
+        "scope_score": 0,
+        "profile_keyword_score": 20,
+        "bounded_profile_score": 0.8333333333333334,
+        "question_tokens": [
+          "adaptation",
+          "anchors",
+          "behavioral",
+          "certified",
+          "continual",
+          "does",
+          "held-out",
+          "investigate",
+          "retention"
+        ],
+        "scope_tokens": [],
+        "question_title_matches": [],
+        "question_abstract_matches": [
+          "does"
+        ],
+        "scope_title_matches": [],
+        "scope_abstract_matches": [],
+        "freshness": 0.0,
+        "known_date": null,
+        "date_basis": null,
+        "read_penalty": 0,
+        "sort_components": [
+          1,
+          1,
+          0,
+          0.8333333333333334,
+          0.0
+        ]
+      },
+      "ranks": {
+        "question_only": 9,
+        "profile_only": 2,
+        "combined_research": 7,
+        "chronological_diagnostic": 6
+      },
+      "rank_changes_from_question_only": {
+        "question_only": 0,
+        "profile_only": -7,
+        "combined_research": -2,
+        "chronological_diagnostic": -3
+      },
+      "chronological_known_date_rank": null,
+      "owner_usefulness": null,
+      "owner_reason": null,
+      "reference_relevance": null
+    },
+    {
+      "work_id": "arxiv:2610.40906",
+      "version_id": "arxiv:2610.40906:v1:metadata-289de52681520e8e",
+      "title": "Does Recursive Knowledge Construction Help Agents Verify Consensus Claims in Science?",
+      "source_id": "arxiv-cs-ai",
+      "published_at": null,
+      "updated_at": null,
+      "announced_at": "2026-11-02T05:00:00Z",
+      "legacy_relevance": {
+        "score": 20.0,
+        "keyword_score": 20,
+        "recency": 0.0,
+        "matched_terms": [
+          "agent",
+          "control",
+          "knowledge",
+          "scientific",
+          "verification"
+        ],
+        "matched_topics": [
+          "ml:agents-and-tool-use",
+          "ml:embodied-intelligence",
+          "ml:embodied-intelligence/model-based-reinforcement-learning",
+          "ml:evaluation-and-responsible-ml",
+          "ml:machine-learning-for-science",
+          "ml:retrieval-and-memory",
+          "study:22/control-systems"
+        ],
+        "question_terms": [],
+        "policy_version": "workspace-lexical-v3",
+        "baseline": "relevance"
+      },
+      "mode_relevance": {
+        "policy_version": "workspace-modes-lexical-v1",
+        "product_mode": "research",
+        "eligible": true,
+        "question_score": 3,
+        "scope_score": 0,
+        "profile_keyword_score": 20,
+        "bounded_profile_score": 0.8333333333333334,
+        "question_tokens": [
+          "adaptation",
+          "anchors",
+          "behavioral",
+          "certified",
+          "continual",
+          "does",
+          "held-out",
+          "investigate",
+          "retention"
+        ],
+        "scope_tokens": [],
+        "question_title_matches": [
+          "does"
+        ],
+        "question_abstract_matches": [],
+        "scope_title_matches": [],
+        "scope_abstract_matches": [],
+        "freshness": 0.0,
+        "known_date": null,
+        "date_basis": null,
+        "read_penalty": 0,
+        "sort_components": [
+          1,
+          3,
+          0,
+          0.8333333333333334,
+          0.0
+        ]
+      },
+      "ranks": {
+        "question_only": 3,
+        "profile_only": 3,
+        "combined_research": 3,
+        "chronological_diagnostic": 8
+      },
+      "rank_changes_from_question_only": {
+        "question_only": 0,
+        "profile_only": 0,
+        "combined_research": 0,
+        "chronological_diagnostic": 5
+      },
+      "chronological_known_date_rank": null,
+      "owner_usefulness": null,
+      "owner_reason": null,
+      "reference_relevance": null
+    },
+    {
+      "work_id": "arxiv:2610.40939",
+      "version_id": "arxiv:2610.40939:v1:metadata-a24c81ca3638415c",
+      "title": "The First Few Tokens Matter: Understanding Chain-of-Thought Controllability",
+      "source_id": "arxiv-cs-ai",
+      "published_at": null,
+      "updated_at": null,
+      "announced_at": "2026-11-02T05:00:00Z",
+      "legacy_relevance": {
+        "score": 20.0,
+        "keyword_score": 20,
+        "recency": 0.0,
+        "matched_terms": [
+          "agent",
+          "control",
+          "evaluation",
+          "inference",
+          "reasoning"
+        ],
+        "matched_topics": [
+          "ml:agents-and-tool-use",
+          "ml:embodied-intelligence",
+          "ml:embodied-intelligence/model-based-reinforcement-learning",
+          "ml:evaluation-and-responsible-ml",
+          "ml:ml-systems-and-efficiency",
+          "ml:reasoning-and-inference-time-compute",
+          "study:22/control-systems"
+        ],
+        "question_terms": [],
+        "policy_version": "workspace-lexical-v3",
+        "baseline": "relevance"
+      },
+      "mode_relevance": {
+        "policy_version": "workspace-modes-lexical-v1",
+        "product_mode": "research",
+        "eligible": true,
+        "question_score": 1,
+        "scope_score": 0,
+        "profile_keyword_score": 20,
+        "bounded_profile_score": 0.8333333333333334,
+        "question_tokens": [
+          "adaptation",
+          "anchors",
+          "behavioral",
+          "certified",
+          "continual",
+          "does",
+          "held-out",
+          "investigate",
+          "retention"
+        ],
+        "scope_tokens": [],
+        "question_title_matches": [],
+        "question_abstract_matches": [
+          "investigate"
+        ],
+        "scope_title_matches": [],
+        "scope_abstract_matches": [],
+        "freshness": 0.0,
+        "known_date": null,
+        "date_basis": null,
+        "read_penalty": 0,
+        "sort_components": [
+          1,
+          1,
+          0,
+          0.8333333333333334,
+          0.0
+        ]
+      },
+      "ranks": {
+        "question_only": 11,
+        "profile_only": 4,
+        "combined_research": 8,
+        "chronological_diagnostic": 10
+      },
+      "rank_changes_from_question_only": {
+        "question_only": 0,
+        "profile_only": -7,
+        "combined_research": -3,
+        "chronological_diagnostic": -1
+      },
+      "chronological_known_date_rank": null,
+      "owner_usefulness": null,
+      "owner_reason": null,
+      "reference_relevance": null
+    },
+    {
+      "work_id": "arxiv:2610.40966",
+      "version_id": "arxiv:2610.40966:v1:metadata-55c0a56c8750035c",
+      "title": "Better Retrievers, Worse Labels: How Incomplete Relevance Judgments Distort Abstention Evaluation in Conversational RAG",
+      "source_id": "arxiv-cs-cl",
+      "published_at": null,
+      "updated_at": null,
+      "announced_at": "2026-11-02T05:00:00Z",
+      "legacy_relevance": {
+        "score": 20.0,
+        "keyword_score": 20,
+        "recency": 0.0,
+        "matched_terms": [
+          "benchmark",
+          "evaluation",
+          "generation",
+          "rag",
+          "retrieval"
+        ],
+        "matched_topics": [
+          "ml:evaluation-and-responsible-ml",
+          "ml:generative-models/controllable-generation",
+          "ml:retrieval-and-memory"
+        ],
+        "question_terms": [],
+        "policy_version": "workspace-lexical-v3",
+        "baseline": "relevance"
+      },
+      "mode_relevance": {
+        "policy_version": "workspace-modes-lexical-v1",
+        "product_mode": "research",
+        "eligible": false,
+        "question_score": 0,
+        "scope_score": 0,
+        "profile_keyword_score": 20,
+        "bounded_profile_score": 0.8333333333333334,
+        "question_tokens": [
+          "adaptation",
+          "anchors",
+          "behavioral",
+          "certified",
+          "continual",
+          "does",
+          "held-out",
+          "investigate",
+          "retention"
+        ],
+        "scope_tokens": [],
+        "question_title_matches": [],
+        "question_abstract_matches": [],
+        "scope_title_matches": [],
+        "scope_abstract_matches": [],
+        "freshness": 0.0,
+        "known_date": null,
+        "date_basis": null,
+        "read_penalty": 0,
+        "sort_components": [
+          0,
+          0,
+          0,
+          0.8333333333333334,
+          0.0
+        ]
+      },
+      "ranks": {
+        "question_only": null,
+        "profile_only": null,
+        "combined_research": null,
+        "chronological_diagnostic": null
+      },
+      "rank_changes_from_question_only": {
+        "question_only": null,
+        "profile_only": null,
+        "combined_research": null,
+        "chronological_diagnostic": null
+      },
+      "chronological_known_date_rank": null,
+      "owner_usefulness": null,
+      "owner_reason": null,
+      "reference_relevance": null
+    },
+    {
+      "work_id": "arxiv:2610.40992",
+      "version_id": "arxiv:2610.40992:v1:metadata-ab88b833815a1f0e",
+      "title": "Can Personal Requirements Become Supervision for Planning?",
+      "source_id": "arxiv-cs-ai",
+      "published_at": null,
+      "updated_at": null,
+      "announced_at": "2026-11-02T05:00:00Z",
+      "legacy_relevance": {
+        "score": 20.0,
+        "keyword_score": 20,
+        "recency": 0.0,
+        "matched_terms": [
+          "agent",
+          "evaluation",
+          "generation",
+          "planning",
+          "reasoning"
+        ],
+        "matched_topics": [
+          "ml:agents-and-tool-use",
+          "ml:evaluation-and-responsible-ml",
+          "ml:generative-models/controllable-generation",
+          "ml:reasoning-and-inference-time-compute"
+        ],
+        "question_terms": [],
+        "policy_version": "workspace-lexical-v3",
+        "baseline": "relevance"
+      },
+      "mode_relevance": {
+        "policy_version": "workspace-modes-lexical-v1",
+        "product_mode": "research",
+        "eligible": true,
+        "question_score": 1,
+        "scope_score": 0,
+        "profile_keyword_score": 20,
+        "bounded_profile_score": 0.8333333333333334,
+        "question_tokens": [
+          "adaptation",
+          "anchors",
+          "behavioral",
+          "certified",
+          "continual",
+          "does",
+          "held-out",
+          "investigate",
+          "retention"
+        ],
+        "scope_tokens": [],
+        "question_title_matches": [],
+        "question_abstract_matches": [
+          "held-out"
+        ],
+        "scope_title_matches": [],
+        "scope_abstract_matches": [],
+        "freshness": 0.0,
+        "known_date": null,
+        "date_basis": null,
+        "read_penalty": 0,
+        "sort_components": [
+          1,
+          1,
+          0,
+          0.8333333333333334,
+          0.0
+        ]
+      },
+      "ranks": {
+        "question_only": 13,
+        "profile_only": 5,
+        "combined_research": 9,
+        "chronological_diagnostic": 12
+      },
+      "rank_changes_from_question_only": {
+        "question_only": 0,
+        "profile_only": -8,
+        "combined_research": -4,
+        "chronological_diagnostic": -1
+      },
+      "chronological_known_date_rank": null,
+      "owner_usefulness": null,
+      "owner_reason": null,
+      "reference_relevance": null
+    },
+    {
+      "work_id": "arxiv:2610.40747",
+      "version_id": "arxiv:2610.40747:v1:metadata-be0a1828c70df62e",
+      "title": "Mage-VL-Cowork: A Full Training Recipe to Learn Hybrid Computer Use From Evolved Harnesses",
+      "source_id": "arxiv-cs-cl",
+      "published_at": null,
+      "updated_at": null,
+      "announced_at": "2026-11-02T05:00:00Z",
+      "legacy_relevance": {
+        "score": 16.0,
+        "keyword_score": 16,
+        "recency": 0.0,
+        "matched_terms": [
+          "agent",
+          "efficient",
+          "generation",
+          "reasoning"
+        ],
+        "matched_topics": [
+          "ml:agents-and-tool-use",
+          "ml:generative-models/controllable-generation",
+          "ml:ml-systems-and-efficiency",
+          "ml:reasoning-and-inference-time-compute"
+        ],
+        "question_terms": [],
+        "policy_version": "workspace-lexical-v3",
+        "baseline": "relevance"
+      },
+      "mode_relevance": {
+        "policy_version": "workspace-modes-lexical-v1",
+        "product_mode": "research",
+        "eligible": false,
+        "question_score": 0,
+        "scope_score": 0,
+        "profile_keyword_score": 16,
+        "bounded_profile_score": 0.6666666666666666,
+        "question_tokens": [
+          "adaptation",
+          "anchors",
+          "behavioral",
+          "certified",
+          "continual",
+          "does",
+          "held-out",
+          "investigate",
+          "retention"
+        ],
+        "scope_tokens": [],
+        "question_title_matches": [],
+        "question_abstract_matches": [],
+        "scope_title_matches": [],
+        "scope_abstract_matches": [],
+        "freshness": 0.0,
+        "known_date": null,
+        "date_basis": null,
+        "read_penalty": 0,
+        "sort_components": [
+          0,
+          0,
+          0,
+          0.6666666666666666,
+          0.0
+        ]
+      },
+      "ranks": {
+        "question_only": null,
+        "profile_only": null,
+        "combined_research": null,
+        "chronological_diagnostic": null
+      },
+      "rank_changes_from_question_only": {
+        "question_only": null,
+        "profile_only": null,
+        "combined_research": null,
+        "chronological_diagnostic": null
+      },
+      "chronological_known_date_rank": null,
+      "owner_usefulness": null,
+      "owner_reason": null,
+      "reference_relevance": null
+    },
+    {
+      "work_id": "arxiv:2610.40857",
+      "version_id": "arxiv:2610.40857:v1:metadata-ad6a5ab2673194a3",
+      "title": "Frozen in Time: How a Physics Foundation Model Forgets Under Sim-to-Real Adaptation",
+      "source_id": "arxiv-cs-lg",
+      "published_at": null,
+      "updated_at": null,
+      "announced_at": "2026-11-02T05:00:00Z",
+      "legacy_relevance": {
+        "score": 16.0,
+        "keyword_score": 16,
+        "recency": 0.0,
+        "matched_terms": [
+          "knowledge",
+          "scientific",
+          "sim-to-real",
+          "simulation"
+        ],
+        "matched_topics": [
+          "ml:embodied-intelligence",
+          "ml:machine-learning-for-science",
+          "ml:retrieval-and-memory",
+          "study:22/control-systems"
+        ],
+        "question_terms": [],
+        "policy_version": "workspace-lexical-v3",
+        "baseline": "relevance"
+      },
+      "mode_relevance": {
+        "policy_version": "workspace-modes-lexical-v1",
+        "product_mode": "research",
+        "eligible": true,
+        "question_score": 5,
+        "scope_score": 0,
+        "profile_keyword_score": 16,
+        "bounded_profile_score": 0.6666666666666666,
+        "question_tokens": [
+          "adaptation",
+          "anchors",
+          "behavioral",
+          "certified",
+          "continual",
+          "does",
+          "held-out",
+          "investigate",
+          "retention"
+        ],
+        "scope_tokens": [],
+        "question_title_matches": [
+          "adaptation"
+        ],
+        "question_abstract_matches": [
+          "adaptation",
+          "retention"
+        ],
+        "scope_title_matches": [],
+        "scope_abstract_matches": [],
+        "freshness": 0.0,
+        "known_date": null,
+        "date_basis": null,
+        "read_penalty": 0,
+        "sort_components": [
+          1,
+          5,
+          0,
+          0.6666666666666666,
+          0.0
+        ]
+      },
+      "ranks": {
+        "question_only": 2,
+        "profile_only": 6,
+        "combined_research": 2,
+        "chronological_diagnostic": 7
+      },
+      "rank_changes_from_question_only": {
+        "question_only": 0,
+        "profile_only": 4,
+        "combined_research": 0,
+        "chronological_diagnostic": 5
+      },
+      "chronological_known_date_rank": null,
+      "owner_usefulness": null,
+      "owner_reason": null,
+      "reference_relevance": null
+    },
+    {
+      "work_id": "arxiv:2610.40940",
+      "version_id": "arxiv:2610.40940:v1:metadata-21d8200059afcd01",
+      "title": "Benchmarking Forecasting Agents on Yesterday's Tomorrows",
+      "source_id": "arxiv-cs-ai",
+      "published_at": null,
+      "updated_at": null,
+      "announced_at": "2026-11-02T05:00:00Z",
+      "legacy_relevance": {
+        "score": 16.0,
+        "keyword_score": 16,
+        "recency": 0.0,
+        "matched_terms": [
+          "agent",
+          "benchmark",
+          "evaluation",
+          "retrieval"
+        ],
+        "matched_topics": [
+          "ml:agents-and-tool-use",
+          "ml:evaluation-and-responsible-ml",
+          "ml:retrieval-and-memory"
+        ],
+        "question_terms": [],
+        "policy_version": "workspace-lexical-v3",
+        "baseline": "relevance"
+      },
+      "mode_relevance": {
+        "policy_version": "workspace-modes-lexical-v1",
+        "product_mode": "research",
+        "eligible": false,
+        "question_score": 0,
+        "scope_score": 0,
+        "profile_keyword_score": 16,
+        "bounded_profile_score": 0.6666666666666666,
+        "question_tokens": [
+          "adaptation",
+          "anchors",
+          "behavioral",
+          "certified",
+          "continual",
+          "does",
+          "held-out",
+          "investigate",
+          "retention"
+        ],
+        "scope_tokens": [],
+        "question_title_matches": [],
+        "question_abstract_matches": [],
+        "scope_title_matches": [],
+        "scope_abstract_matches": [],
+        "freshness": 0.0,
+        "known_date": null,
+        "date_basis": null,
+        "read_penalty": 0,
+        "sort_components": [
+          0,
+          0,
+          0,
+          0.6666666666666666,
+          0.0
+        ]
+      },
+      "ranks": {
+        "question_only": null,
+        "profile_only": null,
+        "combined_research": null,
+        "chronological_diagnostic": null
+      },
+      "rank_changes_from_question_only": {
+        "question_only": null,
+        "profile_only": null,
+        "combined_research": null,
+        "chronological_diagnostic": null
+      },
+      "chronological_known_date_rank": null,
+      "owner_usefulness": null,
+      "owner_reason": null,
+      "reference_relevance": null
+    },
+    {
+      "work_id": "arxiv:2610.40959",
+      "version_id": "arxiv:2610.40959:v1:metadata-a78f18ab927d7ec9",
+      "title": "P-ContextBench: From Personal Fact Recall to Personalized Agent Behavior",
+      "source_id": "arxiv-cs-ai",
+      "published_at": null,
+      "updated_at": null,
+      "announced_at": "2026-11-02T05:00:00Z",
+      "legacy_relevance": {
+        "score": 16.0,
+        "keyword_score": 16,
+        "recency": 0.0,
+        "matched_terms": [
+          "agent",
+          "benchmark",
+          "generation",
+          "inference"
+        ],
+        "matched_topics": [
+          "ml:agents-and-tool-use",
+          "ml:evaluation-and-responsible-ml",
+          "ml:generative-models/controllable-generation",
+          "ml:ml-systems-and-efficiency",
+          "ml:reasoning-and-inference-time-compute"
+        ],
+        "question_terms": [],
+        "policy_version": "workspace-lexical-v3",
+        "baseline": "relevance"
+      },
+      "mode_relevance": {
+        "policy_version": "workspace-modes-lexical-v1",
+        "product_mode": "research",
+        "eligible": false,
+        "question_score": 0,
+        "scope_score": 0,
+        "profile_keyword_score": 16,
+        "bounded_profile_score": 0.6666666666666666,
+        "question_tokens": [
+          "adaptation",
+          "anchors",
+          "behavioral",
+          "certified",
+          "continual",
+          "does",
+          "held-out",
+          "investigate",
+          "retention"
+        ],
+        "scope_tokens": [],
+        "question_title_matches": [],
+        "question_abstract_matches": [],
+        "scope_title_matches": [],
+        "scope_abstract_matches": [],
+        "freshness": 0.0,
+        "known_date": null,
+        "date_basis": null,
+        "read_penalty": 0,
+        "sort_components": [
+          0,
+          0,
+          0,
+          0.6666666666666666,
+          0.0
+        ]
+      },
+      "ranks": {
+        "question_only": null,
+        "profile_only": null,
+        "combined_research": null,
+        "chronological_diagnostic": null
+      },
+      "rank_changes_from_question_only": {
+        "question_only": null,
+        "profile_only": null,
+        "combined_research": null,
+        "chronological_diagnostic": null
+      },
+      "chronological_known_date_rank": null,
+      "owner_usefulness": null,
+      "owner_reason": null,
+      "reference_relevance": null
+    },
+    {
+      "work_id": "arxiv:2610.41177",
+      "version_id": "arxiv:2610.41177:v1:metadata-f12968377b0c70f8",
+      "title": "TraceSpec: Understanding and Improving Speculative Decoding for LLM Agents",
+      "source_id": "arxiv-cs-cl",
+      "published_at": null,
+      "updated_at": null,
+      "announced_at": "2026-11-02T05:00:00Z",
+      "legacy_relevance": {
+        "score": 16.0,
+        "keyword_score": 16,
+        "recency": 0.0,
+        "matched_terms": [
+          "agent",
+          "evaluation",
+          "reasoning",
+          "speculative decoding"
+        ],
+        "matched_topics": [
+          "ml:agents-and-tool-use",
+          "ml:evaluation-and-responsible-ml",
+          "ml:ml-systems-and-efficiency",
+          "ml:reasoning-and-inference-time-compute"
+        ],
+        "question_terms": [],
+        "policy_version": "workspace-lexical-v3",
+        "baseline": "relevance"
+      },
+      "mode_relevance": {
+        "policy_version": "workspace-modes-lexical-v1",
+        "product_mode": "research",
+        "eligible": false,
+        "question_score": 0,
+        "scope_score": 0,
+        "profile_keyword_score": 16,
+        "bounded_profile_score": 0.6666666666666666,
+        "question_tokens": [
+          "adaptation",
+          "anchors",
+          "behavioral",
+          "certified",
+          "continual",
+          "does",
+          "held-out",
+          "investigate",
+          "retention"
+        ],
+        "scope_tokens": [],
+        "question_title_matches": [],
+        "question_abstract_matches": [],
+        "scope_title_matches": [],
+        "scope_abstract_matches": [],
+        "freshness": 0.0,
+        "known_date": null,
+        "date_basis": null,
+        "read_penalty": 0,
+        "sort_components": [
+          0,
+          0,
+          0,
+          0.6666666666666666,
+          0.0
+        ]
+      },
+      "ranks": {
+        "question_only": null,
+        "profile_only": null,
+        "combined_research": null,
+        "chronological_diagnostic": null
+      },
+      "rank_changes_from_question_only": {
+        "question_only": null,
+        "profile_only": null,
+        "combined_research": null,
+        "chronological_diagnostic": null
+      },
+      "chronological_known_date_rank": null,
+      "owner_usefulness": null,
+      "owner_reason": null,
+      "reference_relevance": null
+    },
+    {
+      "work_id": "arxiv:2610.41435",
+      "version_id": "arxiv:2610.41435:v1:metadata-beb2da6bb778a0f0",
+      "title": "BlindToChange: AI Agents Can Find Changes When Asked But Do They Look When Needed?",
+      "source_id": "arxiv-cs-cl",
+      "published_at": null,
+      "updated_at": null,
+      "announced_at": "2026-11-02T05:00:00Z",
+      "legacy_relevance": {
+        "score": 16.0,
+        "keyword_score": 16,
+        "recency": 0.0,
+        "matched_terms": [
+          "agent",
+          "agentic",
+          "benchmark",
+          "reasoning"
+        ],
+        "matched_topics": [
+          "ml:agents-and-tool-use",
+          "ml:evaluation-and-responsible-ml",
+          "ml:reasoning-and-inference-time-compute"
+        ],
+        "question_terms": [],
+        "policy_version": "workspace-lexical-v3",
+        "baseline": "relevance"
+      },
+      "mode_relevance": {
+        "policy_version": "workspace-modes-lexical-v1",
+        "product_mode": "research",
+        "eligible": true,
+        "question_score": 1,
+        "scope_score": 0,
+        "profile_keyword_score": 16,
+        "bounded_profile_score": 0.6666666666666666,
+        "question_tokens": [
+          "adaptation",
+          "anchors",
+          "behavioral",
+          "certified",
+          "continual",
+          "does",
+          "held-out",
+          "investigate",
+          "retention"
+        ],
+        "scope_tokens": [],
+        "question_title_matches": [],
+        "question_abstract_matches": [
+          "does"
+        ],
+        "scope_title_matches": [],
+        "scope_abstract_matches": [],
+        "freshness": 0.0,
+        "known_date": null,
+        "date_basis": null,
+        "read_penalty": 0,
+        "sort_components": [
+          1,
+          1,
+          0,
+          0.6666666666666666,
+          0.0
+        ]
+      },
+      "ranks": {
+        "question_only": 18,
+        "profile_only": 7,
+        "combined_research": 10,
+        "chronological_diagnostic": 17
+      },
+      "rank_changes_from_question_only": {
+        "question_only": 0,
+        "profile_only": -11,
+        "combined_research": -8,
+        "chronological_diagnostic": -1
+      },
+      "chronological_known_date_rank": null,
+      "owner_usefulness": null,
+      "owner_reason": null,
+      "reference_relevance": null
+    },
+    {
+      "work_id": "arxiv:2610.41482",
+      "version_id": "arxiv:2610.41482:v1:metadata-e5c832a06d88973f",
+      "title": "KEEPER: Learning Control-Sufficient Textual Memory for Long-Horizon LLM Agents",
+      "source_id": "arxiv-cs-cl",
+      "published_at": null,
+      "updated_at": null,
+      "announced_at": "2026-11-02T05:00:00Z",
+      "legacy_relevance": {
+        "score": 16.0,
+        "keyword_score": 16,
+        "recency": 0.0,
+        "matched_terms": [
+          "agent",
+          "control",
+          "memory",
+          "reinforcement learning"
+        ],
+        "matched_topics": [
+          "ml:agents-and-tool-use",
+          "ml:embodied-intelligence",
+          "ml:embodied-intelligence/model-based-reinforcement-learning",
+          "ml:retrieval-and-memory",
+          "study:22/control-systems"
+        ],
+        "question_terms": [],
+        "policy_version": "workspace-lexical-v3",
+        "baseline": "relevance"
+      },
+      "mode_relevance": {
+        "policy_version": "workspace-modes-lexical-v1",
+        "product_mode": "research",
+        "eligible": true,
+        "question_score": 2,
+        "scope_score": 0,
+        "profile_keyword_score": 16,
+        "bounded_profile_score": 0.6666666666666666,
+        "question_tokens": [
+          "adaptation",
+          "anchors",
+          "behavioral",
+          "certified",
+          "continual",
+          "does",
+          "held-out",
+          "investigate",
+          "retention"
+        ],
+        "scope_tokens": [],
+        "question_title_matches": [],
+        "question_abstract_matches": [
+          "does",
+          "retention"
+        ],
+        "scope_title_matches": [],
+        "scope_abstract_matches": [],
+        "freshness": 0.0,
+        "known_date": null,
+        "date_basis": null,
+        "read_penalty": 0,
+        "sort_components": [
+          1,
+          2,
+          0,
+          0.6666666666666666,
+          0.0
+        ]
+      },
+      "ranks": {
+        "question_only": 5,
+        "profile_only": 8,
+        "combined_research": 5,
+        "chronological_diagnostic": 18
+      },
+      "rank_changes_from_question_only": {
+        "question_only": 0,
+        "profile_only": 3,
+        "combined_research": 0,
+        "chronological_diagnostic": 13
+      },
+      "chronological_known_date_rank": null,
+      "owner_usefulness": null,
+      "owner_reason": null,
+      "reference_relevance": null
+    },
+    {
+      "work_id": "arxiv:2610.40700",
+      "version_id": "arxiv:2610.40700:v1:metadata-c05b44ce3bd6d5f0",
+      "title": "Automatic Construction of Strong Simple Baselines",
+      "source_id": "arxiv-cs-lg",
+      "published_at": null,
+      "updated_at": null,
+      "announced_at": "2026-11-02T05:00:00Z",
+      "legacy_relevance": {
+        "score": 12.0,
+        "keyword_score": 12,
+        "recency": 0.0,
+        "matched_terms": [
+          "compute",
+          "scientific",
+          "test-time"
+        ],
+        "matched_topics": [
+          "ml:machine-learning-for-science",
+          "ml:ml-systems-and-efficiency",
+          "ml:reasoning-and-inference-time-compute"
+        ],
+        "question_terms": [],
+        "policy_version": "workspace-lexical-v3",
+        "baseline": "relevance"
+      },
+      "mode_relevance": {
+        "policy_version": "workspace-modes-lexical-v1",
+        "product_mode": "research",
+        "eligible": true,
+        "question_score": 1,
+        "scope_score": 0,
+        "profile_keyword_score": 12,
+        "bounded_profile_score": 0.5,
+        "question_tokens": [
+          "adaptation",
+          "anchors",
+          "behavioral",
+          "certified",
+          "continual",
+          "does",
+          "held-out",
+          "investigate",
+          "retention"
+        ],
+        "scope_tokens": [],
+        "question_title_matches": [],
+        "question_abstract_matches": [
+          "investigate"
+        ],
+        "scope_title_matches": [],
+        "scope_abstract_matches": [],
+        "freshness": 0.0,
+        "known_date": null,
+        "date_basis": null,
+        "read_penalty": 0,
+        "sort_components": [
+          1,
+          1,
+          0,
+          0.5,
+          0.0
+        ]
+      },
+      "ranks": {
+        "question_only": 6,
+        "profile_only": 9,
+        "combined_research": 11,
+        "chronological_diagnostic": 2
+      },
+      "rank_changes_from_question_only": {
+        "question_only": 0,
+        "profile_only": 3,
+        "combined_research": 5,
+        "chronological_diagnostic": -4
+      },
+      "chronological_known_date_rank": null,
+      "owner_usefulness": null,
+      "owner_reason": null,
+      "reference_relevance": null
+    },
+    {
+      "work_id": "arxiv:2610.40893",
+      "version_id": "arxiv:2610.40893:v1:metadata-018e69b4ec3841a0",
+      "title": "Qistas: A Pre-Registered, Portable Protocol for Fairness Evaluation of Large Language Models",
+      "source_id": "arxiv-cs-cl",
+      "published_at": null,
+      "updated_at": null,
+      "announced_at": "2026-11-02T05:00:00Z",
+      "legacy_relevance": {
+        "score": 12.0,
+        "keyword_score": 12,
+        "recency": 0.0,
+        "matched_terms": [
+          "benchmark",
+          "evaluation",
+          "procedural"
+        ],
+        "matched_topics": [
+          "ml:evaluation-and-responsible-ml",
+          "ml:generative-models/controllable-generation"
+        ],
+        "question_terms": [],
+        "policy_version": "workspace-lexical-v3",
+        "baseline": "relevance"
+      },
+      "mode_relevance": {
+        "policy_version": "workspace-modes-lexical-v1",
+        "product_mode": "research",
+        "eligible": false,
+        "question_score": 0,
+        "scope_score": 0,
+        "profile_keyword_score": 12,
+        "bounded_profile_score": 0.5,
+        "question_tokens": [
+          "adaptation",
+          "anchors",
+          "behavioral",
+          "certified",
+          "continual",
+          "does",
+          "held-out",
+          "investigate",
+          "retention"
+        ],
+        "scope_tokens": [],
+        "question_title_matches": [],
+        "question_abstract_matches": [],
+        "scope_title_matches": [],
+        "scope_abstract_matches": [],
+        "freshness": 0.0,
+        "known_date": null,
+        "date_basis": null,
+        "read_penalty": 0,
+        "sort_components": [
+          0,
+          0,
+          0,
+          0.5,
+          0.0
+        ]
+      },
+      "ranks": {
+        "question_only": null,
+        "profile_only": null,
+        "combined_research": null,
+        "chronological_diagnostic": null
+      },
+      "rank_changes_from_question_only": {
+        "question_only": null,
+        "profile_only": null,
+        "combined_research": null,
+        "chronological_diagnostic": null
+      },
+      "chronological_known_date_rank": null,
+      "owner_usefulness": null,
+      "owner_reason": null,
+      "reference_relevance": null
+    },
+    {
+      "work_id": "arxiv:2610.41012",
+      "version_id": "arxiv:2610.41012:v1:metadata-f20dbad8ce03c4ef",
+      "title": "Language Models Show Conformity Bias in RAG: When the Majority Endorses a Poisoned Claim",
+      "source_id": "arxiv-cs-cl",
+      "published_at": null,
+      "updated_at": null,
+      "announced_at": "2026-11-02T05:00:00Z",
+      "legacy_relevance": {
+        "score": 12.0,
+        "keyword_score": 12,
+        "recency": 0.0,
+        "matched_terms": [
+          "generation",
+          "rag",
+          "retrieval"
+        ],
+        "matched_topics": [
+          "ml:generative-models/controllable-generation",
+          "ml:retrieval-and-memory"
+        ],
+        "question_terms": [],
+        "policy_version": "workspace-lexical-v3",
+        "baseline": "relevance"
+      },
+      "mode_relevance": {
+        "policy_version": "workspace-modes-lexical-v1",
+        "product_mode": "research",
+        "eligible": true,
+        "question_score": 1,
+        "scope_score": 0,
+        "profile_keyword_score": 12,
+        "bounded_profile_score": 0.5,
+        "question_tokens": [
+          "adaptation",
+          "anchors",
+          "behavioral",
+          "certified",
+          "continual",
+          "does",
+          "held-out",
+          "investigate",
+          "retention"
+        ],
+        "scope_tokens": [],
+        "question_title_matches": [],
+        "question_abstract_matches": [
+          "investigate"
+        ],
+        "scope_title_matches": [],
+        "scope_abstract_matches": [],
+        "freshness": 0.0,
+        "known_date": null,
+        "date_basis": null,
+        "read_penalty": 0,
+        "sort_components": [
+          1,
+          1,
+          0,
+          0.5,
+          0.0
+        ]
+      },
+      "ranks": {
+        "question_only": 14,
+        "profile_only": 10,
+        "combined_research": 12,
+        "chronological_diagnostic": 13
+      },
+      "rank_changes_from_question_only": {
+        "question_only": 0,
+        "profile_only": -4,
+        "combined_research": -2,
+        "chronological_diagnostic": -1
+      },
+      "chronological_known_date_rank": null,
+      "owner_usefulness": null,
+      "owner_reason": null,
+      "reference_relevance": null
+    },
+    {
+      "work_id": "arxiv:2610.41014",
+      "version_id": "arxiv:2610.41014:v1:metadata-db1a32505c4d09a1",
+      "title": "Towards Understanding Score-Seeking in LLMs",
+      "source_id": "arxiv-cs-lg",
+      "published_at": null,
+      "updated_at": null,
+      "announced_at": "2026-11-02T05:00:00Z",
+      "legacy_relevance": {
+        "score": 12.0,
+        "keyword_score": 12,
+        "recency": 0.0,
+        "matched_terms": [
+          "agent",
+          "agentic",
+          "evaluation"
+        ],
+        "matched_topics": [
+          "ml:agents-and-tool-use",
+          "ml:evaluation-and-responsible-ml"
+        ],
+        "question_terms": [],
+        "policy_version": "workspace-lexical-v3",
+        "baseline": "relevance"
+      },
+      "mode_relevance": {
+        "policy_version": "workspace-modes-lexical-v1",
+        "product_mode": "research",
+        "eligible": true,
+        "question_score": 1,
+        "scope_score": 0,
+        "profile_keyword_score": 12,
+        "bounded_profile_score": 0.5,
+        "question_tokens": [
+          "adaptation",
+          "anchors",
+          "behavioral",
+          "certified",
+          "continual",
+          "does",
+          "held-out",
+          "investigate",
+          "retention"
+        ],
+        "scope_tokens": [],
+        "question_title_matches": [],
+        "question_abstract_matches": [
+          "investigate"
+        ],
+        "scope_title_matches": [],
+        "scope_abstract_matches": [],
+        "freshness": 0.0,
+        "known_date": null,
+        "date_basis": null,
+        "read_penalty": 0,
+        "sort_components": [
+          1,
+          1,
+          0,
+          0.5,
+          0.0
+        ]
+      },
+      "ranks": {
+        "question_only": 15,
+        "profile_only": 11,
+        "combined_research": 13,
+        "chronological_diagnostic": 14
+      },
+      "rank_changes_from_question_only": {
+        "question_only": 0,
+        "profile_only": -4,
+        "combined_research": -2,
+        "chronological_diagnostic": -1
+      },
+      "chronological_known_date_rank": null,
+      "owner_usefulness": null,
+      "owner_reason": null,
+      "reference_relevance": null
+    },
+    {
+      "work_id": "arxiv:2610.41025",
+      "version_id": "arxiv:2610.41025:v1:metadata-1aa9801b0aa16243",
+      "title": "ReplayRCA: Measuring Post-hoc Diagnosis and Live Oversight of Agent Failures by Counterfactual Replay",
+      "source_id": "arxiv-cs-ai",
+      "published_at": null,
+      "updated_at": null,
+      "announced_at": "2026-11-02T05:00:00Z",
+      "legacy_relevance": {
+        "score": 12.0,
+        "keyword_score": 12,
+        "recency": 0.0,
+        "matched_terms": [
+          "agent",
+          "benchmark",
+          "evaluation"
+        ],
+        "matched_topics": [
+          "ml:agents-and-tool-use",
+          "ml:evaluation-and-responsible-ml"
+        ],
+        "question_terms": [],
+        "policy_version": "workspace-lexical-v3",
+        "baseline": "relevance"
+      },
+      "mode_relevance": {
+        "policy_version": "workspace-modes-lexical-v1",
+        "product_mode": "research",
+        "eligible": true,
+        "question_score": 1,
+        "scope_score": 0,
+        "profile_keyword_score": 12,
+        "bounded_profile_score": 0.5,
+        "question_tokens": [
+          "adaptation",
+          "anchors",
+          "behavioral",
+          "certified",
+          "continual",
+          "does",
+          "held-out",
+          "investigate",
+          "retention"
+        ],
+        "scope_tokens": [],
+        "question_title_matches": [],
+        "question_abstract_matches": [
+          "does"
+        ],
+        "scope_title_matches": [],
+        "scope_abstract_matches": [],
+        "freshness": 0.0,
+        "known_date": null,
+        "date_basis": null,
+        "read_penalty": 0,
+        "sort_components": [
+          1,
+          1,
+          0,
+          0.5,
+          0.0
+        ]
+      },
+      "ranks": {
+        "question_only": 16,
+        "profile_only": 12,
+        "combined_research": 14,
+        "chronological_diagnostic": 15
+      },
+      "rank_changes_from_question_only": {
+        "question_only": 0,
+        "profile_only": -4,
+        "combined_research": -2,
+        "chronological_diagnostic": -1
+      },
+      "chronological_known_date_rank": null,
+      "owner_usefulness": null,
+      "owner_reason": null,
+      "reference_relevance": null
+    },
+    {
+      "work_id": "arxiv:2610.41040",
+      "version_id": "arxiv:2610.41040:v1:metadata-74eebd3cc589eed0",
+      "title": "Capability-Grounded Agentic Planning",
+      "source_id": "arxiv-cs-ai",
+      "published_at": null,
+      "updated_at": null,
+      "announced_at": "2026-11-02T05:00:00Z",
+      "legacy_relevance": {
+        "score": 12.0,
+        "keyword_score": 12,
+        "recency": 0.0,
+        "matched_terms": [
+          "agent",
+          "agentic",
+          "planning"
+        ],
+        "matched_topics": [
+          "ml:agents-and-tool-use"
+        ],
+        "question_terms": [],
+        "policy_version": "workspace-lexical-v3",
+        "baseline": "relevance"
+      },
+      "mode_relevance": {
+        "policy_version": "workspace-modes-lexical-v1",
+        "product_mode": "research",
+        "eligible": false,
+        "question_score": 0,
+        "scope_score": 0,
+        "profile_keyword_score": 12,
+        "bounded_profile_score": 0.5,
+        "question_tokens": [
+          "adaptation",
+          "anchors",
+          "behavioral",
+          "certified",
+          "continual",
+          "does",
+          "held-out",
+          "investigate",
+          "retention"
+        ],
+        "scope_tokens": [],
+        "question_title_matches": [],
+        "question_abstract_matches": [],
+        "scope_title_matches": [],
+        "scope_abstract_matches": [],
+        "freshness": 0.0,
+        "known_date": null,
+        "date_basis": null,
+        "read_penalty": 0,
+        "sort_components": [
+          0,
+          0,
+          0,
+          0.5,
+          0.0
+        ]
+      },
+      "ranks": {
+        "question_only": null,
+        "profile_only": null,
+        "combined_research": null,
+        "chronological_diagnostic": null
+      },
+      "rank_changes_from_question_only": {
+        "question_only": null,
+        "profile_only": null,
+        "combined_research": null,
+        "chronological_diagnostic": null
+      },
+      "chronological_known_date_rank": null,
+      "owner_usefulness": null,
+      "owner_reason": null,
+      "reference_relevance": null
+    },
+    {
+      "work_id": "arxiv:2610.41391",
+      "version_id": "arxiv:2610.41391:v1:metadata-be875cebfaa26052",
+      "title": "Comparative Evaluation of LLM-Based Review Paradigms for Academic Paper Quality Assessment",
+      "source_id": "arxiv-cs-cl",
+      "published_at": null,
+      "updated_at": null,
+      "announced_at": "2026-11-02T05:00:00Z",
+      "legacy_relevance": {
+        "score": 12.0,
+        "keyword_score": 12,
+        "recency": 0.0,
+        "matched_terms": [
+          "calibration",
+          "control",
+          "evaluation"
+        ],
+        "matched_topics": [
+          "ml:embodied-intelligence",
+          "ml:embodied-intelligence/model-based-reinforcement-learning",
+          "ml:evaluation-and-responsible-ml",
+          "study:22/control-systems"
+        ],
+        "question_terms": [],
+        "policy_version": "workspace-lexical-v3",
+        "baseline": "relevance"
+      },
+      "mode_relevance": {
+        "policy_version": "workspace-modes-lexical-v1",
+        "product_mode": "research",
+        "eligible": false,
+        "question_score": 0,
+        "scope_score": 0,
+        "profile_keyword_score": 12,
+        "bounded_profile_score": 0.5,
+        "question_tokens": [
+          "adaptation",
+          "anchors",
+          "behavioral",
+          "certified",
+          "continual",
+          "does",
+          "held-out",
+          "investigate",
+          "retention"
+        ],
+        "scope_tokens": [],
+        "question_title_matches": [],
+        "question_abstract_matches": [],
+        "scope_title_matches": [],
+        "scope_abstract_matches": [],
+        "freshness": 0.0,
+        "known_date": null,
+        "date_basis": null,
+        "read_penalty": 0,
+        "sort_components": [
+          0,
+          0,
+          0,
+          0.5,
+          0.0
+        ]
+      },
+      "ranks": {
+        "question_only": null,
+        "profile_only": null,
+        "combined_research": null,
+        "chronological_diagnostic": null
+      },
+      "rank_changes_from_question_only": {
+        "question_only": null,
+        "profile_only": null,
+        "combined_research": null,
+        "chronological_diagnostic": null
+      },
+      "chronological_known_date_rank": null,
+      "owner_usefulness": null,
+      "owner_reason": null,
+      "reference_relevance": null
+    },
+    {
+      "work_id": "arxiv:2610.40758",
+      "version_id": "arxiv:2610.40758:v1:metadata-96148d2d4e4a4093",
+      "title": "More Rules, Longer Lists? Benchmarking Self-Evolving Agents on a Hidden-Rule Curriculum",
+      "source_id": "arxiv-cs-ai",
+      "published_at": null,
+      "updated_at": null,
+      "announced_at": "2026-11-02T05:00:00Z",
+      "legacy_relevance": {
+        "score": 8.0,
+        "keyword_score": 8,
+        "recency": 0.0,
+        "matched_terms": [
+          "agent",
+          "benchmark"
+        ],
+        "matched_topics": [
+          "ml:agents-and-tool-use",
+          "ml:evaluation-and-responsible-ml"
+        ],
+        "question_terms": [],
+        "policy_version": "workspace-lexical-v3",
+        "baseline": "relevance"
+      },
+      "mode_relevance": {
+        "policy_version": "workspace-modes-lexical-v1",
+        "product_mode": "research",
+        "eligible": true,
+        "question_score": 1,
+        "scope_score": 0,
+        "profile_keyword_score": 8,
+        "bounded_profile_score": 0.3333333333333333,
+        "question_tokens": [
+          "adaptation",
+          "anchors",
+          "behavioral",
+          "certified",
+          "continual",
+          "does",
+          "held-out",
+          "investigate",
+          "retention"
+        ],
+        "scope_tokens": [],
+        "question_title_matches": [],
+        "question_abstract_matches": [
+          "does"
+        ],
+        "scope_title_matches": [],
+        "scope_abstract_matches": [],
+        "freshness": 0.0,
+        "known_date": null,
+        "date_basis": null,
+        "read_penalty": 0,
+        "sort_components": [
+          1,
+          1,
+          0,
+          0.3333333333333333,
+          0.0
+        ]
+      },
+      "ranks": {
+        "question_only": 8,
+        "profile_only": 13,
+        "combined_research": 15,
+        "chronological_diagnostic": 5
+      },
+      "rank_changes_from_question_only": {
+        "question_only": 0,
+        "profile_only": 5,
+        "combined_research": 7,
+        "chronological_diagnostic": -3
+      },
+      "chronological_known_date_rank": null,
+      "owner_usefulness": null,
+      "owner_reason": null,
+      "reference_relevance": null
+    },
+    {
+      "work_id": "arxiv:2610.40871",
+      "version_id": "arxiv:2610.40871:v1:metadata-0be4ee69b6741057",
+      "title": "TensorSSM: Memorizing Spatial Position in Dynamic State Space for Tensor Core Generation",
+      "source_id": "arxiv-cs-lg",
+      "published_at": null,
+      "updated_at": null,
+      "announced_at": "2026-11-02T05:00:00Z",
+      "legacy_relevance": {
+        "score": 8.0,
+        "keyword_score": 8,
+        "recency": 0.0,
+        "matched_terms": [
+          "generation",
+          "spatial"
+        ],
+        "matched_topics": [
+          "ml:generative-models/controllable-generation",
+          "ml:multimodal-and-perception/3d-perception"
+        ],
+        "question_terms": [],
+        "policy_version": "workspace-lexical-v3",
+        "baseline": "relevance"
+      },
+      "mode_relevance": {
+        "policy_version": "workspace-modes-lexical-v1",
+        "product_mode": "research",
+        "eligible": false,
+        "question_score": 0,
+        "scope_score": 0,
+        "profile_keyword_score": 8,
+        "bounded_profile_score": 0.3333333333333333,
+        "question_tokens": [
+          "adaptation",
+          "anchors",
+          "behavioral",
+          "certified",
+          "continual",
+          "does",
+          "held-out",
+          "investigate",
+          "retention"
+        ],
+        "scope_tokens": [],
+        "question_title_matches": [],
+        "question_abstract_matches": [],
+        "scope_title_matches": [],
+        "scope_abstract_matches": [],
+        "freshness": 0.0,
+        "known_date": null,
+        "date_basis": null,
+        "read_penalty": 0,
+        "sort_components": [
+          0,
+          0,
+          0,
+          0.3333333333333333,
+          0.0
+        ]
+      },
+      "ranks": {
+        "question_only": null,
+        "profile_only": null,
+        "combined_research": null,
+        "chronological_diagnostic": null
+      },
+      "rank_changes_from_question_only": {
+        "question_only": null,
+        "profile_only": null,
+        "combined_research": null,
+        "chronological_diagnostic": null
+      },
+      "chronological_known_date_rank": null,
+      "owner_usefulness": null,
+      "owner_reason": null,
+      "reference_relevance": null
+    },
+    {
+      "work_id": "arxiv:2610.40901",
+      "version_id": "arxiv:2610.40901:v1:metadata-b94f57a0b8a51165",
+      "title": "TSFLab: A Self-Improving Agent-Agnostic Workbench for Time Series Forecasting Research",
+      "source_id": "arxiv-cs-lg",
+      "published_at": null,
+      "updated_at": null,
+      "announced_at": "2026-11-02T05:00:00Z",
+      "legacy_relevance": {
+        "score": 8.0,
+        "keyword_score": 8,
+        "recency": 0.0,
+        "matched_terms": [
+          "agent",
+          "coding agents"
+        ],
+        "matched_topics": [
+          "ml:agents-and-tool-use"
+        ],
+        "question_terms": [],
+        "policy_version": "workspace-lexical-v3",
+        "baseline": "relevance"
+      },
+      "mode_relevance": {
+        "policy_version": "workspace-modes-lexical-v1",
+        "product_mode": "research",
+        "eligible": false,
+        "question_score": 0,
+        "scope_score": 0,
+        "profile_keyword_score": 8,
+        "bounded_profile_score": 0.3333333333333333,
+        "question_tokens": [
+          "adaptation",
+          "anchors",
+          "behavioral",
+          "certified",
+          "continual",
+          "does",
+          "held-out",
+          "investigate",
+          "retention"
+        ],
+        "scope_tokens": [],
+        "question_title_matches": [],
+        "question_abstract_matches": [],
+        "scope_title_matches": [],
+        "scope_abstract_matches": [],
+        "freshness": 0.0,
+        "known_date": null,
+        "date_basis": null,
+        "read_penalty": 0,
+        "sort_components": [
+          0,
+          0,
+          0,
+          0.3333333333333333,
+          0.0
+        ]
+      },
+      "ranks": {
+        "question_only": null,
+        "profile_only": null,
+        "combined_research": null,
+        "chronological_diagnostic": null
+      },
+      "rank_changes_from_question_only": {
+        "question_only": null,
+        "profile_only": null,
+        "combined_research": null,
+        "chronological_diagnostic": null
+      },
+      "chronological_known_date_rank": null,
+      "owner_usefulness": null,
+      "owner_reason": null,
+      "reference_relevance": null
+    },
+    {
+      "work_id": "arxiv:2610.40943",
+      "version_id": "arxiv:2610.40943:v1:metadata-9449877c1e5f5e99",
+      "title": "Kernel-based Interpolatory Methods for Context Compression of Attention Mechanisms",
+      "source_id": "arxiv-cs-lg",
+      "published_at": null,
+      "updated_at": null,
+      "announced_at": "2026-11-02T05:00:00Z",
+      "legacy_relevance": {
+        "score": 8.0,
+        "keyword_score": 8,
+        "recency": 0.0,
+        "matched_terms": [
+          "benchmark",
+          "efficient"
+        ],
+        "matched_topics": [
+          "ml:evaluation-and-responsible-ml",
+          "ml:ml-systems-and-efficiency"
+        ],
+        "question_terms": [],
+        "policy_version": "workspace-lexical-v3",
+        "baseline": "relevance"
+      },
+      "mode_relevance": {
+        "policy_version": "workspace-modes-lexical-v1",
+        "product_mode": "research",
+        "eligible": false,
+        "question_score": 0,
+        "scope_score": 0,
+        "profile_keyword_score": 8,
+        "bounded_profile_score": 0.3333333333333333,
+        "question_tokens": [
+          "adaptation",
+          "anchors",
+          "behavioral",
+          "certified",
+          "continual",
+          "does",
+          "held-out",
+          "investigate",
+          "retention"
+        ],
+        "scope_tokens": [],
+        "question_title_matches": [],
+        "question_abstract_matches": [],
+        "scope_title_matches": [],
+        "scope_abstract_matches": [],
+        "freshness": 0.0,
+        "known_date": null,
+        "date_basis": null,
+        "read_penalty": 0,
+        "sort_components": [
+          0,
+          0,
+          0,
+          0.3333333333333333,
+          0.0
+        ]
+      },
+      "ranks": {
+        "question_only": null,
+        "profile_only": null,
+        "combined_research": null,
+        "chronological_diagnostic": null
+      },
+      "rank_changes_from_question_only": {
+        "question_only": null,
+        "profile_only": null,
+        "combined_research": null,
+        "chronological_diagnostic": null
+      },
+      "chronological_known_date_rank": null,
+      "owner_usefulness": null,
+      "owner_reason": null,
+      "reference_relevance": null
+    },
+    {
+      "work_id": "arxiv:2610.40946",
+      "version_id": "arxiv:2610.40946:v1:metadata-fe7eb688ec7eee7b",
+      "title": "Opening the Box Changes the Cat: LLMs Detect Chain-of-Thought Monitoring - What now?",
+      "source_id": "arxiv-cs-ai",
+      "published_at": null,
+      "updated_at": null,
+      "announced_at": "2026-11-02T05:00:00Z",
+      "legacy_relevance": {
+        "score": 8.0,
+        "keyword_score": 8,
+        "recency": 0.0,
+        "matched_terms": [
+          "inference",
+          "reasoning"
+        ],
+        "matched_topics": [
+          "ml:ml-systems-and-efficiency",
+          "ml:reasoning-and-inference-time-compute"
+        ],
+        "question_terms": [],
+        "policy_version": "workspace-lexical-v3",
+        "baseline": "relevance"
+      },
+      "mode_relevance": {
+        "policy_version": "workspace-modes-lexical-v1",
+        "product_mode": "research",
+        "eligible": true,
+        "question_score": 1,
+        "scope_score": 0,
+        "profile_keyword_score": 8,
+        "bounded_profile_score": 0.3333333333333333,
+        "question_tokens": [
+          "adaptation",
+          "anchors",
+          "behavioral",
+          "certified",
+          "continual",
+          "does",
+          "held-out",
+          "investigate",
+          "retention"
+        ],
+        "scope_tokens": [],
+        "question_title_matches": [],
+        "question_abstract_matches": [
+          "investigate"
+        ],
+        "scope_title_matches": [],
+        "scope_abstract_matches": [],
+        "freshness": 0.0,
+        "known_date": null,
+        "date_basis": null,
+        "read_penalty": 0,
+        "sort_components": [
+          1,
+          1,
+          0,
+          0.3333333333333333,
+          0.0
+        ]
+      },
+      "ranks": {
+        "question_only": 12,
+        "profile_only": 14,
+        "combined_research": 16,
+        "chronological_diagnostic": 11
+      },
+      "rank_changes_from_question_only": {
+        "question_only": 0,
+        "profile_only": 2,
+        "combined_research": 4,
+        "chronological_diagnostic": -1
+      },
+      "chronological_known_date_rank": null,
+      "owner_usefulness": null,
+      "owner_reason": null,
+      "reference_relevance": null
+    },
+    {
+      "work_id": "arxiv:2610.40984",
+      "version_id": "arxiv:2610.40984:v1:metadata-0667d01675a6b6ec",
+      "title": "RC Prediction: A Python Package for Parameter-Aware Reservoir Computing",
+      "source_id": "arxiv-cs-lg",
+      "published_at": null,
+      "updated_at": null,
+      "announced_at": "2026-11-02T05:00:00Z",
+      "legacy_relevance": {
+        "score": 8.0,
+        "keyword_score": 8,
+        "recency": 0.0,
+        "matched_terms": [
+          "autonomous",
+          "benchmark"
+        ],
+        "matched_topics": [
+          "ml:agents-and-tool-use",
+          "ml:evaluation-and-responsible-ml"
+        ],
+        "question_terms": [],
+        "policy_version": "workspace-lexical-v3",
+        "baseline": "relevance"
+      },
+      "mode_relevance": {
+        "policy_version": "workspace-modes-lexical-v1",
+        "product_mode": "research",
+        "eligible": false,
+        "question_score": 0,
+        "scope_score": 0,
+        "profile_keyword_score": 8,
+        "bounded_profile_score": 0.3333333333333333,
+        "question_tokens": [
+          "adaptation",
+          "anchors",
+          "behavioral",
+          "certified",
+          "continual",
+          "does",
+          "held-out",
+          "investigate",
+          "retention"
+        ],
+        "scope_tokens": [],
+        "question_title_matches": [],
+        "question_abstract_matches": [],
+        "scope_title_matches": [],
+        "scope_abstract_matches": [],
+        "freshness": 0.0,
+        "known_date": null,
+        "date_basis": null,
+        "read_penalty": 0,
+        "sort_components": [
+          0,
+          0,
+          0,
+          0.3333333333333333,
+          0.0
+        ]
+      },
+      "ranks": {
+        "question_only": null,
+        "profile_only": null,
+        "combined_research": null,
+        "chronological_diagnostic": null
+      },
+      "rank_changes_from_question_only": {
+        "question_only": null,
+        "profile_only": null,
+        "combined_research": null,
+        "chronological_diagnostic": null
+      },
+      "chronological_known_date_rank": null,
+      "owner_usefulness": null,
+      "owner_reason": null,
+      "reference_relevance": null
+    },
+    {
+      "work_id": "arxiv:2610.41076",
+      "version_id": "arxiv:2610.41076:v1:metadata-b07e88facba4e8cb",
+      "title": "BABA-Bench: Evaluating Long-Horizon Patient-Advocacy Agents",
+      "source_id": "arxiv-cs-ai",
+      "published_at": null,
+      "updated_at": null,
+      "announced_at": "2026-11-02T05:00:00Z",
+      "legacy_relevance": {
+        "score": 8.0,
+        "keyword_score": 8,
+        "recency": 0.0,
+        "matched_terms": [
+          "agent",
+          "benchmark"
+        ],
+        "matched_topics": [
+          "ml:agents-and-tool-use",
+          "ml:evaluation-and-responsible-ml"
+        ],
+        "question_terms": [],
+        "policy_version": "workspace-lexical-v3",
+        "baseline": "relevance"
+      },
+      "mode_relevance": {
+        "policy_version": "workspace-modes-lexical-v1",
+        "product_mode": "research",
+        "eligible": true,
+        "question_score": 1,
+        "scope_score": 0,
+        "profile_keyword_score": 8,
+        "bounded_profile_score": 0.3333333333333333,
+        "question_tokens": [
+          "adaptation",
+          "anchors",
+          "behavioral",
+          "certified",
+          "continual",
+          "does",
+          "held-out",
+          "investigate",
+          "retention"
+        ],
+        "scope_tokens": [],
+        "question_title_matches": [],
+        "question_abstract_matches": [
+          "does"
+        ],
+        "scope_title_matches": [],
+        "scope_abstract_matches": [],
+        "freshness": 0.0,
+        "known_date": null,
+        "date_basis": null,
+        "read_penalty": 0,
+        "sort_components": [
+          1,
+          1,
+          0,
+          0.3333333333333333,
+          0.0
+        ]
+      },
+      "ranks": {
+        "question_only": 17,
+        "profile_only": 15,
+        "combined_research": 17,
+        "chronological_diagnostic": 16
+      },
+      "rank_changes_from_question_only": {
+        "question_only": 0,
+        "profile_only": -2,
+        "combined_research": 0,
+        "chronological_diagnostic": -1
+      },
+      "chronological_known_date_rank": null,
+      "owner_usefulness": null,
+      "owner_reason": null,
+      "reference_relevance": null
+    },
+    {
+      "work_id": "arxiv:2610.41291",
+      "version_id": "arxiv:2610.41291:v1:metadata-540221e5b83d286b",
+      "title": "In-Model Context Compression with Agentic Soft Tokens for Long-Horizon LLM Agents",
+      "source_id": "arxiv-cs-cl",
+      "published_at": null,
+      "updated_at": null,
+      "announced_at": "2026-11-02T05:00:00Z",
+      "legacy_relevance": {
+        "score": 8.0,
+        "keyword_score": 8,
+        "recency": 0.0,
+        "matched_terms": [
+          "agent",
+          "agentic"
+        ],
+        "matched_topics": [
+          "ml:agents-and-tool-use"
+        ],
+        "question_terms": [],
+        "policy_version": "workspace-lexical-v3",
+        "baseline": "relevance"
+      },
+      "mode_relevance": {
+        "policy_version": "workspace-modes-lexical-v1",
+        "product_mode": "research",
+        "eligible": false,
+        "question_score": 0,
+        "scope_score": 0,
+        "profile_keyword_score": 8,
+        "bounded_profile_score": 0.3333333333333333,
+        "question_tokens": [
+          "adaptation",
+          "anchors",
+          "behavioral",
+          "certified",
+          "continual",
+          "does",
+          "held-out",
+          "investigate",
+          "retention"
+        ],
+        "scope_tokens": [],
+        "question_title_matches": [],
+        "question_abstract_matches": [],
+        "scope_title_matches": [],
+        "scope_abstract_matches": [],
+        "freshness": 0.0,
+        "known_date": null,
+        "date_basis": null,
+        "read_penalty": 0,
+        "sort_components": [
+          0,
+          0,
+          0,
+          0.3333333333333333,
+          0.0
+        ]
+      },
+      "ranks": {
+        "question_only": null,
+        "profile_only": null,
+        "combined_research": null,
+        "chronological_diagnostic": null
+      },
+      "rank_changes_from_question_only": {
+        "question_only": null,
+        "profile_only": null,
+        "combined_research": null,
+        "chronological_diagnostic": null
+      },
+      "chronological_known_date_rank": null,
+      "owner_usefulness": null,
+      "owner_reason": null,
+      "reference_relevance": null
+    },
+    {
+      "work_id": "arxiv:2610.41552",
+      "version_id": "arxiv:2610.41552:v1:metadata-1c364e8ae805a931",
+      "title": "Enhancing Knowledge Entity Relation Extraction in Abstracts and Full-text Content of Academic Articles Using Large Language Models",
+      "source_id": "arxiv-cs-cl",
+      "published_at": null,
+      "updated_at": null,
+      "announced_at": "2026-11-02T05:00:00Z",
+      "legacy_relevance": {
+        "score": 8.0,
+        "keyword_score": 8,
+        "recency": 0.0,
+        "matched_terms": [
+          "evaluation",
+          "knowledge"
+        ],
+        "matched_topics": [
+          "ml:evaluation-and-responsible-ml",
+          "ml:retrieval-and-memory"
+        ],
+        "question_terms": [],
+        "policy_version": "workspace-lexical-v3",
+        "baseline": "relevance"
+      },
+      "mode_relevance": {
+        "policy_version": "workspace-modes-lexical-v1",
+        "product_mode": "research",
+        "eligible": false,
+        "question_score": 0,
+        "scope_score": 0,
+        "profile_keyword_score": 8,
+        "bounded_profile_score": 0.3333333333333333,
+        "question_tokens": [
+          "adaptation",
+          "anchors",
+          "behavioral",
+          "certified",
+          "continual",
+          "does",
+          "held-out",
+          "investigate",
+          "retention"
+        ],
+        "scope_tokens": [],
+        "question_title_matches": [],
+        "question_abstract_matches": [],
+        "scope_title_matches": [],
+        "scope_abstract_matches": [],
+        "freshness": 0.0,
+        "known_date": null,
+        "date_basis": null,
+        "read_penalty": 0,
+        "sort_components": [
+          0,
+          0,
+          0,
+          0.3333333333333333,
+          0.0
+        ]
+      },
+      "ranks": {
+        "question_only": null,
+        "profile_only": null,
+        "combined_research": null,
+        "chronological_diagnostic": null
+      },
+      "rank_changes_from_question_only": {
+        "question_only": null,
+        "profile_only": null,
+        "combined_research": null,
+        "chronological_diagnostic": null
+      },
+      "chronological_known_date_rank": null,
+      "owner_usefulness": null,
+      "owner_reason": null,
+      "reference_relevance": null
+    },
+    {
+      "work_id": "arxiv:2210.03629",
+      "version_id": "arxiv:2210.03629:v3",
+      "title": "ReAct: Synergizing Reasoning and Acting in Language Models",
+      "source_id": "scientific-sample",
+      "published_at": null,
+      "updated_at": null,
+      "announced_at": null,
+      "legacy_relevance": {
+        "score": 4.0,
+        "keyword_score": 4,
+        "recency": 0.0,
+        "matched_terms": [
+          "reasoning"
+        ],
+        "matched_topics": [
+          "ml:reasoning-and-inference-time-compute"
+        ],
+        "question_terms": [],
+        "policy_version": "workspace-lexical-v3",
+        "baseline": "relevance"
+      },
+      "mode_relevance": {
+        "policy_version": "workspace-modes-lexical-v1",
+        "product_mode": "research",
+        "eligible": false,
+        "question_score": 0,
+        "scope_score": 0,
+        "profile_keyword_score": 4,
+        "bounded_profile_score": 0.16666666666666666,
+        "question_tokens": [
+          "adaptation",
+          "anchors",
+          "behavioral",
+          "certified",
+          "continual",
+          "does",
+          "held-out",
+          "investigate",
+          "retention"
+        ],
+        "scope_tokens": [],
+        "question_title_matches": [],
+        "question_abstract_matches": [],
+        "scope_title_matches": [],
+        "scope_abstract_matches": [],
+        "freshness": 0.0,
+        "known_date": null,
+        "date_basis": null,
+        "read_penalty": 0,
+        "sort_components": [
+          0,
+          0,
+          0,
+          0.16666666666666666,
+          0.0
+        ]
+      },
+      "ranks": {
+        "question_only": null,
+        "profile_only": null,
+        "combined_research": null,
+        "chronological_diagnostic": null
+      },
+      "rank_changes_from_question_only": {
+        "question_only": null,
+        "profile_only": null,
+        "combined_research": null,
+        "chronological_diagnostic": null
+      },
+      "chronological_known_date_rank": null,
+      "owner_usefulness": null,
+      "owner_reason": null,
+      "reference_relevance": null
+    },
+    {
+      "work_id": "arxiv:2310.11511",
+      "version_id": "arxiv:2310.11511:v1",
+      "title": "Self-RAG: Learning to Retrieve, Generate, and Critique through Self-Reflection",
+      "source_id": "scientific-sample",
+      "published_at": null,
+      "updated_at": null,
+      "announced_at": null,
+      "legacy_relevance": {
+        "score": 4.0,
+        "keyword_score": 4,
+        "recency": 0.0,
+        "matched_terms": [
+          "rag"
+        ],
+        "matched_topics": [
+          "ml:retrieval-and-memory"
+        ],
+        "question_terms": [],
+        "policy_version": "workspace-lexical-v3",
+        "baseline": "relevance"
+      },
+      "mode_relevance": {
+        "policy_version": "workspace-modes-lexical-v1",
+        "product_mode": "research",
+        "eligible": false,
+        "question_score": 0,
+        "scope_score": 0,
+        "profile_keyword_score": 4,
+        "bounded_profile_score": 0.16666666666666666,
+        "question_tokens": [
+          "adaptation",
+          "anchors",
+          "behavioral",
+          "certified",
+          "continual",
+          "does",
+          "held-out",
+          "investigate",
+          "retention"
+        ],
+        "scope_tokens": [],
+        "question_title_matches": [],
+        "question_abstract_matches": [],
+        "scope_title_matches": [],
+        "scope_abstract_matches": [],
+        "freshness": 0.0,
+        "known_date": null,
+        "date_basis": null,
+        "read_penalty": 0,
+        "sort_components": [
+          0,
+          0,
+          0,
+          0.16666666666666666,
+          0.0
+        ]
+      },
+      "ranks": {
+        "question_only": null,
+        "profile_only": null,
+        "combined_research": null,
+        "chronological_diagnostic": null
+      },
+      "rank_changes_from_question_only": {
+        "question_only": null,
+        "profile_only": null,
+        "combined_research": null,
+        "chronological_diagnostic": null
+      },
+      "chronological_known_date_rank": null,
+      "owner_usefulness": null,
+      "owner_reason": null,
+      "reference_relevance": null
+    },
+    {
+      "work_id": "arxiv:2610.40728",
+      "version_id": "arxiv:2610.40728:v1:metadata-cb0c65fffb216247",
+      "title": "Bayesian Distribution System State Estimation with Flow Matching",
+      "source_id": "arxiv-cs-lg",
+      "published_at": null,
+      "updated_at": null,
+      "announced_at": "2026-11-02T05:00:00Z",
+      "legacy_relevance": {
+        "score": 4.0,
+        "keyword_score": 4,
+        "recency": 0.0,
+        "matched_terms": [
+          "uncertainty"
+        ],
+        "matched_topics": [
+          "ml:evaluation-and-responsible-ml"
+        ],
+        "question_terms": [],
+        "policy_version": "workspace-lexical-v3",
+        "baseline": "relevance"
+      },
+      "mode_relevance": {
+        "policy_version": "workspace-modes-lexical-v1",
+        "product_mode": "research",
+        "eligible": true,
+        "question_score": 1,
+        "scope_score": 0,
+        "profile_keyword_score": 4,
+        "bounded_profile_score": 0.16666666666666666,
+        "question_tokens": [
+          "adaptation",
+          "anchors",
+          "behavioral",
+          "certified",
+          "continual",
+          "does",
+          "held-out",
+          "investigate",
+          "retention"
+        ],
+        "scope_tokens": [],
+        "question_title_matches": [],
+        "question_abstract_matches": [
+          "does"
+        ],
+        "scope_title_matches": [],
+        "scope_abstract_matches": [],
+        "freshness": 0.0,
+        "known_date": null,
+        "date_basis": null,
+        "read_penalty": 0,
+        "sort_components": [
+          1,
+          1,
+          0,
+          0.16666666666666666,
+          0.0
+        ]
+      },
+      "ranks": {
+        "question_only": 7,
+        "profile_only": 16,
+        "combined_research": 18,
+        "chronological_diagnostic": 3
+      },
+      "rank_changes_from_question_only": {
+        "question_only": 0,
+        "profile_only": 9,
+        "combined_research": 11,
+        "chronological_diagnostic": -4
+      },
+      "chronological_known_date_rank": null,
+      "owner_usefulness": null,
+      "owner_reason": null,
+      "reference_relevance": null
+    },
+    {
+      "work_id": "arxiv:2610.40917",
+      "version_id": "arxiv:2610.40917:v1:metadata-ed88c851cf4b1810",
+      "title": "Towards Portable Specification of the Agent Harness",
+      "source_id": "arxiv-cs-ai",
+      "published_at": null,
+      "updated_at": null,
+      "announced_at": "2026-11-02T05:00:00Z",
+      "legacy_relevance": {
+        "score": 4.0,
+        "keyword_score": 4,
+        "recency": 0.0,
+        "matched_terms": [
+          "agent"
+        ],
+        "matched_topics": [
+          "ml:agents-and-tool-use"
+        ],
+        "question_terms": [],
+        "policy_version": "workspace-lexical-v3",
+        "baseline": "relevance"
+      },
+      "mode_relevance": {
+        "policy_version": "workspace-modes-lexical-v1",
+        "product_mode": "research",
+        "eligible": false,
+        "question_score": 0,
+        "scope_score": 0,
+        "profile_keyword_score": 4,
+        "bounded_profile_score": 0.16666666666666666,
+        "question_tokens": [
+          "adaptation",
+          "anchors",
+          "behavioral",
+          "certified",
+          "continual",
+          "does",
+          "held-out",
+          "investigate",
+          "retention"
+        ],
+        "scope_tokens": [],
+        "question_title_matches": [],
+        "question_abstract_matches": [],
+        "scope_title_matches": [],
+        "scope_abstract_matches": [],
+        "freshness": 0.0,
+        "known_date": null,
+        "date_basis": null,
+        "read_penalty": 0,
+        "sort_components": [
+          0,
+          0,
+          0,
+          0.16666666666666666,
+          0.0
+        ]
+      },
+      "ranks": {
+        "question_only": null,
+        "profile_only": null,
+        "combined_research": null,
+        "chronological_diagnostic": null
+      },
+      "rank_changes_from_question_only": {
+        "question_only": null,
+        "profile_only": null,
+        "combined_research": null,
+        "chronological_diagnostic": null
+      },
+      "chronological_known_date_rank": null,
+      "owner_usefulness": null,
+      "owner_reason": null,
+      "reference_relevance": null
+    },
+    {
+      "work_id": "url:b49ec3bd8394c6fb4c19e7973ae4b411",
+      "version_id": "url:b49ec3bd8394c6fb4c19e7973ae4b411:observed-42d6cea8785311a4",
+      "title": "The sleep framework: A new way for LLMs to retain knowledge in continual learning",
+      "source_id": "google-research",
+      "published_at": "2026-10-27T17:35:00Z",
+      "updated_at": null,
+      "announced_at": null,
+      "legacy_relevance": {
+        "score": 4.0,
+        "keyword_score": 4,
+        "recency": 0.0,
+        "matched_terms": [
+          "knowledge"
+        ],
+        "matched_topics": [
+          "ml:retrieval-and-memory"
+        ],
+        "question_terms": [],
+        "policy_version": "workspace-lexical-v3",
+        "baseline": "relevance"
+      },
+      "mode_relevance": {
+        "policy_version": "workspace-modes-lexical-v1",
+        "product_mode": "research",
+        "eligible": true,
+        "question_score": 3,
+        "scope_score": 0,
+        "profile_keyword_score": 4,
+        "bounded_profile_score": 0.16666666666666666,
+        "question_tokens": [
+          "adaptation",
+          "anchors",
+          "behavioral",
+          "certified",
+          "continual",
+          "does",
+          "held-out",
+          "investigate",
+          "retention"
+        ],
+        "scope_tokens": [],
+        "question_title_matches": [
+          "continual"
+        ],
+        "question_abstract_matches": [],
+        "scope_title_matches": [],
+        "scope_abstract_matches": [],
+        "freshness": 0.0,
+        "known_date": "2026-10-27T17:35:00+00:00",
+        "date_basis": "published_at",
+        "read_penalty": 0,
+        "sort_components": [
+          1,
+          3,
+          0,
+          0.16666666666666666,
+          0.0
+        ]
+      },
+      "ranks": {
+        "question_only": 4,
+        "profile_only": 17,
+        "combined_research": 4,
+        "chronological_diagnostic": 1
+      },
+      "rank_changes_from_question_only": {
+        "question_only": 0,
+        "profile_only": 13,
+        "combined_research": 0,
+        "chronological_diagnostic": -3
+      },
+      "chronological_known_date_rank": 1,
+      "owner_usefulness": null,
+      "owner_reason": null,
+      "reference_relevance": null
+    },
+    {
+      "work_id": "arxiv:2610.40740",
+      "version_id": "arxiv:2610.40740:v1:metadata-b471d2e5f0142ad7",
+      "title": "Certified Behavioral Retention for Continual Adaptation with Held-Out Anchors",
+      "source_id": "arxiv-cs-lg",
+      "published_at": null,
+      "updated_at": null,
+      "announced_at": "2026-11-02T05:00:00Z",
+      "legacy_relevance": {
+        "score": 0.0,
+        "keyword_score": 0,
+        "recency": 0.0,
+        "matched_terms": [],
+        "matched_topics": [],
+        "question_terms": [],
+        "policy_version": "workspace-lexical-v3",
+        "baseline": "relevance"
+      },
+      "mode_relevance": {
+        "policy_version": "workspace-modes-lexical-v1",
+        "product_mode": "research",
+        "eligible": true,
+        "question_score": 26,
+        "scope_score": 0,
+        "profile_keyword_score": 0,
+        "bounded_profile_score": 0.0,
+        "question_tokens": [
+          "adaptation",
+          "anchors",
+          "behavioral",
+          "certified",
+          "continual",
+          "does",
+          "held-out",
+          "investigate",
+          "retention"
+        ],
+        "scope_tokens": [],
+        "question_title_matches": [
+          "adaptation",
+          "anchors",
+          "behavioral",
+          "certified",
+          "continual",
+          "held-out",
+          "retention"
+        ],
+        "question_abstract_matches": [
+          "adaptation",
+          "certified",
+          "continual",
+          "does",
+          "retention"
+        ],
+        "scope_title_matches": [],
+        "scope_abstract_matches": [],
+        "freshness": 0.0,
+        "known_date": null,
+        "date_basis": null,
+        "read_penalty": 0,
+        "sort_components": [
+          1,
+          26,
+          0,
+          0.0,
+          0.0
+        ]
+      },
+      "ranks": {
+        "question_only": 1,
+        "profile_only": 18,
+        "combined_research": 1,
+        "chronological_diagnostic": 4
+      },
+      "rank_changes_from_question_only": {
+        "question_only": 0,
+        "profile_only": 17,
+        "combined_research": 0,
+        "chronological_diagnostic": 3
+      },
+      "chronological_known_date_rank": null,
+      "owner_usefulness": null,
+      "owner_reason": null,
+      "reference_relevance": null
+    },
+    {
+      "work_id": "url:1d6c5c59e46e52b936cbc7b983785a69",
+      "version_id": "url:1d6c5c59e46e52b936cbc7b983785a69:observed-90d0651966e90e2e",
+      "title": "Can we trust LLMs to judge whether a research idea is novel?",
+      "source_id": "hugging-face-blog",
+      "published_at": "2026-10-27T16:12:42Z",
+      "updated_at": null,
+      "announced_at": null,
+      "legacy_relevance": {
+        "score": 0.0,
+        "keyword_score": 0,
+        "recency": 0.0,
+        "matched_terms": [],
+        "matched_topics": [],
+        "question_terms": [],
+        "policy_version": "workspace-lexical-v3",
+        "baseline": "relevance"
+      },
+      "mode_relevance": {
+        "policy_version": "workspace-modes-lexical-v1",
+        "product_mode": "research",
+        "eligible": false,
+        "question_score": 0,
+        "scope_score": 0,
+        "profile_keyword_score": 0,
+        "bounded_profile_score": 0.0,
+        "question_tokens": [
+          "adaptation",
+          "anchors",
+          "behavioral",
+          "certified",
+          "continual",
+          "does",
+          "held-out",
+          "investigate",
+          "retention"
+        ],
+        "scope_tokens": [],
+        "question_title_matches": [],
+        "question_abstract_matches": [],
+        "scope_title_matches": [],
+        "scope_abstract_matches": [],
+        "freshness": 0.0,
+        "known_date": "2026-10-27T16:12:42+00:00",
+        "date_basis": "published_at",
+        "read_penalty": 0,
+        "sort_components": [
+          0,
+          0,
+          0,
+          0.0,
+          0.0
+        ]
+      },
+      "ranks": {
+        "question_only": null,
+        "profile_only": null,
+        "combined_research": null,
+        "chronological_diagnostic": null
+      },
+      "rank_changes_from_question_only": {
+        "question_only": null,
+        "profile_only": null,
+        "combined_research": null,
+        "chronological_diagnostic": null
+      },
+      "chronological_known_date_rank": null,
+      "owner_usefulness": null,
+      "owner_reason": null,
+      "reference_relevance": null
+    }
+  ],
+  "limitations": [
+    "One development project context is not a held-out question evaluation.",
+    "Question retrieval and daily Explore usefulness are different targets.",
+    "Chronological ordering is only a limited diagnostic when publication/update dates are missing.",
+    "A lexical match, exact identity or ranking gain is not whole-claim factual support."
+  ],
+  "reproduction": {
+    "inputs": {
+      "items": {
+        "path": "/private/tmp/arxiv-agent-eng-workspace-mode-build/outputs/modes-d0/public-pool.json",
+        "sha256": "9dfaf7d924e8a7dd0e5084f15271879b233b7849270b248a35571ed73fb39c4b"
+      },
+      "profile": {
+        "path": "/private/tmp/arxiv-agent-eng-workspace-mode-build/outputs/modes-d0/owner-profile.json",
+        "sha256": "15fc20316f83d96f7690ec54e213305aac386a45e801bfa844403a2318d10696"
+      },
+      "project": {
+        "path": "/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/ranking/development-project.json",
+        "sha256": "293a834ae20fc27354346195b74b1d703870db2c4c6f193d3bc38c87de25d6d4"
+      }
+    },
+    "source_sha256": {
+      "/private/tmp/arxiv-agent-eng-workspace-mode-build/tools/workspace_mode_ranking_report.py": "0a54725f7ad7c0db88c9f3b8fb716d3f6b1b47ff22ba2882634d67f76604b5b7",
+      "src/workspace/mode_ranking.py": "ba409f6aeb2b42c01e945f936b5b5f6edc1a71beb4be3b3676c1a382eef23d31",
+      "planning/14-explore-and-research-modes/07-ranking-policy-v1.md": "7f9821c4777c8c0390def7abe3b366046247bc972681336e915bc7b6be976474"
+    },
+    "command": "python -m tools.workspace_mode_ranking_report --items ITEMS --profile PROFILE --project PROJECT --now 2026-11-05T12:00:00Z --output NEW_DIRECTORY (repeat the recorded filters/minutes)"
+  }
+}

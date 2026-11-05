@@ -1340,4 +1340,7 @@ def create_app(
     from src.workspace.routes import router as workspace_router
 
     app.include_router(workspace_router)
+    from src.workspace.context_routes import router as workspace_context_router
+
+    app.include_router(workspace_context_router)
     return app

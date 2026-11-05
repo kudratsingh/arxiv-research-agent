@@ -8,12 +8,20 @@ type Serialized<T> = T extends (infer Item)[]
     ? { [Key in keyof T]-?: Serialized<T[Key]> }
     : T;
 type Schemas = components["schemas"];
-export type WorkspaceState = Serialized<Schemas["WorkspaceState"]>;
-export type WorkItem = Serialized<Schemas["WorkItem"]>;
+export type WorkspaceState = Omit<Serialized<Schemas["WorkspaceState"]>, "works"> & {
+  works: WorkItem[];
+  context?: ResolvedContext;
+  active_edition?: ContextEdition | null;
+};
+export type WorkItem = Omit<Serialized<Schemas["WorkItem"]>, "entries" | "reading"> & {
+  entries: EntryRevision[];
+  reading: ReadingRevision;
+  mode_relevance?: Record<string, unknown>;
+};
 export type ProfileData = Serialized<Schemas["ProfileData"]>;
 export type ReadingData = Serialized<Schemas["ReadingData"]>;
-export type ReadingRevision = Serialized<Schemas["ReadingRevision"]>;
-export type EntryRevision = Serialized<Schemas["EntryRevision"]>;
+export type ReadingRevision = Serialized<Schemas["ReadingRevision"]> & { context?: ResumeContext | null };
+export type EntryRevision = Serialized<Schemas["EntryRevision"]> & { context?: ResumeContext | null };
 export type ImportPreview = Serialized<Schemas["ImportPreview"]>;
 export type SourceStatus = Serialized<Schemas["SourceStatus"]>;
 export type ScheduleData = Serialized<Schemas["ScheduleData"]>;
@@ -32,6 +40,36 @@ export type FakeJob = Serialized<Schemas["FakeJob"]>;
 export type FakeDraft = Serialized<Schemas["FakeDraft"]>;
 export type FakeResult = Serialized<Schemas["FakeResult"]>;
 export type FakeUsage = Serialized<Schemas["FakeUsage"]>;
+export type ProductMode = Schemas["ResumeContext"]["mode"] & string;
+export type ResumeContext = Serialized<Schemas["ResumeContext"]>;
+export type ResolvedContext = Serialized<Schemas["ResolvedContext"]>;
+export type ContextPreferences = Serialized<Schemas["ContextPreferences"]>;
+export type ContextIndex = Serialized<Schemas["ContextIndex"]>;
+export type ResearchProject = Serialized<Schemas["ResearchProject"]>;
+export type ProjectDetail = Serialized<Schemas["ProjectDetail"]>;
+export type ProjectSource = Serialized<Schemas["ProjectSource"]>;
+export type LearningThread = Serialized<Schemas["LearningThread"]>;
+export type ContextEdition = Serialized<Schemas["ContextEdition"]>;
+export type ContextWorkspaceState = Serialized<Schemas["ContextWorkspaceState"]>;
+export type ContextWorkPage = Serialized<Schemas["ContextWorkPage"]>;
+export type SourceReference = Schemas["SourceReference"];
+export type EntryReference = Schemas["EntryReference"];
+export type ArtifactData = Schemas["ArtifactData"];
+export type ProjectArtifact = Serialized<Schemas["ProjectArtifact"]>;
+export type BoundSource = Serialized<Schemas["BoundSource"]>;
+export type ProjectWrite = Schemas["ProjectWrite"];
+export type ProjectSourceWrite = Schemas["ProjectSourceWrite"];
+export type ProjectEntryWrite = Schemas["ProjectEntryWrite"];
+export type ProjectArtifactWrite = Schemas["ProjectArtifactWrite"];
+export type LearningThreadWrite = Schemas["LearningThreadWrite"];
+export type ContextPreferencesWrite = Schemas["ContextPreferencesWrite"];
+export type ContextEntryWrite = Schemas["ContextEntryWrite"];
+export type ContextReadingWrite = Schemas["ContextReadingWrite"];
+
+/** Same owned proxy boundary; this helper cannot start generation. */
+export function contextRequest<T>(path = "", body?: unknown, signal?: AbortSignal): Promise<T> {
+  return workspaceRequest<T>(`context${path}`, body, signal);
+}
 
 export class WorkspaceError extends Error {
   constructor(
@@ -109,18 +147,24 @@ export function readingMaterial(item: WorkItem, versionId?: string) {
   return { version, pdf, scope: version.available_scopes?.[0] ?? version.access_state };
 }
 
-/** A return link can only navigate within the four source-list routes. */
+/** Constrained owned workspace context; never an external redirect. */
 export function normalizeReaderReturnTo(value: string | null): string {
   if (!value || !value.startsWith("/workspace/") || /[\\\u0000-\u001f]/.test(value))
     return "/workspace/today";
   try {
-    const target = value.split("#", 1)[0] ?? "";
+    const [target = "", fragment = ""] = value.split("#", 2);
     const separator = target.indexOf("?");
     const pathname = separator < 0 ? target : target.slice(0, separator);
     const search = new URLSearchParams(separator < 0 ? "" : target.slice(separator + 1));
-    if (!["/workspace/today", "/workspace/library", "/workspace/radar", "/workspace/review"].includes(pathname))
+    if (!["/workspace/today", "/workspace/library", "/workspace/radar", "/workspace/review", "/workspace/projects"].includes(pathname) && !/^\/workspace\/threads\/thread-[a-f0-9]{32}$/.test(pathname))
       return "/workspace/today";
     const params = new URLSearchParams();
+    const mode = search.get("mode");
+    if (mode === "learn" || mode === "research") params.set("mode", mode);
+    const project = search.get("project");
+    if (project && /^project-[a-f0-9]{32}$/.test(project)) params.set("project", project);
+    const thread = search.get("thread");
+    if (thread && /^thread-[a-f0-9]{32}$/.test(thread)) params.set("thread", thread);
     if (pathname === "/workspace/today") {
       const focus = search.get("focus");
       if (focus && focus.length <= 500 && !/[\\\u0000-\u001f\u007f]/.test(focus)) params.set("focus", focus);
@@ -130,6 +174,8 @@ export function normalizeReaderReturnTo(value: string | null): string {
     } else if (pathname === "/workspace/library") {
       const view = search.get("view");
       if (view && ["saved", "notes", "read", "archived", "all"].includes(view)) params.set("view", view);
+      const focus = search.get("focus");
+      if (focus && focus.length <= 500 && !/[\\\u0000-\u001f\u007f]/.test(focus)) params.set("focus", focus);
     } else if (pathname === "/workspace/radar") {
       for (const key of ["q", "source_id", "access_state", "status", "days", "cursor", "as_of", "focus"]) {
         const item = search.get(key);
@@ -137,7 +183,14 @@ export function normalizeReaderReturnTo(value: string | null): string {
         if (item && item.length <= limit && !/[\\\u0000-\u001f\u007f]/.test(item)) params.set(key, item);
       }
     }
-    return `${pathname}${params.size ? `?${params}` : ""}`;
+    if (pathname === "/workspace/projects" || pathname.startsWith("/workspace/threads/")) {
+      for (const key of ["focus", "version", "entry"]) {
+        const item = search.get(key);
+        if (item && item.length <= 500 && !/[\\\u0000-\u001f\u007f]/.test(item)) params.set(key, item);
+      }
+    }
+    const anchor = fragment && fragment.length <= 500 && !/[\\\u0000-\u001f\u007f]/.test(fragment) ? `#${fragment}` : "";
+    return `${pathname}${params.size ? `?${params}` : ""}${anchor}`;
   } catch {
     return "/workspace/today";
   }

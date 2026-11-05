@@ -1,0 +1,5 @@
+{
+  "src/workspace/mode_ranking.py": "07a911a3c99c5cf3f1de694279187a813bde98c7c316e316b16547d536cbe3e4",
+  "tests/test_workspace_mode_ranking.py": "a13a247ebb7512029cac7bd5d0b4a7afd073d7eb48ce529252ebd0c09e64515d",
+  "tools/workspace_mode_ranking_report.py": "0a54725f7ad7c0db88c9f3b8fb716d3f6b1b47ff22ba2882634d67f76604b5b7"
+}

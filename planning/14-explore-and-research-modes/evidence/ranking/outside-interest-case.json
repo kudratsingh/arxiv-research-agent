@@ -1,0 +1,17 @@
+{
+  "status": "machine_proposed_development_example_not_owner_project",
+  "selection": "First ascending actual paper work_id with P=0; exact public-title question",
+  "work_id": "arxiv:2610.40740",
+  "version_id": "arxiv:2610.40740:v1:metadata-b471d2e5f0142ad7",
+  "title": "Certified Behavioral Retention for Continual Adaptation with Held-Out Anchors",
+  "url": "https://arxiv.org/abs/2610.40740v1",
+  "proposed_question": "What does \"Certified Behavioral Retention for Continual Adaptation with Held-Out Anchors\" investigate?",
+  "profile_keyword_score": 0,
+  "question_score": 26,
+  "scope_score": 0,
+  "research_rank": 1,
+  "owner_usefulness": null,
+  "reference_relevance": null,
+  "database_records_created": 0,
+  "provider_contacts": 0
+}

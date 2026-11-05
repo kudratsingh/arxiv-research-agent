@@ -1,0 +1,13 @@
+{
+  "outcome_fields_identical_to_v1": [
+    "counts",
+    "denominators",
+    "rankings",
+    "learn_ranking",
+    "editions",
+    "quality_metrics"
+  ],
+  "only_item_component_change": "read_penalty_applied flag; original source/report retained",
+  "private_question_occurrences": 0,
+  "owner_labels_filled": false
+}

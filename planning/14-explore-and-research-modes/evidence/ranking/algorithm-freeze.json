@@ -1,0 +1,25 @@
+{
+  "revision": "workspace-mode-ranking-precomparison-v1",
+  "recorded_at_utc": "2026-11-05T12:28:33.759869+00:00",
+  "before_public_pool_comparison": true,
+  "clock": "2026-11-05T12:00:00+00:00",
+  "policy_version": "workspace-modes-lexical-v1",
+  "source_sha256": {
+    "src/workspace/mode_ranking.py": "ba409f6aeb2b42c01e945f936b5b5f6edc1a71beb4be3b3676c1a382eef23d31",
+    "tests/test_workspace_mode_ranking.py": "a1ff40964290ab9ca5b6c48dfe95a4c20bbae8108b35457cb77ca5059ece5d40",
+    "tools/workspace_mode_ranking_report.py": "0a54725f7ad7c0db88c9f3b8fb716d3f6b1b47ff22ba2882634d67f76604b5b7",
+    "planning/14-explore-and-research-modes/07-ranking-policy-v1.md": "7f9821c4777c8c0390def7abe3b366046247bc972681336e915bc7b6be976474",
+    "planning/14-explore-and-research-modes/evidence/ranking/PROTOCOL.md": "d43be915f623d3585f6fc365f74a57db56f251573d4be5bb7aa12c97d7dbe603"
+  },
+  "input_sha256": {
+    "outputs/modes-d0/public-pool.json": "9dfaf7d924e8a7dd0e5084f15271879b233b7849270b248a35571ed73fb39c4b",
+    "outputs/modes-d0/owner-profile.json": "15fc20316f83d96f7690ec54e213305aac386a45e801bfa844403a2318d10696"
+  },
+  "private_profile_contents_included": false,
+  "selection": "First ascending actual paper work_id with P=0; proposed exact-title development question; no owner question is invented.",
+  "shared_research_arms": "Same hard-filtered Q/S-eligible pool",
+  "labels": "All owner/reference labels blank; quality unscored",
+  "provider_contacts": 0,
+  "source_requests": 0,
+  "database_operations": 0
+}

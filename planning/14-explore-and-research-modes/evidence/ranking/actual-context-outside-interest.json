@@ -1,0 +1,22 @@
+{
+  "status": "actual_copied_context_mechanics_not_owner_usefulness",
+  "policy_version": "workspace-modes-lexical-v1",
+  "profile_revision": 1,
+  "profile_file_sha256": "15fc20316f83d96f7690ec54e213305aac386a45e801bfa844403a2318d10696",
+  "question_text_included": false,
+  "scope": "",
+  "outside_interest_examples": [
+    {
+      "work_id": "arxiv:2610.40740",
+      "version_id": "arxiv:2610.40740:v1:metadata-b471d2e5f0142ad7",
+      "question_score": 3,
+      "profile_keyword_score": 0,
+      "rank": 11
+    }
+  ],
+  "durable_projects_created": 0,
+  "database_operations": 0,
+  "provider_contacts": 0,
+  "source_requests": 0,
+  "owner_labels_supplied": false
+}

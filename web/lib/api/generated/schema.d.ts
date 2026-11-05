@@ -948,6 +948,244 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/workspace/context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Index */
+        get: operations["get_index_workspace_context_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspace/context/preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Save Preferences */
+        post: operations["save_preferences_workspace_context_preferences_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspace/context/projects/{project_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Project */
+        get: operations["get_project_workspace_context_projects__project_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspace/context/projects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Save Project */
+        post: operations["save_project_workspace_context_projects_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspace/context/projects/{project_id}/sources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Save Source */
+        post: operations["save_source_workspace_context_projects__project_id__sources_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspace/context/projects/{project_id}/unlink": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Unlink Source */
+        post: operations["unlink_source_workspace_context_projects__project_id__unlink_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspace/context/projects/{project_id}/entries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Link Entry */
+        post: operations["link_entry_workspace_context_projects__project_id__entries_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspace/context/projects/{project_id}/artifacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Save Artifact */
+        post: operations["save_artifact_workspace_context_projects__project_id__artifacts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspace/context/threads/{thread_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Thread */
+        get: operations["get_thread_workspace_context_threads__thread_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspace/context/threads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Save Thread */
+        post: operations["save_thread_workspace_context_threads_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspace/context/entries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Save Entry */
+        post: operations["save_entry_workspace_context_entries_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspace/context/reading": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Save Reading */
+        post: operations["save_reading_workspace_context_reading_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspace/context/state": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get State */
+        get: operations["get_state_workspace_context_state_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspace/context/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Items */
+        get: operations["get_items_workspace_context_items_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -981,11 +1219,373 @@ export interface components {
             /** Updated At */
             updated_at: string;
         };
+        /** ArtifactData */
+        ArtifactData: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "observation" | "assumption" | "hypothesis" | "comparison" | "proposed-experiment";
+            /**
+             * Body
+             * @default
+             */
+            body: string;
+            entry?: components["schemas"]["EntryReference"] | null;
+            /** Evidence Link Ids */
+            evidence_link_ids?: string[];
+        };
+        /** BoundSource */
+        BoundSource: {
+            /** Work Id */
+            work_id: string;
+            /** Version Id */
+            version_id: string;
+            /**
+             * Anchor
+             * @default abstract:0
+             */
+            anchor: string;
+            /** Version Hash */
+            version_hash?: string | null;
+            /** Material Id */
+            material_id?: string | null;
+            /** Material Hash */
+            material_hash?: string | null;
+            /** Parser Revision */
+            parser_revision?: string | null;
+            /** Source Scope */
+            source_scope?: ("metadata" | "abstract" | "excerpt" | "full_text") | null;
+            /** Title */
+            title: string;
+            /** Source Url */
+            source_url: string;
+            /** Page */
+            page?: number | null;
+            /** Start */
+            start?: number | null;
+            /** End */
+            end?: number | null;
+            /**
+             * Quote
+             * @default
+             */
+            quote: string;
+            /**
+             * Offset Basis
+             * @default page-local Unicode code points; end exclusive
+             */
+            offset_basis: string;
+            /**
+             * Available
+             * @default true
+             */
+            available: boolean;
+            /** Unavailable Reason */
+            unavailable_reason?: string | null;
+        };
         /**
          * ClaimKind
          * @enum {string}
          */
         ClaimKind: "factual" | "inference";
+        /** ContextEdition */
+        ContextEdition: {
+            /** Id */
+            id: string;
+            /** Created At */
+            created_at: string;
+            /** Profile Revision */
+            profile_revision: number;
+            /** Minutes */
+            minutes: number;
+            /** Work Ids */
+            work_ids: string[];
+            /** Work Versions */
+            work_versions?: {
+                [key: string]: string;
+            };
+            /** Coverage */
+            coverage: components["schemas"]["SourceStatus"][];
+            /** Status */
+            status: string;
+            /** Allocation */
+            allocation?: {
+                [key: string]: unknown;
+            };
+            context: components["schemas"]["ResolvedContext"];
+            /** Context Preferences Revision */
+            context_preferences_revision: number;
+            /** Candidate Digest */
+            candidate_digest: string;
+        };
+        /** ContextEntryRevision */
+        ContextEntryRevision: {
+            /** Work Id */
+            work_id: string;
+            /** Version Id */
+            version_id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "question" | "note" | "next-action";
+            /** Body */
+            body: string;
+            /**
+             * Anchor
+             * @default abstract:0
+             */
+            anchor: string;
+            /** Id */
+            id: string;
+            /** Revision */
+            revision: number;
+            /**
+             * Updated At
+             * @default
+             */
+            updated_at: string;
+            /**
+             * Activity Sequence
+             * @default 0
+             */
+            activity_sequence: number;
+            context?: components["schemas"]["ResumeContext"] | null;
+        };
+        /** ContextEntryWrite */
+        ContextEntryWrite: {
+            /** Id */
+            id: string;
+            /** Revision */
+            revision: number;
+            /** Request Id */
+            request_id: string;
+            data: components["schemas"]["EntryData"];
+            context: components["schemas"]["ResumeContext"];
+        };
+        /** ContextIndex */
+        ContextIndex: {
+            /** Principal Key Id */
+            principal_key_id: string;
+            preferences: components["schemas"]["ContextPreferences"];
+            /** Projects */
+            projects: components["schemas"]["ResearchProject"][];
+            /** Threads */
+            threads: components["schemas"]["LearningThread"][];
+        };
+        /** ContextPreferences */
+        ContextPreferences: {
+            /**
+             * Revision
+             * @default 0
+             */
+            revision: number;
+            data?: components["schemas"]["ContextPreferencesData"];
+        };
+        /** ContextPreferencesData */
+        ContextPreferencesData: {
+            /**
+             * Default Mode
+             * @default learn
+             * @enum {string}
+             */
+            default_mode: "learn" | "research";
+            /**
+             * Learning Background
+             * @default
+             */
+            learning_background: string;
+            /** Learning Goals */
+            learning_goals?: string[];
+        };
+        /** ContextPreferencesWrite */
+        ContextPreferencesWrite: {
+            /** Revision */
+            revision: number;
+            data?: components["schemas"]["ContextPreferencesData"];
+            /** Request Id */
+            request_id: string;
+        };
+        /** ContextReadingRevision */
+        ContextReadingRevision: {
+            /**
+             * Status
+             * @default unread
+             * @enum {string}
+             */
+            status: "unread" | "saved" | "read" | "archived" | "dismissed" | "snoozed";
+            /**
+             * Anchor
+             * @default abstract:0
+             */
+            anchor: string;
+            /**
+             * Version Id
+             * @default
+             */
+            version_id: string;
+            /** Snoozed Until */
+            snoozed_until?: string | null;
+            /**
+             * Revision
+             * @default 0
+             */
+            revision: number;
+            /**
+             * Updated At
+             * @default
+             */
+            updated_at: string;
+            /**
+             * Activity Sequence
+             * @default 0
+             */
+            activity_sequence: number;
+            context?: components["schemas"]["ResumeContext"] | null;
+        };
+        /** ContextReadingWrite */
+        ContextReadingWrite: {
+            /** Work Id */
+            work_id: string;
+            /** Revision */
+            revision: number;
+            /** Request Id */
+            request_id: string;
+            data: components["schemas"]["ReadingData"];
+            context: components["schemas"]["ResumeContext"];
+        };
+        /** ContextWorkItem */
+        ContextWorkItem: {
+            /** Work Id */
+            work_id: string;
+            /** Version Id */
+            version_id: string;
+            /** Source Id */
+            source_id: string;
+            /**
+             * Source Record Id
+             * @default
+             */
+            source_record_id: string;
+            /** Title */
+            title: string;
+            /** Url */
+            url: string;
+            /** Authors */
+            authors?: string[];
+            /**
+             * Abstract
+             * @default
+             */
+            abstract: string;
+            /**
+             * Access State
+             * @default metadata
+             */
+            access_state: string;
+            /** Categories */
+            categories?: string[];
+            /** Published At */
+            published_at?: string | null;
+            /** Updated At */
+            updated_at?: string | null;
+            /**
+             * Published Precision
+             * @default unknown
+             */
+            published_precision: string;
+            /**
+             * Updated Precision
+             * @default unknown
+             */
+            updated_precision: string;
+            /** First Seen At */
+            first_seen_at: string;
+            /** Fetched At */
+            fetched_at: string;
+            /**
+             * Content Hash
+             * @default
+             */
+            content_hash: string;
+            /**
+             * Version Label
+             * @default observed
+             */
+            version_label: string;
+            /**
+             * Kind
+             * @default paper
+             */
+            kind: string;
+            /** Versions */
+            versions?: components["schemas"]["MaterialVersion"][];
+            /** Entries */
+            entries?: components["schemas"]["ContextEntryRevision"][];
+            reading?: components["schemas"]["ContextReadingRevision"];
+            /** Reasons */
+            reasons?: string[];
+            /**
+             * Reading Access State
+             * @default metadata
+             */
+            reading_access_state: string;
+            /** Available Scopes */
+            available_scopes?: string[];
+            /** Retained Materials */
+            retained_materials?: components["schemas"]["RetainedAvailability"][];
+            /** Mode Relevance */
+            mode_relevance?: {
+                [key: string]: unknown;
+            };
+        };
+        /** ContextWorkPage */
+        ContextWorkPage: {
+            /** Items */
+            items: components["schemas"]["ContextWorkItem"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+            /** As Of */
+            as_of: string;
+            context: components["schemas"]["ResolvedContext"];
+        };
+        /** ContextWorkspaceState */
+        ContextWorkspaceState: {
+            /** Principal Key Id */
+            principal_key_id: string;
+            profile: components["schemas"]["ProfileRevision"];
+            /** Works */
+            works: components["schemas"]["ContextWorkItem"][];
+            /** Sources */
+            sources: components["schemas"]["SourceStatus"][];
+            /** Editions */
+            editions: components["schemas"]["Edition"][];
+            schedule: components["schemas"]["ScheduleRevision"];
+            /** Tasks */
+            tasks?: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * Generation
+             * @default approval_required
+             * @constant
+             */
+            generation: "approval_required";
+            /** As Of */
+            as_of: string;
+            /** Activity */
+            activity?: components["schemas"]["Activity"][];
+            latest_activity?: components["schemas"]["Activity"] | null;
+            /** Interest Coverage */
+            interest_coverage?: components["schemas"]["InterestCoverage"][];
+            /** Allocation Previews */
+            allocation_previews?: {
+                [key: string]: unknown;
+            }[];
+            context: components["schemas"]["ResolvedContext"];
+            active_edition?: components["schemas"]["ContextEdition"] | null;
+        };
         /**
          * ConversationCreateRequest
          * @description Body for `POST /conversations`. Both fields optional — a
@@ -1088,6 +1688,13 @@ export interface components {
              * @default abstract:0
              */
             anchor: string;
+        };
+        /** EntryReference */
+        EntryReference: {
+            /** Entry Id */
+            entry_id: string;
+            /** Entry Revision */
+            entry_revision: number;
         };
         /** EntryRevision */
         EntryRevision: {
@@ -1979,6 +2586,67 @@ export interface components {
             /** Artifacts */
             artifacts: components["schemas"]["ProgressEvidence"][];
         };
+        /** LearningThread */
+        LearningThread: {
+            /** Id */
+            id: string;
+            /** Revision */
+            revision: number;
+            data: components["schemas"]["LearningThreadData"];
+            source?: components["schemas"]["BoundSource"] | null;
+            /** Created At */
+            created_at: string;
+            /** Updated At */
+            updated_at: string;
+            /** Activity Sequence */
+            activity_sequence: number;
+        };
+        /** LearningThreadData */
+        LearningThreadData: {
+            /** Title */
+            title: string;
+            /** Goal */
+            goal: string;
+            /**
+             * Prerequisite
+             * @default
+             */
+            prerequisite: string;
+            /**
+             * Status
+             * @default active
+             * @enum {string}
+             */
+            status: "active" | "archived";
+            origin: components["schemas"]["ResumeContext"];
+            source?: components["schemas"]["SourceReference"] | null;
+            entry?: components["schemas"]["EntryReference"] | null;
+        };
+        /** LearningThreadWrite */
+        LearningThreadWrite: {
+            /** Id */
+            id: string;
+            /** Revision */
+            revision: number;
+            /** Request Id */
+            request_id: string;
+            data: components["schemas"]["LearningThreadData"];
+        };
+        /** LinkedEntry */
+        LinkedEntry: {
+            /** Entry Id */
+            entry_id: string;
+            /** Entry Revision */
+            entry_revision: number;
+            entry: components["schemas"]["EntryRevision"] | null;
+            /** Current Revision */
+            current_revision: number | null;
+            /**
+             * Available
+             * @default true
+             */
+            available: boolean;
+        };
         /** ManualRequest */
         ManualRequest: {
             /** Value */
@@ -2370,6 +3038,164 @@ export interface components {
              */
             event_ids: string[];
         };
+        /** ProjectArtifact */
+        ProjectArtifact: {
+            /** Id */
+            id: string;
+            /** Revision */
+            revision: number;
+            data: components["schemas"]["ArtifactData"];
+            /**
+             * Authorship
+             * @default manual
+             * @constant
+             */
+            authorship: "manual";
+            /**
+             * Verification
+             * @default unverified
+             * @constant
+             */
+            verification: "unverified";
+        };
+        /** ProjectArtifactWrite */
+        ProjectArtifactWrite: {
+            /** Id */
+            id: string;
+            /**
+             * Revision
+             * @description Current project revision
+             */
+            revision: number;
+            /**
+             * Artifact Revision
+             * @default 0
+             */
+            artifact_revision: number;
+            /** Request Id */
+            request_id: string;
+            data: components["schemas"]["ArtifactData"];
+        };
+        /** ProjectData */
+        ProjectData: {
+            /** Title */
+            title: string;
+            /** Question */
+            question: string;
+            /**
+             * Scope
+             * @default
+             */
+            scope: string;
+            /**
+             * Constraints
+             * @default
+             */
+            constraints: string;
+            /** Next Actions */
+            next_actions?: string[];
+            /**
+             * Status
+             * @default active
+             * @enum {string}
+             */
+            status: "active" | "archived";
+        };
+        /** ProjectDetail */
+        ProjectDetail: {
+            /** Id */
+            id: string;
+            /** Revision */
+            revision: number;
+            data: components["schemas"]["ProjectData"];
+            /** Created At */
+            created_at: string;
+            /** Updated At */
+            updated_at: string;
+            /** Activity Sequence */
+            activity_sequence: number;
+            /** Sources */
+            sources?: components["schemas"]["ProjectSource"][];
+            /** Entries */
+            entries?: components["schemas"]["LinkedEntry"][];
+            /** Artifacts */
+            artifacts?: components["schemas"]["ProjectArtifact"][];
+            /** Threads */
+            threads?: components["schemas"]["LearningThread"][];
+        };
+        /** ProjectEntryWrite */
+        ProjectEntryWrite: {
+            /** Entry Id */
+            entry_id: string;
+            /** Entry Revision */
+            entry_revision: number;
+            /** Revision */
+            revision: number;
+            /** Request Id */
+            request_id: string;
+        };
+        /** ProjectSource */
+        ProjectSource: {
+            /** Id */
+            id: string;
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "source" | "evidence";
+            /**
+             * Label
+             * @default
+             */
+            label: string;
+            /**
+             * Status
+             * @default active
+             * @enum {string}
+             */
+            status: "active" | "removed";
+            reference: components["schemas"]["BoundSource"];
+        };
+        /** ProjectSourceWrite */
+        ProjectSourceWrite: {
+            /** Revision */
+            revision: number;
+            /** Request Id */
+            request_id: string;
+            /**
+             * Role
+             * @default source
+             * @enum {string}
+             */
+            role: "source" | "evidence";
+            /**
+             * Label
+             * @default
+             */
+            label: string;
+            reference: components["schemas"]["SourceReference"];
+        };
+        /** ProjectUnlink */
+        ProjectUnlink: {
+            /** Revision */
+            revision: number;
+            /** Request Id */
+            request_id: string;
+            /** Link Id */
+            link_id: string;
+        };
+        /** ProjectWrite */
+        ProjectWrite: {
+            /** Id */
+            id: string;
+            /** Revision */
+            revision: number;
+            /** Request Id */
+            request_id: string;
+            data: components["schemas"]["ProjectData"];
+            initial_source?: components["schemas"]["SourceReference"] | null;
+            origin_entry?: components["schemas"]["EntryReference"] | null;
+        };
         /** ReadingData */
         ReadingData: {
             /**
@@ -2479,6 +3305,20 @@ export interface components {
             /** Inference Label */
             inference_label?: string | null;
         };
+        /** ResearchProject */
+        ResearchProject: {
+            /** Id */
+            id: string;
+            /** Revision */
+            revision: number;
+            data: components["schemas"]["ProjectData"];
+            /** Created At */
+            created_at: string;
+            /** Updated At */
+            updated_at: string;
+            /** Activity Sequence */
+            activity_sequence: number;
+        };
         /**
          * ResearchRequest
          * @description Body for `POST /research`.
@@ -2500,6 +3340,42 @@ export interface components {
              * @description Run this query as a follow-up in an existing conversation. Prior-report chunks from the same conversation are retrieved and prepended to the planner's system prompt. See ADR 0032.
              */
             conversation_id?: string | null;
+        };
+        /** ResolvedContext */
+        ResolvedContext: {
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "learn" | "research";
+            /** Project Id */
+            project_id?: string | null;
+            /** Thread Id */
+            thread_id?: string | null;
+            /** Project Revision */
+            project_revision?: number | null;
+            /** Policy Version */
+            policy_version: string;
+            /** Unavailable Reason */
+            unavailable_reason?: string | null;
+        };
+        /** ResumeContext */
+        ResumeContext: {
+            /**
+             * Mode
+             * @default learn
+             * @enum {string}
+             */
+            mode: "learn" | "research";
+            /** Project Id */
+            project_id?: string | null;
+            /** Thread Id */
+            thread_id?: string | null;
+            /**
+             * Return To
+             * @default /workspace/today
+             */
+            return_to: string;
         };
         /** RetainedAvailability */
         RetainedAvailability: {
@@ -2896,6 +3772,28 @@ export interface components {
              * @enum {string}
              */
             level: "none" | "aware" | "working" | "solid";
+        };
+        /** SourceReference */
+        SourceReference: {
+            /** Work Id */
+            work_id: string;
+            /** Version Id */
+            version_id: string;
+            /**
+             * Anchor
+             * @default abstract:0
+             */
+            anchor: string;
+            /** Version Hash */
+            version_hash?: string | null;
+            /** Material Id */
+            material_id?: string | null;
+            /** Material Hash */
+            material_hash?: string | null;
+            /** Parser Revision */
+            parser_revision?: string | null;
+            /** Source Scope */
+            source_scope?: ("metadata" | "abstract" | "excerpt" | "full_text") | null;
         };
         /** SourceStatus */
         SourceStatus: {
@@ -4393,6 +5291,467 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_index_workspace_context_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContextIndex"];
+                };
+            };
+        };
+    };
+    save_preferences_workspace_context_preferences_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContextPreferencesWrite"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContextPreferences"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_project_workspace_context_projects__project_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    save_project_workspace_context_projects_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProjectWrite"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    save_source_workspace_context_projects__project_id__sources_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProjectSourceWrite"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unlink_source_workspace_context_projects__project_id__unlink_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProjectUnlink"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    link_entry_workspace_context_projects__project_id__entries_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProjectEntryWrite"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    save_artifact_workspace_context_projects__project_id__artifacts_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProjectArtifactWrite"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_thread_workspace_context_threads__thread_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                thread_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LearningThread"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    save_thread_workspace_context_threads_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LearningThreadWrite"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LearningThread"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    save_entry_workspace_context_entries_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContextEntryWrite"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContextEntryRevision"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    save_reading_workspace_context_reading_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContextReadingWrite"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContextReadingRevision"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_state_workspace_context_state_get: {
+        parameters: {
+            query?: {
+                mode?: ("learn" | "research") | null;
+                project?: string;
+                thread?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContextWorkspaceState"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_items_workspace_context_items_get: {
+        parameters: {
+            query?: {
+                mode?: ("learn" | "research") | null;
+                project?: string;
+                thread?: string;
+                q?: string;
+                source_id?: string;
+                access_state?: string;
+                status?: string;
+                days?: number;
+                cursor?: string;
+                as_of?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContextWorkPage"];
                 };
             };
             /** @description Validation Error */
