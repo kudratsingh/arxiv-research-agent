@@ -444,10 +444,15 @@ export default defineConfig(async () => ({
       // Preserve statements/branches/lines; ratchet functions 91.8 to 92.2,
       // keeping the recorded measurement within the existing half-point band.
       // No coverage input, exclusion, test tier or other floor is changed.
+      // Two-mode workspace verified record: 4,202 tests across 214 files:
+      // 6355/6473 statements, 5440/5772 branches, 2119/2259 functions, 5021/5048 lines.
+      // The recorded193-file suite exceeded the existing15-file freshness band.
+      // Preserve statement/branch/line floors and all inputs, exclusions and tiers;
+      // ratchet functions92.2 to93.4 under measured93.80, within the same half-point band.
       thresholds: {
         statements: 98.15,
         branches: 94.0,
-        functions: 92.2,
+        functions: 93.4,
         lines: 99.11,
       },
     },
