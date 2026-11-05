@@ -1,6 +1,7 @@
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, renderHook, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { LiveInterests } from "@/components/workspace/Interests";
+import { useReadingActions } from "@/lib/workspace/useReadingActions";
 import ReaderQueue from "@/components/workspace/ReaderQueue";
 import { workspace } from "./fixtures";
 vi.mock("next/navigation", () => ({ usePathname: () => location.pathname }));
@@ -41,6 +42,16 @@ describe("optional context surfaces mounted from their real entry points", () =>
     fireEvent.submit(screen.getByRole("form", { name: "Learning preferences" }));
     await screen.findByText(/Learning preferences saved on the server/);
     await waitFor(() => expect(reads).toBeGreaterThan(1)); expect(writes).toEqual(["/api/workspace/context/preferences"]);
+  });
+  it("refuses a reading mutation before an owned workspace snapshot has loaded", async () => {
+    const fetcher = vi.fn(), setState = vi.fn(), announce = vi.fn();
+    vi.stubGlobal("fetch", fetcher);
+    const { result } = renderHook(() => useReadingActions(null, setState, announce));
+    let saved: boolean | undefined;
+    await act(async () => { saved = await result.current.status(workspace().works[0]!, "saved"); });
+    expect(saved).toBe(false); expect(fetcher).not.toHaveBeenCalled();
+    expect(setState).not.toHaveBeenCalled(); expect(announce).not.toHaveBeenCalled();
+    expect(result.current.busy).toBe(false); expect(result.current.hasUndo).toBe(false);
   });
   it("keeps queue links unfocusable and prevents their navigation during a pending write", () => {
     const target = { workId: "work", title: "Exact paper", href: "/workspace/items/work?version=v1#abstract:1:3" };
