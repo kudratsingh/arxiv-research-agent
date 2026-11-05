@@ -34,10 +34,10 @@ def bound_jobs(
 ) -> list[tuple[dict[str, Any], GenerationInput]]:
     jobs = []
     if (
-        packet.get("revision") != "workspace-qualification-packet-v6-typed-summary-handles"
+        packet.get("revision") != "workspace-qualification-packet-v7-stage-scoped-context"
         or not 1 <= len(packet.get("jobs", [])) <= 20
     ):
-        raise AdmissionError("bounded_v6_handles_packet_required")
+        raise AdmissionError("bounded_v7_stage_context_packet_required")
     for job in packet["jobs"]:
         raw = job["sealed_input"]
         inputs = GenerationInput(
