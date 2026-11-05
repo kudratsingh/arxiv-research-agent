@@ -64,6 +64,7 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
     const toggleButton = toggleRef.current;
     closeRef.current?.focus();
     const trap = (event: KeyboardEvent) => {
+      if (event.isComposing || event.key === "Tab" && (event.ctrlKey || event.metaKey || event.altKey)) return;
       if (event.target instanceof Element && event.target.closest(".ws-command-dialog")) return;
       if (event.key === "Escape") {
         event.preventDefault();

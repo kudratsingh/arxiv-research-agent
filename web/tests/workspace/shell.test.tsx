@@ -209,6 +209,19 @@ describe("workspace controller shell", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(screen.getByRole("main")).not.toHaveAttribute("inert");
   });
+  it.each([390, 900])("keeps %ipx drawer focus and state during composing Escape and browser modifier-Tab", async viewport => {
+    width = viewport; const user = userEvent.setup(); render(<WorkspaceShell><Page /><SidebarSection label="Composition fixture"><input aria-label="Composing drawer query" /></SidebarSection></WorkspaceShell>);
+    const toggle = screen.getByRole("button", { name: viewport === 390 ? "Queue & controls" : "Expand sidebar" }); await user.click(toggle);
+    const dialog = screen.getByRole("dialog"); const close = within(dialog).getByRole("button", { name: "Close controls" });
+    const composing = within(dialog).getByRole("textbox", { name: "Composing drawer query" }); composing.focus();
+    const escape = new KeyboardEvent("keydown", { key: "Escape", isComposing: true, bubbles: true, cancelable: true }); act(() => composing.dispatchEvent(escape));
+    expect(escape.defaultPrevented).toBe(false); expect(dialog).toBeInTheDocument(); expect(composing).toHaveFocus(); close.focus();
+    for (const init of [{ key: "Tab", ctrlKey: true, shiftKey: true }, { key: "Tab", metaKey: true, shiftKey: true }, { key: "Tab", altKey: true, shiftKey: true }]) {
+      const event = new KeyboardEvent("keydown", { bubbles: true, cancelable: true, ...init }); act(() => close.dispatchEvent(event));
+      expect(event.defaultPrevented).toBe(false); expect(dialog).toBeInTheDocument(); expect(close).toHaveFocus();
+    }
+    fireEvent.keyDown(close, { key: "Escape" }); expect(screen.queryByRole("dialog")).not.toBeInTheDocument(); expect(toggle).toHaveFocus();
+  });
   it("closes mobile controls from the scrim or close button without unmounting the slot", async () => {
     width = 390;
     const user = userEvent.setup();
