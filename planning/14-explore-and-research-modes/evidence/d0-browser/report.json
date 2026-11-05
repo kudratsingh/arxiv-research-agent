@@ -1,0 +1,962 @@
+{
+  "base": "http://127.0.0.1:3178",
+  "principal": "modes-preview",
+  "sourceCommit": "10b4260f734c88a250880cb07d284a467e273529",
+  "startedAtUtc": "2026-11-05T12:03:38.376Z",
+  "scope": "D0 existing-controller read-only smoke on retained public metadata with copied interest profile; no mode UI yet, no new freshness or human usefulness claim",
+  "contexts": [
+    {
+      "name": "desktop-light",
+      "size": "desktop",
+      "width": 1440,
+      "height": 1000,
+      "theme": "light",
+      "stateSha256Before": "9242ecc646c1f6b78e1cc18e04dd93550d0c0ddf1894b1004b3610d006309ec2",
+      "reviewSha256Before": "cd1bfd1c02c02f08f4f74120c5b5793be75f39611e4b7e481f815a2b6ff915d3",
+      "csp": {
+        "nonce": true,
+        "unsafeEval": false
+      },
+      "focus": {
+        "workId": "arxiv:2610.40927",
+        "versionId": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+        "title": "Agentic World Modeling for Agent Test-time Scaling without Environment Replica",
+        "abstractUnicodeLength": 1532,
+        "abstractSha256": "7e819173b096a1caebb3340631b08700d0b8065222bba222a7b064da96dc5f0d",
+        "actualReaderHref": "/workspace/items/arxiv%3A2610.40927?version=arxiv%3A2610.40927%3Av1%3Ametadata-b09108e19893972e&return_to=%2Fworkspace%2Ftoday%3Ffocus%3Darxiv%253A2610.40927#abstract%3A0",
+        "returnTo": "/workspace/today?focus=arxiv%3A2610.40927",
+        "scope": "abstract"
+      },
+      "todayInitialClearance": {
+        "title": {
+          "top": 488.96875,
+          "bottom": 616.375
+        },
+        "firstTwoAbstractLines": [
+          {
+            "top": 697.875,
+            "bottom": 724.875
+          },
+          {
+            "top": 729.375,
+            "bottom": 756.375
+          }
+        ],
+        "playerTop": 780
+      },
+      "fullTitleAndTwoLinesInitial": "pass",
+      "exactReaderVersionAndText": true,
+      "exactFocusedReturn": true,
+      "status": "pass",
+      "stateSha256After": "9242ecc646c1f6b78e1cc18e04dd93550d0c0ddf1894b1004b3610d006309ec2",
+      "reviewSha256After": "cd1bfd1c02c02f08f4f74120c5b5793be75f39611e4b7e481f815a2b6ff915d3",
+      "allProtectedStateUnchanged": true
+    },
+    {
+      "name": "desktop-dark",
+      "size": "desktop",
+      "width": 1440,
+      "height": 1000,
+      "theme": "dark",
+      "stateSha256Before": "9242ecc646c1f6b78e1cc18e04dd93550d0c0ddf1894b1004b3610d006309ec2",
+      "reviewSha256Before": "cd1bfd1c02c02f08f4f74120c5b5793be75f39611e4b7e481f815a2b6ff915d3",
+      "csp": {
+        "nonce": true,
+        "unsafeEval": false
+      },
+      "focus": {
+        "workId": "arxiv:2610.40927",
+        "versionId": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+        "title": "Agentic World Modeling for Agent Test-time Scaling without Environment Replica",
+        "abstractUnicodeLength": 1532,
+        "abstractSha256": "7e819173b096a1caebb3340631b08700d0b8065222bba222a7b064da96dc5f0d",
+        "actualReaderHref": "/workspace/items/arxiv%3A2610.40927?version=arxiv%3A2610.40927%3Av1%3Ametadata-b09108e19893972e&return_to=%2Fworkspace%2Ftoday%3Ffocus%3Darxiv%253A2610.40927#abstract%3A0",
+        "returnTo": "/workspace/today?focus=arxiv%3A2610.40927",
+        "scope": "abstract"
+      },
+      "todayInitialClearance": {
+        "title": {
+          "top": 488.96875,
+          "bottom": 616.375
+        },
+        "firstTwoAbstractLines": [
+          {
+            "top": 697.875,
+            "bottom": 724.875
+          },
+          {
+            "top": 729.375,
+            "bottom": 756.375
+          }
+        ],
+        "playerTop": 780
+      },
+      "fullTitleAndTwoLinesInitial": "pass",
+      "exactReaderVersionAndText": true,
+      "exactFocusedReturn": true,
+      "status": "pass",
+      "stateSha256After": "9242ecc646c1f6b78e1cc18e04dd93550d0c0ddf1894b1004b3610d006309ec2",
+      "reviewSha256After": "cd1bfd1c02c02f08f4f74120c5b5793be75f39611e4b7e481f815a2b6ff915d3",
+      "allProtectedStateUnchanged": true
+    },
+    {
+      "name": "mobile-light",
+      "size": "mobile",
+      "width": 390,
+      "height": 844,
+      "theme": "light",
+      "stateSha256Before": "9242ecc646c1f6b78e1cc18e04dd93550d0c0ddf1894b1004b3610d006309ec2",
+      "reviewSha256Before": "cd1bfd1c02c02f08f4f74120c5b5793be75f39611e4b7e481f815a2b6ff915d3",
+      "csp": {
+        "nonce": true,
+        "unsafeEval": false
+      },
+      "focus": {
+        "workId": "arxiv:2610.40927",
+        "versionId": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+        "title": "Agentic World Modeling for Agent Test-time Scaling without Environment Replica",
+        "abstractUnicodeLength": 1532,
+        "abstractSha256": "7e819173b096a1caebb3340631b08700d0b8065222bba222a7b064da96dc5f0d",
+        "actualReaderHref": "/workspace/items/arxiv%3A2610.40927?version=arxiv%3A2610.40927%3Av1%3Ametadata-b09108e19893972e&return_to=%2Fworkspace%2Ftoday%3Ffocus%3Darxiv%253A2610.40927#abstract%3A0",
+        "returnTo": "/workspace/today?focus=arxiv%3A2610.40927",
+        "scope": "abstract"
+      },
+      "todayInitialClearance": {
+        "title": {
+          "top": 466.359375,
+          "bottom": 551.296875
+        },
+        "firstTwoAbstractLines": [
+          {
+            "top": 622.296875,
+            "bottom": 646.296875
+          },
+          {
+            "top": 649.484375,
+            "bottom": 673.484375
+          }
+        ],
+        "playerTop": 712
+      },
+      "fullTitleAndTwoLinesInitial": "pass",
+      "exactReaderVersionAndText": true,
+      "exactFocusedReturn": true,
+      "drawerEscapeFocus": true,
+      "status": "pass",
+      "stateSha256After": "9242ecc646c1f6b78e1cc18e04dd93550d0c0ddf1894b1004b3610d006309ec2",
+      "reviewSha256After": "cd1bfd1c02c02f08f4f74120c5b5793be75f39611e4b7e481f815a2b6ff915d3",
+      "allProtectedStateUnchanged": true
+    },
+    {
+      "name": "mobile-dark",
+      "size": "mobile",
+      "width": 390,
+      "height": 844,
+      "theme": "dark",
+      "stateSha256Before": "9242ecc646c1f6b78e1cc18e04dd93550d0c0ddf1894b1004b3610d006309ec2",
+      "reviewSha256Before": "cd1bfd1c02c02f08f4f74120c5b5793be75f39611e4b7e481f815a2b6ff915d3",
+      "csp": {
+        "nonce": true,
+        "unsafeEval": false
+      },
+      "focus": {
+        "workId": "arxiv:2610.40927",
+        "versionId": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+        "title": "Agentic World Modeling for Agent Test-time Scaling without Environment Replica",
+        "abstractUnicodeLength": 1532,
+        "abstractSha256": "7e819173b096a1caebb3340631b08700d0b8065222bba222a7b064da96dc5f0d",
+        "actualReaderHref": "/workspace/items/arxiv%3A2610.40927?version=arxiv%3A2610.40927%3Av1%3Ametadata-b09108e19893972e&return_to=%2Fworkspace%2Ftoday%3Ffocus%3Darxiv%253A2610.40927#abstract%3A0",
+        "returnTo": "/workspace/today?focus=arxiv%3A2610.40927",
+        "scope": "abstract"
+      },
+      "todayInitialClearance": {
+        "title": {
+          "top": 466.359375,
+          "bottom": 551.296875
+        },
+        "firstTwoAbstractLines": [
+          {
+            "top": 622.296875,
+            "bottom": 646.296875
+          },
+          {
+            "top": 649.484375,
+            "bottom": 673.484375
+          }
+        ],
+        "playerTop": 712
+      },
+      "fullTitleAndTwoLinesInitial": "pass",
+      "exactReaderVersionAndText": true,
+      "exactFocusedReturn": true,
+      "drawerEscapeFocus": true,
+      "status": "pass",
+      "stateSha256After": "9242ecc646c1f6b78e1cc18e04dd93550d0c0ddf1894b1004b3610d006309ec2",
+      "reviewSha256After": "cd1bfd1c02c02f08f4f74120c5b5793be75f39611e4b7e481f815a2b6ff915d3",
+      "allProtectedStateUnchanged": true
+    }
+  ],
+  "routes": [
+    {
+      "name": "desktop-light-today",
+      "theme": "light",
+      "status": "pass",
+      "url": "http://127.0.0.1:3178/workspace/today",
+      "heading": "What changed.",
+      "geometry": {
+        "theme": "light",
+        "canvas": "rgb(245, 245, 245)",
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "documentVerticalOverflow": 0,
+        "heading": {
+          "top": 176.1875,
+          "bottom": 201.1875,
+          "left": 444,
+          "right": 683.109375
+        },
+        "bar": {
+          "top": 780,
+          "bottom": 976,
+          "left": 484,
+          "right": 1304
+        }
+      },
+      "violations": []
+    },
+    {
+      "name": "desktop-light-reader",
+      "theme": "light",
+      "status": "pass",
+      "url": "http://127.0.0.1:3178/workspace/items/arxiv%3A2610.40927?version=arxiv%3A2610.40927%3Av1%3Ametadata-b09108e19893972e&return_to=%2Fworkspace%2Ftoday%3Ffocus%3Darxiv%253A2610.40927#abstract%3A0",
+      "heading": "Agentic World Modeling for Agent Test-time Scaling without Environment Replica",
+      "geometry": {
+        "theme": "light",
+        "canvas": "rgb(245, 245, 245)",
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "documentVerticalOverflow": 0,
+        "heading": {
+          "top": -216.8125,
+          "bottom": -131.875,
+          "left": 444,
+          "right": 1264
+        },
+        "bar": {
+          "top": 788,
+          "bottom": 976,
+          "left": 484,
+          "right": 1304
+        }
+      },
+      "violations": []
+    },
+    {
+      "name": "desktop-light-radar",
+      "theme": "light",
+      "status": "pass",
+      "url": "http://127.0.0.1:3178/workspace/radar?as_of=2026-11-05T12%3A03%3A43.173970%2B00%3A00",
+      "heading": "A wider view.\nYour terms, your pace.",
+      "geometry": {
+        "theme": "light",
+        "canvas": "rgb(245, 245, 245)",
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "documentVerticalOverflow": 0,
+        "heading": {
+          "top": 24.390625,
+          "bottom": 107.171875,
+          "left": 394,
+          "right": 968.890625
+        },
+        "bar": {
+          "top": 780,
+          "bottom": 976,
+          "left": 484,
+          "right": 1304
+        }
+      },
+      "violations": []
+    },
+    {
+      "name": "desktop-light-library",
+      "theme": "light",
+      "status": "pass",
+      "url": "http://127.0.0.1:3178/workspace/library",
+      "heading": "Keep the source.\nKeep your thinking.",
+      "geometry": {
+        "theme": "light",
+        "canvas": "rgb(245, 245, 245)",
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "documentVerticalOverflow": 0,
+        "heading": {
+          "top": 182.1875,
+          "bottom": 264.96875,
+          "left": 394,
+          "right": 868.390625
+        },
+        "bar": {
+          "top": 874,
+          "bottom": 976,
+          "left": 484,
+          "right": 1304
+        }
+      },
+      "violations": []
+    },
+    {
+      "name": "desktop-light-interests",
+      "theme": "light",
+      "status": "pass",
+      "url": "http://127.0.0.1:3178/workspace/interests",
+      "heading": "Follow a field.\nOr your own question.",
+      "geometry": {
+        "theme": "light",
+        "canvas": "rgb(245, 245, 245)",
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "documentVerticalOverflow": 0,
+        "heading": {
+          "top": 24,
+          "bottom": 111.375,
+          "left": 394,
+          "right": 901.046875
+        },
+        "bar": {
+          "top": 797,
+          "bottom": 976,
+          "left": 484,
+          "right": 1304
+        }
+      },
+      "violations": []
+    },
+    {
+      "name": "desktop-light-operations",
+      "theme": "light",
+      "status": "pass",
+      "url": "http://127.0.0.1:3178/workspace/operations",
+      "heading": "Know what was checked.\nAnd what wasn’t.",
+      "geometry": {
+        "theme": "light",
+        "canvas": "rgb(245, 245, 245)",
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "documentVerticalOverflow": 0,
+        "heading": {
+          "top": 24.390625,
+          "bottom": 111.765625,
+          "left": 394,
+          "right": 910
+        },
+        "bar": {
+          "top": 825,
+          "bottom": 976,
+          "left": 484,
+          "right": 1304
+        }
+      },
+      "violations": []
+    },
+    {
+      "name": "desktop-light-review",
+      "theme": "light",
+      "status": "pass",
+      "url": "http://127.0.0.1:3178/workspace/review",
+      "heading": "What deserves\nyour attention?",
+      "geometry": {
+        "theme": "light",
+        "canvas": "rgb(245, 245, 245)",
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "documentVerticalOverflow": 0,
+        "heading": {
+          "top": 179,
+          "bottom": 266.375,
+          "left": 394,
+          "right": 1047.0625
+        },
+        "bar": {
+          "top": 816,
+          "bottom": 976,
+          "left": 484,
+          "right": 1304
+        }
+      },
+      "violations": []
+    },
+    {
+      "name": "desktop-dark-today",
+      "theme": "dark",
+      "status": "pass",
+      "url": "http://127.0.0.1:3178/workspace/today",
+      "heading": "What changed.",
+      "geometry": {
+        "theme": "dark",
+        "canvas": "rgb(10, 10, 10)",
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "documentVerticalOverflow": 0,
+        "heading": {
+          "top": 176.1875,
+          "bottom": 201.1875,
+          "left": 444,
+          "right": 683.109375
+        },
+        "bar": {
+          "top": 780,
+          "bottom": 976,
+          "left": 484,
+          "right": 1304
+        }
+      },
+      "violations": []
+    },
+    {
+      "name": "desktop-dark-reader",
+      "theme": "dark",
+      "status": "pass",
+      "url": "http://127.0.0.1:3178/workspace/items/arxiv%3A2610.40927?version=arxiv%3A2610.40927%3Av1%3Ametadata-b09108e19893972e&return_to=%2Fworkspace%2Ftoday%3Ffocus%3Darxiv%253A2610.40927#abstract%3A0",
+      "heading": "Agentic World Modeling for Agent Test-time Scaling without Environment Replica",
+      "geometry": {
+        "theme": "dark",
+        "canvas": "rgb(10, 10, 10)",
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "documentVerticalOverflow": 0,
+        "heading": {
+          "top": -216.8125,
+          "bottom": -131.875,
+          "left": 444,
+          "right": 1264
+        },
+        "bar": {
+          "top": 788,
+          "bottom": 976,
+          "left": 484,
+          "right": 1304
+        }
+      },
+      "violations": []
+    },
+    {
+      "name": "desktop-dark-radar",
+      "theme": "dark",
+      "status": "pass",
+      "url": "http://127.0.0.1:3178/workspace/radar?as_of=2026-11-05T12%3A03%3A53.511137%2B00%3A00",
+      "heading": "A wider view.\nYour terms, your pace.",
+      "geometry": {
+        "theme": "dark",
+        "canvas": "rgb(10, 10, 10)",
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "documentVerticalOverflow": 0,
+        "heading": {
+          "top": 24.390625,
+          "bottom": 107.171875,
+          "left": 394,
+          "right": 968.890625
+        },
+        "bar": {
+          "top": 780,
+          "bottom": 976,
+          "left": 484,
+          "right": 1304
+        }
+      },
+      "violations": []
+    },
+    {
+      "name": "desktop-dark-library",
+      "theme": "dark",
+      "status": "pass",
+      "url": "http://127.0.0.1:3178/workspace/library",
+      "heading": "Keep the source.\nKeep your thinking.",
+      "geometry": {
+        "theme": "dark",
+        "canvas": "rgb(10, 10, 10)",
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "documentVerticalOverflow": 0,
+        "heading": {
+          "top": 182.1875,
+          "bottom": 264.96875,
+          "left": 394,
+          "right": 868.390625
+        },
+        "bar": {
+          "top": 874,
+          "bottom": 976,
+          "left": 484,
+          "right": 1304
+        }
+      },
+      "violations": []
+    },
+    {
+      "name": "desktop-dark-interests",
+      "theme": "dark",
+      "status": "pass",
+      "url": "http://127.0.0.1:3178/workspace/interests",
+      "heading": "Follow a field.\nOr your own question.",
+      "geometry": {
+        "theme": "dark",
+        "canvas": "rgb(10, 10, 10)",
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "documentVerticalOverflow": 0,
+        "heading": {
+          "top": 24,
+          "bottom": 111.375,
+          "left": 394,
+          "right": 901.046875
+        },
+        "bar": {
+          "top": 797,
+          "bottom": 976,
+          "left": 484,
+          "right": 1304
+        }
+      },
+      "violations": []
+    },
+    {
+      "name": "desktop-dark-operations",
+      "theme": "dark",
+      "status": "pass",
+      "url": "http://127.0.0.1:3178/workspace/operations",
+      "heading": "Know what was checked.\nAnd what wasn’t.",
+      "geometry": {
+        "theme": "dark",
+        "canvas": "rgb(10, 10, 10)",
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "documentVerticalOverflow": 0,
+        "heading": {
+          "top": 24.390625,
+          "bottom": 111.765625,
+          "left": 394,
+          "right": 910
+        },
+        "bar": {
+          "top": 825,
+          "bottom": 976,
+          "left": 484,
+          "right": 1304
+        }
+      },
+      "violations": []
+    },
+    {
+      "name": "desktop-dark-review",
+      "theme": "dark",
+      "status": "pass",
+      "url": "http://127.0.0.1:3178/workspace/review",
+      "heading": "What deserves\nyour attention?",
+      "geometry": {
+        "theme": "dark",
+        "canvas": "rgb(10, 10, 10)",
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "documentVerticalOverflow": 0,
+        "heading": {
+          "top": 179,
+          "bottom": 266.375,
+          "left": 394,
+          "right": 1047.0625
+        },
+        "bar": {
+          "top": 816,
+          "bottom": 976,
+          "left": 484,
+          "right": 1304
+        }
+      },
+      "violations": []
+    },
+    {
+      "name": "mobile-light-today",
+      "theme": "light",
+      "status": "pass",
+      "url": "http://127.0.0.1:3178/workspace/today",
+      "heading": "What changed.",
+      "geometry": {
+        "theme": "light",
+        "canvas": "rgb(245, 245, 245)",
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "documentVerticalOverflow": 1381,
+        "heading": {
+          "top": 250.375,
+          "bottom": 275.375,
+          "left": 16,
+          "right": 149.5625
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        }
+      },
+      "violations": []
+    },
+    {
+      "name": "mobile-light-reader",
+      "theme": "light",
+      "status": "pass",
+      "url": "http://127.0.0.1:3178/workspace/items/arxiv%3A2610.40927?version=arxiv%3A2610.40927%3Av1%3Ametadata-b09108e19893972e&return_to=%2Fworkspace%2Ftoday%3Ffocus%3Darxiv%253A2610.40927#abstract%3A0",
+      "heading": "Agentic World Modeling for Agent Test-time Scaling without Environment Replica",
+      "geometry": {
+        "theme": "light",
+        "canvas": "rgb(245, 245, 245)",
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "documentVerticalOverflow": 1822,
+        "heading": {
+          "top": -302.8125,
+          "bottom": -180.125,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 666,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        }
+      },
+      "violations": []
+    },
+    {
+      "name": "mobile-light-radar",
+      "theme": "light",
+      "status": "pass",
+      "url": "http://127.0.0.1:3178/workspace/radar?as_of=2026-11-05T12%3A04%3A03.618427%2B00%3A00",
+      "heading": "A wider view.\nYour terms, your pace.",
+      "geometry": {
+        "theme": "light",
+        "canvas": "rgb(245, 245, 245)",
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "documentVerticalOverflow": 459,
+        "heading": {
+          "top": 15.578125,
+          "bottom": 70.765625,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        }
+      },
+      "violations": []
+    },
+    {
+      "name": "mobile-light-library",
+      "theme": "light",
+      "status": "pass",
+      "url": "http://127.0.0.1:3178/workspace/library",
+      "heading": "Keep the source.\nKeep your thinking.",
+      "geometry": {
+        "theme": "light",
+        "canvas": "rgb(245, 245, 245)",
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "documentVerticalOverflow": 289,
+        "heading": {
+          "top": 16.1875,
+          "bottom": 71.375,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 760,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        }
+      },
+      "violations": []
+    },
+    {
+      "name": "mobile-light-interests",
+      "theme": "light",
+      "status": "pass",
+      "url": "http://127.0.0.1:3178/workspace/interests",
+      "heading": "Follow a field.\nOr your own question.",
+      "geometry": {
+        "theme": "light",
+        "canvas": "rgb(245, 245, 245)",
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "documentVerticalOverflow": 3705,
+        "heading": {
+          "top": 16,
+          "bottom": 75.78125,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 680,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        }
+      },
+      "violations": []
+    },
+    {
+      "name": "mobile-light-operations",
+      "theme": "light",
+      "status": "pass",
+      "url": "http://127.0.0.1:3178/workspace/operations",
+      "heading": "Know what was checked.\nAnd what wasn’t.",
+      "geometry": {
+        "theme": "light",
+        "canvas": "rgb(245, 245, 245)",
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "documentVerticalOverflow": 1067,
+        "heading": {
+          "top": 15.578125,
+          "bottom": 75.359375,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 604,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        }
+      },
+      "violations": []
+    },
+    {
+      "name": "mobile-light-review",
+      "theme": "light",
+      "status": "pass",
+      "url": "http://127.0.0.1:3178/workspace/review",
+      "heading": "What deserves\nyour attention?",
+      "geometry": {
+        "theme": "light",
+        "canvas": "rgb(245, 245, 245)",
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "documentVerticalOverflow": 353,
+        "heading": {
+          "top": 16.375,
+          "bottom": 76.15625,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 630,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        }
+      },
+      "violations": []
+    },
+    {
+      "name": "mobile-dark-today",
+      "theme": "dark",
+      "status": "pass",
+      "url": "http://127.0.0.1:3178/workspace/today",
+      "heading": "What changed.",
+      "geometry": {
+        "theme": "dark",
+        "canvas": "rgb(10, 10, 10)",
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "documentVerticalOverflow": 1381,
+        "heading": {
+          "top": 250.375,
+          "bottom": 275.375,
+          "left": 16,
+          "right": 149.5625
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        }
+      },
+      "violations": []
+    },
+    {
+      "name": "mobile-dark-reader",
+      "theme": "dark",
+      "status": "pass",
+      "url": "http://127.0.0.1:3178/workspace/items/arxiv%3A2610.40927?version=arxiv%3A2610.40927%3Av1%3Ametadata-b09108e19893972e&return_to=%2Fworkspace%2Ftoday%3Ffocus%3Darxiv%253A2610.40927#abstract%3A0",
+      "heading": "Agentic World Modeling for Agent Test-time Scaling without Environment Replica",
+      "geometry": {
+        "theme": "dark",
+        "canvas": "rgb(10, 10, 10)",
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "documentVerticalOverflow": 1822,
+        "heading": {
+          "top": -302.8125,
+          "bottom": -180.125,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 666,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        }
+      },
+      "violations": []
+    },
+    {
+      "name": "mobile-dark-radar",
+      "theme": "dark",
+      "status": "pass",
+      "url": "http://127.0.0.1:3178/workspace/radar?as_of=2026-11-05T12%3A04%3A13.635316%2B00%3A00",
+      "heading": "A wider view.\nYour terms, your pace.",
+      "geometry": {
+        "theme": "dark",
+        "canvas": "rgb(10, 10, 10)",
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "documentVerticalOverflow": 459,
+        "heading": {
+          "top": 15.578125,
+          "bottom": 70.765625,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        }
+      },
+      "violations": []
+    },
+    {
+      "name": "mobile-dark-library",
+      "theme": "dark",
+      "status": "pass",
+      "url": "http://127.0.0.1:3178/workspace/library",
+      "heading": "Keep the source.\nKeep your thinking.",
+      "geometry": {
+        "theme": "dark",
+        "canvas": "rgb(10, 10, 10)",
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "documentVerticalOverflow": 289,
+        "heading": {
+          "top": 16.1875,
+          "bottom": 71.375,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 760,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        }
+      },
+      "violations": []
+    },
+    {
+      "name": "mobile-dark-interests",
+      "theme": "dark",
+      "status": "pass",
+      "url": "http://127.0.0.1:3178/workspace/interests",
+      "heading": "Follow a field.\nOr your own question.",
+      "geometry": {
+        "theme": "dark",
+        "canvas": "rgb(10, 10, 10)",
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "documentVerticalOverflow": 3705,
+        "heading": {
+          "top": 16,
+          "bottom": 75.78125,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 680,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        }
+      },
+      "violations": []
+    },
+    {
+      "name": "mobile-dark-operations",
+      "theme": "dark",
+      "status": "pass",
+      "url": "http://127.0.0.1:3178/workspace/operations",
+      "heading": "Know what was checked.\nAnd what wasn’t.",
+      "geometry": {
+        "theme": "dark",
+        "canvas": "rgb(10, 10, 10)",
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "documentVerticalOverflow": 1067,
+        "heading": {
+          "top": 15.578125,
+          "bottom": 75.359375,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 604,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        }
+      },
+      "violations": []
+    },
+    {
+      "name": "mobile-dark-review",
+      "theme": "dark",
+      "status": "pass",
+      "url": "http://127.0.0.1:3178/workspace/review",
+      "heading": "What deserves\nyour attention?",
+      "geometry": {
+        "theme": "dark",
+        "canvas": "rgb(10, 10, 10)",
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "documentVerticalOverflow": 353,
+        "heading": {
+          "top": 16.375,
+          "bottom": 76.15625,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 630,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        }
+      },
+      "violations": []
+    }
+  ],
+  "blocked": [],
+  "errors": [],
+  "cspViolations": [],
+  "endedAtUtc": "2026-11-05T12:04:19.733Z",
+  "status": "pass"
+}

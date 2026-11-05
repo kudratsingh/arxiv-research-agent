@@ -1,7 +1,7 @@
 # Two-mode implementation status
 
 Recorded **2026-11-04 America/Los_Angeles**; controller gate refreshed **2026-11-05 UTC**. This kit is an additive planning
-checkpoint. **No product-mode implementation or owner data migration yet.**
+checkpoint. D0 is now verified locally; D1–D4 implementation is in progress. No owner data migration.
 
 | Item | Current state | Evidence / next boundary |
 |---|---|---|
@@ -67,3 +67,27 @@ its current local G7 result is recorded above, independently of this kit's
 `dff860e` starting snapshot. Fresh integrated documented-claims/repository-hygiene
 checks pass **66/66 in 9.18 s**. Publication and exact pushed-head CI are pending
 root integration. No mode UI, backend, source acquisition or owner data changed.
+
+## D0 baseline, 2026-11-05
+
+Controller base `7e1bd9792ef60c64ee13c94a88b7783cc30b512a`; reconciled backend
+`10b4260f734c88a250880cb07d284a467e273529`; unchanged web tree
+`e4f4f72d1b49f1647fb116e52105c90b03c0335c`. See [baseline](05-d0-implementation-baseline.md),
+[API contract](06-context-api-contract.md), [predeclared policy](07-ranking-policy-v1.md)
+and [browser evidence](evidence/d0-browser/README.md).
+
+Fresh local results:179 qualification/accounting/source/API regressions passed;
+20/20 production budgets passed;28 route observations and28 axe scans passed
+across desktop/mobile and both themes. Zero browser writes, provider/source
+requests, overflow, console or hydration errors. These establish the existing
+controller baseline, not new-mode acceptance. Remote CI is not yet run for this
+batch. CSS23,940/25,600B; original JS ceilings unchanged.
+
+Preview http://127.0.0.1:3178/workspace/today uses40 copied public works and an
+isolated copy of the actual saved11-interest/15-minute profile. It shows honest
+limited coverage and retained source dates. No owner notes/history/labels copied;
+owner3137 untouched. New projects/threads remain under implementation.
+
+Paid dispatch, including counts, is stopped. Historical estimate$0.109967,
+9Messages/15counts/6jobs,unknown0; closed approval; q01 development, q02–q04
+failed, q05–q10 unrun. Everyday generation and recurrence remain disabled.

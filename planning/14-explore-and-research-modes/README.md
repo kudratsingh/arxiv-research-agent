@@ -1,7 +1,7 @@
 # Explore & Learn and Research
 
 Owner-adopted product direction, recorded **2026-11-04 America/Los_Angeles**.
-Status: **planning only; neither mode is implemented by this kit**.
+Status: **D0 verified locally; D1–D4 implementation in progress**.
 
 The workspace will have two main modes sharing one Library, Reader, source
 identity system and durable personal records. Explore & Learn supports daily
@@ -16,6 +16,9 @@ between them carries exact source versions, passages and the user's work.
 | [02-data-and-ranking.md](02-data-and-ranking.md) | Current-code gaps, proposed contracts, mode ranking and migration |
 | [03-work-orders.md](03-work-orders.md) | Dependency order, file ownership, concrete gates and next deliverables |
 | [04-evaluation.md](04-evaluation.md) | Separate discovery/learning and question/evidence evaluations |
+| [05-d0-implementation-baseline.md](05-d0-implementation-baseline.md) | Exact source, isolation and baseline evidence |
+| [06-context-api-contract.md](06-context-api-contract.md) | Frozen manual context contract |
+| [07-ranking-policy-v1.md](07-ranking-policy-v1.md) | Predeclared mode formulas and comparison |
 | [STATUS.md](STATUS.md) | What is planned, implemented, verified and owner-gated |
 
 This is an additive direction kit, not another original-discovery phase.

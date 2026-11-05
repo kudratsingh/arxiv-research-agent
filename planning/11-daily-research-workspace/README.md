@@ -1,5 +1,12 @@
 # Daily research workspace direction kit
 
+> Current authority, 2026-11-05: provider dispatch is stopped, including token
+> counts. Historical estimate $0.109967, 9 Messages/15 counts/6 jobs, unknown0;
+> scoped approval closed. q01 is development, q02–q04 failed, q05–q10 unrun.
+> Historical qualification packets below are records, not current authority.
+> The active D0–D4 two-mode batch is model-free; everyday generation and
+> recurrence remain disabled.
+
 Prepared **2026-11-02** for Kudrat Singh and the implementation agent.
 
 Build a personal research workspace that helps an ML student and researcher

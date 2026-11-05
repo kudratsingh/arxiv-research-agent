@@ -1,0 +1,66 @@
+{
+  "applicationCommit": "10b4260f734c88a250880cb07d284a467e273529",
+  "scope": "Every D0-browser file except this manifest; no selfcycle.",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 4537,
+      "sha256": "51da91a8c1c4db854e184e254ab5364f39e92c00c025dbe622afde8ad5ec8250"
+    },
+    {
+      "path": "command.log",
+      "bytes": 1211,
+      "sha256": "26d0d8ec05efef6b03103d584b4b6031c17eeffb5c183c6d24b6289b79a03632"
+    },
+    {
+      "path": "desktop-dark-reader.png",
+      "bytes": 572326,
+      "sha256": "b466198ad23bc86dad4f5bfee2f6185b548574ba9c70c93f53660aab0171e327"
+    },
+    {
+      "path": "desktop-dark-today.png",
+      "bytes": 485316,
+      "sha256": "8697a928659286aa803bed1a1e7e2b9a6921f9272ccbd7190825574306888618"
+    },
+    {
+      "path": "desktop-light-today.png",
+      "bytes": 476226,
+      "sha256": "a3ad6e7d88b3b550ca9a1c0e5a01267ff61ec7e66c055a51b08096282e5dc393"
+    },
+    {
+      "path": "mobile-dark-today.png",
+      "bytes": 184656,
+      "sha256": "4c16eb57b892869b2ddd042cd3e150cbecbd52fdc68f57f7b7690462cb4aab75"
+    },
+    {
+      "path": "mobile-light-reader.png",
+      "bytes": 200384,
+      "sha256": "e83c496415a6ab52079aa661931e2a4cb5a3865243592c2287952aab5a893434"
+    },
+    {
+      "path": "mobile-light-today.png",
+      "bytes": 184842,
+      "sha256": "b457cde513891eccdf7c7ec0c09ade22a9b095a7c85f1236e759f80f123e3469"
+    },
+    {
+      "path": "report.json",
+      "bytes": 27782,
+      "sha256": "82a15c4c64292a409b243c0df0deaed47dc387602646407f8f620506d03a2cec"
+    },
+    {
+      "path": "smoke.cjs",
+      "bytes": 11042,
+      "sha256": "323a9cbd5f994476f5012a723b616fb136e752d1fc0c8415408ff141c22ea020"
+    },
+    {
+      "path": "source-binding.json",
+      "bytes": 92757,
+      "sha256": "cedacef53f45a5e46a540dea378c3a8a5c798636cbe4243b652aa3e7fcd19a0b"
+    },
+    {
+      "path": "static-assets.json",
+      "bytes": 15921,
+      "sha256": "787df51b44876a9be1d6d774660b781ba5597e349d02526fd53314cb1e5c83ab"
+    }
+  ]
+}

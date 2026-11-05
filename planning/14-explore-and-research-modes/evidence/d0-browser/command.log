@@ -1,0 +1,33 @@
+PASS desktop-light Agentic World Modeling for Agent Test-time Scaling without Environment Replica {
+  title: { top: 488.96875, bottom: 616.375 },
+  firstTwoAbstractLines: [
+    { top: 697.875, bottom: 724.875 },
+    { top: 729.375, bottom: 756.375 }
+  ],
+  playerTop: 780
+}
+PASS desktop-dark Agentic World Modeling for Agent Test-time Scaling without Environment Replica {
+  title: { top: 488.96875, bottom: 616.375 },
+  firstTwoAbstractLines: [
+    { top: 697.875, bottom: 724.875 },
+    { top: 729.375, bottom: 756.375 }
+  ],
+  playerTop: 780
+}
+PASS mobile-light Agentic World Modeling for Agent Test-time Scaling without Environment Replica {
+  title: { top: 466.359375, bottom: 551.296875 },
+  firstTwoAbstractLines: [
+    { top: 622.296875, bottom: 646.296875 },
+    { top: 649.484375, bottom: 673.484375 }
+  ],
+  playerTop: 712
+}
+PASS mobile-dark Agentic World Modeling for Agent Test-time Scaling without Environment Replica {
+  title: { top: 466.359375, bottom: 551.296875 },
+  firstTwoAbstractLines: [
+    { top: 622.296875, bottom: 646.296875 },
+    { top: 649.484375, bottom: 673.484375 }
+  ],
+  playerTop: 712
+}
+{"status":"pass","contexts":4,"routes":28,"blocked":[],"errors":[],"cspViolations":[]}

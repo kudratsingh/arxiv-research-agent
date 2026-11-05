@@ -1,0 +1,19 @@
+# Disposable local mode-development storage. No worker or recurrence service.
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: workspace
+      POSTGRES_PASSWORD: workspace-local-only
+      POSTGRES_DB: workspace_modes
+    ports:
+      - "127.0.0.1:15478:5432"
+    volumes:
+      - mode-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U workspace -d workspace_modes"]
+      interval: 2s
+      timeout: 2s
+      retries: 20
+volumes:
+  mode-data:

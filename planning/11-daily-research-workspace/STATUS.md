@@ -1,5 +1,12 @@
 # Daily research workspace — implementation status
 
+> Current authority, 2026-11-05: provider dispatch is stopped, including token
+> counts. Historical estimate $0.109967, 9 Messages/15 counts/6 jobs, unknown0;
+> scoped approval closed. q01 is development, q02–q04 failed, q05–q10 unrun.
+> Historical qualification packets below are records, not current authority.
+> The active D0–D4 two-mode batch is model-free; everyday generation and
+> recurrence remain disabled.
+
 The owner adopted this direction on 2026-11-02 and authorized W0/W1 first:
 **Today → reader → saved question → return visit**, desktop and phone.
 The full destination includes real grounded summaries and guided deep dives.
