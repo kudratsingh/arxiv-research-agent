@@ -201,8 +201,8 @@ class WorkspaceContext:
             if scope != actual_scope and (evidence or text):
                 raise ValueError("source_scope_anchor_mismatch")
             row = conn.execute(
-                "SELECT data,material_id,content_hash,source_scope FROM workspace_material WHERE version_id=%s AND source_scope=%s AND data->>'page_count' IS NULL ORDER BY material_id",
-                (reference.version_id, actual_scope),
+                "SELECT data,material_id,content_hash,source_scope FROM workspace_material WHERE version_id=%s AND source_scope=%s AND data->>'page_count' IS NULL AND (%s::text IS NULL OR material_id=%s) ORDER BY material_id",
+                (reference.version_id, actual_scope, reference.material_id, reference.material_id),
             ).fetchone()
             material = row[0] if row else None
             if row and (

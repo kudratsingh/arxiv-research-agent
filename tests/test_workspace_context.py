@@ -510,6 +510,55 @@ def test_recomputed_payload_cannot_replace_material_behind_existing_storage_iden
         )
 
 
+def test_new_text_extraction_does_not_invalidate_an_older_exact_material_link(store):
+    value = support.ingest(store)
+    repo = WorkspaceContext(store)
+    repo.write_project("a", project())
+    first = repo.source(
+        "a",
+        PID,
+        ProjectSourceWrite(
+            revision=1, request_id="original", role="evidence", reference=ref(value)
+        ),
+    )
+    bound = first["sources"][0]["reference"]
+    with store.pool.connection() as conn:
+        original = conn.execute(
+            "SELECT data FROM workspace_material WHERE material_id=%s", (bound["material_id"],)
+        ).fetchone()[0]
+        candidates = [
+            _build(
+                work_id=value["work_id"],
+                version_id=value["version_id"],
+                source_hash=original["source_hash"],
+                scope="abstract",
+                parser_revision=f"alternate-parser-{index}",
+                pages=original["pages"],
+                page_count=None,
+                quality="text_extracted",
+                warnings=[],
+                complete=True,
+            )
+            for index in range(100)
+        ]
+        alternate = min(candidates, key=lambda material: material.material_id)
+        assert alternate.material_id < bound["material_id"]
+        conn.execute(
+            "INSERT INTO workspace_material VALUES (%s,%s,%s,%s,%s)",
+            (
+                alternate.material_id,
+                alternate.version_id,
+                alternate.content_hash,
+                alternate.scope,
+                Jsonb(asdict(alternate)),
+            ),
+        )
+    preserved = repo.project("a", PID)["sources"][0]["reference"]
+    assert preserved["available"] and preserved["material_id"] == bound["material_id"]
+    assert preserved["parser_revision"] == bound["parser_revision"]
+    assert preserved["quote"] == bound["quote"]
+
+
 def test_links_and_artifacts_preserve_types_and_validate_owned_passages(store):
     value = support.ingest(store)
     note = store.write_entry("a", support.entry(value))
