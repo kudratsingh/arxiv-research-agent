@@ -1,4 +1,5 @@
 """Owned manual research context. These contracts never authorize generation."""
+
 from __future__ import annotations
 
 import re
@@ -29,14 +30,49 @@ ProductMode = Literal["learn", "research"]
 def safe_return(value: str) -> str:
     """Constrain durable navigation context; it is never an arbitrary redirect."""
     parts = urlsplit(value)
-    allowed = {"/workspace/today", "/workspace/radar", "/workspace/library", "/workspace/review", "/workspace/projects"}
+    allowed = {
+        "/workspace/today",
+        "/workspace/radar",
+        "/workspace/library",
+        "/workspace/review",
+        "/workspace/projects",
+    }
     thread_route = re.fullmatch(r"/workspace/threads/thread-[a-f0-9]{32}", parts.path)
-    if parts.scheme or parts.netloc or (parts.path not in allowed and not thread_route) or any(ord(c) < 32 or c == "\\" for c in value):
+    if (
+        parts.scheme
+        or parts.netloc
+        or (parts.path not in allowed and not thread_route)
+        or any(ord(c) < 32 or c == "\\" for c in value)
+    ):
         raise ValueError("return context must be a local workspace list/project/thread route")
-    keys = {"mode", "project", "thread", "focus", "view", "q", "source_id", "access_state", "status", "days", "cursor", "as_of", "packet", "entry", "version"}
-    params = [(k, v) for k, v in parse_qsl(parts.query) if k in keys and len(v) <= (2048 if k == "cursor" else 500)]
+    keys = {
+        "mode",
+        "project",
+        "thread",
+        "focus",
+        "view",
+        "q",
+        "source_id",
+        "access_state",
+        "status",
+        "days",
+        "cursor",
+        "as_of",
+        "packet",
+        "entry",
+        "version",
+    }
+    params = [
+        (k, v)
+        for k, v in parse_qsl(parts.query)
+        if k in keys and len(v) <= (2048 if k == "cursor" else 500)
+    ]
     fragment = parts.fragment if len(parts.fragment) <= 500 else ""
-    return parts.path + ("?" + urlencode(params) if params else "") + ("#" + fragment if fragment else "")
+    return (
+        parts.path
+        + ("?" + urlencode(params) if params else "")
+        + ("#" + fragment if fragment else "")
+    )
 
 
 class ResumeContext(StrictModel):

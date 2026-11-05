@@ -74,10 +74,13 @@ Editor/association forms use the existing pending-write navigation veto.
 ## Exact evidence and unavailable material
 
 A whole-source link may be metadata-only; it is never a substantive support
-claim. Evidence needs a nonempty retained passage. Validate work/version owner
+claim. `metadata:0` carries no quotation or material identity and is accepted
+only as a source reference, never as evidence. Evidence needs a nonempty retained passage. Validate work/version owner
 visibility, source-version hash when supplied, material id/content hash/parser/
 scope, retained page mapping and Unicode code-point bounds. Rebuild material
-identity against retained bytes to refuse mutated payloads. Derive quote and
+identity against retained bytes to refuse mutated payloads. Compare the payload
+identity with its database key/hash/scope as well; recomputing a new payload does
+not replace material behind an old anchor. Derive quote and
 offsets server-side from that exact passage; do not search for the first matching
 quote. Wrong versions, hashes, pages, unselected/missing text or empty passages
 are refused. An unavailable pinned source remains unavailable; never select a
@@ -91,6 +94,8 @@ candidate cutoff and exact versions. Edits invalidate incompatible discovery
 snapshots/cursors. Derived snapshot/cache records may be frozen on read; this
 does not create a project or mutate authored preferences. Contextual state has
 an authoritative active edition; never select an unrelated `editions[0]`.
+Source receipt changes, including empty checks and failures with unchanged
+candidates, create a new coverage snapshot; note/reading edits retain queue order.
 
 One client URL builder preserves mode/project/thread, filters, focus, pagination,
 version, entry and passage as appropriate. Extend the constrained Reader-return
