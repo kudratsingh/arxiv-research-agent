@@ -14,7 +14,7 @@ import { QueueList } from "./Queue";
 import { PlayerBar } from "./PlayerBar";
 import { ControlBar, SidebarSection, StageHeaderSlot } from "./Slots";
 
-const FocusPaper = lazy(() => import("./FocusPaper").then(paper => ({ default: paper.FocusPaper })));
+import { FocusPaper } from "./FocusPaper";
 import { Mascot } from "./Mascot";
 
 const PreviewImport = lazy(() => import("./Import").then((module) => ({ default: module.PreviewImport })));
@@ -117,7 +117,7 @@ export function LiveLibrary() {
       {importOpened && <Suspense fallback={<p className="daily-muted">Opening the explicit preview transfer…</p>}><PreviewImport revision={state.profile.revision} reload={reload} announce={setNotice} disabled={busy || actions.busy} onBusyChange={setImportBusy} /></Suspense>}
     </details></SidebarSection>
     {focused ? <>
-      {available ? <><h2 className="sr-only">Focused source</h2><Suspense fallback={<p className="daily-muted" aria-busy="true">Opening the selected paper…</p>}><FocusPaper position={{ index: position.index, count: position.count }} item={focused} href={href} /></Suspense></> : <section className="daily-empty ws-empty"><Mascot mood="alert" size={72} /><div><h2>This retained source version is unavailable.</h2><p>A newer version has not been substituted. Your notes still retain their original version and passage.</p></div></section>}
+      {available ? <><h2 className="sr-only">Focused source</h2><FocusPaper position={{ index: position.index, count: position.count }} item={focused} href={href} /></> : <section className="daily-empty ws-empty"><Mascot mood="alert" size={72} /><div><h2>This retained source version is unavailable.</h2><p>A newer version has not been substituted. Your notes still retain their original version and passage.</p></div></section>}
       {notebook.some((work) => work.entries.length > 0) && <section className="ws-library-notebook" aria-labelledby="library-notebook"><h2 id="library-notebook">Questions, notes and next actions</h2>
         {filter === "notes" && <p className="daily-muted">All notebook entries in this view, with the focused source first.</p>}
         {notebook.flatMap((item) => item.entries.map((entry) => <article key={entry.id} className="daily-notebook-entry">

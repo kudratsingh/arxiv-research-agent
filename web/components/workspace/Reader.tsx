@@ -1,12 +1,12 @@
 "use client";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { normalizeReaderReturnTo, type WorkItem } from "@/lib/workspace/api";
 import { useWorkspace } from "@/lib/workspace/useWorkspace";
+import { readerModule, type ReaderContentComponent } from "@/lib/workspace/readerModule";
 import { LoadingState } from "./Common";
 
-const ReaderContent = lazy(() => import("./ReaderContent"));
 const ReaderReviewContext = lazy(() => import("./ReaderReviewContext"));
 
 export function LiveReader({ id }: { id: string }) {
@@ -21,6 +21,19 @@ export function LiveReader({ id }: { id: string }) {
     ? <Suspense fallback={null}><ReaderReviewContext returnTo={returnTo} onReady={setReview} /></Suspense> : null;
 
   const item = state?.works.find((work) => work.work_id === id);
+  const hasItem = Boolean(item);
+  const contentKey = state ? `${state.principal_key_id}:${id}:${requestedVersion ?? ""}:${requestedEntry ?? ""}` : "";
+  const [Content, setContent] = useState<ReaderContentComponent | null>(() => readerModule.peek());
+  const [contentError, setContentError] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
+  useEffect(() => {
+    if (!hasItem || Content) return;
+    let active = true;
+    readerModule.load().then(component => {
+      if (active) { setContent(() => component); setContentError(false); }
+    }).catch(() => { if (active) setContentError(true); });
+    return () => { active = false; };
+  }, [hasItem, Content, loadAttempt, contentKey]);
   return <>{reviewContext}{!state
     ? <LoadingState error={error} retry={() => void reload()} />
     : !item ? <div className="daily-empty" data-reader-unavailable="">
@@ -33,8 +46,14 @@ export function LiveReader({ id }: { id: string }) {
           Open Library →
         </Link>
       </div>
-    : <Suspense fallback={<p className="daily-muted" aria-busy="true">Opening the retained source reader…</p>}><ReaderContent
-      key={`${state.principal_key_id}:${item.work_id}:${requestedVersion ?? ""}:${requestedEntry ?? ""}`}
+    : contentError ? <section className="workspace-alert error" data-reader-unavailable="">
+        <h1>This source view could not be opened.</h1>
+        <p>Your source and saved notes are unchanged. Retry to open this exact source version.</p>
+        <button type="button" className="daily-secondary" onClick={() => { setContentError(false); setLoadAttempt(value => value + 1); }}>Retry source view</button>
+      </section>
+    : !Content ? <p className="daily-muted" aria-busy="true">Opening the retained source reader…</p>
+    : <Content
+      key={contentKey}
       item={item}
       state={state}
       setState={setState}
@@ -43,5 +62,5 @@ export function LiveReader({ id }: { id: string }) {
       requestedEntry={requestedEntry}
       returnTo={returnTo}
       reviewWorks={reviewWorks}
-    /></Suspense>}</>;
+    />}</>;
 }
