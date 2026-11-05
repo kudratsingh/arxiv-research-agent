@@ -131,13 +131,18 @@ test("a failed real save retains the draft across reload and permits recovery", 
   await page
     .getByRole("textbox", { name: "Your question", exact: true })
     .fill(text);
-  await page.route("**/api/workspace/entries", (route) =>
-    route.abort("failed"),
-  );
+  let intercepted = 0;
+  // D2 moves Reader writes to the context-aware endpoint. Fail the real
+  // emitted request, keeping the outage/reload/retry assertions intact.
+  await page.route("**/api/workspace/context/entries", (route) => {
+    intercepted++;
+    return route.abort("failed");
+  });
   await page
     .getByRole("button", { name: "Save question", exact: true })
     .click();
   await expect(page.getByRole("status")).toContainText("unavailable");
+  expect(intercepted).toBe(1);
   await expect(
     page.getByRole("textbox", { name: "Your question", exact: true }),
   ).toHaveValue(text);
@@ -148,7 +153,7 @@ test("a failed real save retains the draft across reload and permits recovery", 
   await expect(page.getByRole("status")).toContainText(
     "Recovered your unsaved draft",
   );
-  await page.unroute("**/api/workspace/entries");
+  await page.unroute("**/api/workspace/context/entries");
   await page
     .getByRole("button", { name: "Save question", exact: true })
     .click();
