@@ -1,0 +1,18 @@
+FAIL desktop AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
++ actual - expected
+... Skipped lines
+
+  {
+    length: 4,
+    state: {
+      __NA: true,
+      __PRIVATE_NEXTJS_INTERNALS_TREE: {
+...
+      },
++     workspaceScroll: 1764
+-     workspaceScroll: 509
+    }
+  }
+
+PASS mobile
+{"status":"fail","cases":2,"writes":[{"name":"desktop","path":"/api/workspace/reading","work":"ci:workspace-agent-evaluation","forwarded":true},{"name":"desktop","path":"/api/workspace/entries","work":"ci:workspace-agent-evaluation","forwarded":false,"injection":"held then409"},{"name":"desktop","path":"/api/workspace/reading","work":"ci:workspace-agent-evaluation","forwarded":true,"kind":"restore own logicalreadingfields"},{"name":"mobile","path":"/api/workspace/reading","work":"ci:workspace-agent-evaluation","forwarded":true},{"name":"mobile","path":"/api/workspace/entries","work":"ci:workspace-agent-evaluation","forwarded":false,"injection":"held then409"},{"name":"mobile","path":"/api/workspace/entries","work":"ci:workspace-agent-evaluation","forwarded":true},{"name":"mobile","path":"/api/workspace/reading","work":"ci:workspace-agent-evaluation","forwarded":true,"kind":"restore own logicalreadingfields"}],"blocked":[],"errors":[]}

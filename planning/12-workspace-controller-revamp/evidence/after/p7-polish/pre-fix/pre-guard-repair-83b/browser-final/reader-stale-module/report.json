@@ -1,0 +1,37 @@
+{
+  "base": "http://127.0.0.1:3168",
+  "startedAtUtc": "2026-11-05T07:07:45.311Z",
+  "scope": "Held actual Reader code, native route away before release, no stale source adoption, cached code/new work; read-only",
+  "cases": [
+    {
+      "name": "desktop",
+      "status": "pass",
+      "requests": [
+        "/_next/static/chunks/7882.3614371e86a6bc6f.js"
+      ],
+      "originalWork": "arxiv:2611.99800",
+      "finalWork": "arxiv:2611.99000",
+      "exactVersion": "arxiv:2611.99000:v1",
+      "noStaleReaderOnToday": true,
+      "cachedCodeReused": true,
+      "serverStateUnchanged": true
+    },
+    {
+      "name": "mobile",
+      "status": "pass",
+      "requests": [
+        "/_next/static/chunks/7882.3614371e86a6bc6f.js"
+      ],
+      "originalWork": "arxiv:2611.99800",
+      "finalWork": "arxiv:2611.99000",
+      "exactVersion": "arxiv:2611.99000:v1",
+      "noStaleReaderOnToday": true,
+      "cachedCodeReused": true,
+      "serverStateUnchanged": true
+    }
+  ],
+  "blocked": [],
+  "errors": [],
+  "endedAtUtc": "2026-11-05T07:07:50.257Z",
+  "status": "pass"
+}

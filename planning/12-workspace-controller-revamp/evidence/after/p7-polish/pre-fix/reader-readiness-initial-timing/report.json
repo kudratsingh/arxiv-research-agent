@@ -1,0 +1,1377 @@
+{
+  "phase": "baseline",
+  "base": "http://127.0.0.1:3148",
+  "principal": "controller-p6-preview",
+  "startedAtUtc": "2026-11-05T05:20:51.713Z",
+  "scope": "One cold loopback navigation per viewport/theme; single observations, not causal speed/transfer-reduction proof",
+  "cases": [
+    {
+      "name": "desktop-light",
+      "status": "pass",
+      "readiness": {
+        "phases": [
+          {
+            "label": "Opening your local workspace…",
+            "atMs": 29.400000035762787
+          },
+          {
+            "label": "retained-source",
+            "atMs": 242.4000000357628
+          }
+        ],
+        "headingAtMs": 242.4000000357628,
+        "sourceAtMs": 242.4000000357628,
+        "markAtMs": 242.4000000357628,
+        "settledAtMs": 766.5,
+        "theme": "light"
+      },
+      "geometry": {
+        "inset": 16.34375,
+        "bottom": 51.34375,
+        "barTop": 788
+      },
+      "exactVersion": "arxiv:2611.99800:v1",
+      "exactUnicodeRange": "abstract:2500:2520",
+      "exactQuote": "is intentionally lon",
+      "scriptCount": 26,
+      "settledJavaScriptBodyBytes": 225945,
+      "requests": [
+        {
+          "path": "/_next/static/chunks/7817-d2aa1481ea461335.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 4054,
+          "responseHeadersBytes": 518,
+          "startMs": 0.054,
+          "endMs": 7.344
+        },
+        {
+          "path": "/_next/static/chunks/2982.c83ca6a7ee38df33.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 18306,
+          "responseHeadersBytes": 518,
+          "startMs": 0.056,
+          "endMs": 8.606
+        },
+        {
+          "path": "/_next/static/chunks/3146.5403ad7ab2976d8f.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 12932,
+          "responseHeadersBytes": 518,
+          "startMs": 0.058,
+          "endMs": 8.433
+        },
+        {
+          "path": "/_next/static/chunks/5296-9e8513b2c0946000.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 1806,
+          "responseHeadersBytes": 518,
+          "startMs": 0.073,
+          "endMs": 19.116
+        },
+        {
+          "path": "/_next/static/chunks/app/(live)/template-83d2943d32513f3b.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 3516,
+          "responseHeadersBytes": 518,
+          "startMs": 0.095,
+          "endMs": 20.905
+        },
+        {
+          "path": "/_next/static/chunks/1540.67036401d0e30b05.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 2521,
+          "responseHeadersBytes": 518,
+          "startMs": 0.114,
+          "endMs": 6.384
+        },
+        {
+          "path": "/_next/static/chunks/1935-32d99753df5b9519.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 5582,
+          "responseHeadersBytes": 518,
+          "startMs": 0.117,
+          "endMs": 6.305
+        },
+        {
+          "path": "/_next/static/chunks/2316-9f220a1a89990c08.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 1374,
+          "responseHeadersBytes": 517,
+          "startMs": 0.117,
+          "endMs": 8.054
+        },
+        {
+          "path": "/_next/static/chunks/8375.b05e87629f6ce61b.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 894,
+          "responseHeadersBytes": 486,
+          "startMs": 0.119,
+          "endMs": 3.693
+        },
+        {
+          "path": "/_next/static/chunks/6430-ed6c548668b43fcd.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 3180,
+          "responseHeadersBytes": 518,
+          "startMs": 0.136,
+          "endMs": 6.808
+        },
+        {
+          "path": "/api/workspace/state",
+          "type": "fetch",
+          "status": 200,
+          "responseBodyBytes": 135458,
+          "responseHeadersBytes": 423,
+          "startMs": 0.139,
+          "endMs": 109.692
+        },
+        {
+          "path": "/_next/static/media/b75e973a7f03466f.woff2",
+          "type": "font",
+          "status": 200,
+          "responseBodyBytes": 34416,
+          "responseHeadersBytes": 439,
+          "startMs": 0.139,
+          "endMs": 11.58
+        },
+        {
+          "path": "/_next/static/chunks/4626-c11f45d2b1552a69.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 2890,
+          "responseHeadersBytes": 518,
+          "startMs": 0.141,
+          "endMs": 20.942
+        },
+        {
+          "path": "/_next/static/chunks/8500-107859ed31978aa3.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 3243,
+          "responseHeadersBytes": 518,
+          "startMs": 0.145,
+          "endMs": 19.274
+        },
+        {
+          "path": "/_next/static/chunks/6708-5180b011d18b4046.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 3040,
+          "responseHeadersBytes": 518,
+          "startMs": 0.15,
+          "endMs": 7.301
+        },
+        {
+          "path": "/_next/static/chunks/webpack-de7e04be5685306c.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 2708,
+          "responseHeadersBytes": 518,
+          "startMs": 0.153,
+          "endMs": 15.629
+        },
+        {
+          "path": "/_next/static/chunks/app/(live)/layout-2e4f6b9f2dc5c69e.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 433,
+          "responseHeadersBytes": 486,
+          "startMs": 0.155,
+          "endMs": 18.278
+        },
+        {
+          "path": "/_next/static/chunks/app/not-found-5e995a170722fb8b.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 339,
+          "responseHeadersBytes": 486,
+          "startMs": 0.156,
+          "endMs": 24.757
+        },
+        {
+          "path": "/_next/static/media/4a7f5dc07e8cb505.woff2",
+          "type": "font",
+          "status": 200,
+          "responseBodyBytes": 14276,
+          "responseHeadersBytes": 439,
+          "startMs": 0.164,
+          "endMs": 14.374
+        },
+        {
+          "path": "/_next/static/media/c9067fc2f3d1f4e5.woff2",
+          "type": "font",
+          "status": 200,
+          "responseBodyBytes": 13996,
+          "responseHeadersBytes": 439,
+          "startMs": 0.171,
+          "endMs": 14.594
+        },
+        {
+          "path": "/_next/static/css/5d816b8c0dad564e.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 1046,
+          "responseHeadersBytes": 503,
+          "startMs": 0.179,
+          "endMs": 7.303
+        },
+        {
+          "path": "/_next/static/chunks/app/global-error-4ca5521766b8c25d.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 986,
+          "responseHeadersBytes": 517,
+          "startMs": 0.186,
+          "endMs": 20.783
+        },
+        {
+          "path": "/_next/static/css/7cd7f3878632625c.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 658,
+          "responseHeadersBytes": 503,
+          "startMs": 0.189,
+          "endMs": 6.287
+        },
+        {
+          "path": "/_next/static/chunks/main-app-917a6a97efb0c7ee.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 472,
+          "responseHeadersBytes": 486,
+          "startMs": 0.192,
+          "endMs": 18.676
+        },
+        {
+          "path": "/_next/static/chunks/4bd1b696-e199e788e58acf79.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 64173,
+          "responseHeadersBytes": 519,
+          "startMs": 0.196,
+          "endMs": 27.108
+        },
+        {
+          "path": "/_next/static/chunks/3794-84013bfe205fc83e.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 67242,
+          "responseHeadersBytes": 519,
+          "startMs": 0.198,
+          "endMs": 27.429
+        },
+        {
+          "path": "/_next/static/css/f4b04de22fdebcb9.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 7800,
+          "responseHeadersBytes": 504,
+          "startMs": 0.246,
+          "endMs": 6.129
+        },
+        {
+          "path": "/_next/static/chunks/1944-c8f2c5df9893687c.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 4218,
+          "responseHeadersBytes": 518,
+          "startMs": 0.252,
+          "endMs": 20.624
+        },
+        {
+          "path": "/_next/static/media/8b355a0d3365113c.p.woff2",
+          "type": "font",
+          "status": 200,
+          "responseBodyBytes": 19892,
+          "responseHeadersBytes": 439,
+          "startMs": 0.267,
+          "endMs": 5.88
+        },
+        {
+          "path": "/_next/static/css/fadd03207f4f952a.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 433,
+          "responseHeadersBytes": 472,
+          "startMs": 0.321,
+          "endMs": 7.172
+        },
+        {
+          "path": "/_next/static/css/e99d0168c1fda947.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 8184,
+          "responseHeadersBytes": 504,
+          "startMs": 0.342,
+          "endMs": 7.916
+        },
+        {
+          "path": "/_next/static/css/8609413464d16cbc.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 3411,
+          "responseHeadersBytes": 504,
+          "startMs": 0.352,
+          "endMs": 6.9
+        },
+        {
+          "path": "/_next/static/chunks/1423.f988b92f231a827e.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 3597,
+          "responseHeadersBytes": 518,
+          "startMs": 0.401,
+          "endMs": 9.079
+        },
+        {
+          "path": "/_next/static/chunks/app/(live)/workspace/items/%5Bid%5D/page-b16581781832c25c.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 13163,
+          "responseHeadersBytes": 518,
+          "startMs": 0.736,
+          "endMs": 23.979
+        },
+        {
+          "path": "/_next/static/chunks/2300-48d38c12a9935ce7.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 2290,
+          "responseHeadersBytes": 518,
+          "startMs": 1.034,
+          "endMs": 23.006
+        },
+        {
+          "path": "/_next/static/chunks/app/(workspace)/layout-0defdb5452b72894.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 251,
+          "responseHeadersBytes": 485,
+          "startMs": 1.151,
+          "endMs": 23.482
+        },
+        {
+          "path": "/_next/static/chunks/7214-d0728730539e3f2a.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 2735,
+          "responseHeadersBytes": 518,
+          "startMs": 1.245,
+          "endMs": 24.528
+        },
+        {
+          "path": "/workspace/items/arxiv%3A2611.99800",
+          "type": "document",
+          "status": 200,
+          "responseBodyBytes": 6479,
+          "responseHeadersBytes": 844,
+          "startMs": 2.382,
+          "endMs": 11.985
+        }
+      ],
+      "screenshot": "desktop-light.png",
+      "serverStateUnchanged": true
+    },
+    {
+      "name": "desktop-dark",
+      "status": "pass",
+      "readiness": {
+        "phases": [
+          {
+            "label": "Opening your local workspace…",
+            "atMs": 14.900000035762787
+          },
+          {
+            "label": "retained-source",
+            "atMs": 187.5
+          }
+        ],
+        "headingAtMs": 187.5,
+        "sourceAtMs": 187.5,
+        "markAtMs": 187.5,
+        "settledAtMs": 704.5,
+        "theme": "dark"
+      },
+      "geometry": {
+        "inset": 16.34375,
+        "bottom": 51.34375,
+        "barTop": 788
+      },
+      "exactVersion": "arxiv:2611.99800:v1",
+      "exactUnicodeRange": "abstract:2500:2520",
+      "exactQuote": "is intentionally lon",
+      "scriptCount": 26,
+      "settledJavaScriptBodyBytes": 225945,
+      "requests": [
+        {
+          "path": "/_next/static/chunks/5296-9e8513b2c0946000.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 1806,
+          "responseHeadersBytes": 518,
+          "startMs": 0.082,
+          "endMs": 12.673
+        },
+        {
+          "path": "/_next/static/chunks/7817-d2aa1481ea461335.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 4054,
+          "responseHeadersBytes": 518,
+          "startMs": 0.084,
+          "endMs": 7.191
+        },
+        {
+          "path": "/api/workspace/state",
+          "type": "fetch",
+          "status": 200,
+          "responseBodyBytes": 135458,
+          "responseHeadersBytes": 423,
+          "startMs": 0.091,
+          "endMs": 111.77
+        },
+        {
+          "path": "/_next/static/chunks/8500-107859ed31978aa3.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 3243,
+          "responseHeadersBytes": 518,
+          "startMs": 0.118,
+          "endMs": 12.54
+        },
+        {
+          "path": "/_next/static/media/8b355a0d3365113c.p.woff2",
+          "type": "font",
+          "status": 200,
+          "responseBodyBytes": 19892,
+          "responseHeadersBytes": 439,
+          "startMs": 0.12,
+          "endMs": 3.497
+        },
+        {
+          "path": "/_next/static/chunks/2316-9f220a1a89990c08.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 1374,
+          "responseHeadersBytes": 517,
+          "startMs": 0.122,
+          "endMs": 7.344
+        },
+        {
+          "path": "/_next/static/chunks/3146.5403ad7ab2976d8f.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 12932,
+          "responseHeadersBytes": 518,
+          "startMs": 0.123,
+          "endMs": 7.92
+        },
+        {
+          "path": "/_next/static/media/b75e973a7f03466f.woff2",
+          "type": "font",
+          "status": 200,
+          "responseBodyBytes": 34416,
+          "responseHeadersBytes": 439,
+          "startMs": 0.125,
+          "endMs": 4.843
+        },
+        {
+          "path": "/_next/static/chunks/2982.c83ca6a7ee38df33.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 18306,
+          "responseHeadersBytes": 518,
+          "startMs": 0.13,
+          "endMs": 8.992
+        },
+        {
+          "path": "/_next/static/chunks/6708-5180b011d18b4046.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 3040,
+          "responseHeadersBytes": 518,
+          "startMs": 0.132,
+          "endMs": 6.793
+        },
+        {
+          "path": "/_next/static/chunks/1935-32d99753df5b9519.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 5582,
+          "responseHeadersBytes": 518,
+          "startMs": 0.133,
+          "endMs": 6.054
+        },
+        {
+          "path": "/_next/static/chunks/1944-c8f2c5df9893687c.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 4218,
+          "responseHeadersBytes": 518,
+          "startMs": 0.144,
+          "endMs": 15.02
+        },
+        {
+          "path": "/_next/static/chunks/1540.67036401d0e30b05.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 2521,
+          "responseHeadersBytes": 518,
+          "startMs": 0.153,
+          "endMs": 7.034
+        },
+        {
+          "path": "/_next/static/chunks/4626-c11f45d2b1552a69.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 2890,
+          "responseHeadersBytes": 518,
+          "startMs": 0.16,
+          "endMs": 15.848
+        },
+        {
+          "path": "/_next/static/media/c9067fc2f3d1f4e5.woff2",
+          "type": "font",
+          "status": 200,
+          "responseBodyBytes": 13996,
+          "responseHeadersBytes": 439,
+          "startMs": 0.161,
+          "endMs": 21.978
+        },
+        {
+          "path": "/_next/static/chunks/3794-84013bfe205fc83e.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 67242,
+          "responseHeadersBytes": 519,
+          "startMs": 0.164,
+          "endMs": 23.058
+        },
+        {
+          "path": "/_next/static/media/4a7f5dc07e8cb505.woff2",
+          "type": "font",
+          "status": 200,
+          "responseBodyBytes": 14276,
+          "responseHeadersBytes": 439,
+          "startMs": 0.165,
+          "endMs": 22.193
+        },
+        {
+          "path": "/_next/static/chunks/6430-ed6c548668b43fcd.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 3180,
+          "responseHeadersBytes": 518,
+          "startMs": 0.202,
+          "endMs": 6.9
+        },
+        {
+          "path": "/_next/static/chunks/main-app-917a6a97efb0c7ee.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 472,
+          "responseHeadersBytes": 486,
+          "startMs": 0.205,
+          "endMs": 12.186
+        },
+        {
+          "path": "/_next/static/chunks/8375.b05e87629f6ce61b.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 894,
+          "responseHeadersBytes": 486,
+          "startMs": 0.208,
+          "endMs": 3.577
+        },
+        {
+          "path": "/_next/static/css/f4b04de22fdebcb9.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 7800,
+          "responseHeadersBytes": 504,
+          "startMs": 0.227,
+          "endMs": 4.691
+        },
+        {
+          "path": "/_next/static/chunks/app/(live)/layout-2e4f6b9f2dc5c69e.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 433,
+          "responseHeadersBytes": 486,
+          "startMs": 0.238,
+          "endMs": 11.973
+        },
+        {
+          "path": "/_next/static/chunks/4bd1b696-e199e788e58acf79.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 64173,
+          "responseHeadersBytes": 519,
+          "startMs": 0.278,
+          "endMs": 21.918
+        },
+        {
+          "path": "/_next/static/chunks/app/(live)/template-83d2943d32513f3b.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 3516,
+          "responseHeadersBytes": 518,
+          "startMs": 0.297,
+          "endMs": 15.203
+        },
+        {
+          "path": "/workspace/items/arxiv%3A2611.99800",
+          "type": "document",
+          "status": 200,
+          "responseBodyBytes": 6479,
+          "responseHeadersBytes": 844,
+          "startMs": 0.33,
+          "endMs": 5.659
+        },
+        {
+          "path": "/_next/static/chunks/app/global-error-4ca5521766b8c25d.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 986,
+          "responseHeadersBytes": 517,
+          "startMs": 0.335,
+          "endMs": 15.421
+        },
+        {
+          "path": "/_next/static/chunks/webpack-de7e04be5685306c.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 2708,
+          "responseHeadersBytes": 518,
+          "startMs": 0.337,
+          "endMs": 10.475
+        },
+        {
+          "path": "/_next/static/css/5d816b8c0dad564e.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 1046,
+          "responseHeadersBytes": 503,
+          "startMs": 0.38,
+          "endMs": 5.759
+        },
+        {
+          "path": "/_next/static/css/7cd7f3878632625c.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 658,
+          "responseHeadersBytes": 503,
+          "startMs": 0.452,
+          "endMs": 5.086
+        },
+        {
+          "path": "/_next/static/chunks/app/not-found-5e995a170722fb8b.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 339,
+          "responseHeadersBytes": 486,
+          "startMs": 0.49,
+          "endMs": 20.972
+        },
+        {
+          "path": "/_next/static/chunks/app/(workspace)/layout-0defdb5452b72894.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 251,
+          "responseHeadersBytes": 485,
+          "startMs": 0.511,
+          "endMs": 17.6
+        },
+        {
+          "path": "/_next/static/css/fadd03207f4f952a.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 433,
+          "responseHeadersBytes": 472,
+          "startMs": 0.549,
+          "endMs": 5.215
+        },
+        {
+          "path": "/_next/static/css/e99d0168c1fda947.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 8184,
+          "responseHeadersBytes": 504,
+          "startMs": 0.563,
+          "endMs": 6.139
+        },
+        {
+          "path": "/_next/static/css/8609413464d16cbc.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 3411,
+          "responseHeadersBytes": 504,
+          "startMs": 0.572,
+          "endMs": 5.805
+        },
+        {
+          "path": "/_next/static/chunks/1423.f988b92f231a827e.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 3597,
+          "responseHeadersBytes": 518,
+          "startMs": 0.592,
+          "endMs": 8.344
+        },
+        {
+          "path": "/_next/static/chunks/7214-d0728730539e3f2a.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 2735,
+          "responseHeadersBytes": 518,
+          "startMs": 0.768,
+          "endMs": 17.982
+        },
+        {
+          "path": "/_next/static/chunks/app/(live)/workspace/items/%5Bid%5D/page-b16581781832c25c.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 13163,
+          "responseHeadersBytes": 518,
+          "startMs": 0.787,
+          "endMs": 18.707
+        },
+        {
+          "path": "/_next/static/chunks/2300-48d38c12a9935ce7.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 2290,
+          "responseHeadersBytes": 518,
+          "startMs": 0.92,
+          "endMs": 17.842
+        }
+      ],
+      "screenshot": "desktop-dark.png",
+      "serverStateUnchanged": true
+    },
+    {
+      "name": "mobile-light",
+      "status": "pass",
+      "readiness": {
+        "phases": [
+          {
+            "label": "Opening your local workspace…",
+            "atMs": 16.19999998807907
+          },
+          {
+            "label": "retained-source",
+            "atMs": 172.89999997615814
+          }
+        ],
+        "headingAtMs": 172.89999997615814,
+        "sourceAtMs": 172.89999997615814,
+        "markAtMs": 172.89999997615814,
+        "settledAtMs": 694.8999999761581,
+        "theme": "light"
+      },
+      "geometry": {
+        "inset": 16.109375,
+        "bottom": 40.109375,
+        "barTop": 666
+      },
+      "exactVersion": "arxiv:2611.99800:v1",
+      "exactUnicodeRange": "abstract:2500:2520",
+      "exactQuote": "is intentionally lon",
+      "scriptCount": 18,
+      "settledJavaScriptBodyBytes": 173880,
+      "requests": [
+        {
+          "path": "/_next/static/media/4a7f5dc07e8cb505.woff2",
+          "type": "font",
+          "status": 200,
+          "responseBodyBytes": 14276,
+          "responseHeadersBytes": 439,
+          "startMs": 0.089,
+          "endMs": 11.53
+        },
+        {
+          "path": "/_next/static/media/c9067fc2f3d1f4e5.woff2",
+          "type": "font",
+          "status": 200,
+          "responseBodyBytes": 13996,
+          "responseHeadersBytes": 439,
+          "startMs": 0.097,
+          "endMs": 11.3
+        },
+        {
+          "path": "/api/workspace/state",
+          "type": "fetch",
+          "status": 200,
+          "responseBodyBytes": 135458,
+          "responseHeadersBytes": 423,
+          "startMs": 0.109,
+          "endMs": 101.054
+        },
+        {
+          "path": "/_next/static/chunks/4bd1b696-e199e788e58acf79.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 64173,
+          "responseHeadersBytes": 519,
+          "startMs": 0.114,
+          "endMs": 19.216
+        },
+        {
+          "path": "/_next/static/chunks/webpack-de7e04be5685306c.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 2708,
+          "responseHeadersBytes": 518,
+          "startMs": 0.126,
+          "endMs": 9.21
+        },
+        {
+          "path": "/_next/static/media/b75e973a7f03466f.woff2",
+          "type": "font",
+          "status": 200,
+          "responseBodyBytes": 34416,
+          "responseHeadersBytes": 439,
+          "startMs": 0.127,
+          "endMs": 7.054
+        },
+        {
+          "path": "/_next/static/chunks/4626-c11f45d2b1552a69.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 2890,
+          "responseHeadersBytes": 518,
+          "startMs": 0.13,
+          "endMs": 14.637
+        },
+        {
+          "path": "/_next/static/chunks/8375.b05e87629f6ce61b.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 894,
+          "responseHeadersBytes": 486,
+          "startMs": 0.13,
+          "endMs": 2.803
+        },
+        {
+          "path": "/_next/static/chunks/1540.67036401d0e30b05.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 2521,
+          "responseHeadersBytes": 518,
+          "startMs": 0.256,
+          "endMs": 6.443
+        },
+        {
+          "path": "/_next/static/chunks/main-app-917a6a97efb0c7ee.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 472,
+          "responseHeadersBytes": 486,
+          "startMs": 0.257,
+          "endMs": 11.41
+        },
+        {
+          "path": "/_next/static/chunks/3794-84013bfe205fc83e.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 67242,
+          "responseHeadersBytes": 519,
+          "startMs": 0.264,
+          "endMs": 21.894
+        },
+        {
+          "path": "/_next/static/chunks/5296-9e8513b2c0946000.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 1806,
+          "responseHeadersBytes": 518,
+          "startMs": 0.273,
+          "endMs": 12.948
+        },
+        {
+          "path": "/_next/static/chunks/app/(live)/layout-2e4f6b9f2dc5c69e.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 433,
+          "responseHeadersBytes": 486,
+          "startMs": 0.277,
+          "endMs": 11.74
+        },
+        {
+          "path": "/_next/static/chunks/8500-107859ed31978aa3.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 3243,
+          "responseHeadersBytes": 518,
+          "startMs": 0.29,
+          "endMs": 12.431
+        },
+        {
+          "path": "/_next/static/chunks/app/global-error-4ca5521766b8c25d.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 986,
+          "responseHeadersBytes": 517,
+          "startMs": 0.3,
+          "endMs": 13.862
+        },
+        {
+          "path": "/_next/static/media/8b355a0d3365113c.p.woff2",
+          "type": "font",
+          "status": 200,
+          "responseBodyBytes": 19892,
+          "responseHeadersBytes": 439,
+          "startMs": 0.313,
+          "endMs": 5.124
+        },
+        {
+          "path": "/workspace/items/arxiv%3A2611.99800",
+          "type": "document",
+          "status": 200,
+          "responseBodyBytes": 6481,
+          "responseHeadersBytes": 844,
+          "startMs": 0.356,
+          "endMs": 6.137
+        },
+        {
+          "path": "/_next/static/css/fadd03207f4f952a.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 433,
+          "responseHeadersBytes": 472,
+          "startMs": 0.379,
+          "endMs": 5.371
+        },
+        {
+          "path": "/_next/static/css/8609413464d16cbc.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 3411,
+          "responseHeadersBytes": 504,
+          "startMs": 0.394,
+          "endMs": 5.276
+        },
+        {
+          "path": "/_next/static/chunks/app/(live)/workspace/items/%5Bid%5D/page-b16581781832c25c.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 13163,
+          "responseHeadersBytes": 518,
+          "startMs": 0.434,
+          "endMs": 18.829
+        },
+        {
+          "path": "/_next/static/css/e99d0168c1fda947.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 8184,
+          "responseHeadersBytes": 504,
+          "startMs": 0.442,
+          "endMs": 5.968
+        },
+        {
+          "path": "/_next/static/chunks/app/(live)/template-83d2943d32513f3b.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 3516,
+          "responseHeadersBytes": 518,
+          "startMs": 0.463,
+          "endMs": 14.108
+        },
+        {
+          "path": "/_next/static/css/7cd7f3878632625c.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 658,
+          "responseHeadersBytes": 503,
+          "startMs": 0.506,
+          "endMs": 4.575
+        },
+        {
+          "path": "/_next/static/chunks/1944-c8f2c5df9893687c.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 4218,
+          "responseHeadersBytes": 518,
+          "startMs": 0.566,
+          "endMs": 14.344
+        },
+        {
+          "path": "/_next/static/css/f4b04de22fdebcb9.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 7800,
+          "responseHeadersBytes": 504,
+          "startMs": 0.574,
+          "endMs": 4.982
+        },
+        {
+          "path": "/_next/static/chunks/app/not-found-5e995a170722fb8b.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 339,
+          "responseHeadersBytes": 486,
+          "startMs": 0.594,
+          "endMs": 19.373
+        },
+        {
+          "path": "/_next/static/chunks/2300-48d38c12a9935ce7.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 2290,
+          "responseHeadersBytes": 518,
+          "startMs": 0.851,
+          "endMs": 17.865
+        },
+        {
+          "path": "/_next/static/css/5d816b8c0dad564e.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 1046,
+          "responseHeadersBytes": 503,
+          "startMs": 0.871,
+          "endMs": 5.415
+        },
+        {
+          "path": "/_next/static/chunks/7214-d0728730539e3f2a.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 2735,
+          "responseHeadersBytes": 518,
+          "startMs": 1.005,
+          "endMs": 18.066
+        },
+        {
+          "path": "/_next/static/chunks/app/(workspace)/layout-0defdb5452b72894.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 251,
+          "responseHeadersBytes": 485,
+          "startMs": 1.417,
+          "endMs": 17.706
+        }
+      ],
+      "screenshot": "mobile-light.png",
+      "serverStateUnchanged": true
+    },
+    {
+      "name": "mobile-dark",
+      "status": "pass",
+      "readiness": {
+        "phases": [
+          {
+            "label": "Opening your local workspace…",
+            "atMs": 15.100000023841858
+          },
+          {
+            "label": "retained-source",
+            "atMs": 178.9000000357628
+          }
+        ],
+        "headingAtMs": 178.9000000357628,
+        "sourceAtMs": 178.9000000357628,
+        "markAtMs": 178.9000000357628,
+        "settledAtMs": 699.1000000238419,
+        "theme": "dark"
+      },
+      "geometry": {
+        "inset": 16.109375,
+        "bottom": 40.109375,
+        "barTop": 666
+      },
+      "exactVersion": "arxiv:2611.99800:v1",
+      "exactUnicodeRange": "abstract:2500:2520",
+      "exactQuote": "is intentionally lon",
+      "scriptCount": 18,
+      "settledJavaScriptBodyBytes": 173880,
+      "requests": [
+        {
+          "path": "/_next/static/chunks/5296-9e8513b2c0946000.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 1806,
+          "responseHeadersBytes": 518,
+          "startMs": 0.058,
+          "endMs": 12.405
+        },
+        {
+          "path": "/_next/static/chunks/main-app-917a6a97efb0c7ee.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 472,
+          "responseHeadersBytes": 486,
+          "startMs": 0.069,
+          "endMs": 11.853
+        },
+        {
+          "path": "/_next/static/chunks/4bd1b696-e199e788e58acf79.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 64173,
+          "responseHeadersBytes": 519,
+          "startMs": 0.069,
+          "endMs": 18.884
+        },
+        {
+          "path": "/_next/static/chunks/webpack-de7e04be5685306c.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 2708,
+          "responseHeadersBytes": 518,
+          "startMs": 0.091,
+          "endMs": 8.046
+        },
+        {
+          "path": "/_next/static/media/c9067fc2f3d1f4e5.woff2",
+          "type": "font",
+          "status": 200,
+          "responseBodyBytes": 13996,
+          "responseHeadersBytes": 439,
+          "startMs": 0.102,
+          "endMs": 11.131
+        },
+        {
+          "path": "/_next/static/media/8b355a0d3365113c.p.woff2",
+          "type": "font",
+          "status": 200,
+          "responseBodyBytes": 19892,
+          "responseHeadersBytes": 439,
+          "startMs": 0.108,
+          "endMs": 3.663
+        },
+        {
+          "path": "/_next/static/chunks/app/(live)/layout-2e4f6b9f2dc5c69e.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 433,
+          "responseHeadersBytes": 486,
+          "startMs": 0.115,
+          "endMs": 11.895
+        },
+        {
+          "path": "/_next/static/chunks/3794-84013bfe205fc83e.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 67242,
+          "responseHeadersBytes": 519,
+          "startMs": 0.115,
+          "endMs": 21.351
+        },
+        {
+          "path": "/_next/static/chunks/8500-107859ed31978aa3.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 3243,
+          "responseHeadersBytes": 518,
+          "startMs": 0.122,
+          "endMs": 12.34
+        },
+        {
+          "path": "/_next/static/chunks/8375.b05e87629f6ce61b.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 894,
+          "responseHeadersBytes": 486,
+          "startMs": 0.128,
+          "endMs": 3.038
+        },
+        {
+          "path": "/api/workspace/state",
+          "type": "fetch",
+          "status": 200,
+          "responseBodyBytes": 135458,
+          "responseHeadersBytes": 423,
+          "startMs": 0.136,
+          "endMs": 108.86
+        },
+        {
+          "path": "/_next/static/media/4a7f5dc07e8cb505.woff2",
+          "type": "font",
+          "status": 200,
+          "responseBodyBytes": 14276,
+          "responseHeadersBytes": 439,
+          "startMs": 0.231,
+          "endMs": 11.174
+        },
+        {
+          "path": "/_next/static/media/b75e973a7f03466f.woff2",
+          "type": "font",
+          "status": 200,
+          "responseBodyBytes": 34416,
+          "responseHeadersBytes": 439,
+          "startMs": 0.232,
+          "endMs": 7.51
+        },
+        {
+          "path": "/_next/static/css/f4b04de22fdebcb9.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 7800,
+          "responseHeadersBytes": 504,
+          "startMs": 0.235,
+          "endMs": 4.891
+        },
+        {
+          "path": "/_next/static/chunks/1944-c8f2c5df9893687c.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 4218,
+          "responseHeadersBytes": 518,
+          "startMs": 0.245,
+          "endMs": 13.756
+        },
+        {
+          "path": "/_next/static/chunks/1540.67036401d0e30b05.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 2521,
+          "responseHeadersBytes": 518,
+          "startMs": 0.297,
+          "endMs": 6.489
+        },
+        {
+          "path": "/_next/static/css/5d816b8c0dad564e.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 1046,
+          "responseHeadersBytes": 503,
+          "startMs": 0.301,
+          "endMs": 4.956
+        },
+        {
+          "path": "/_next/static/chunks/4626-c11f45d2b1552a69.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 2890,
+          "responseHeadersBytes": 518,
+          "startMs": 0.304,
+          "endMs": 14.699
+        },
+        {
+          "path": "/_next/static/css/fadd03207f4f952a.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 433,
+          "responseHeadersBytes": 472,
+          "startMs": 0.309,
+          "endMs": 4.839
+        },
+        {
+          "path": "/_next/static/chunks/app/(live)/template-83d2943d32513f3b.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 3516,
+          "responseHeadersBytes": 518,
+          "startMs": 0.334,
+          "endMs": 14.368
+        },
+        {
+          "path": "/_next/static/chunks/app/global-error-4ca5521766b8c25d.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 986,
+          "responseHeadersBytes": 517,
+          "startMs": 0.344,
+          "endMs": 14.457
+        },
+        {
+          "path": "/workspace/items/arxiv%3A2611.99800",
+          "type": "document",
+          "status": 200,
+          "responseBodyBytes": 6477,
+          "responseHeadersBytes": 844,
+          "startMs": 0.354,
+          "endMs": 5.593
+        },
+        {
+          "path": "/_next/static/css/e99d0168c1fda947.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 8184,
+          "responseHeadersBytes": 504,
+          "startMs": 0.4,
+          "endMs": 5.72
+        },
+        {
+          "path": "/_next/static/css/8609413464d16cbc.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 3411,
+          "responseHeadersBytes": 504,
+          "startMs": 0.447,
+          "endMs": 4.595
+        },
+        {
+          "path": "/_next/static/css/7cd7f3878632625c.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 658,
+          "responseHeadersBytes": 503,
+          "startMs": 0.474,
+          "endMs": 4.183
+        },
+        {
+          "path": "/_next/static/chunks/app/not-found-5e995a170722fb8b.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 339,
+          "responseHeadersBytes": 486,
+          "startMs": 0.539,
+          "endMs": 18.983
+        },
+        {
+          "path": "/_next/static/chunks/app/(workspace)/layout-0defdb5452b72894.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 251,
+          "responseHeadersBytes": 485,
+          "startMs": 1.05,
+          "endMs": 16.688
+        },
+        {
+          "path": "/_next/static/chunks/2300-48d38c12a9935ce7.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 2290,
+          "responseHeadersBytes": 518,
+          "startMs": 1.072,
+          "endMs": 17.583
+        },
+        {
+          "path": "/_next/static/chunks/app/(live)/workspace/items/%5Bid%5D/page-b16581781832c25c.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 13163,
+          "responseHeadersBytes": 518,
+          "startMs": 1.102,
+          "endMs": 18.33
+        },
+        {
+          "path": "/_next/static/chunks/7214-d0728730539e3f2a.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 2735,
+          "responseHeadersBytes": 518,
+          "startMs": 1.103,
+          "endMs": 17.776
+        }
+      ],
+      "screenshot": "mobile-dark.png",
+      "serverStateUnchanged": true
+    }
+  ],
+  "blocked": [],
+  "errors": [],
+  "endedAtUtc": "2026-11-05T05:20:56.354Z",
+  "status": "pass"
+}

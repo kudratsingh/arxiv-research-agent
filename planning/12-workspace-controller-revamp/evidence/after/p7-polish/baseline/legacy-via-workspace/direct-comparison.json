@@ -1,0 +1,58 @@
+[
+  {
+    "case": "desktop-light-fictional-today",
+    "computedStateIdentical": true,
+    "axeIdentical": true,
+    "pixelsIdentical": true,
+    "diffBounds": null
+  },
+  {
+    "case": "desktop-light-evidence-workbench",
+    "computedStateIdentical": true,
+    "axeIdentical": true,
+    "pixelsIdentical": true,
+    "diffBounds": null
+  },
+  {
+    "case": "desktop-dark-fictional-today",
+    "computedStateIdentical": true,
+    "axeIdentical": true,
+    "pixelsIdentical": true,
+    "diffBounds": null
+  },
+  {
+    "case": "desktop-dark-evidence-workbench",
+    "computedStateIdentical": true,
+    "axeIdentical": true,
+    "pixelsIdentical": true,
+    "diffBounds": null
+  },
+  {
+    "case": "mobile-light-fictional-today",
+    "computedStateIdentical": true,
+    "axeIdentical": true,
+    "pixelsIdentical": true,
+    "diffBounds": null
+  },
+  {
+    "case": "mobile-light-evidence-workbench",
+    "computedStateIdentical": true,
+    "axeIdentical": true,
+    "pixelsIdentical": true,
+    "diffBounds": null
+  },
+  {
+    "case": "mobile-dark-fictional-today",
+    "computedStateIdentical": true,
+    "axeIdentical": true,
+    "pixelsIdentical": true,
+    "diffBounds": null
+  },
+  {
+    "case": "mobile-dark-evidence-workbench",
+    "computedStateIdentical": true,
+    "axeIdentical": true,
+    "pixelsIdentical": true,
+    "diffBounds": null
+  }
+]

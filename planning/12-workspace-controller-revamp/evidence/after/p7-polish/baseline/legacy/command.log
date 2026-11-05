@@ -1,0 +1,9 @@
+PASS desktop-light-fictional-today axe 1
+PASS desktop-light-evidence-workbench axe 0
+PASS desktop-dark-fictional-today axe 1
+PASS desktop-dark-evidence-workbench axe 0
+PASS mobile-light-fictional-today axe 1
+PASS mobile-light-evidence-workbench axe 0
+PASS mobile-dark-fictional-today axe 1
+PASS mobile-dark-evidence-workbench axe 0
+{"status":"pass","cases":8,"blocked":[],"errors":[]}

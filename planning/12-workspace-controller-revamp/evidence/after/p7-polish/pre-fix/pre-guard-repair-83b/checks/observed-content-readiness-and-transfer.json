@@ -1,0 +1,72 @@
+{
+  "application_commit": "83b196eb14b33cd3033453701e93482266366e5f",
+  "scope": "Single cold loopback observations, not a benchmark or causal speed/transfer reduction claim. Settled JavaScript response-body bytes include lazy scripts, exclude headers/CSS/fonts.",
+  "reader": [
+    {
+      "name": "desktop-light",
+      "p6_settled_js_body_bytes": 225945,
+      "p7_settled_js_body_bytes": 229514,
+      "delta_bytes": 3569,
+      "p6_content_dom_at_ms": 200.30000001192093,
+      "p7_content_dom_at_ms": 325.39999997615814
+    },
+    {
+      "name": "desktop-dark",
+      "p6_settled_js_body_bytes": 225945,
+      "p7_settled_js_body_bytes": 229514,
+      "delta_bytes": 3569,
+      "p6_content_dom_at_ms": 190.10000002384186,
+      "p7_content_dom_at_ms": 209.60000002384186
+    },
+    {
+      "name": "mobile-light",
+      "p6_settled_js_body_bytes": 173880,
+      "p7_settled_js_body_bytes": 177456,
+      "delta_bytes": 3576,
+      "p6_content_dom_at_ms": 181.0999999642372,
+      "p7_content_dom_at_ms": 234.19999998807907
+    },
+    {
+      "name": "mobile-dark",
+      "p6_settled_js_body_bytes": 173880,
+      "p7_settled_js_body_bytes": 177456,
+      "delta_bytes": 3576,
+      "p6_content_dom_at_ms": 180.39999997615814,
+      "p7_content_dom_at_ms": 193.10000002384186
+    }
+  ],
+  "today": [
+    {
+      "name": "desktop-light-today",
+      "p6_settled_js_body_bytes": 221893,
+      "p7_settled_js_body_bytes": 223665,
+      "delta_bytes": 1772,
+      "p6_content_dom_at_ms": 448.60000002384186,
+      "p7_content_dom_at_ms": 271.7000000476837
+    },
+    {
+      "name": "desktop-dark-today",
+      "p6_settled_js_body_bytes": 221893,
+      "p7_settled_js_body_bytes": 223665,
+      "delta_bytes": 1772,
+      "p6_content_dom_at_ms": 253.79999995231628,
+      "p7_content_dom_at_ms": 189
+    },
+    {
+      "name": "mobile-light-today",
+      "p6_settled_js_body_bytes": 169828,
+      "p7_settled_js_body_bytes": 171607,
+      "delta_bytes": 1779,
+      "p6_content_dom_at_ms": 251.19999998807907,
+      "p7_content_dom_at_ms": 184.69999998807907
+    },
+    {
+      "name": "mobile-dark-today",
+      "p6_settled_js_body_bytes": 169828,
+      "p7_settled_js_body_bytes": 171607,
+      "delta_bytes": 1779,
+      "p6_content_dom_at_ms": 291.80000001192093,
+      "p7_content_dom_at_ms": 183
+    }
+  ]
+}

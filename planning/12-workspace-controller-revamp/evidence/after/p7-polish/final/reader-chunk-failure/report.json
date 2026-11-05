@@ -1,0 +1,75 @@
+{
+  "base": "http://127.0.0.1:3168",
+  "principal": "controller-p7-preview",
+  "startedAtUtc": "2026-11-05T08:04:17.924Z",
+  "scope": "Deliberate abort of one actual ReaderContent JS request; explicit code-only retry with same retained version/latest hash, zero server mutations",
+  "cases": [
+    {
+      "name": "desktop",
+      "status": "pass",
+      "coreRequests": [
+        {
+          "path": "/_next/static/chunks/7882.2890e808f8759bc9.js",
+          "aborted": true,
+          "forwarded": false
+        },
+        {
+          "path": "/_next/static/chunks/7882.2890e808f8759bc9.js",
+          "aborted": false,
+          "forwarded": true
+        }
+      ],
+      "stateRequests": 1,
+      "expectedNetworkFailures": [
+        {
+          "path": "/_next/static/chunks/7882.2890e808f8759bc9.js",
+          "error": "net::ERR_FAILED"
+        }
+      ],
+      "consoleErrorsFromDeliberateAbort": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "exactVersion": "arxiv:2611.99800:v1",
+      "exactRange": "abstract:2500:2520",
+      "exactQuote": "is intentionally lon",
+      "serverStateUnchanged": true
+    },
+    {
+      "name": "mobile",
+      "status": "pass",
+      "coreRequests": [
+        {
+          "path": "/_next/static/chunks/7882.2890e808f8759bc9.js",
+          "aborted": true,
+          "forwarded": false
+        },
+        {
+          "path": "/_next/static/chunks/7882.2890e808f8759bc9.js",
+          "aborted": false,
+          "forwarded": true
+        }
+      ],
+      "stateRequests": 1,
+      "expectedNetworkFailures": [
+        {
+          "path": "/_next/static/chunks/7882.2890e808f8759bc9.js",
+          "error": "net::ERR_FAILED"
+        }
+      ],
+      "consoleErrorsFromDeliberateAbort": [
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "exactVersion": "arxiv:2611.99800:v1",
+      "exactRange": "abstract:2500:2520",
+      "exactQuote": "is intentionally lon",
+      "serverStateUnchanged": true
+    }
+  ],
+  "blocked": [],
+  "errors": [],
+  "candidatePaths": [
+    "/_next/static/chunks/7882.2890e808f8759bc9.js"
+  ],
+  "endedAtUtc": "2026-11-05T08:04:21.447Z",
+  "status": "pass"
+}

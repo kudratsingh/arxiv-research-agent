@@ -1,0 +1,12 @@
+{
+  "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+  "files": {
+    "README.md": "71c8980fb320a480cb7392bdd46483519120176e5bf4e4216100e2c79d4e337e",
+    "summary.json": "69bd105049bcb1a661ff86af16554018cbb91b8954383e442df1eadb05dec59a",
+    "browser-artifact-hashes.json": "00a3a2b3012b9c22961523234dcf4fbad4e78ae56a1d6dd6802fd6a71b602225",
+    "final/source-binding.json": "cc81ca54df299796ba85df1cbc754fc0fc179df3b50da9c066787de4b41dd9bc",
+    "final/static-asset-manifest.json": "89486bdda473bf048b22cdc4f55ff0868afdbf1aff2d6abdfdfe50a0ca69ac23",
+    "final/video-inspection/report.json": "91df1c36f7d048f775c858fe8fcfce7e576523bdbe9427d659e9be9badc778e1",
+    "ci/teardown.json": "b1697937cb9bd4c125f5ac8c502c19cfa1c0bccf1bf70a5bc1fe879872316d39"
+  }
+}

@@ -1,0 +1,17 @@
+FAIL desktop-light TimeoutError: locator.click: Timeout 30000ms exceeded.
+Call log:
+[2m  - waiting for getByRole('button', { name: /Show paper 20 of / })[22m
+
+FAIL desktop-dark TimeoutError: locator.click: Timeout 30000ms exceeded.
+Call log:
+[2m  - waiting for getByRole('button', { name: /Show paper 20 of / })[22m
+
+FAIL mobile-light TimeoutError: locator.click: Timeout 30000ms exceeded.
+Call log:
+[2m  - waiting for getByRole('button', { name: /Show paper 20 of / })[22m
+
+FAIL mobile-dark TimeoutError: locator.click: Timeout 30000ms exceeded.
+Call log:
+[2m  - waiting for getByRole('button', { name: /Show paper 20 of / })[22m
+
+{"status":"fail","cases":4,"blocked":[],"errors":[]}

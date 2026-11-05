@@ -1,0 +1,56 @@
+
+ RUN  v4.1.11 /private/tmp/arxiv-agent-eng-workspace-controller-guard-repro/web
+
+ ❯ |unit| tests/workspace/shell.test.tsx (21 tests | 2 failed | 19 skipped) 170ms
+     × keeps 390px drawer focus and state during composing Escape and browser modifier-Tab 126ms
+     × keeps 900px drawer focus and state during composing Escape and browser modifier-Tab 42ms
+ ❯ |unit| tests/workspace/interests-controller.test.tsx (17 tests | 1 failed | 16 skipped) 176ms
+     × vetoes ordinary and slash search during a pending profile save with working recovery and permits the unchanged query contract afterward 175ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |unit| tests/workspace/interests-controller.test.tsx > Interests controller > vetoes ordinary and slash search during a pending profile save with working recovery and permits the unchanged query contract afterward
+AssertionError: expected "vi.fn()" to not be called at all, but actually been called 1 times
+
+Received:
+
+  1st vi.fn() call:
+
+    Array [
+      "/workspace/radar?q=pending+profile+query&days=7",
+    ]
+
+
+Number of calls: 1
+
+ ❯ tests/workspace/interests-controller.test.tsx:52:184
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  |unit| tests/workspace/shell.test.tsx > workspace controller shell > keeps 390px drawer focus and state during composing Escape and browser modifier-Tab
+ FAIL  |unit| tests/workspace/shell.test.tsx > workspace controller shell > keeps 900px drawer focus and state during composing Escape and browser modifier-Tab
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/workspace/shell.test.tsx:218:37
+    216|     const composing = within(dialog).getByRole("textbox", { name: "Com…
+    217|     const escape = new KeyboardEvent("keydown", { key: "Escape", isCom…
+    218|     expect(escape.defaultPrevented).toBe(false); expect(dialog).toBeIn…
+       |                                     ^
+    219|     for (const init of [{ key: "Tab", ctrlKey: true, shiftKey: true },…
+    220|       const event = new KeyboardEvent("keydown", { bubbles: true, canc…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  3 failed | 35 skipped (38)
+   Start at  23:42:39
+   Duration  1.15s (transform 461ms, setup 317ms, import 397ms, tests 346ms, environment 976ms)
+

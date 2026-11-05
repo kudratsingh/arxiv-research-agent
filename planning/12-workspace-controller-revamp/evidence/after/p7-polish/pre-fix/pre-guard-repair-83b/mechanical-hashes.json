@@ -1,0 +1,12 @@
+{
+  "application_commit": "83b196eb14b33cd3033453701e93482266366e5f",
+  "original_path_prefix": "checks/",
+  "preserved_path_prefix": "pre-fix/pre-guard-repair-83b/checks/",
+  "sha256": {
+    "final-build.log": "9de7bae9d4fa3f85503943539f7ec5bb21ed6726ee89e0f7b88354471fd20d44",
+    "final-budgets.log": "29a12a35aad356c6961d0697f3091bc5d205cd558f8bcf253585c78902adb137",
+    "final-coverage.log": "39c29022ea420b6b762e5905af4074bfb689f166e8732db5fbc017fffac4e854",
+    "application-source-manifest.json": "32c72db87a7e2831aad525bc75c1ad25d5aece222493bed170148961dc7bb40b",
+    "coverage-summary.json": "e4834079ebdee2914eb6a14b4ed93b9c5324d932b8d64fffcb9b286d8e6ce5f1"
+  }
+}

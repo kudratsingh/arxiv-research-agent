@@ -1,0 +1,493 @@
+{
+  "base": "http://127.0.0.1:3168",
+  "applicationCommit": "5d9e7081b20d8d8fc19e2e5da75b5e43c5ea231f",
+  "scope": "Read-only causal diagnostic; one injected sidebar position declaration, no source edit or final screenshot claim",
+  "snapshots": [
+    {
+      "label": "unmodified Source",
+      "url": "http://127.0.0.1:3168/workspace/items/arxiv%3A2611.99800?version=arxiv%3A2611.99800%3Av1#abstract:0:20",
+      "windowScroll": 0,
+      "documentHeight": 1242,
+      "bodyHeight": 1000,
+      "viewportHeight": 1000,
+      "main": {
+        "scrollTop": 509,
+        "scrollHeight": 3600,
+        "clientHeight": 984,
+        "rect": {
+          "x": 356,
+          "y": 8,
+          "width": 1076,
+          "height": 984,
+          "top": 8,
+          "right": 1432,
+          "bottom": 992,
+          "left": 356
+        }
+      },
+      "aside": {
+        "position": "static",
+        "scrollTop": 0,
+        "scrollHeight": 1311,
+        "clientHeight": 984,
+        "rect": {
+          "x": 8,
+          "y": 8,
+          "width": 340,
+          "height": 984,
+          "top": 8,
+          "right": 348,
+          "bottom": 992,
+          "left": 8
+        }
+      },
+      "hiddenThemeNodes": [
+        {
+          "tag": "LEGEND",
+          "value": null,
+          "position": "absolute",
+          "rect": {
+            "x": 24,
+            "y": 1241.46875,
+            "width": 1,
+            "height": 1,
+            "top": 1241.46875,
+            "right": 25,
+            "bottom": 1242.46875,
+            "left": 24
+          },
+          "offsetParent": {
+            "tag": "BODY",
+            "id": "",
+            "class": ""
+          }
+        },
+        {
+          "tag": "INPUT",
+          "value": "light",
+          "position": "absolute",
+          "rect": {
+            "x": 24,
+            "y": 1228.96875,
+            "width": 1,
+            "height": 1,
+            "top": 1228.96875,
+            "right": 25,
+            "bottom": 1229.96875,
+            "left": 24
+          },
+          "offsetParent": {
+            "tag": "BODY",
+            "id": "",
+            "class": ""
+          }
+        },
+        {
+          "tag": "INPUT",
+          "value": "dark",
+          "position": "absolute",
+          "rect": {
+            "x": 67.59375,
+            "y": 1228.96875,
+            "width": 1,
+            "height": 1,
+            "top": 1228.96875,
+            "right": 68.59375,
+            "bottom": 1229.96875,
+            "left": 67.59375
+          },
+          "offsetParent": {
+            "tag": "BODY",
+            "id": "",
+            "class": ""
+          }
+        },
+        {
+          "tag": "INPUT",
+          "value": "system",
+          "position": "absolute",
+          "rect": {
+            "x": 109.046875,
+            "y": 1228.96875,
+            "width": 1,
+            "height": 1,
+            "top": 1228.96875,
+            "right": 110.046875,
+            "bottom": 1229.96875,
+            "left": 109.046875
+          },
+          "offsetParent": {
+            "tag": "BODY",
+            "id": "",
+            "class": ""
+          }
+        }
+      ]
+    },
+    {
+      "label": "unmodified native #notes",
+      "url": "http://127.0.0.1:3168/workspace/items/arxiv%3A2611.99800?version=arxiv%3A2611.99800%3Av1#notes",
+      "windowScroll": 242,
+      "documentHeight": 1242,
+      "bodyHeight": 1000,
+      "viewportHeight": 1000,
+      "main": {
+        "scrollTop": 2616,
+        "scrollHeight": 3600,
+        "clientHeight": 984,
+        "rect": {
+          "x": 356,
+          "y": -234,
+          "width": 1076,
+          "height": 984,
+          "top": -234,
+          "right": 1432,
+          "bottom": 750,
+          "left": 356
+        }
+      },
+      "aside": {
+        "position": "static",
+        "scrollTop": 0,
+        "scrollHeight": 1311,
+        "clientHeight": 984,
+        "rect": {
+          "x": 8,
+          "y": -234,
+          "width": 340,
+          "height": 984,
+          "top": -234,
+          "right": 348,
+          "bottom": 750,
+          "left": 8
+        }
+      },
+      "hiddenThemeNodes": [
+        {
+          "tag": "LEGEND",
+          "value": null,
+          "position": "absolute",
+          "rect": {
+            "x": 24,
+            "y": 999.46875,
+            "width": 1,
+            "height": 1,
+            "top": 999.46875,
+            "right": 25,
+            "bottom": 1000.46875,
+            "left": 24
+          },
+          "offsetParent": {
+            "tag": "BODY",
+            "id": "",
+            "class": ""
+          }
+        },
+        {
+          "tag": "INPUT",
+          "value": "light",
+          "position": "absolute",
+          "rect": {
+            "x": 24,
+            "y": 986.96875,
+            "width": 1,
+            "height": 1,
+            "top": 986.96875,
+            "right": 25,
+            "bottom": 987.96875,
+            "left": 24
+          },
+          "offsetParent": {
+            "tag": "BODY",
+            "id": "",
+            "class": ""
+          }
+        },
+        {
+          "tag": "INPUT",
+          "value": "dark",
+          "position": "absolute",
+          "rect": {
+            "x": 67.59375,
+            "y": 986.96875,
+            "width": 1,
+            "height": 1,
+            "top": 986.96875,
+            "right": 68.59375,
+            "bottom": 987.96875,
+            "left": 67.59375
+          },
+          "offsetParent": {
+            "tag": "BODY",
+            "id": "",
+            "class": ""
+          }
+        },
+        {
+          "tag": "INPUT",
+          "value": "system",
+          "position": "absolute",
+          "rect": {
+            "x": 109.046875,
+            "y": 986.96875,
+            "width": 1,
+            "height": 1,
+            "top": 986.96875,
+            "right": 110.046875,
+            "bottom": 987.96875,
+            "left": 109.046875
+          },
+          "offsetParent": {
+            "tag": "BODY",
+            "id": "",
+            "class": ""
+          }
+        }
+      ]
+    },
+    {
+      "label": "diagnostic declaration applied",
+      "url": "http://127.0.0.1:3168/workspace/items/arxiv%3A2611.99800?version=arxiv%3A2611.99800%3Av1#notes",
+      "windowScroll": 0,
+      "documentHeight": 1000,
+      "bodyHeight": 1000,
+      "viewportHeight": 1000,
+      "main": {
+        "scrollTop": 2877,
+        "scrollHeight": 3861,
+        "clientHeight": 984,
+        "rect": {
+          "x": 356,
+          "y": 8,
+          "width": 1076,
+          "height": 984,
+          "top": 8,
+          "right": 1432,
+          "bottom": 992,
+          "left": 356
+        }
+      },
+      "aside": {
+        "position": "relative",
+        "scrollTop": 0,
+        "scrollHeight": 1311,
+        "clientHeight": 984,
+        "rect": {
+          "x": 8,
+          "y": 8,
+          "width": 340,
+          "height": 984,
+          "top": 8,
+          "right": 348,
+          "bottom": 992,
+          "left": 8
+        }
+      },
+      "hiddenThemeNodes": [
+        {
+          "tag": "LEGEND",
+          "value": null,
+          "position": "absolute",
+          "rect": {
+            "x": 24,
+            "y": 1241.46875,
+            "width": 1,
+            "height": 1,
+            "top": 1241.46875,
+            "right": 25,
+            "bottom": 1242.46875,
+            "left": 24
+          },
+          "offsetParent": {
+            "tag": "ASIDE",
+            "id": "",
+            "class": "ws-sidebar"
+          }
+        },
+        {
+          "tag": "INPUT",
+          "value": "light",
+          "position": "absolute",
+          "rect": {
+            "x": 24,
+            "y": 1228.96875,
+            "width": 1,
+            "height": 1,
+            "top": 1228.96875,
+            "right": 25,
+            "bottom": 1229.96875,
+            "left": 24
+          },
+          "offsetParent": {
+            "tag": "ASIDE",
+            "id": "",
+            "class": "ws-sidebar"
+          }
+        },
+        {
+          "tag": "INPUT",
+          "value": "dark",
+          "position": "absolute",
+          "rect": {
+            "x": 67.59375,
+            "y": 1228.96875,
+            "width": 1,
+            "height": 1,
+            "top": 1228.96875,
+            "right": 68.59375,
+            "bottom": 1229.96875,
+            "left": 67.59375
+          },
+          "offsetParent": {
+            "tag": "ASIDE",
+            "id": "",
+            "class": "ws-sidebar"
+          }
+        },
+        {
+          "tag": "INPUT",
+          "value": "system",
+          "position": "absolute",
+          "rect": {
+            "x": 109.046875,
+            "y": 1228.96875,
+            "width": 1,
+            "height": 1,
+            "top": 1228.96875,
+            "right": 110.046875,
+            "bottom": 1229.96875,
+            "left": 109.046875
+          },
+          "offsetParent": {
+            "tag": "ASIDE",
+            "id": "",
+            "class": "ws-sidebar"
+          }
+        }
+      ]
+    },
+    {
+      "label": "native #notes with diagnostic containing block",
+      "url": "http://127.0.0.1:3168/workspace/items/arxiv%3A2611.99800?version=arxiv%3A2611.99800%3Av1#notes",
+      "windowScroll": 0,
+      "documentHeight": 1000,
+      "bodyHeight": 1000,
+      "viewportHeight": 1000,
+      "main": {
+        "scrollTop": 2877,
+        "scrollHeight": 3861,
+        "clientHeight": 984,
+        "rect": {
+          "x": 356,
+          "y": 8,
+          "width": 1076,
+          "height": 984,
+          "top": 8,
+          "right": 1432,
+          "bottom": 992,
+          "left": 356
+        }
+      },
+      "aside": {
+        "position": "relative",
+        "scrollTop": 0,
+        "scrollHeight": 1311,
+        "clientHeight": 984,
+        "rect": {
+          "x": 8,
+          "y": 8,
+          "width": 340,
+          "height": 984,
+          "top": 8,
+          "right": 348,
+          "bottom": 992,
+          "left": 8
+        }
+      },
+      "hiddenThemeNodes": [
+        {
+          "tag": "LEGEND",
+          "value": null,
+          "position": "absolute",
+          "rect": {
+            "x": 24,
+            "y": 1241.46875,
+            "width": 1,
+            "height": 1,
+            "top": 1241.46875,
+            "right": 25,
+            "bottom": 1242.46875,
+            "left": 24
+          },
+          "offsetParent": {
+            "tag": "ASIDE",
+            "id": "",
+            "class": "ws-sidebar"
+          }
+        },
+        {
+          "tag": "INPUT",
+          "value": "light",
+          "position": "absolute",
+          "rect": {
+            "x": 24,
+            "y": 1228.96875,
+            "width": 1,
+            "height": 1,
+            "top": 1228.96875,
+            "right": 25,
+            "bottom": 1229.96875,
+            "left": 24
+          },
+          "offsetParent": {
+            "tag": "ASIDE",
+            "id": "",
+            "class": "ws-sidebar"
+          }
+        },
+        {
+          "tag": "INPUT",
+          "value": "dark",
+          "position": "absolute",
+          "rect": {
+            "x": 67.59375,
+            "y": 1228.96875,
+            "width": 1,
+            "height": 1,
+            "top": 1228.96875,
+            "right": 68.59375,
+            "bottom": 1229.96875,
+            "left": 67.59375
+          },
+          "offsetParent": {
+            "tag": "ASIDE",
+            "id": "",
+            "class": "ws-sidebar"
+          }
+        },
+        {
+          "tag": "INPUT",
+          "value": "system",
+          "position": "absolute",
+          "rect": {
+            "x": 109.046875,
+            "y": 1228.96875,
+            "width": 1,
+            "height": 1,
+            "top": 1228.96875,
+            "right": 110.046875,
+            "bottom": 1229.96875,
+            "left": 109.046875
+          },
+          "offsetParent": {
+            "tag": "ASIDE",
+            "id": "",
+            "class": "ws-sidebar"
+          }
+        }
+      ]
+    }
+  ],
+  "blocked": [],
+  "serverStateUnchanged": true
+}

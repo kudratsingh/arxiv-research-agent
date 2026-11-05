@@ -1,0 +1,26 @@
+{
+  "purpose": "Intentional failures on original83b source; not a passing gate",
+  "application_commit": "83b196eb14b33cd3033453701e93482266366e5f",
+  "returncode": 1,
+  "command": [
+    "node",
+    "/private/tmp/arxiv-agent-eng-workspace-controller-p7/web/node_modules/vitest/vitest.mjs",
+    "run",
+    "tests/workspace/interests-controller.test.tsx",
+    "tests/workspace/shell.test.tsx",
+    "-t",
+    "vetoes ordinary and slash search during a pending profile save|keeps .* drawer focus and state during composing Escape"
+  ],
+  "derivation": "First copied Interests test failed at cleared slash text before reaching its assign assertion. This second run adds the same zero-assign assertion inside each loop iteration, exposing the ordinary-search location.assign bypass first. No application source or active-worktree test modified. Both attempts preserved.",
+  "test_files": {
+    "web/tests/workspace/interests-controller.test.tsx": "74239a5d412bcd88cdb57f477d8a90ff98bd5c26dc46106de1a2e5fb04c35e18",
+    "web/tests/workspace/shell.test.tsx": "2c4638f6cf32a24359d2a6c8839b9edda15c85f0f9e70c47af465ec3738b9f75"
+  },
+  "original_source_files": {
+    "web/components/workspace/Composer.tsx": "962a32136e6730bda3d7a24434e9fd3e2594d55c38da71634ea3259446ab5f15",
+    "web/components/workspace/Interests.tsx": "cad70d386809dc72b018addcc90affe7d325b32ab499dbfd234392032153c1fa",
+    "web/components/workspace/Shell.tsx": "9e4dc4b5b98a68be99ae545e8d88517a21382870928a3a621cccecd2ef23edcb"
+  },
+  "provider_contacts": 0,
+  "database_writes": 0
+}

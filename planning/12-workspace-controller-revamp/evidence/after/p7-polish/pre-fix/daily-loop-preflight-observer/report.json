@@ -1,0 +1,88 @@
+{
+  "base": "http://127.0.0.1:3169",
+  "principal": "controller-p7-ci",
+  "startedAtUtc": "2026-11-05T08:05:39.202Z",
+  "scope": "Disposable synthetic CI; software-only409 and pending-navigation injection",
+  "cases": [
+    {
+      "name": "desktop",
+      "status": "fail",
+      "error": "Error: expect(received).toBe(expected) // Object.is equality\n\nExpected: true\nReceived: false\n\nCall Log:\n- Timeout 5000ms exceeded while waiting on the predicate\n    at captureRawStack (/private/tmp/arxiv-agent-eng-workspace-controller/web/node_modules/playwright-core/lib/coreBundle.js:9681:17)\n    at callMatcherAsStep (/private/tmp/arxiv-agent-eng-workspace-controller/web/node_modules/playwright/lib/matchers/expect.js:13310:57)\n    at Object.toBe (/private/tmp/arxiv-agent-eng-workspace-controller/web/node_modules/playwright/lib/matchers/expect.js:13300:23)\n    at /private/tmp/arxiv-agent-eng-workspace-controller-p7/planning/12-workspace-controller-revamp/evidence/after/p7-polish/ci/daily-loop.cjs:22:517",
+      "video": "desktop.webm"
+    },
+    {
+      "name": "mobile",
+      "status": "fail",
+      "error": "Error: expect(received).toBe(expected) // Object.is equality\n\nExpected: true\nReceived: false\n\nCall Log:\n- Timeout 5000ms exceeded while waiting on the predicate\n    at captureRawStack (/private/tmp/arxiv-agent-eng-workspace-controller/web/node_modules/playwright-core/lib/coreBundle.js:9681:17)\n    at callMatcherAsStep (/private/tmp/arxiv-agent-eng-workspace-controller/web/node_modules/playwright/lib/matchers/expect.js:13310:57)\n    at Object.toBe (/private/tmp/arxiv-agent-eng-workspace-controller/web/node_modules/playwright/lib/matchers/expect.js:13300:23)\n    at /private/tmp/arxiv-agent-eng-workspace-controller-p7/planning/12-workspace-controller-revamp/evidence/after/p7-polish/ci/daily-loop.cjs:22:517",
+      "video": "mobile.webm"
+    }
+  ],
+  "writes": [
+    {
+      "name": "desktop",
+      "path": "/api/workspace/reading",
+      "work": "ci:workspace-agent-evaluation",
+      "forwarded": true
+    },
+    {
+      "name": "desktop",
+      "path": "/api/workspace/entries",
+      "work": "ci:workspace-agent-evaluation",
+      "forwarded": false,
+      "injection": "held then409"
+    },
+    {
+      "name": "desktop",
+      "path": "/api/workspace/reading",
+      "work": "ci:workspace-agent-evaluation",
+      "forwarded": true,
+      "kind": "restore own logicalreadingfields"
+    },
+    {
+      "name": "mobile",
+      "path": "/api/workspace/reading",
+      "work": "ci:workspace-agent-evaluation",
+      "forwarded": true
+    },
+    {
+      "name": "mobile",
+      "path": "/api/workspace/entries",
+      "work": "ci:workspace-agent-evaluation",
+      "forwarded": false,
+      "injection": "held then409"
+    },
+    {
+      "name": "mobile",
+      "path": "/api/workspace/reading",
+      "work": "ci:workspace-agent-evaluation",
+      "forwarded": true,
+      "kind": "restore own logicalreadingfields"
+    }
+  ],
+  "blocked": [],
+  "errors": [],
+  "chapters": [
+    {
+      "name": "desktop",
+      "label": "Skip-main→J→O→exact Reader",
+      "elapsedMs": 1515
+    },
+    {
+      "name": "desktop",
+      "label": "Keyboard question submitted; request held before server",
+      "elapsedMs": 1590
+    },
+    {
+      "name": "mobile",
+      "label": "Skip-main→J→O→exact Reader",
+      "elapsedMs": 1476
+    },
+    {
+      "name": "mobile",
+      "label": "Keyboard question submitted; request held before server",
+      "elapsedMs": 1542
+    }
+  ],
+  "endedAtUtc": "2026-11-05T08:05:54.447Z",
+  "status": "fail"
+}

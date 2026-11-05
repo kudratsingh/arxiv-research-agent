@@ -1,0 +1,9 @@
+PASS desktop-light-no-preference
+PASS desktop-light-reduce
+PASS desktop-dark-no-preference
+PASS desktop-dark-reduce
+PASS mobile-light-no-preference
+PASS mobile-light-reduce
+FAIL mobile-dark-no-preference AssertionError [ERR_ASSERTION]: Expected170ms paper animation
+PASS mobile-dark-reduce
+{"status":"fail","cases":8,"blocked":[],"errors":[]}

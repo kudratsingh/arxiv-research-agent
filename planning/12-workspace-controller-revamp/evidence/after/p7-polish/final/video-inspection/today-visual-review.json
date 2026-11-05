@@ -1,0 +1,12 @@
+{
+  "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+  "status": "pass",
+  "scope": "All four fresh final Today PNGs visually inspected directly, with actualtheme and full title/firstabstract clearance assertions in matrix/geometry.",
+  "screenshots": [
+    "desktop-light-today.png",
+    "desktop-dark-today.png",
+    "mobile-light-today.png",
+    "mobile-dark-today.png"
+  ],
+  "judgment": "Focused title and first abstract lines clear the player, readable source/synthetic labels, correct actual colors; full long content verified with nativewheel/hit/paint frames."
+}

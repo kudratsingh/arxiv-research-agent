@@ -1,0 +1,1756 @@
+{
+  "startedAtUtc": "2026-11-05T08:03:33.118Z",
+  "phase": "final",
+  "base": "http://127.0.0.1:3168",
+  "principal": "controller-p7-preview",
+  "cases": [
+    {
+      "name": "desktop-light",
+      "status": "pass",
+      "initial": {
+        "title": {
+          "top": 423.671875,
+          "bottom": 508.609375
+        },
+        "firstTwoAbstractLines": [
+          {
+            "top": 590.109375,
+            "bottom": 617.109375
+          },
+          {
+            "top": 590.109375,
+            "bottom": 617.109375
+          }
+        ],
+        "barTop": 780
+      },
+      "queueInset": 16.484375,
+      "rapidMs": 15,
+      "rapidAnnouncement": "Paper 2 of 9: Budgeted Retrieval for Long-Horizon Agents: When to Stop Searching",
+      "playerFocusRetained": true,
+      "beforeReader": 870,
+      "restoredScroll": 870,
+      "farGeometry": {
+        "top": 24.34375,
+        "bottom": 51.34375,
+        "inset": 16.34375,
+        "barTop": 788
+      },
+      "exactText": "is intentionally lon",
+      "sourceLower": {
+        "mode": "source",
+        "top": 528.34375,
+        "bottom": 555.34375,
+        "left": 1053.5625,
+        "right": 1059.546875,
+        "viewportTop": 24,
+        "barTop": 788,
+        "hit": true,
+        "hitElement": {
+          "tag": "P",
+          "id": "",
+          "class": ""
+        },
+        "target": {
+          "tag": "P",
+          "label": "for interface verification and makes no scientific claim. Each passage is intentionally long enough to test scrolling, paper transitions, and the exact return to a retained source."
+        },
+        "scrollContainer": "main",
+        "windowScroll": 0,
+        "documentScrollHeight": 1000,
+        "documentClientHeight": 1000,
+        "stageScroll": 1296,
+        "stageScrollHeight": 3600,
+        "stageClientHeight": 984,
+        "tailHeights": [],
+        "wheelSteps": 0,
+        "trace": [
+          {
+            "mode": "source",
+            "top": 528.34375,
+            "bottom": 555.34375,
+            "left": 1053.5625,
+            "right": 1059.546875,
+            "viewportTop": 24,
+            "barTop": 788,
+            "hit": true,
+            "hitElement": {
+              "tag": "P",
+              "id": "",
+              "class": ""
+            },
+            "target": {
+              "tag": "P",
+              "label": "for interface verification and makes no scientific claim. Each passage is intentionally long enough to test scrolling, paper transitions, and the exact return to a retained source."
+            },
+            "scrollContainer": "main",
+            "windowScroll": 0,
+            "documentScrollHeight": 1000,
+            "documentClientHeight": 1000,
+            "stageScroll": 1296,
+            "stageScrollHeight": 3600,
+            "stageClientHeight": 984,
+            "tailHeights": []
+          }
+        ],
+        "afterScreenshot": {
+          "mode": "source",
+          "top": 528.34375,
+          "bottom": 555.34375,
+          "left": 1053.5625,
+          "right": 1059.546875,
+          "viewportTop": 24,
+          "barTop": 788,
+          "hit": true,
+          "hitElement": {
+            "tag": "P",
+            "id": "",
+            "class": ""
+          },
+          "target": {
+            "tag": "P",
+            "label": "for interface verification and makes no scientific claim. Each passage is intentionally long enough to test scrolling, paper transitions, and the exact return to a retained source."
+          },
+          "scrollContainer": "main",
+          "windowScroll": 0,
+          "documentScrollHeight": 1000,
+          "documentClientHeight": 1000,
+          "stageScroll": 1296,
+          "stageScrollHeight": 3600,
+          "stageClientHeight": 984,
+          "tailHeights": []
+        }
+      },
+      "sourceFooter": {
+        "mode": "source-footer",
+        "top": 746,
+        "bottom": 764,
+        "left": 940.609375,
+        "right": 947.4375,
+        "viewportTop": 24,
+        "barTop": 788,
+        "hit": true,
+        "hitElement": {
+          "tag": "BUTTON",
+          "id": "",
+          "class": "daily-secondary"
+        },
+        "target": {
+          "tag": "BUTTON",
+          "label": "Find retained PDF excerpts"
+        },
+        "scrollContainer": "main",
+        "windowScroll": 0,
+        "documentScrollHeight": 1000,
+        "documentClientHeight": 1000,
+        "stageScroll": 1403,
+        "stageScrollHeight": 3600,
+        "stageClientHeight": 984,
+        "tailHeights": [],
+        "wheelSteps": 1,
+        "trace": [
+          {
+            "mode": "source-footer",
+            "top": 853,
+            "bottom": 871,
+            "left": 940.609375,
+            "right": 947.4375,
+            "viewportTop": 24,
+            "barTop": 788,
+            "hit": false,
+            "hitElement": {
+              "tag": "DIV",
+              "id": "_r_1_",
+              "class": "ws-composer-fields"
+            },
+            "target": {
+              "tag": "BUTTON",
+              "label": "Find retained PDF excerpts"
+            },
+            "scrollContainer": "main",
+            "windowScroll": 0,
+            "documentScrollHeight": 1000,
+            "documentClientHeight": 1000,
+            "stageScroll": 1296,
+            "stageScrollHeight": 3600,
+            "stageClientHeight": 984,
+            "tailHeights": []
+          },
+          {
+            "mode": "source-footer",
+            "top": 746,
+            "bottom": 764,
+            "left": 940.609375,
+            "right": 947.4375,
+            "viewportTop": 24,
+            "barTop": 788,
+            "hit": true,
+            "hitElement": {
+              "tag": "BUTTON",
+              "id": "",
+              "class": "daily-secondary"
+            },
+            "target": {
+              "tag": "BUTTON",
+              "label": "Find retained PDF excerpts"
+            },
+            "scrollContainer": "main",
+            "windowScroll": 0,
+            "documentScrollHeight": 1000,
+            "documentClientHeight": 1000,
+            "stageScroll": 1403,
+            "stageScrollHeight": 3600,
+            "stageClientHeight": 984,
+            "tailHeights": []
+          }
+        ],
+        "afterScreenshot": {
+          "mode": "source-footer",
+          "top": 746,
+          "bottom": 764,
+          "left": 940.609375,
+          "right": 947.4375,
+          "viewportTop": 24,
+          "barTop": 788,
+          "hit": true,
+          "hitElement": {
+            "tag": "BUTTON",
+            "id": "",
+            "class": "daily-secondary"
+          },
+          "target": {
+            "tag": "BUTTON",
+            "label": "Find retained PDF excerpts"
+          },
+          "scrollContainer": "main",
+          "windowScroll": 0,
+          "documentScrollHeight": 1000,
+          "documentClientHeight": 1000,
+          "stageScroll": 1403,
+          "stageScrollHeight": 3600,
+          "stageClientHeight": 984,
+          "tailHeights": []
+        }
+      },
+      "notesLower": {
+        "mode": "notes",
+        "top": 441.9375,
+        "bottom": 465.734375,
+        "left": 469,
+        "right": 1319,
+        "viewportTop": 24,
+        "barTop": 788,
+        "hit": true,
+        "hitElement": {
+          "tag": "P",
+          "id": "",
+          "class": ""
+        },
+        "target": {
+          "tag": "P",
+          "label": "No server-saved notes for this version yet."
+        },
+        "scrollContainer": "main",
+        "windowScroll": 0,
+        "documentScrollHeight": 1000,
+        "documentClientHeight": 1000,
+        "stageScroll": 2877,
+        "stageScrollHeight": 3861,
+        "stageClientHeight": 984,
+        "tailHeights": [
+          261
+        ],
+        "wheelSteps": 0,
+        "trace": [
+          {
+            "mode": "notes",
+            "top": 441.9375,
+            "bottom": 465.734375,
+            "left": 469,
+            "right": 1319,
+            "viewportTop": 24,
+            "barTop": 788,
+            "hit": true,
+            "hitElement": {
+              "tag": "P",
+              "id": "",
+              "class": ""
+            },
+            "target": {
+              "tag": "P",
+              "label": "No server-saved notes for this version yet."
+            },
+            "scrollContainer": "main",
+            "windowScroll": 0,
+            "documentScrollHeight": 1000,
+            "documentClientHeight": 1000,
+            "stageScroll": 2877,
+            "stageScrollHeight": 3861,
+            "stageClientHeight": 984,
+            "tailHeights": [
+              261
+            ]
+          }
+        ],
+        "afterScreenshot": {
+          "mode": "notes",
+          "top": 441.9375,
+          "bottom": 465.734375,
+          "left": 469,
+          "right": 1319,
+          "viewportTop": 24,
+          "barTop": 788,
+          "hit": true,
+          "hitElement": {
+            "tag": "P",
+            "id": "",
+            "class": ""
+          },
+          "target": {
+            "tag": "P",
+            "label": "No server-saved notes for this version yet."
+          },
+          "scrollContainer": "main",
+          "windowScroll": 0,
+          "documentScrollHeight": 1000,
+          "documentClientHeight": 1000,
+          "stageScroll": 2877,
+          "stageScrollHeight": 3861,
+          "stageClientHeight": 984,
+          "tailHeights": [
+            261
+          ]
+        }
+      },
+      "desktopShellContained": {
+        "windowScroll": 0,
+        "documentOverflow": 0,
+        "main": {
+          "x": 356,
+          "y": 8,
+          "width": 1076,
+          "height": 984,
+          "top": 8,
+          "right": 1432,
+          "bottom": 992,
+          "left": 356
+        },
+        "sidebar": {
+          "x": 8,
+          "y": 8,
+          "width": 340,
+          "height": 984,
+          "top": 8,
+          "right": 348,
+          "bottom": 992,
+          "left": 8
+        },
+        "brand": {
+          "x": 20,
+          "y": 20,
+          "width": 236,
+          "height": 33.59375,
+          "top": 20,
+          "right": 256,
+          "bottom": 53.59375,
+          "left": 20
+        },
+        "hiddenThemeOffsetParents": [
+          "ASIDE",
+          "ASIDE",
+          "ASIDE"
+        ]
+      },
+      "serverStateUnchanged": true,
+      "video": null
+    },
+    {
+      "name": "desktop-dark",
+      "status": "pass",
+      "initial": {
+        "title": {
+          "top": 423.671875,
+          "bottom": 508.609375
+        },
+        "firstTwoAbstractLines": [
+          {
+            "top": 590.109375,
+            "bottom": 617.109375
+          },
+          {
+            "top": 590.109375,
+            "bottom": 617.109375
+          }
+        ],
+        "barTop": 780
+      },
+      "queueInset": 16.484375,
+      "rapidMs": 28,
+      "rapidAnnouncement": "Paper 2 of 9: Budgeted Retrieval for Long-Horizon Agents: When to Stop Searching",
+      "playerFocusRetained": true,
+      "beforeReader": 870,
+      "restoredScroll": 870,
+      "farGeometry": {
+        "top": 24.34375,
+        "bottom": 51.34375,
+        "inset": 16.34375,
+        "barTop": 788
+      },
+      "exactText": "is intentionally lon",
+      "sourceLower": {
+        "mode": "source",
+        "top": 528.34375,
+        "bottom": 555.34375,
+        "left": 1053.5625,
+        "right": 1059.546875,
+        "viewportTop": 24,
+        "barTop": 788,
+        "hit": true,
+        "hitElement": {
+          "tag": "P",
+          "id": "",
+          "class": ""
+        },
+        "target": {
+          "tag": "P",
+          "label": "for interface verification and makes no scientific claim. Each passage is intentionally long enough to test scrolling, paper transitions, and the exact return to a retained source."
+        },
+        "scrollContainer": "main",
+        "windowScroll": 0,
+        "documentScrollHeight": 1000,
+        "documentClientHeight": 1000,
+        "stageScroll": 1296,
+        "stageScrollHeight": 3600,
+        "stageClientHeight": 984,
+        "tailHeights": [],
+        "wheelSteps": 0,
+        "trace": [
+          {
+            "mode": "source",
+            "top": 528.34375,
+            "bottom": 555.34375,
+            "left": 1053.5625,
+            "right": 1059.546875,
+            "viewportTop": 24,
+            "barTop": 788,
+            "hit": true,
+            "hitElement": {
+              "tag": "P",
+              "id": "",
+              "class": ""
+            },
+            "target": {
+              "tag": "P",
+              "label": "for interface verification and makes no scientific claim. Each passage is intentionally long enough to test scrolling, paper transitions, and the exact return to a retained source."
+            },
+            "scrollContainer": "main",
+            "windowScroll": 0,
+            "documentScrollHeight": 1000,
+            "documentClientHeight": 1000,
+            "stageScroll": 1296,
+            "stageScrollHeight": 3600,
+            "stageClientHeight": 984,
+            "tailHeights": []
+          }
+        ],
+        "afterScreenshot": {
+          "mode": "source",
+          "top": 528.34375,
+          "bottom": 555.34375,
+          "left": 1053.5625,
+          "right": 1059.546875,
+          "viewportTop": 24,
+          "barTop": 788,
+          "hit": true,
+          "hitElement": {
+            "tag": "P",
+            "id": "",
+            "class": ""
+          },
+          "target": {
+            "tag": "P",
+            "label": "for interface verification and makes no scientific claim. Each passage is intentionally long enough to test scrolling, paper transitions, and the exact return to a retained source."
+          },
+          "scrollContainer": "main",
+          "windowScroll": 0,
+          "documentScrollHeight": 1000,
+          "documentClientHeight": 1000,
+          "stageScroll": 1296,
+          "stageScrollHeight": 3600,
+          "stageClientHeight": 984,
+          "tailHeights": []
+        }
+      },
+      "sourceFooter": {
+        "mode": "source-footer",
+        "top": 746,
+        "bottom": 764,
+        "left": 940.609375,
+        "right": 947.4375,
+        "viewportTop": 24,
+        "barTop": 788,
+        "hit": true,
+        "hitElement": {
+          "tag": "BUTTON",
+          "id": "",
+          "class": "daily-secondary"
+        },
+        "target": {
+          "tag": "BUTTON",
+          "label": "Find retained PDF excerpts"
+        },
+        "scrollContainer": "main",
+        "windowScroll": 0,
+        "documentScrollHeight": 1000,
+        "documentClientHeight": 1000,
+        "stageScroll": 1403,
+        "stageScrollHeight": 3600,
+        "stageClientHeight": 984,
+        "tailHeights": [],
+        "wheelSteps": 1,
+        "trace": [
+          {
+            "mode": "source-footer",
+            "top": 853,
+            "bottom": 871,
+            "left": 940.609375,
+            "right": 947.4375,
+            "viewportTop": 24,
+            "barTop": 788,
+            "hit": false,
+            "hitElement": {
+              "tag": "DIV",
+              "id": "_r_0_",
+              "class": "ws-composer-fields"
+            },
+            "target": {
+              "tag": "BUTTON",
+              "label": "Find retained PDF excerpts"
+            },
+            "scrollContainer": "main",
+            "windowScroll": 0,
+            "documentScrollHeight": 1000,
+            "documentClientHeight": 1000,
+            "stageScroll": 1296,
+            "stageScrollHeight": 3600,
+            "stageClientHeight": 984,
+            "tailHeights": []
+          },
+          {
+            "mode": "source-footer",
+            "top": 746,
+            "bottom": 764,
+            "left": 940.609375,
+            "right": 947.4375,
+            "viewportTop": 24,
+            "barTop": 788,
+            "hit": true,
+            "hitElement": {
+              "tag": "BUTTON",
+              "id": "",
+              "class": "daily-secondary"
+            },
+            "target": {
+              "tag": "BUTTON",
+              "label": "Find retained PDF excerpts"
+            },
+            "scrollContainer": "main",
+            "windowScroll": 0,
+            "documentScrollHeight": 1000,
+            "documentClientHeight": 1000,
+            "stageScroll": 1403,
+            "stageScrollHeight": 3600,
+            "stageClientHeight": 984,
+            "tailHeights": []
+          }
+        ],
+        "afterScreenshot": {
+          "mode": "source-footer",
+          "top": 746,
+          "bottom": 764,
+          "left": 940.609375,
+          "right": 947.4375,
+          "viewportTop": 24,
+          "barTop": 788,
+          "hit": true,
+          "hitElement": {
+            "tag": "BUTTON",
+            "id": "",
+            "class": "daily-secondary"
+          },
+          "target": {
+            "tag": "BUTTON",
+            "label": "Find retained PDF excerpts"
+          },
+          "scrollContainer": "main",
+          "windowScroll": 0,
+          "documentScrollHeight": 1000,
+          "documentClientHeight": 1000,
+          "stageScroll": 1403,
+          "stageScrollHeight": 3600,
+          "stageClientHeight": 984,
+          "tailHeights": []
+        }
+      },
+      "notesLower": {
+        "mode": "notes",
+        "top": 441.9375,
+        "bottom": 465.734375,
+        "left": 469,
+        "right": 1319,
+        "viewportTop": 24,
+        "barTop": 788,
+        "hit": true,
+        "hitElement": {
+          "tag": "P",
+          "id": "",
+          "class": ""
+        },
+        "target": {
+          "tag": "P",
+          "label": "No server-saved notes for this version yet."
+        },
+        "scrollContainer": "main",
+        "windowScroll": 0,
+        "documentScrollHeight": 1000,
+        "documentClientHeight": 1000,
+        "stageScroll": 2877,
+        "stageScrollHeight": 3861,
+        "stageClientHeight": 984,
+        "tailHeights": [
+          261
+        ],
+        "wheelSteps": 0,
+        "trace": [
+          {
+            "mode": "notes",
+            "top": 441.9375,
+            "bottom": 465.734375,
+            "left": 469,
+            "right": 1319,
+            "viewportTop": 24,
+            "barTop": 788,
+            "hit": true,
+            "hitElement": {
+              "tag": "P",
+              "id": "",
+              "class": ""
+            },
+            "target": {
+              "tag": "P",
+              "label": "No server-saved notes for this version yet."
+            },
+            "scrollContainer": "main",
+            "windowScroll": 0,
+            "documentScrollHeight": 1000,
+            "documentClientHeight": 1000,
+            "stageScroll": 2877,
+            "stageScrollHeight": 3861,
+            "stageClientHeight": 984,
+            "tailHeights": [
+              261
+            ]
+          }
+        ],
+        "afterScreenshot": {
+          "mode": "notes",
+          "top": 441.9375,
+          "bottom": 465.734375,
+          "left": 469,
+          "right": 1319,
+          "viewportTop": 24,
+          "barTop": 788,
+          "hit": true,
+          "hitElement": {
+            "tag": "P",
+            "id": "",
+            "class": ""
+          },
+          "target": {
+            "tag": "P",
+            "label": "No server-saved notes for this version yet."
+          },
+          "scrollContainer": "main",
+          "windowScroll": 0,
+          "documentScrollHeight": 1000,
+          "documentClientHeight": 1000,
+          "stageScroll": 2877,
+          "stageScrollHeight": 3861,
+          "stageClientHeight": 984,
+          "tailHeights": [
+            261
+          ]
+        }
+      },
+      "desktopShellContained": {
+        "windowScroll": 0,
+        "documentOverflow": 0,
+        "main": {
+          "x": 356,
+          "y": 8,
+          "width": 1076,
+          "height": 984,
+          "top": 8,
+          "right": 1432,
+          "bottom": 992,
+          "left": 356
+        },
+        "sidebar": {
+          "x": 8,
+          "y": 8,
+          "width": 340,
+          "height": 984,
+          "top": 8,
+          "right": 348,
+          "bottom": 992,
+          "left": 8
+        },
+        "brand": {
+          "x": 20,
+          "y": 20,
+          "width": 236,
+          "height": 33.59375,
+          "top": 20,
+          "right": 256,
+          "bottom": 53.59375,
+          "left": 20
+        },
+        "hiddenThemeOffsetParents": [
+          "ASIDE",
+          "ASIDE",
+          "ASIDE"
+        ]
+      },
+      "serverStateUnchanged": true,
+      "video": "desktop-dark.webm"
+    },
+    {
+      "name": "mobile-light",
+      "status": "pass",
+      "initial": {
+        "title": {
+          "top": 478.15625,
+          "bottom": 534.78125
+        },
+        "firstTwoAbstractLines": [
+          {
+            "top": 587.78125,
+            "bottom": 611.78125
+          },
+          {
+            "top": 587.78125,
+            "bottom": 611.78125
+          }
+        ],
+        "barTop": 712
+      },
+      "queueInset": 16.15625,
+      "rapidMs": 13,
+      "rapidAnnouncement": "Paper 2 of 9: Budgeted Retrieval for Long-Horizon Agents: When to Stop Searching",
+      "playerFocusRetained": true,
+      "beforeReader": 870,
+      "restoredScroll": 870,
+      "farGeometry": {
+        "top": 16.109375,
+        "bottom": 40.109375,
+        "inset": 16.109375,
+        "barTop": 666
+      },
+      "exactText": "is intentionally lon",
+      "sourceLower": {
+        "mode": "source",
+        "top": 618.109375,
+        "bottom": 642.109375,
+        "left": 277.859375,
+        "right": 283.1875,
+        "viewportTop": 16,
+        "barTop": 666,
+        "hit": true,
+        "hitElement": {
+          "tag": "P",
+          "id": "",
+          "class": ""
+        },
+        "target": {
+          "tag": "P",
+          "label": "for interface verification and makes no scientific claim. Each passage is intentionally long enough to test scrolling, paper transitions, and the exact return to a retained source."
+        },
+        "scrollContainer": "document",
+        "windowScroll": 2827,
+        "documentScrollHeight": 4227,
+        "documentClientHeight": 844,
+        "stageScroll": 0,
+        "stageScrollHeight": 4103,
+        "stageClientHeight": 4103,
+        "tailHeights": [],
+        "wheelSteps": 2,
+        "trace": [
+          {
+            "mode": "source",
+            "top": 1052.109375,
+            "bottom": 1076.109375,
+            "left": 277.859375,
+            "right": 283.1875,
+            "viewportTop": 16,
+            "barTop": 666,
+            "hit": false,
+            "hitElement": null,
+            "target": {
+              "tag": "P",
+              "label": "for interface verification and makes no scientific claim. Each passage is intentionally long enough to test scrolling, paper transitions, and the exact return to a retained source."
+            },
+            "scrollContainer": "document",
+            "windowScroll": 2393,
+            "documentScrollHeight": 4227,
+            "documentClientHeight": 844,
+            "stageScroll": 0,
+            "stageScrollHeight": 4103,
+            "stageClientHeight": 4103,
+            "tailHeights": []
+          },
+          {
+            "mode": "source",
+            "top": 692.109375,
+            "bottom": 716.109375,
+            "left": 277.859375,
+            "right": 283.1875,
+            "viewportTop": 16,
+            "barTop": 666,
+            "hit": false,
+            "hitElement": {
+              "tag": "FORM",
+              "id": "",
+              "class": "ws-composer ws-composer-shell"
+            },
+            "target": {
+              "tag": "P",
+              "label": "for interface verification and makes no scientific claim. Each passage is intentionally long enough to test scrolling, paper transitions, and the exact return to a retained source."
+            },
+            "scrollContainer": "document",
+            "windowScroll": 2753,
+            "documentScrollHeight": 4227,
+            "documentClientHeight": 844,
+            "stageScroll": 0,
+            "stageScrollHeight": 4103,
+            "stageClientHeight": 4103,
+            "tailHeights": []
+          },
+          {
+            "mode": "source",
+            "top": 618.109375,
+            "bottom": 642.109375,
+            "left": 277.859375,
+            "right": 283.1875,
+            "viewportTop": 16,
+            "barTop": 666,
+            "hit": true,
+            "hitElement": {
+              "tag": "P",
+              "id": "",
+              "class": ""
+            },
+            "target": {
+              "tag": "P",
+              "label": "for interface verification and makes no scientific claim. Each passage is intentionally long enough to test scrolling, paper transitions, and the exact return to a retained source."
+            },
+            "scrollContainer": "document",
+            "windowScroll": 2827,
+            "documentScrollHeight": 4227,
+            "documentClientHeight": 844,
+            "stageScroll": 0,
+            "stageScrollHeight": 4103,
+            "stageClientHeight": 4103,
+            "tailHeights": []
+          }
+        ],
+        "afterScreenshot": {
+          "mode": "source",
+          "top": 618.109375,
+          "bottom": 642.109375,
+          "left": 277.859375,
+          "right": 283.1875,
+          "viewportTop": 16,
+          "barTop": 666,
+          "hit": true,
+          "hitElement": {
+            "tag": "P",
+            "id": "",
+            "class": ""
+          },
+          "target": {
+            "tag": "P",
+            "label": "for interface verification and makes no scientific claim. Each passage is intentionally long enough to test scrolling, paper transitions, and the exact return to a retained source."
+          },
+          "scrollContainer": "document",
+          "windowScroll": 2827,
+          "documentScrollHeight": 4227,
+          "documentClientHeight": 844,
+          "stageScroll": 0,
+          "stageScrollHeight": 4103,
+          "stageClientHeight": 4103,
+          "tailHeights": []
+        }
+      },
+      "sourceFooter": {
+        "mode": "source-footer",
+        "top": 623.921875,
+        "bottom": 641.921875,
+        "left": 273.828125,
+        "right": 280.65625,
+        "viewportTop": 16,
+        "barTop": 666,
+        "hit": true,
+        "hitElement": {
+          "tag": "BUTTON",
+          "id": "",
+          "class": "daily-secondary"
+        },
+        "target": {
+          "tag": "BUTTON",
+          "label": "Find retained PDF excerpts"
+        },
+        "scrollContainer": "document",
+        "windowScroll": 3295,
+        "documentScrollHeight": 4227,
+        "documentClientHeight": 844,
+        "stageScroll": 0,
+        "stageScrollHeight": 4103,
+        "stageClientHeight": 4103,
+        "tailHeights": [],
+        "wheelSteps": 2,
+        "trace": [
+          {
+            "mode": "source-footer",
+            "top": 1091.921875,
+            "bottom": 1109.921875,
+            "left": 273.828125,
+            "right": 280.65625,
+            "viewportTop": 16,
+            "barTop": 666,
+            "hit": false,
+            "hitElement": null,
+            "target": {
+              "tag": "BUTTON",
+              "label": "Find retained PDF excerpts"
+            },
+            "scrollContainer": "document",
+            "windowScroll": 2827,
+            "documentScrollHeight": 4227,
+            "documentClientHeight": 844,
+            "stageScroll": 0,
+            "stageScrollHeight": 4103,
+            "stageClientHeight": 4103,
+            "tailHeights": []
+          },
+          {
+            "mode": "source-footer",
+            "top": 731.921875,
+            "bottom": 749.921875,
+            "left": 273.828125,
+            "right": 280.65625,
+            "viewportTop": 16,
+            "barTop": 666,
+            "hit": false,
+            "hitElement": {
+              "tag": "DIV",
+              "id": "",
+              "class": "ws-reader-navigation"
+            },
+            "target": {
+              "tag": "BUTTON",
+              "label": "Find retained PDF excerpts"
+            },
+            "scrollContainer": "document",
+            "windowScroll": 3187,
+            "documentScrollHeight": 4227,
+            "documentClientHeight": 844,
+            "stageScroll": 0,
+            "stageScrollHeight": 4103,
+            "stageClientHeight": 4103,
+            "tailHeights": []
+          },
+          {
+            "mode": "source-footer",
+            "top": 623.921875,
+            "bottom": 641.921875,
+            "left": 273.828125,
+            "right": 280.65625,
+            "viewportTop": 16,
+            "barTop": 666,
+            "hit": true,
+            "hitElement": {
+              "tag": "BUTTON",
+              "id": "",
+              "class": "daily-secondary"
+            },
+            "target": {
+              "tag": "BUTTON",
+              "label": "Find retained PDF excerpts"
+            },
+            "scrollContainer": "document",
+            "windowScroll": 3295,
+            "documentScrollHeight": 4227,
+            "documentClientHeight": 844,
+            "stageScroll": 0,
+            "stageScrollHeight": 4103,
+            "stageClientHeight": 4103,
+            "tailHeights": []
+          }
+        ],
+        "afterScreenshot": {
+          "mode": "source-footer",
+          "top": 623.921875,
+          "bottom": 641.921875,
+          "left": 273.828125,
+          "right": 280.65625,
+          "viewportTop": 16,
+          "barTop": 666,
+          "hit": true,
+          "hitElement": {
+            "tag": "BUTTON",
+            "id": "",
+            "class": "daily-secondary"
+          },
+          "target": {
+            "tag": "BUTTON",
+            "label": "Find retained PDF excerpts"
+          },
+          "scrollContainer": "document",
+          "windowScroll": 3295,
+          "documentScrollHeight": 4227,
+          "documentClientHeight": 844,
+          "stageScroll": 0,
+          "stageScrollHeight": 4103,
+          "stageClientHeight": 4103,
+          "tailHeights": []
+        }
+      },
+      "notesLower": {
+        "mode": "notes",
+        "top": 609.703125,
+        "bottom": 633.5,
+        "left": 33,
+        "right": 357,
+        "viewportTop": 16,
+        "barTop": 666,
+        "hit": true,
+        "hitElement": {
+          "tag": "P",
+          "id": "",
+          "class": ""
+        },
+        "target": {
+          "tag": "P",
+          "label": "No server-saved notes for this version yet."
+        },
+        "scrollContainer": "document",
+        "windowScroll": 577,
+        "documentScrollHeight": 1468,
+        "documentClientHeight": 844,
+        "stageScroll": 0,
+        "stageScrollHeight": 1344,
+        "stageClientHeight": 1344,
+        "tailHeights": [],
+        "wheelSteps": 1,
+        "trace": [
+          {
+            "mode": "notes",
+            "top": 651.703125,
+            "bottom": 675.5,
+            "left": 33,
+            "right": 357,
+            "viewportTop": 16,
+            "barTop": 666,
+            "hit": true,
+            "hitElement": {
+              "tag": "P",
+              "id": "",
+              "class": ""
+            },
+            "target": {
+              "tag": "P",
+              "label": "No server-saved notes for this version yet."
+            },
+            "scrollContainer": "document",
+            "windowScroll": 535,
+            "documentScrollHeight": 1468,
+            "documentClientHeight": 844,
+            "stageScroll": 0,
+            "stageScrollHeight": 1344,
+            "stageClientHeight": 1344,
+            "tailHeights": []
+          },
+          {
+            "mode": "notes",
+            "top": 609.703125,
+            "bottom": 633.5,
+            "left": 33,
+            "right": 357,
+            "viewportTop": 16,
+            "barTop": 666,
+            "hit": true,
+            "hitElement": {
+              "tag": "P",
+              "id": "",
+              "class": ""
+            },
+            "target": {
+              "tag": "P",
+              "label": "No server-saved notes for this version yet."
+            },
+            "scrollContainer": "document",
+            "windowScroll": 577,
+            "documentScrollHeight": 1468,
+            "documentClientHeight": 844,
+            "stageScroll": 0,
+            "stageScrollHeight": 1344,
+            "stageClientHeight": 1344,
+            "tailHeights": []
+          }
+        ],
+        "afterScreenshot": {
+          "mode": "notes",
+          "top": 609.703125,
+          "bottom": 633.5,
+          "left": 33,
+          "right": 357,
+          "viewportTop": 16,
+          "barTop": 666,
+          "hit": true,
+          "hitElement": {
+            "tag": "P",
+            "id": "",
+            "class": ""
+          },
+          "target": {
+            "tag": "P",
+            "label": "No server-saved notes for this version yet."
+          },
+          "scrollContainer": "document",
+          "windowScroll": 577,
+          "documentScrollHeight": 1468,
+          "documentClientHeight": 844,
+          "stageScroll": 0,
+          "stageScrollHeight": 1344,
+          "stageClientHeight": 1344,
+          "tailHeights": []
+        }
+      },
+      "desktopShellContained": null,
+      "serverStateUnchanged": true,
+      "video": "mobile-light.webm"
+    },
+    {
+      "name": "mobile-dark",
+      "status": "pass",
+      "initial": {
+        "title": {
+          "top": 478.15625,
+          "bottom": 534.78125
+        },
+        "firstTwoAbstractLines": [
+          {
+            "top": 587.78125,
+            "bottom": 611.78125
+          },
+          {
+            "top": 587.78125,
+            "bottom": 611.78125
+          }
+        ],
+        "barTop": 712
+      },
+      "queueInset": 16.15625,
+      "rapidMs": 5,
+      "rapidAnnouncement": "Paper 2 of 9: Budgeted Retrieval for Long-Horizon Agents: When to Stop Searching",
+      "playerFocusRetained": true,
+      "beforeReader": 870,
+      "restoredScroll": 870,
+      "farGeometry": {
+        "top": 16.109375,
+        "bottom": 40.109375,
+        "inset": 16.109375,
+        "barTop": 666
+      },
+      "exactText": "is intentionally lon",
+      "sourceLower": {
+        "mode": "source",
+        "top": 618.109375,
+        "bottom": 642.109375,
+        "left": 277.859375,
+        "right": 283.1875,
+        "viewportTop": 16,
+        "barTop": 666,
+        "hit": true,
+        "hitElement": {
+          "tag": "P",
+          "id": "",
+          "class": ""
+        },
+        "target": {
+          "tag": "P",
+          "label": "for interface verification and makes no scientific claim. Each passage is intentionally long enough to test scrolling, paper transitions, and the exact return to a retained source."
+        },
+        "scrollContainer": "document",
+        "windowScroll": 2827,
+        "documentScrollHeight": 4227,
+        "documentClientHeight": 844,
+        "stageScroll": 0,
+        "stageScrollHeight": 4103,
+        "stageClientHeight": 4103,
+        "tailHeights": [],
+        "wheelSteps": 2,
+        "trace": [
+          {
+            "mode": "source",
+            "top": 1052.109375,
+            "bottom": 1076.109375,
+            "left": 277.859375,
+            "right": 283.1875,
+            "viewportTop": 16,
+            "barTop": 666,
+            "hit": false,
+            "hitElement": null,
+            "target": {
+              "tag": "P",
+              "label": "for interface verification and makes no scientific claim. Each passage is intentionally long enough to test scrolling, paper transitions, and the exact return to a retained source."
+            },
+            "scrollContainer": "document",
+            "windowScroll": 2393,
+            "documentScrollHeight": 4227,
+            "documentClientHeight": 844,
+            "stageScroll": 0,
+            "stageScrollHeight": 4103,
+            "stageClientHeight": 4103,
+            "tailHeights": []
+          },
+          {
+            "mode": "source",
+            "top": 692.109375,
+            "bottom": 716.109375,
+            "left": 277.859375,
+            "right": 283.1875,
+            "viewportTop": 16,
+            "barTop": 666,
+            "hit": false,
+            "hitElement": {
+              "tag": "FORM",
+              "id": "",
+              "class": "ws-composer ws-composer-shell"
+            },
+            "target": {
+              "tag": "P",
+              "label": "for interface verification and makes no scientific claim. Each passage is intentionally long enough to test scrolling, paper transitions, and the exact return to a retained source."
+            },
+            "scrollContainer": "document",
+            "windowScroll": 2753,
+            "documentScrollHeight": 4227,
+            "documentClientHeight": 844,
+            "stageScroll": 0,
+            "stageScrollHeight": 4103,
+            "stageClientHeight": 4103,
+            "tailHeights": []
+          },
+          {
+            "mode": "source",
+            "top": 618.109375,
+            "bottom": 642.109375,
+            "left": 277.859375,
+            "right": 283.1875,
+            "viewportTop": 16,
+            "barTop": 666,
+            "hit": true,
+            "hitElement": {
+              "tag": "P",
+              "id": "",
+              "class": ""
+            },
+            "target": {
+              "tag": "P",
+              "label": "for interface verification and makes no scientific claim. Each passage is intentionally long enough to test scrolling, paper transitions, and the exact return to a retained source."
+            },
+            "scrollContainer": "document",
+            "windowScroll": 2827,
+            "documentScrollHeight": 4227,
+            "documentClientHeight": 844,
+            "stageScroll": 0,
+            "stageScrollHeight": 4103,
+            "stageClientHeight": 4103,
+            "tailHeights": []
+          }
+        ],
+        "afterScreenshot": {
+          "mode": "source",
+          "top": 618.109375,
+          "bottom": 642.109375,
+          "left": 277.859375,
+          "right": 283.1875,
+          "viewportTop": 16,
+          "barTop": 666,
+          "hit": true,
+          "hitElement": {
+            "tag": "P",
+            "id": "",
+            "class": ""
+          },
+          "target": {
+            "tag": "P",
+            "label": "for interface verification and makes no scientific claim. Each passage is intentionally long enough to test scrolling, paper transitions, and the exact return to a retained source."
+          },
+          "scrollContainer": "document",
+          "windowScroll": 2827,
+          "documentScrollHeight": 4227,
+          "documentClientHeight": 844,
+          "stageScroll": 0,
+          "stageScrollHeight": 4103,
+          "stageClientHeight": 4103,
+          "tailHeights": []
+        }
+      },
+      "sourceFooter": {
+        "mode": "source-footer",
+        "top": 623.921875,
+        "bottom": 641.921875,
+        "left": 273.828125,
+        "right": 280.65625,
+        "viewportTop": 16,
+        "barTop": 666,
+        "hit": true,
+        "hitElement": {
+          "tag": "BUTTON",
+          "id": "",
+          "class": "daily-secondary"
+        },
+        "target": {
+          "tag": "BUTTON",
+          "label": "Find retained PDF excerpts"
+        },
+        "scrollContainer": "document",
+        "windowScroll": 3295,
+        "documentScrollHeight": 4227,
+        "documentClientHeight": 844,
+        "stageScroll": 0,
+        "stageScrollHeight": 4103,
+        "stageClientHeight": 4103,
+        "tailHeights": [],
+        "wheelSteps": 2,
+        "trace": [
+          {
+            "mode": "source-footer",
+            "top": 1091.921875,
+            "bottom": 1109.921875,
+            "left": 273.828125,
+            "right": 280.65625,
+            "viewportTop": 16,
+            "barTop": 666,
+            "hit": false,
+            "hitElement": null,
+            "target": {
+              "tag": "BUTTON",
+              "label": "Find retained PDF excerpts"
+            },
+            "scrollContainer": "document",
+            "windowScroll": 2827,
+            "documentScrollHeight": 4227,
+            "documentClientHeight": 844,
+            "stageScroll": 0,
+            "stageScrollHeight": 4103,
+            "stageClientHeight": 4103,
+            "tailHeights": []
+          },
+          {
+            "mode": "source-footer",
+            "top": 731.921875,
+            "bottom": 749.921875,
+            "left": 273.828125,
+            "right": 280.65625,
+            "viewportTop": 16,
+            "barTop": 666,
+            "hit": false,
+            "hitElement": {
+              "tag": "DIV",
+              "id": "",
+              "class": "ws-reader-navigation"
+            },
+            "target": {
+              "tag": "BUTTON",
+              "label": "Find retained PDF excerpts"
+            },
+            "scrollContainer": "document",
+            "windowScroll": 3187,
+            "documentScrollHeight": 4227,
+            "documentClientHeight": 844,
+            "stageScroll": 0,
+            "stageScrollHeight": 4103,
+            "stageClientHeight": 4103,
+            "tailHeights": []
+          },
+          {
+            "mode": "source-footer",
+            "top": 623.921875,
+            "bottom": 641.921875,
+            "left": 273.828125,
+            "right": 280.65625,
+            "viewportTop": 16,
+            "barTop": 666,
+            "hit": true,
+            "hitElement": {
+              "tag": "BUTTON",
+              "id": "",
+              "class": "daily-secondary"
+            },
+            "target": {
+              "tag": "BUTTON",
+              "label": "Find retained PDF excerpts"
+            },
+            "scrollContainer": "document",
+            "windowScroll": 3295,
+            "documentScrollHeight": 4227,
+            "documentClientHeight": 844,
+            "stageScroll": 0,
+            "stageScrollHeight": 4103,
+            "stageClientHeight": 4103,
+            "tailHeights": []
+          }
+        ],
+        "afterScreenshot": {
+          "mode": "source-footer",
+          "top": 623.921875,
+          "bottom": 641.921875,
+          "left": 273.828125,
+          "right": 280.65625,
+          "viewportTop": 16,
+          "barTop": 666,
+          "hit": true,
+          "hitElement": {
+            "tag": "BUTTON",
+            "id": "",
+            "class": "daily-secondary"
+          },
+          "target": {
+            "tag": "BUTTON",
+            "label": "Find retained PDF excerpts"
+          },
+          "scrollContainer": "document",
+          "windowScroll": 3295,
+          "documentScrollHeight": 4227,
+          "documentClientHeight": 844,
+          "stageScroll": 0,
+          "stageScrollHeight": 4103,
+          "stageClientHeight": 4103,
+          "tailHeights": []
+        }
+      },
+      "notesLower": {
+        "mode": "notes",
+        "top": 609.703125,
+        "bottom": 633.5,
+        "left": 33,
+        "right": 357,
+        "viewportTop": 16,
+        "barTop": 666,
+        "hit": true,
+        "hitElement": {
+          "tag": "P",
+          "id": "",
+          "class": ""
+        },
+        "target": {
+          "tag": "P",
+          "label": "No server-saved notes for this version yet."
+        },
+        "scrollContainer": "document",
+        "windowScroll": 577,
+        "documentScrollHeight": 1468,
+        "documentClientHeight": 844,
+        "stageScroll": 0,
+        "stageScrollHeight": 1344,
+        "stageClientHeight": 1344,
+        "tailHeights": [],
+        "wheelSteps": 1,
+        "trace": [
+          {
+            "mode": "notes",
+            "top": 651.703125,
+            "bottom": 675.5,
+            "left": 33,
+            "right": 357,
+            "viewportTop": 16,
+            "barTop": 666,
+            "hit": true,
+            "hitElement": {
+              "tag": "P",
+              "id": "",
+              "class": ""
+            },
+            "target": {
+              "tag": "P",
+              "label": "No server-saved notes for this version yet."
+            },
+            "scrollContainer": "document",
+            "windowScroll": 535,
+            "documentScrollHeight": 1468,
+            "documentClientHeight": 844,
+            "stageScroll": 0,
+            "stageScrollHeight": 1344,
+            "stageClientHeight": 1344,
+            "tailHeights": []
+          },
+          {
+            "mode": "notes",
+            "top": 609.703125,
+            "bottom": 633.5,
+            "left": 33,
+            "right": 357,
+            "viewportTop": 16,
+            "barTop": 666,
+            "hit": true,
+            "hitElement": {
+              "tag": "P",
+              "id": "",
+              "class": ""
+            },
+            "target": {
+              "tag": "P",
+              "label": "No server-saved notes for this version yet."
+            },
+            "scrollContainer": "document",
+            "windowScroll": 577,
+            "documentScrollHeight": 1468,
+            "documentClientHeight": 844,
+            "stageScroll": 0,
+            "stageScrollHeight": 1344,
+            "stageClientHeight": 1344,
+            "tailHeights": []
+          }
+        ],
+        "afterScreenshot": {
+          "mode": "notes",
+          "top": 609.703125,
+          "bottom": 633.5,
+          "left": 33,
+          "right": 357,
+          "viewportTop": 16,
+          "barTop": 666,
+          "hit": true,
+          "hitElement": {
+            "tag": "P",
+            "id": "",
+            "class": ""
+          },
+          "target": {
+            "tag": "P",
+            "label": "No server-saved notes for this version yet."
+          },
+          "scrollContainer": "document",
+          "windowScroll": 577,
+          "documentScrollHeight": 1468,
+          "documentClientHeight": 844,
+          "stageScroll": 0,
+          "stageScrollHeight": 1344,
+          "stageClientHeight": 1344,
+          "tailHeights": []
+        }
+      },
+      "desktopShellContained": null,
+      "serverStateUnchanged": true,
+      "video": null
+    }
+  ],
+  "blocked": [],
+  "errors": [],
+  "chapters": [
+    {
+      "name": "desktop-light",
+      "label": "Initial full title and two abstract lines clear bar",
+      "elapsedMs": 1166
+    },
+    {
+      "name": "desktop-light",
+      "label": "Queue click from870, rapidJJK final wins, live position and player focus",
+      "elapsedMs": 1690
+    },
+    {
+      "name": "desktop-light",
+      "label": "Radar page2",
+      "elapsedMs": 2651
+    },
+    {
+      "name": "desktop-light",
+      "label": "Immediate native Readclick then Back870 and Forward",
+      "elapsedMs": 4623
+    },
+    {
+      "name": "desktop-light",
+      "label": "Same-document exact20Unicodechar mark at16px unobscured",
+      "elapsedMs": 4878
+    },
+    {
+      "name": "desktop-light",
+      "label": "Fragment Back removes range and Forward restores exact mark",
+      "elapsedMs": 4895
+    },
+    {
+      "name": "desktop-light",
+      "label": "Actual last source character visibly reachable above player",
+      "elapsedMs": 5053
+    },
+    {
+      "name": "desktop-light",
+      "label": "Actual source evidence footer end visibly reachable above player",
+      "elapsedMs": 5324
+    },
+    {
+      "name": "desktop-light",
+      "label": "Actual last notes content visibly reachable above player",
+      "elapsedMs": 5486
+    },
+    {
+      "name": "desktop-light",
+      "label": "Native Notes keeps desktop document at0 and full sidebar/brand within viewport",
+      "elapsedMs": 5487
+    },
+    {
+      "name": "desktop-dark",
+      "label": "Initial full title and two abstract lines clear bar",
+      "elapsedMs": 845
+    },
+    {
+      "name": "desktop-dark",
+      "label": "Queue click from870, rapidJJK final wins, live position and player focus",
+      "elapsedMs": 1367
+    },
+    {
+      "name": "desktop-dark",
+      "label": "Radar page2",
+      "elapsedMs": 2362
+    },
+    {
+      "name": "desktop-dark",
+      "label": "Immediate native Readclick then Back870 and Forward",
+      "elapsedMs": 4648
+    },
+    {
+      "name": "desktop-dark",
+      "label": "Same-document exact20Unicodechar mark at16px unobscured",
+      "elapsedMs": 4836
+    },
+    {
+      "name": "desktop-dark",
+      "label": "Fragment Back removes range and Forward restores exact mark",
+      "elapsedMs": 4957
+    },
+    {
+      "name": "desktop-dark",
+      "label": "Actual last source character visibly reachable above player",
+      "elapsedMs": 5127
+    },
+    {
+      "name": "desktop-dark",
+      "label": "Actual source evidence footer end visibly reachable above player",
+      "elapsedMs": 5373
+    },
+    {
+      "name": "desktop-dark",
+      "label": "Actual last notes content visibly reachable above player",
+      "elapsedMs": 5526
+    },
+    {
+      "name": "desktop-dark",
+      "label": "Native Notes keeps desktop document at0 and full sidebar/brand within viewport",
+      "elapsedMs": 5547
+    },
+    {
+      "name": "mobile-light",
+      "label": "Initial full title and two abstract lines clear bar",
+      "elapsedMs": 881
+    },
+    {
+      "name": "mobile-light",
+      "label": "Queue click from870, rapidJJK final wins, live position and player focus",
+      "elapsedMs": 1485
+    },
+    {
+      "name": "mobile-light",
+      "label": "Radar page2",
+      "elapsedMs": 2380
+    },
+    {
+      "name": "mobile-light",
+      "label": "Immediate native Readclick then Back870 and Forward",
+      "elapsedMs": 4328
+    },
+    {
+      "name": "mobile-light",
+      "label": "Same-document exact20Unicodechar mark at16px unobscured",
+      "elapsedMs": 4503
+    },
+    {
+      "name": "mobile-light",
+      "label": "Fragment Back removes range and Forward restores exact mark",
+      "elapsedMs": 4513
+    },
+    {
+      "name": "mobile-light",
+      "label": "Actual last source character visibly reachable above player",
+      "elapsedMs": 4755
+    },
+    {
+      "name": "mobile-light",
+      "label": "Actual source evidence footer end visibly reachable above player",
+      "elapsedMs": 4997
+    },
+    {
+      "name": "mobile-light",
+      "label": "Actual last notes content visibly reachable above player",
+      "elapsedMs": 5160
+    },
+    {
+      "name": "mobile-dark",
+      "label": "Initial full title and two abstract lines clear bar",
+      "elapsedMs": 877
+    },
+    {
+      "name": "mobile-dark",
+      "label": "Queue click from870, rapidJJK final wins, live position and player focus",
+      "elapsedMs": 1444
+    },
+    {
+      "name": "mobile-dark",
+      "label": "Radar page2",
+      "elapsedMs": 2292
+    },
+    {
+      "name": "mobile-dark",
+      "label": "Immediate native Readclick then Back870 and Forward",
+      "elapsedMs": 4191
+    },
+    {
+      "name": "mobile-dark",
+      "label": "Same-document exact20Unicodechar mark at16px unobscured",
+      "elapsedMs": 4374
+    },
+    {
+      "name": "mobile-dark",
+      "label": "Fragment Back removes range and Forward restores exact mark",
+      "elapsedMs": 4383
+    },
+    {
+      "name": "mobile-dark",
+      "label": "Actual last source character visibly reachable above player",
+      "elapsedMs": 4630
+    },
+    {
+      "name": "mobile-dark",
+      "label": "Actual source evidence footer end visibly reachable above player",
+      "elapsedMs": 4874
+    },
+    {
+      "name": "mobile-dark",
+      "label": "Actual last notes content visibly reachable above player",
+      "elapsedMs": 5042
+    }
+  ],
+  "endedAtUtc": "2026-11-05T08:03:55.536Z",
+  "status": "pass"
+}

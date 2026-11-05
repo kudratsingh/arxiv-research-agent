@@ -1,0 +1,9 @@
+{
+  "sourceCommit": "83b196eb14b33cd3033453701e93482266366e5f",
+  "mapping": {
+    "final/": "browser-final/",
+    "ci/daily-loop/": "browser-ci/daily-loop/",
+    "ci/p7-source-notes/": "browser-ci/p7-source-notes/"
+  },
+  "scope": "Original bytes preserved before guard-repair recaptures; paths inside receipts remain original-relative. checks/ snapshot is separate and source-agent-owned."
+}

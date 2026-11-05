@@ -1,0 +1,10 @@
+{
+  "applicationCommit": "2129fedb072a5ad42d1e30a80b0763641d8d7a1e",
+  "acceptance": "superseded for root-authorized measured core-content latency repairs",
+  "functionalResults": "70 responsive cases, 28 workspace axe scans, 16 existing live regressions, 4 strict command contexts plus 8 dialog axe scans, 8 mood/motion contexts, 4 native geometry contexts including actual visible lower content and desktop document zero, 12 focused-paper observations, 4 exact Reader observations, 16 legacy contexts, 4 focus/form contexts and 14 coarse-pointer route/theme measurements passed on this source",
+  "performanceLimitation": "Mandatory React.lazy content added a consistent roughly 300ms visible fallback phase. Reader source DOM appeared around480-578ms versus P6 around180-200ms in single loopback observations; paper titles around490ms versus P6 around250-448ms. This is a measured visible wait cost, not a statistical performance benchmark. Actual settled JavaScript increased; no transfer or speed reduction is claimed.",
+  "requestedRepair": "Root authorized eager FocusPaper within unchanged ceilings, and explicit asynchronous Reader module state after retained item data, preserving no-data skip, busy/error/retry, identity guards and latest hash. These artifacts stay bound to2129 and are not final acceptance for the repaired application.",
+  "providerContacts": 0,
+  "sourceRefreshContacts": 0,
+  "humanQualityAcceptance": false
+}

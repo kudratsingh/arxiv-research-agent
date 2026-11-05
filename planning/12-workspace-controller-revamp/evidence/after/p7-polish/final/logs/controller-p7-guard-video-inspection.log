@@ -1,0 +1,74 @@
+[
+  {
+    "video": "final/commands/desktop-dark.webm",
+    "sha256": "45d87a01ff2a1780ffe6e17ef2b24fe424bf9e5552ac10223dc15b98279d4c91",
+    "bytes": 1650502,
+    "durationSeconds": 11.28,
+    "width": 1440,
+    "height": 1000,
+    "fullDecodeExitCode": 0,
+    "sampleFrames": 13,
+    "contactSheet": "commands-desktop-dark-contact-sheet.png",
+    "visualAssessment": "pending visual review"
+  },
+  {
+    "video": "final/commands/mobile-light.webm",
+    "sha256": "f9d1182a1d21a4a7983ded6363f20e93ef3cc99ff902eb970dda0a81300c2399",
+    "bytes": 1096074,
+    "durationSeconds": 10.52,
+    "width": 390,
+    "height": 844,
+    "fullDecodeExitCode": 0,
+    "sampleFrames": 12,
+    "contactSheet": "commands-mobile-light-contact-sheet.png",
+    "visualAssessment": "pending visual review"
+  },
+  {
+    "video": "final/geometry/desktop-dark.webm",
+    "sha256": "7b0d2fb6e3c80852afdd6612d0ac9ff6b3eee9acb916e7a1b547f73cbda9112a",
+    "bytes": 1311594,
+    "durationSeconds": 6.6,
+    "width": 1440,
+    "height": 1000,
+    "fullDecodeExitCode": 0,
+    "sampleFrames": 8,
+    "contactSheet": "geometry-desktop-dark-contact-sheet.png",
+    "visualAssessment": "pending visual review"
+  },
+  {
+    "video": "final/geometry/mobile-light.webm",
+    "sha256": "79e1a6e69fd1433e046a76467753f1dacda528728ff39bc7ee3ac66eb6658f78",
+    "bytes": 901511,
+    "durationSeconds": 6.12,
+    "width": 390,
+    "height": 844,
+    "fullDecodeExitCode": 0,
+    "sampleFrames": 8,
+    "contactSheet": "geometry-mobile-light-contact-sheet.png",
+    "visualAssessment": "pending visual review"
+  },
+  {
+    "video": "ci/daily-loop/desktop.webm",
+    "sha256": "5c14eadbd8cc903d813c23d9e6d54b61328806cf8d4d6373d155456e1478b188",
+    "bytes": 634618,
+    "durationSeconds": 4.0,
+    "width": 1440,
+    "height": 1000,
+    "fullDecodeExitCode": 0,
+    "sampleFrames": 6,
+    "contactSheet": "daily-loop-desktop-contact-sheet.png",
+    "visualAssessment": "pending visual review"
+  },
+  {
+    "video": "ci/daily-loop/mobile.webm",
+    "sha256": "c7f368d10b3d772215f498b72878250a2add9a4d0ef5505fa7d09d9c01b23749",
+    "bytes": 439256,
+    "durationSeconds": 3.76,
+    "width": 390,
+    "height": 844,
+    "fullDecodeExitCode": 0,
+    "sampleFrames": 5,
+    "contactSheet": "daily-loop-mobile-contact-sheet.png",
+    "visualAssessment": "pending visual review"
+  }
+]

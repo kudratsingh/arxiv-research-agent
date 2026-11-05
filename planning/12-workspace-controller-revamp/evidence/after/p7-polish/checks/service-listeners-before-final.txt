@@ -1,0 +1,13 @@
+COMMAND     PID        USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+Python    10951 kudratsingh   12u  IPv4 0x9232149547e68c54      0t0  TCP 127.0.0.1:8169 (LISTEN)
+Python    12238 kudratsingh   12u  IPv4 0x26dedd5acd5e2c45      0t0  TCP 127.0.0.1:8137 (LISTEN)
+node      12359 kudratsingh   12u  IPv4 0xd90f63bd405ac3f5      0t0  TCP 127.0.0.1:3137 (LISTEN)
+Python    25818 kudratsingh   12u  IPv4 0x3edd09f1ddd22624      0t0  TCP 127.0.0.1:8148 (LISTEN)
+node      33419 kudratsingh   12u  IPv4 0x43d9b585e4eb6039      0t0  TCP 127.0.0.1:3168 (LISTEN)
+node      34911 kudratsingh   12u  IPv4 0x50c44588321578b8      0t0  TCP 127.0.0.1:3169 (LISTEN)
+node      73344 kudratsingh   12u  IPv4 0xeded4208a76d100c      0t0  TCP 127.0.0.1:3148 (LISTEN)
+com.docke 90818 kudratsingh   86u  IPv4 0x83393665d698d423      0t0  TCP 127.0.0.1:15438 (LISTEN)
+com.docke 90818 kudratsingh   94u  IPv4 0x492e5e0513fd747f      0t0  TCP 127.0.0.1:15458 (LISTEN)
+Python    91172 kudratsingh   12u  IPv4 0x3efed43667efa729      0t0  TCP 127.0.0.1:8158 (LISTEN)
+node      91519 kudratsingh   12u  IPv4 0x293f4ac28c1bd01f      0t0  TCP 127.0.0.1:3158 (LISTEN)
+Python    95014 kudratsingh   12u  IPv4 0x2888550496a29dbf      0t0  TCP 127.0.0.1:8168 (LISTEN)

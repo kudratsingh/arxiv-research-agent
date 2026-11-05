@@ -1,0 +1,77 @@
+FAIL desktop light AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
++ actual - expected
+... Skipped lines
+
+  {
+    activity: [
+      {
+        anchor: 'abstract:0',
+        body: '',
+...
+    ],
++   as_of: '2026-11-05T04:56:26.799506+00:00',
+-   as_of: '2026-11-05T04:56:25.673846+00:00',
+    editions: [
+      {
+        allocation: {},
+        coverage: [
+          {
+
+FAIL desktop dark AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
++ actual - expected
+... Skipped lines
+
+  {
+    activity: [
+      {
+        anchor: 'abstract:0',
+        body: '',
+...
+    ],
++   as_of: '2026-11-05T04:56:27.933146+00:00',
+-   as_of: '2026-11-05T04:56:26.954584+00:00',
+    editions: [
+      {
+        allocation: {},
+        coverage: [
+          {
+
+FAIL mobile light AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
++ actual - expected
+... Skipped lines
+
+  {
+    activity: [
+      {
+        anchor: 'abstract:0',
+        body: '',
+...
+    ],
++   as_of: '2026-11-05T04:56:28.995813+00:00',
+-   as_of: '2026-11-05T04:56:28.078492+00:00',
+    editions: [
+      {
+        allocation: {},
+        coverage: [
+          {
+
+FAIL mobile dark AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
++ actual - expected
+... Skipped lines
+
+  {
+    activity: [
+      {
+        anchor: 'abstract:0',
+        body: '',
+...
+    ],
++   as_of: '2026-11-05T04:56:30.045158+00:00',
+-   as_of: '2026-11-05T04:56:29.145008+00:00',
+    editions: [
+      {
+        allocation: {},
+        coverage: [
+          {
+
+{"status":"fail","cases":4,"blocked":[],"errors":[]}

@@ -1,0 +1,452 @@
+{
+  "base": "http://127.0.0.1:3169",
+  "principal": "controller-p7-ci",
+  "startedAtUtc": "2026-11-05T08:11:18.021Z",
+  "scope": "Disposable synthetic CI; software-only409 and pending-navigation injection",
+  "cases": [
+    {
+      "name": "desktop",
+      "theme": "dark",
+      "status": "pass",
+      "notesTabs": 1,
+      "retryTabs": 31,
+      "returnTabs": 10,
+      "readerUrl": "http://127.0.0.1:3169/workspace/items/ci%3Aworkspace-agent-evaluation?version=ci%3Aworkspace-agent-evaluation%3Av2&return_to=%2Fworkspace%2Ftoday%3Ffocus%3Dci%253Aworkspace-agent-evaluation#abstract%3A0",
+      "savedEntryId": "e9f16f2d-7c67-42b0-ae9b-a0e32436b6ee",
+      "savedVersion": "ci:workspace-agent-evaluation:v2",
+      "protectedStateUnchanged": true,
+      "cancelledPreflightObserved": true,
+      "scrollBeforePalette": {
+        "actual": 1764,
+        "history": 509
+      },
+      "scrollAfterPalette": {
+        "actual": 1764,
+        "history": 1764
+      },
+      "paletteOpeningActualScrollDelta": 0,
+      "historyBeforePalette": {
+        "length": 4,
+        "state": {
+          "__NA": true,
+          "__PRIVATE_NEXTJS_INTERNALS_TREE": {
+            "tree": [
+              "",
+              {
+                "children": [
+                  "(live)",
+                  {
+                    "children": [
+                      "workspace",
+                      {
+                        "children": [
+                          "items",
+                          {
+                            "children": [
+                              [
+                                "id",
+                                "ci%3Aworkspace-agent-evaluation",
+                                "d",
+                                []
+                              ],
+                              {
+                                "children": [
+                                  "__PAGE__",
+                                  {},
+                                  null,
+                                  null,
+                                  0,
+                                  "?version=ci%3Aworkspace-agent-evaluation%3Av2&return_to=%2Fworkspace%2Ftoday%3Ffocus%3Dci%253Aworkspace-agent-evaluation"
+                                ]
+                              },
+                              null,
+                              null,
+                              0
+                            ]
+                          },
+                          null,
+                          null,
+                          0
+                        ]
+                      },
+                      null,
+                      null,
+                      0
+                    ]
+                  },
+                  null,
+                  null,
+                  0
+                ]
+              },
+              null,
+              null,
+              16
+            ],
+            "renderedSearch": "?version=ci%3Aworkspace-agent-evaluation%3Av2&return_to=%2Fworkspace%2Ftoday%3Ffocus%3Dci%253Aworkspace-agent-evaluation"
+          },
+          "workspaceScroll": 509
+        }
+      },
+      "historyImmediatelyBeforeBlockedAction": {
+        "length": 4,
+        "state": {
+          "__NA": true,
+          "__PRIVATE_NEXTJS_INTERNALS_TREE": {
+            "tree": [
+              "",
+              {
+                "children": [
+                  "(live)",
+                  {
+                    "children": [
+                      "workspace",
+                      {
+                        "children": [
+                          "items",
+                          {
+                            "children": [
+                              [
+                                "id",
+                                "ci%3Aworkspace-agent-evaluation",
+                                "d",
+                                []
+                              ],
+                              {
+                                "children": [
+                                  "__PAGE__",
+                                  {},
+                                  null,
+                                  null,
+                                  0,
+                                  "?version=ci%3Aworkspace-agent-evaluation%3Av2&return_to=%2Fworkspace%2Ftoday%3Ffocus%3Dci%253Aworkspace-agent-evaluation"
+                                ]
+                              },
+                              null,
+                              null,
+                              0
+                            ]
+                          },
+                          null,
+                          null,
+                          0
+                        ]
+                      },
+                      null,
+                      null,
+                      0
+                    ]
+                  },
+                  null,
+                  null,
+                  0
+                ]
+              },
+              null,
+              null,
+              16
+            ],
+            "renderedSearch": "?version=ci%3Aworkspace-agent-evaluation%3Av2&return_to=%2Fworkspace%2Ftoday%3Ffocus%3Dci%253Aworkspace-agent-evaluation"
+          },
+          "workspaceScroll": 1764
+        }
+      },
+      "navigationRequests": [
+        {
+          "href": "http://127.0.0.1:3169/workspace/items/ci%3Aworkspace-agent-evaluation?version=ci%3Aworkspace-agent-evaluation%3Av2&return_to=%2Fworkspace%2Ftoday%3Ffocus%3Dci%253Aworkspace-agent-evaluation#abstract%3A0",
+          "pathname": "/workspace/items/ci%3Aworkspace-agent-evaluation",
+          "sameOrigin": true,
+          "defaultPrevented": false
+        },
+        {
+          "href": "http://127.0.0.1:3169/workspace/library",
+          "pathname": "/workspace/library",
+          "sameOrigin": true,
+          "defaultPrevented": true
+        }
+      ],
+      "pendingUrlHistoryIntentDraftUnchanged": true,
+      "acceptedLibraryNavigationRequests": 0,
+      "downstreamLibraryAnchorClicks": 0,
+      "video": "desktop.webm"
+    },
+    {
+      "name": "mobile",
+      "theme": "light",
+      "status": "pass",
+      "notesTabs": 1,
+      "retryTabs": 20,
+      "returnTabs": 8,
+      "readerUrl": "http://127.0.0.1:3169/workspace/items/ci%3Aworkspace-agent-evaluation?version=ci%3Aworkspace-agent-evaluation%3Av2&return_to=%2Fworkspace%2Ftoday%3Ffocus%3Dci%253Aworkspace-agent-evaluation#abstract%3A0",
+      "savedEntryId": "5cd69b2b-b860-4039-a171-bbde841d7dce",
+      "savedVersion": "ci:workspace-agent-evaluation:v2",
+      "protectedStateUnchanged": true,
+      "cancelledPreflightObserved": true,
+      "scrollBeforePalette": {
+        "actual": 667,
+        "history": 667
+      },
+      "scrollAfterPalette": {
+        "actual": 667,
+        "history": 667
+      },
+      "paletteOpeningActualScrollDelta": 0,
+      "historyBeforePalette": {
+        "length": 4,
+        "state": {
+          "__NA": true,
+          "__PRIVATE_NEXTJS_INTERNALS_TREE": {
+            "tree": [
+              "",
+              {
+                "children": [
+                  "(live)",
+                  {
+                    "children": [
+                      "workspace",
+                      {
+                        "children": [
+                          "items",
+                          {
+                            "children": [
+                              [
+                                "id",
+                                "ci%3Aworkspace-agent-evaluation",
+                                "d",
+                                []
+                              ],
+                              {
+                                "children": [
+                                  "__PAGE__",
+                                  {},
+                                  null,
+                                  null,
+                                  0,
+                                  "?version=ci%3Aworkspace-agent-evaluation%3Av2&return_to=%2Fworkspace%2Ftoday%3Ffocus%3Dci%253Aworkspace-agent-evaluation"
+                                ]
+                              },
+                              null,
+                              null,
+                              0
+                            ]
+                          },
+                          null,
+                          null,
+                          0
+                        ]
+                      },
+                      null,
+                      null,
+                      0
+                    ]
+                  },
+                  null,
+                  null,
+                  0
+                ]
+              },
+              null,
+              null,
+              16
+            ],
+            "renderedSearch": "?version=ci%3Aworkspace-agent-evaluation%3Av2&return_to=%2Fworkspace%2Ftoday%3Ffocus%3Dci%253Aworkspace-agent-evaluation"
+          },
+          "workspaceScroll": 667
+        }
+      },
+      "historyImmediatelyBeforeBlockedAction": {
+        "length": 4,
+        "state": {
+          "__NA": true,
+          "__PRIVATE_NEXTJS_INTERNALS_TREE": {
+            "tree": [
+              "",
+              {
+                "children": [
+                  "(live)",
+                  {
+                    "children": [
+                      "workspace",
+                      {
+                        "children": [
+                          "items",
+                          {
+                            "children": [
+                              [
+                                "id",
+                                "ci%3Aworkspace-agent-evaluation",
+                                "d",
+                                []
+                              ],
+                              {
+                                "children": [
+                                  "__PAGE__",
+                                  {},
+                                  null,
+                                  null,
+                                  0,
+                                  "?version=ci%3Aworkspace-agent-evaluation%3Av2&return_to=%2Fworkspace%2Ftoday%3Ffocus%3Dci%253Aworkspace-agent-evaluation"
+                                ]
+                              },
+                              null,
+                              null,
+                              0
+                            ]
+                          },
+                          null,
+                          null,
+                          0
+                        ]
+                      },
+                      null,
+                      null,
+                      0
+                    ]
+                  },
+                  null,
+                  null,
+                  0
+                ]
+              },
+              null,
+              null,
+              16
+            ],
+            "renderedSearch": "?version=ci%3Aworkspace-agent-evaluation%3Av2&return_to=%2Fworkspace%2Ftoday%3Ffocus%3Dci%253Aworkspace-agent-evaluation"
+          },
+          "workspaceScroll": 667
+        }
+      },
+      "navigationRequests": [
+        {
+          "href": "http://127.0.0.1:3169/workspace/items/ci%3Aworkspace-agent-evaluation?version=ci%3Aworkspace-agent-evaluation%3Av2&return_to=%2Fworkspace%2Ftoday%3Ffocus%3Dci%253Aworkspace-agent-evaluation#abstract%3A0",
+          "pathname": "/workspace/items/ci%3Aworkspace-agent-evaluation",
+          "sameOrigin": true,
+          "defaultPrevented": false
+        },
+        {
+          "href": "http://127.0.0.1:3169/workspace/library",
+          "pathname": "/workspace/library",
+          "sameOrigin": true,
+          "defaultPrevented": true
+        }
+      ],
+      "pendingUrlHistoryIntentDraftUnchanged": true,
+      "acceptedLibraryNavigationRequests": 0,
+      "downstreamLibraryAnchorClicks": 0,
+      "video": "mobile.webm"
+    }
+  ],
+  "writes": [
+    {
+      "name": "desktop",
+      "path": "/api/workspace/reading",
+      "work": "ci:workspace-agent-evaluation",
+      "forwarded": true
+    },
+    {
+      "name": "desktop",
+      "path": "/api/workspace/entries",
+      "work": "ci:workspace-agent-evaluation",
+      "forwarded": false,
+      "injection": "held then409"
+    },
+    {
+      "name": "desktop",
+      "path": "/api/workspace/entries",
+      "work": "ci:workspace-agent-evaluation",
+      "forwarded": true
+    },
+    {
+      "name": "desktop",
+      "path": "/api/workspace/reading",
+      "work": "ci:workspace-agent-evaluation",
+      "forwarded": true,
+      "kind": "restore own logicalreadingfields"
+    },
+    {
+      "name": "mobile",
+      "path": "/api/workspace/reading",
+      "work": "ci:workspace-agent-evaluation",
+      "forwarded": true
+    },
+    {
+      "name": "mobile",
+      "path": "/api/workspace/entries",
+      "work": "ci:workspace-agent-evaluation",
+      "forwarded": false,
+      "injection": "held then409"
+    },
+    {
+      "name": "mobile",
+      "path": "/api/workspace/entries",
+      "work": "ci:workspace-agent-evaluation",
+      "forwarded": true
+    },
+    {
+      "name": "mobile",
+      "path": "/api/workspace/reading",
+      "work": "ci:workspace-agent-evaluation",
+      "forwarded": true,
+      "kind": "restore own logicalreadingfields"
+    }
+  ],
+  "blocked": [],
+  "errors": [],
+  "chapters": [
+    {
+      "name": "desktop",
+      "label": "Skip-main→J→O→exact Reader",
+      "elapsedMs": 1589
+    },
+    {
+      "name": "desktop",
+      "label": "Keyboard question submitted; request held before server",
+      "elapsedMs": 1635
+    },
+    {
+      "name": "desktop",
+      "label": "Palette route remained blocked during pending entry save",
+      "elapsedMs": 2624
+    },
+    {
+      "name": "desktop",
+      "label": "Injected409 retained question; explicit keyboard retry saved",
+      "elapsedMs": 2762
+    },
+    {
+      "name": "desktop",
+      "label": "Keyboard return to Today→J",
+      "elapsedMs": 2950
+    },
+    {
+      "name": "mobile",
+      "label": "Skip-main→J→O→exact Reader",
+      "elapsedMs": 1489
+    },
+    {
+      "name": "mobile",
+      "label": "Keyboard question submitted; request held before server",
+      "elapsedMs": 1580
+    },
+    {
+      "name": "mobile",
+      "label": "Palette route remained blocked during pending entry save",
+      "elapsedMs": 2569
+    },
+    {
+      "name": "mobile",
+      "label": "Injected409 retained question; explicit keyboard retry saved",
+      "elapsedMs": 2677
+    },
+    {
+      "name": "mobile",
+      "label": "Keyboard return to Today→J",
+      "elapsedMs": 2848
+    }
+  ],
+  "navigationIntentKey": "arxiv.workspace.navigation-intent.v1",
+  "navigationRequestEvent": "arxiv:workspace-navigation-request",
+  "endedAtUtc": "2026-11-05T08:11:24.766Z",
+  "status": "pass"
+}

@@ -1,0 +1,2032 @@
+{
+  "phase": "p7",
+  "base": "http://127.0.0.1:3169",
+  "principal": "controller-p7-ci",
+  "applicationCommit": "83b196eb14b33cd3033453701e93482266366e5f",
+  "startedAtUtc": "2026-11-05T07:02:38.588Z",
+  "scope": "One cold loopback observation per size/theme, Source→Notes→Source; no performance benchmark or actual-transfer-reduction claim",
+  "cases": [
+    {
+      "name": "desktop-light",
+      "status": "pass",
+      "stages": [
+        {
+          "label": "Source initially ready",
+          "atMs": 716.5999999642372,
+          "timeOrigin": 1793862158970.7,
+          "scriptCount": 28,
+          "scriptBodyBytes": 229514
+        },
+        {
+          "label": "Notes ready after actual tab click",
+          "atMs": 924.8999999761581,
+          "timeOrigin": 1793862158970.7,
+          "scriptCount": 28,
+          "scriptBodyBytes": 229514
+        },
+        {
+          "label": "Source ready after return tab click",
+          "atMs": 1068.199999988079,
+          "timeOrigin": 1793862158970.7,
+          "scriptCount": 28,
+          "scriptBodyBytes": 229514
+        }
+      ],
+      "readiness": {
+        "phases": [
+          {
+            "label": "Opening your local workspace…",
+            "atMs": 41.09999996423721
+          },
+          {
+            "label": "Opening the retained source reader…",
+            "atMs": 171.5
+          },
+          {
+            "label": "notes",
+            "atMs": 202.69999998807907
+          }
+        ],
+        "headingAtMs": 191.39999997615814,
+        "sourceAtMs": 191.39999997615814,
+        "notesAtMs": 202.69999998807907,
+        "timeOrigin": 1793862158970.7
+      },
+      "logicalReadingBefore": {
+        "status": "unread",
+        "anchor": "abstract:0",
+        "version_id": "ci:workspace-agent-evaluation:v2",
+        "snoozed_until": null
+      },
+      "logicalReadingRestored": true,
+      "revisionBefore": 28,
+      "revisionAfterRestore": 30,
+      "notesUnchanged": true,
+      "profileSourcesScheduleUnchanged": true,
+      "requests": [
+        {
+          "path": "/workspace/items/ci%3Aworkspace-agent-evaluation",
+          "type": "document",
+          "status": 200,
+          "responseBodyBytes": 6564,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862158975.335,
+          "responseEndMs": 16.642,
+          "navigationStartMs": 4.635009765625,
+          "responseEndSinceNavigationMs": 21.277009765625
+        },
+        {
+          "path": "/_next/static/media/8b355a0d3365113c.p.woff2",
+          "type": "font",
+          "status": 200,
+          "responseBodyBytes": 19892,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862158999.2737,
+          "responseEndMs": 7.772,
+          "navigationStartMs": 28.57373046875,
+          "responseEndSinceNavigationMs": 36.34573046875
+        },
+        {
+          "path": "/_next/static/css/f4b04de22fdebcb9.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 7800,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862159000.3591,
+          "responseEndMs": 8.758,
+          "navigationStartMs": 29.6591796875,
+          "responseEndSinceNavigationMs": 38.417179687499996
+        },
+        {
+          "path": "/_next/static/css/7cd7f3878632625c.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 658,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862159000.5588,
+          "responseEndMs": 7.864,
+          "navigationStartMs": 29.85888671875,
+          "responseEndSinceNavigationMs": 37.72288671875
+        },
+        {
+          "path": "/_next/static/css/8609413464d16cbc.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 3411,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862159000.569,
+          "responseEndMs": 8.242,
+          "navigationStartMs": 29.869140625,
+          "responseEndSinceNavigationMs": 38.111140625000004
+        },
+        {
+          "path": "/_next/static/css/cfcf98882fdbfc90.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 8327,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862159000.6052,
+          "responseEndMs": 8.873,
+          "navigationStartMs": 29.9052734375,
+          "responseEndSinceNavigationMs": 38.7782734375
+        },
+        {
+          "path": "/_next/static/css/fadd03207f4f952a.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 433,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862159000.753,
+          "responseEndMs": 7.829,
+          "navigationStartMs": 30.052978515625,
+          "responseEndSinceNavigationMs": 37.881978515625
+        },
+        {
+          "path": "/_next/static/css/5d816b8c0dad564e.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 1046,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862159001.0889,
+          "responseEndMs": 7.219,
+          "navigationStartMs": 30.388916015625,
+          "responseEndSinceNavigationMs": 37.607916015625
+        },
+        {
+          "path": "/_next/static/chunks/webpack-2c8141ba4316bf80.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 2770,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862159010.169,
+          "responseEndMs": 15.802,
+          "navigationStartMs": 39.468994140625,
+          "responseEndSinceNavigationMs": 55.270994140625
+        },
+        {
+          "path": "/_next/static/chunks/4bd1b696-e199e788e58acf79.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 64173,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862159010.3,
+          "responseEndMs": 26.314,
+          "navigationStartMs": 39.60009765625,
+          "responseEndSinceNavigationMs": 65.91409765625
+        },
+        {
+          "path": "/_next/static/chunks/3794-84013bfe205fc83e.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 67242,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862159012.8723,
+          "responseEndMs": 29.662,
+          "navigationStartMs": 42.17236328125,
+          "responseEndSinceNavigationMs": 71.83436328125
+        },
+        {
+          "path": "/_next/static/chunks/main-app-3f3613dc4cfdba82.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 472,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862159012.9568,
+          "responseEndMs": 18.925,
+          "navigationStartMs": 42.2568359375,
+          "responseEndSinceNavigationMs": 61.1818359375
+        },
+        {
+          "path": "/_next/static/chunks/app/(live)/layout-9632962504747850.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 433,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862159013.09,
+          "responseEndMs": 19.493,
+          "navigationStartMs": 42.39013671875,
+          "responseEndSinceNavigationMs": 61.883136718749995
+        },
+        {
+          "path": "/_next/static/chunks/8500-107859ed31978aa3.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 3243,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862159013.127,
+          "responseEndMs": 20.348,
+          "navigationStartMs": 42.427001953125,
+          "responseEndSinceNavigationMs": 62.775001953125
+        },
+        {
+          "path": "/_next/static/chunks/5296-9e8513b2c0946000.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 1806,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862159013.255,
+          "responseEndMs": 20.531,
+          "navigationStartMs": 42.554931640625,
+          "responseEndSinceNavigationMs": 63.085931640625
+        },
+        {
+          "path": "/_next/static/chunks/8709-a66e5f8db1b68837.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 4239,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862159015.1191,
+          "responseEndMs": 22.546,
+          "navigationStartMs": 44.419189453125,
+          "responseEndSinceNavigationMs": 66.96518945312499
+        },
+        {
+          "path": "/_next/static/chunks/app/(live)/template-9a04df137e63add7.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 3250,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862159015.771,
+          "responseEndMs": 22.945,
+          "navigationStartMs": 45.071044921875,
+          "responseEndSinceNavigationMs": 68.016044921875
+        },
+        {
+          "path": "/_next/static/chunks/app/global-error-bbbbe76738a8cc66.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 985,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862159016.4849,
+          "responseEndMs": 22.205,
+          "navigationStartMs": 45.784912109375,
+          "responseEndSinceNavigationMs": 67.989912109375
+        },
+        {
+          "path": "/_next/static/chunks/4626-c11f45d2b1552a69.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 2890,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862159016.6677,
+          "responseEndMs": 23.775,
+          "navigationStartMs": 45.9677734375,
+          "responseEndSinceNavigationMs": 69.7427734375
+        },
+        {
+          "path": "/_next/static/chunks/app/(live)/workspace/items/%5Bid%5D/page-119757e6223764a7.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 4034,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862159018.4548,
+          "responseEndMs": 27.4,
+          "navigationStartMs": 47.7548828125,
+          "responseEndSinceNavigationMs": 75.1548828125
+        },
+        {
+          "path": "/_next/static/chunks/2300-48d38c12a9935ce7.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 2290,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862159018.6992,
+          "responseEndMs": 27.166,
+          "navigationStartMs": 47.999267578125,
+          "responseEndSinceNavigationMs": 75.165267578125
+        },
+        {
+          "path": "/_next/static/chunks/7214-d0728730539e3f2a.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 2735,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862159019.211,
+          "responseEndMs": 27.747,
+          "navigationStartMs": 48.510986328125,
+          "responseEndSinceNavigationMs": 76.257986328125
+        },
+        {
+          "path": "/_next/static/chunks/app/(workspace)/layout-c1ed5e89f65671f6.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 251,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862159019.979,
+          "responseEndMs": 26.423,
+          "navigationStartMs": 49.279052734375,
+          "responseEndSinceNavigationMs": 75.702052734375
+        },
+        {
+          "path": "/_next/static/chunks/app/not-found-98158f2035361943.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 339,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862159022.92,
+          "responseEndMs": 28.682,
+          "navigationStartMs": 52.219970703125,
+          "responseEndSinceNavigationMs": 80.901970703125
+        },
+        {
+          "path": "/_next/static/media/c9067fc2f3d1f4e5.woff2",
+          "type": "font",
+          "status": 200,
+          "responseBodyBytes": 13996,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862159046.959,
+          "responseEndMs": 29.845,
+          "navigationStartMs": 76.259033203125,
+          "responseEndSinceNavigationMs": 106.104033203125
+        },
+        {
+          "path": "/_next/static/media/4a7f5dc07e8cb505.woff2",
+          "type": "font",
+          "status": 200,
+          "responseBodyBytes": 14276,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862159047.014,
+          "responseEndMs": 28.749,
+          "navigationStartMs": 76.31396484375,
+          "responseEndSinceNavigationMs": 105.06296484375
+        },
+        {
+          "path": "/_next/static/chunks/1935-32d99753df5b9519.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 5582,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862159079.7,
+          "responseEndMs": 7.02,
+          "navigationStartMs": 109,
+          "responseEndSinceNavigationMs": 116.02
+        },
+        {
+          "path": "/_next/static/chunks/6708-5180b011d18b4046.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 3040,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862159080.536,
+          "responseEndMs": 9.266,
+          "navigationStartMs": 109.8359375,
+          "responseEndSinceNavigationMs": 119.1019375
+        },
+        {
+          "path": "/_next/static/chunks/6430-ed6c548668b43fcd.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 3180,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862159080.586,
+          "responseEndMs": 8.518,
+          "navigationStartMs": 109.885986328125,
+          "responseEndSinceNavigationMs": 118.403986328125
+        },
+        {
+          "path": "/_next/static/chunks/3146.5403ad7ab2976d8f.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 12932,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862159080.729,
+          "responseEndMs": 9.925,
+          "navigationStartMs": 110.029052734375,
+          "responseEndSinceNavigationMs": 119.954052734375
+        },
+        {
+          "path": "/_next/static/chunks/2982.c83ca6a7ee38df33.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 18306,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862159080.773,
+          "responseEndMs": 10.317,
+          "navigationStartMs": 110.072998046875,
+          "responseEndSinceNavigationMs": 120.38999804687501
+        },
+        {
+          "path": "/_next/static/chunks/7817-161905866f122cf5.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 4048,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862159080.868,
+          "responseEndMs": 8.675,
+          "navigationStartMs": 110.16796875,
+          "responseEndSinceNavigationMs": 118.84296875
+        },
+        {
+          "path": "/_next/static/chunks/2316-9f220a1a89990c08.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 1374,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862159082.2183,
+          "responseEndMs": 9.139,
+          "navigationStartMs": 111.518310546875,
+          "responseEndSinceNavigationMs": 120.657310546875
+        },
+        {
+          "path": "/_next/static/chunks/1423.4488fa66aafc0bd5.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 3596,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862159084.0208,
+          "responseEndMs": 10.684,
+          "navigationStartMs": 113.32080078125,
+          "responseEndSinceNavigationMs": 124.00480078125
+        },
+        {
+          "path": "/_next/static/chunks/1540.0ad53037a74b0d13.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 2703,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862159107.0308,
+          "responseEndMs": 9.619,
+          "navigationStartMs": 136.330810546875,
+          "responseEndSinceNavigationMs": 145.949810546875
+        },
+        {
+          "path": "/api/workspace/state",
+          "type": "fetch",
+          "status": 200,
+          "responseBodyBytes": 47888,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862159108.408,
+          "responseEndMs": 38.255,
+          "navigationStartMs": 137.7080078125,
+          "responseEndSinceNavigationMs": 175.9630078125
+        },
+        {
+          "path": "/_next/static/chunks/2565.fceaebc4527092e1.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 1516,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862159108.4292,
+          "responseEndMs": 6.17,
+          "navigationStartMs": 137.729248046875,
+          "responseEndSinceNavigationMs": 143.899248046875
+        },
+        {
+          "path": "/_next/static/chunks/7882.3614371e86a6bc6f.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 11191,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862159143.7349,
+          "responseEndMs": 3.068,
+          "navigationStartMs": 173.034912109375,
+          "responseEndSinceNavigationMs": 176.102912109375
+        },
+        {
+          "path": "/_next/static/chunks/8375.b05e87629f6ce61b.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 894,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862159174.299,
+          "responseEndMs": 15.536,
+          "navigationStartMs": 203.59912109375,
+          "responseEndSinceNavigationMs": 219.13512109375
+        },
+        {
+          "path": "/_next/static/media/b75e973a7f03466f.woff2",
+          "type": "font",
+          "status": 200,
+          "responseBodyBytes": 34416,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862159174.3118,
+          "responseEndMs": 12.573,
+          "navigationStartMs": 203.61181640625,
+          "responseEndSinceNavigationMs": 216.18481640625
+        },
+        {
+          "path": "/api/workspace/reading",
+          "type": "fetch",
+          "status": 200,
+          "responseBodyBytes": 201,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862159865.075,
+          "responseEndMs": 19.101,
+          "navigationStartMs": 894.375,
+          "responseEndSinceNavigationMs": 913.476
+        },
+        {
+          "path": "/api/workspace/reading",
+          "type": "fetch",
+          "status": 200,
+          "responseBodyBytes": 206,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862160019.932,
+          "responseEndMs": 15.897,
+          "navigationStartMs": 1049.23193359375,
+          "responseEndSinceNavigationMs": 1065.12893359375
+        }
+      ]
+    },
+    {
+      "name": "desktop-dark",
+      "status": "pass",
+      "stages": [
+        {
+          "label": "Source initially ready",
+          "atMs": 659.9000000357628,
+          "timeOrigin": 1793862160160.6,
+          "scriptCount": 28,
+          "scriptBodyBytes": 229514
+        },
+        {
+          "label": "Notes ready after actual tab click",
+          "atMs": 866.6999999880791,
+          "timeOrigin": 1793862160160.6,
+          "scriptCount": 28,
+          "scriptBodyBytes": 229514
+        },
+        {
+          "label": "Source ready after return tab click",
+          "atMs": 1010.6999999880791,
+          "timeOrigin": 1793862160160.6,
+          "scriptCount": 28,
+          "scriptBodyBytes": 229514
+        }
+      ],
+      "readiness": {
+        "phases": [
+          {
+            "label": "Opening your local workspace…",
+            "atMs": 25.900000035762787
+          },
+          {
+            "label": "Opening the retained source reader…",
+            "atMs": 118.80000001192093
+          },
+          {
+            "label": "notes",
+            "atMs": 139.4000000357628
+          }
+        ],
+        "headingAtMs": 130.69999998807907,
+        "sourceAtMs": 130.69999998807907,
+        "notesAtMs": 139.30000001192093,
+        "timeOrigin": 1793862160160.6
+      },
+      "logicalReadingBefore": {
+        "status": "unread",
+        "anchor": "abstract:0",
+        "version_id": "ci:workspace-agent-evaluation:v2",
+        "snoozed_until": null
+      },
+      "logicalReadingRestored": true,
+      "revisionBefore": 30,
+      "revisionAfterRestore": 32,
+      "notesUnchanged": true,
+      "profileSourcesScheduleUnchanged": true,
+      "requests": [
+        {
+          "path": "/workspace/items/ci%3Aworkspace-agent-evaluation",
+          "type": "document",
+          "status": 200,
+          "responseBodyBytes": 6560,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862160163.8599,
+          "responseEndMs": 14.426,
+          "navigationStartMs": 3.259765625,
+          "responseEndSinceNavigationMs": 17.685765625000002
+        },
+        {
+          "path": "/_next/static/media/8b355a0d3365113c.p.woff2",
+          "type": "font",
+          "status": 200,
+          "responseBodyBytes": 19892,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862160178.6929,
+          "responseEndMs": 6.769,
+          "navigationStartMs": 18.0927734375,
+          "responseEndSinceNavigationMs": 24.8617734375
+        },
+        {
+          "path": "/_next/static/css/f4b04de22fdebcb9.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 7800,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862160178.76,
+          "responseEndMs": 8.579,
+          "navigationStartMs": 18.159912109375,
+          "responseEndSinceNavigationMs": 26.738912109375
+        },
+        {
+          "path": "/_next/static/css/7cd7f3878632625c.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 658,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862160178.992,
+          "responseEndMs": 8.258,
+          "navigationStartMs": 18.391845703125,
+          "responseEndSinceNavigationMs": 26.649845703125
+        },
+        {
+          "path": "/_next/static/css/8609413464d16cbc.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 3411,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862160179.102,
+          "responseEndMs": 10.149,
+          "navigationStartMs": 18.501953125,
+          "responseEndSinceNavigationMs": 28.650953125
+        },
+        {
+          "path": "/_next/static/css/cfcf98882fdbfc90.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 8327,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862160179.136,
+          "responseEndMs": 10.805,
+          "navigationStartMs": 18.535888671875,
+          "responseEndSinceNavigationMs": 29.340888671875
+        },
+        {
+          "path": "/_next/static/css/fadd03207f4f952a.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 433,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862160179.231,
+          "responseEndMs": 8.979,
+          "navigationStartMs": 18.630859375,
+          "responseEndSinceNavigationMs": 27.609859375
+        },
+        {
+          "path": "/_next/static/css/5d816b8c0dad564e.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 1046,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862160179.2998,
+          "responseEndMs": 9.488,
+          "navigationStartMs": 18.69970703125,
+          "responseEndSinceNavigationMs": 28.18770703125
+        },
+        {
+          "path": "/_next/static/chunks/webpack-2c8141ba4316bf80.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 2770,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862160194.645,
+          "responseEndMs": 25.575,
+          "navigationStartMs": 34.044921875,
+          "responseEndSinceNavigationMs": 59.619921875
+        },
+        {
+          "path": "/_next/static/chunks/4bd1b696-e199e788e58acf79.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 64173,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862160194.71,
+          "responseEndMs": 37.302,
+          "navigationStartMs": 34.10986328125,
+          "responseEndSinceNavigationMs": 71.41186328124999
+        },
+        {
+          "path": "/_next/static/chunks/3794-84013bfe205fc83e.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 67242,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862160198.051,
+          "responseEndMs": 42.325,
+          "navigationStartMs": 37.450927734375,
+          "responseEndSinceNavigationMs": 79.775927734375
+        },
+        {
+          "path": "/_next/static/chunks/main-app-3f3613dc4cfdba82.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 472,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862160198.119,
+          "responseEndMs": 27.528,
+          "navigationStartMs": 37.518798828125,
+          "responseEndSinceNavigationMs": 65.04679882812499
+        },
+        {
+          "path": "/_next/static/chunks/app/(live)/layout-9632962504747850.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 433,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862160198.362,
+          "responseEndMs": 28.433,
+          "navigationStartMs": 37.761962890625,
+          "responseEndSinceNavigationMs": 66.19496289062499
+        },
+        {
+          "path": "/_next/static/chunks/8500-107859ed31978aa3.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 3243,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862160198.4702,
+          "responseEndMs": 31.436,
+          "navigationStartMs": 37.8701171875,
+          "responseEndSinceNavigationMs": 69.3061171875
+        },
+        {
+          "path": "/_next/static/chunks/5296-9e8513b2c0946000.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 1806,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862160199.691,
+          "responseEndMs": 31.727,
+          "navigationStartMs": 39.0908203125,
+          "responseEndSinceNavigationMs": 70.8178203125
+        },
+        {
+          "path": "/_next/static/chunks/8709-a66e5f8db1b68837.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 4239,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862160201.89,
+          "responseEndMs": 32.812,
+          "navigationStartMs": 41.289794921875,
+          "responseEndSinceNavigationMs": 74.101794921875
+        },
+        {
+          "path": "/_next/static/chunks/app/(live)/template-9a04df137e63add7.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 3250,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862160202.518,
+          "responseEndMs": 32.071,
+          "navigationStartMs": 41.91796875,
+          "responseEndSinceNavigationMs": 73.98896875
+        },
+        {
+          "path": "/_next/static/media/c9067fc2f3d1f4e5.woff2",
+          "type": "font",
+          "status": 200,
+          "responseBodyBytes": 13996,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862160203.881,
+          "responseEndMs": 20.484,
+          "navigationStartMs": 43.281005859375,
+          "responseEndSinceNavigationMs": 63.765005859375
+        },
+        {
+          "path": "/_next/static/media/4a7f5dc07e8cb505.woff2",
+          "type": "font",
+          "status": 200,
+          "responseBodyBytes": 14276,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862160204.012,
+          "responseEndMs": 20.599,
+          "navigationStartMs": 43.411865234375,
+          "responseEndSinceNavigationMs": 64.010865234375
+        },
+        {
+          "path": "/_next/static/chunks/app/global-error-bbbbe76738a8cc66.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 985,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862160206.394,
+          "responseEndMs": 36.521,
+          "navigationStartMs": 45.7939453125,
+          "responseEndSinceNavigationMs": 82.3149453125
+        },
+        {
+          "path": "/_next/static/chunks/4626-c11f45d2b1552a69.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 2890,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862160207.213,
+          "responseEndMs": 39.278,
+          "navigationStartMs": 46.61279296875,
+          "responseEndSinceNavigationMs": 85.89079296874999
+        },
+        {
+          "path": "/_next/static/chunks/app/(live)/workspace/items/%5Bid%5D/page-119757e6223764a7.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 4034,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862160209.04,
+          "responseEndMs": 39.66,
+          "navigationStartMs": 48.43994140625,
+          "responseEndSinceNavigationMs": 88.09994140625
+        },
+        {
+          "path": "/_next/static/chunks/2300-48d38c12a9935ce7.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 2290,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862160209.113,
+          "responseEndMs": 39.777,
+          "navigationStartMs": 48.512939453125,
+          "responseEndSinceNavigationMs": 88.289939453125
+        },
+        {
+          "path": "/_next/static/chunks/7214-d0728730539e3f2a.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 2735,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862160210.66,
+          "responseEndMs": 41.371,
+          "navigationStartMs": 50.059814453125,
+          "responseEndSinceNavigationMs": 91.43081445312501
+        },
+        {
+          "path": "/_next/static/chunks/app/(workspace)/layout-c1ed5e89f65671f6.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 251,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862160211.3328,
+          "responseEndMs": 41.03,
+          "navigationStartMs": 50.732666015625,
+          "responseEndSinceNavigationMs": 91.762666015625
+        },
+        {
+          "path": "/_next/static/chunks/app/not-found-98158f2035361943.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 339,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862160213.86,
+          "responseEndMs": 41.752,
+          "navigationStartMs": 53.260009765625,
+          "responseEndSinceNavigationMs": 95.01200976562501
+        },
+        {
+          "path": "/_next/static/chunks/1935-32d99753df5b9519.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 5582,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862160239.4053,
+          "responseEndMs": 5.933,
+          "navigationStartMs": 78.80517578125,
+          "responseEndSinceNavigationMs": 84.73817578124999
+        },
+        {
+          "path": "/_next/static/chunks/6708-5180b011d18b4046.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 3040,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862160240.14,
+          "responseEndMs": 6.288,
+          "navigationStartMs": 79.539794921875,
+          "responseEndSinceNavigationMs": 85.827794921875
+        },
+        {
+          "path": "/_next/static/chunks/6430-ed6c548668b43fcd.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 3180,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862160240.199,
+          "responseEndMs": 7.161,
+          "navigationStartMs": 79.598876953125,
+          "responseEndSinceNavigationMs": 86.759876953125
+        },
+        {
+          "path": "/_next/static/chunks/3146.5403ad7ab2976d8f.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 12932,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862160240.28,
+          "responseEndMs": 7.812,
+          "navigationStartMs": 79.679931640625,
+          "responseEndSinceNavigationMs": 87.491931640625
+        },
+        {
+          "path": "/_next/static/chunks/2982.c83ca6a7ee38df33.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 18306,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862160240.4092,
+          "responseEndMs": 7.943,
+          "navigationStartMs": 79.80908203125,
+          "responseEndSinceNavigationMs": 87.75208203125
+        },
+        {
+          "path": "/_next/static/chunks/7817-161905866f122cf5.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 4048,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862160240.556,
+          "responseEndMs": 6.892,
+          "navigationStartMs": 79.955810546875,
+          "responseEndSinceNavigationMs": 86.847810546875
+        },
+        {
+          "path": "/_next/static/chunks/2316-9f220a1a89990c08.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 1374,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862160242.188,
+          "responseEndMs": 8.397,
+          "navigationStartMs": 81.587890625,
+          "responseEndSinceNavigationMs": 89.984890625
+        },
+        {
+          "path": "/_next/static/chunks/1423.4488fa66aafc0bd5.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 3596,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862160242.853,
+          "responseEndMs": 8.753,
+          "navigationStartMs": 82.2529296875,
+          "responseEndSinceNavigationMs": 91.0059296875
+        },
+        {
+          "path": "/_next/static/chunks/1540.0ad53037a74b0d13.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 2703,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862160252.198,
+          "responseEndMs": 7.63,
+          "navigationStartMs": 91.597900390625,
+          "responseEndSinceNavigationMs": 99.227900390625
+        },
+        {
+          "path": "/api/workspace/state",
+          "type": "fetch",
+          "status": 200,
+          "responseBodyBytes": 47533,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862160252.366,
+          "responseEndMs": 29.97,
+          "navigationStartMs": 91.765869140625,
+          "responseEndSinceNavigationMs": 121.735869140625
+        },
+        {
+          "path": "/_next/static/chunks/2565.fceaebc4527092e1.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 1516,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862160252.382,
+          "responseEndMs": 4.698,
+          "navigationStartMs": 91.781982421875,
+          "responseEndSinceNavigationMs": 96.47998242187501
+        },
+        {
+          "path": "/_next/static/chunks/7882.3614371e86a6bc6f.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 11191,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862160280.8308,
+          "responseEndMs": 2.639,
+          "navigationStartMs": 120.230712890625,
+          "responseEndSinceNavigationMs": 122.869712890625
+        },
+        {
+          "path": "/_next/static/chunks/8375.b05e87629f6ce61b.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 894,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862160301.47,
+          "responseEndMs": 12.826,
+          "navigationStartMs": 140.869873046875,
+          "responseEndSinceNavigationMs": 153.695873046875
+        },
+        {
+          "path": "/_next/static/media/b75e973a7f03466f.woff2",
+          "type": "font",
+          "status": 200,
+          "responseBodyBytes": 34416,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862160301.4988,
+          "responseEndMs": 11.031,
+          "navigationStartMs": 140.898681640625,
+          "responseEndSinceNavigationMs": 151.929681640625
+        },
+        {
+          "path": "/api/workspace/reading",
+          "type": "fetch",
+          "status": 200,
+          "responseBodyBytes": 201,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862160987.724,
+          "responseEndMs": 16.271,
+          "navigationStartMs": 827.1240234375,
+          "responseEndSinceNavigationMs": 843.3950234375
+        },
+        {
+          "path": "/api/workspace/reading",
+          "type": "fetch",
+          "status": 200,
+          "responseBodyBytes": 206,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862161151.864,
+          "responseEndMs": 15.865,
+          "navigationStartMs": 991.263916015625,
+          "responseEndSinceNavigationMs": 1007.128916015625
+        }
+      ]
+    },
+    {
+      "name": "mobile-light",
+      "status": "pass",
+      "stages": [
+        {
+          "label": "Source initially ready",
+          "atMs": 633.5,
+          "timeOrigin": 1793862161315.9,
+          "scriptCount": 20,
+          "scriptBodyBytes": 177456
+        },
+        {
+          "label": "Notes ready after actual tab click",
+          "atMs": 784.1999999880791,
+          "timeOrigin": 1793862161315.9,
+          "scriptCount": 20,
+          "scriptBodyBytes": 177456
+        },
+        {
+          "label": "Source ready after return tab click",
+          "atMs": 907.1999999880791,
+          "timeOrigin": 1793862161315.9,
+          "scriptCount": 20,
+          "scriptBodyBytes": 177456
+        }
+      ],
+      "readiness": {
+        "phases": [
+          {
+            "label": "Opening your local workspace…",
+            "atMs": 17.30000001192093
+          },
+          {
+            "label": "Opening the retained source reader…",
+            "atMs": 102.30000001192093
+          },
+          {
+            "label": "retained-source",
+            "atMs": 124
+          },
+          {
+            "label": "notes",
+            "atMs": 740.5
+          },
+          {
+            "label": "retained-source",
+            "atMs": 870.6999999880791
+          }
+        ],
+        "headingAtMs": 113.89999997615814,
+        "sourceAtMs": 113.89999997615814,
+        "notesAtMs": 740.5,
+        "timeOrigin": 1793862161315.9
+      },
+      "logicalReadingBefore": {
+        "status": "unread",
+        "anchor": "abstract:0",
+        "version_id": "ci:workspace-agent-evaluation:v2",
+        "snoozed_until": null
+      },
+      "logicalReadingRestored": true,
+      "revisionBefore": 32,
+      "revisionAfterRestore": 34,
+      "notesUnchanged": true,
+      "profileSourcesScheduleUnchanged": true,
+      "requests": [
+        {
+          "path": "/workspace/items/ci%3Aworkspace-agent-evaluation",
+          "type": "document",
+          "status": 200,
+          "responseBodyBytes": 6567,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862161317.4229,
+          "responseEndMs": 6.846,
+          "navigationStartMs": 1.52294921875,
+          "responseEndSinceNavigationMs": 8.36894921875
+        },
+        {
+          "path": "/_next/static/media/8b355a0d3365113c.p.woff2",
+          "type": "font",
+          "status": 200,
+          "responseBodyBytes": 19892,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862161327.6929,
+          "responseEndMs": 4.824,
+          "navigationStartMs": 11.79296875,
+          "responseEndSinceNavigationMs": 16.616968749999998
+        },
+        {
+          "path": "/_next/static/css/f4b04de22fdebcb9.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 7800,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862161328.3398,
+          "responseEndMs": 5.279,
+          "navigationStartMs": 12.43994140625,
+          "responseEndSinceNavigationMs": 17.71894140625
+        },
+        {
+          "path": "/_next/static/css/7cd7f3878632625c.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 658,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862161328.3809,
+          "responseEndMs": 4.562,
+          "navigationStartMs": 12.48095703125,
+          "responseEndSinceNavigationMs": 17.04295703125
+        },
+        {
+          "path": "/_next/static/css/8609413464d16cbc.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 3411,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862161328.6072,
+          "responseEndMs": 5.363,
+          "navigationStartMs": 12.707275390625,
+          "responseEndSinceNavigationMs": 18.070275390625
+        },
+        {
+          "path": "/_next/static/css/cfcf98882fdbfc90.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 8327,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862161328.649,
+          "responseEndMs": 5.838,
+          "navigationStartMs": 12.7490234375,
+          "responseEndSinceNavigationMs": 18.5870234375
+        },
+        {
+          "path": "/_next/static/css/fadd03207f4f952a.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 433,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862161328.69,
+          "responseEndMs": 4.911,
+          "navigationStartMs": 12.7900390625,
+          "responseEndSinceNavigationMs": 17.7010390625
+        },
+        {
+          "path": "/_next/static/css/5d816b8c0dad564e.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 1046,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862161328.751,
+          "responseEndMs": 5.197,
+          "navigationStartMs": 12.85107421875,
+          "responseEndSinceNavigationMs": 18.04807421875
+        },
+        {
+          "path": "/_next/static/chunks/webpack-2c8141ba4316bf80.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 2770,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862161333.992,
+          "responseEndMs": 9.258,
+          "navigationStartMs": 18.092041015625,
+          "responseEndSinceNavigationMs": 27.350041015625
+        },
+        {
+          "path": "/_next/static/chunks/4bd1b696-e199e788e58acf79.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 64173,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862161334.7803,
+          "responseEndMs": 20.971,
+          "navigationStartMs": 18.88037109375,
+          "responseEndSinceNavigationMs": 39.851371093750004
+        },
+        {
+          "path": "/_next/static/chunks/3794-84013bfe205fc83e.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 67242,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862161336.563,
+          "responseEndMs": 23.971,
+          "navigationStartMs": 20.6630859375,
+          "responseEndSinceNavigationMs": 44.634085937500004
+        },
+        {
+          "path": "/_next/static/chunks/main-app-3f3613dc4cfdba82.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 472,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862161336.613,
+          "responseEndMs": 12.599,
+          "navigationStartMs": 20.713134765625,
+          "responseEndSinceNavigationMs": 33.312134765625004
+        },
+        {
+          "path": "/_next/static/chunks/app/(live)/layout-9632962504747850.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 433,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862161336.653,
+          "responseEndMs": 12.9,
+          "navigationStartMs": 20.753173828125,
+          "responseEndSinceNavigationMs": 33.653173828125
+        },
+        {
+          "path": "/_next/static/chunks/8500-107859ed31978aa3.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 3243,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862161336.689,
+          "responseEndMs": 13.634,
+          "navigationStartMs": 20.7890625,
+          "responseEndSinceNavigationMs": 34.4230625
+        },
+        {
+          "path": "/_next/static/chunks/5296-9e8513b2c0946000.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 1806,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862161336.825,
+          "responseEndMs": 13.88,
+          "navigationStartMs": 20.925048828125,
+          "responseEndSinceNavigationMs": 34.805048828125
+        },
+        {
+          "path": "/_next/static/chunks/8709-a66e5f8db1b68837.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 4239,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862161338.742,
+          "responseEndMs": 15.751,
+          "navigationStartMs": 22.842041015625,
+          "responseEndSinceNavigationMs": 38.593041015625
+        },
+        {
+          "path": "/_next/static/chunks/app/(live)/template-9a04df137e63add7.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 3250,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862161339.219,
+          "responseEndMs": 16.261,
+          "navigationStartMs": 23.319091796875,
+          "responseEndSinceNavigationMs": 39.580091796874996
+        },
+        {
+          "path": "/_next/static/chunks/app/global-error-bbbbe76738a8cc66.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 985,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862161339.831,
+          "responseEndMs": 17.292,
+          "navigationStartMs": 23.93115234375,
+          "responseEndSinceNavigationMs": 41.22315234375
+        },
+        {
+          "path": "/_next/static/chunks/4626-c11f45d2b1552a69.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 2890,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862161340.1401,
+          "responseEndMs": 18.177,
+          "navigationStartMs": 24.240234375,
+          "responseEndSinceNavigationMs": 42.417234375
+        },
+        {
+          "path": "/_next/static/chunks/app/(live)/workspace/items/%5Bid%5D/page-119757e6223764a7.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 4034,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862161341.9932,
+          "responseEndMs": 19.352,
+          "navigationStartMs": 26.09326171875,
+          "responseEndSinceNavigationMs": 45.445261718750004
+        },
+        {
+          "path": "/_next/static/chunks/2300-48d38c12a9935ce7.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 2290,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862161342.722,
+          "responseEndMs": 20.064,
+          "navigationStartMs": 26.822021484375,
+          "responseEndSinceNavigationMs": 46.886021484375
+        },
+        {
+          "path": "/_next/static/media/c9067fc2f3d1f4e5.woff2",
+          "type": "font",
+          "status": 200,
+          "responseBodyBytes": 13996,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862161343.528,
+          "responseEndMs": 10.096,
+          "navigationStartMs": 27.628173828125,
+          "responseEndSinceNavigationMs": 37.724173828125004
+        },
+        {
+          "path": "/_next/static/chunks/7214-d0728730539e3f2a.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 2735,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862161343.538,
+          "responseEndMs": 21.912,
+          "navigationStartMs": 27.63818359375,
+          "responseEndSinceNavigationMs": 49.55018359375
+        },
+        {
+          "path": "/_next/static/media/4a7f5dc07e8cb505.woff2",
+          "type": "font",
+          "status": 200,
+          "responseBodyBytes": 14276,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862161343.5679,
+          "responseEndMs": 11.248,
+          "navigationStartMs": 27.66796875,
+          "responseEndSinceNavigationMs": 38.91596875
+        },
+        {
+          "path": "/_next/static/chunks/app/(workspace)/layout-c1ed5e89f65671f6.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 251,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862161345.69,
+          "responseEndMs": 22.691,
+          "navigationStartMs": 29.7900390625,
+          "responseEndSinceNavigationMs": 52.4810390625
+        },
+        {
+          "path": "/_next/static/chunks/app/not-found-98158f2035361943.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 339,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862161346.859,
+          "responseEndMs": 22.941,
+          "navigationStartMs": 30.958984375,
+          "responseEndSinceNavigationMs": 53.899984375
+        },
+        {
+          "path": "/_next/static/chunks/1540.0ad53037a74b0d13.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 2703,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862161385.187,
+          "responseEndMs": 8.597,
+          "navigationStartMs": 69.287109375,
+          "responseEndSinceNavigationMs": 77.884109375
+        },
+        {
+          "path": "/api/workspace/state",
+          "type": "fetch",
+          "status": 200,
+          "responseBodyBytes": 47277,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862161385.7278,
+          "responseEndMs": 35.647,
+          "navigationStartMs": 69.827880859375,
+          "responseEndSinceNavigationMs": 105.47488085937499
+        },
+        {
+          "path": "/_next/static/chunks/2565.fceaebc4527092e1.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 1516,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862161385.777,
+          "responseEndMs": 5.743,
+          "navigationStartMs": 69.877197265625,
+          "responseEndSinceNavigationMs": 75.620197265625
+        },
+        {
+          "path": "/_next/static/chunks/7882.3614371e86a6bc6f.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 11191,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862161419.5117,
+          "responseEndMs": 2.481,
+          "navigationStartMs": 103.61181640625,
+          "responseEndSinceNavigationMs": 106.09281640625
+        },
+        {
+          "path": "/_next/static/chunks/8375.b05e87629f6ce61b.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 894,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862161440.764,
+          "responseEndMs": 14.247,
+          "navigationStartMs": 124.864013671875,
+          "responseEndSinceNavigationMs": 139.111013671875
+        },
+        {
+          "path": "/_next/static/media/b75e973a7f03466f.woff2",
+          "type": "font",
+          "status": 200,
+          "responseBodyBytes": 34416,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862161440.769,
+          "responseEndMs": 12.012,
+          "navigationStartMs": 124.869140625,
+          "responseEndSinceNavigationMs": 136.881140625
+        },
+        {
+          "path": "/api/workspace/reading",
+          "type": "fetch",
+          "status": 200,
+          "responseBodyBytes": 201,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862162057.811,
+          "responseEndMs": 18.492,
+          "navigationStartMs": 741.9111328125,
+          "responseEndSinceNavigationMs": 760.4031328125
+        },
+        {
+          "path": "/api/workspace/reading",
+          "type": "fetch",
+          "status": 200,
+          "responseBodyBytes": 206,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862162187.591,
+          "responseEndMs": 31.499,
+          "navigationStartMs": 871.691162109375,
+          "responseEndSinceNavigationMs": 903.190162109375
+        }
+      ]
+    },
+    {
+      "name": "mobile-dark",
+      "status": "pass",
+      "stages": [
+        {
+          "label": "Source initially ready",
+          "atMs": 640.6000000238419,
+          "timeOrigin": 1793862162338.8,
+          "scriptCount": 20,
+          "scriptBodyBytes": 177456
+        },
+        {
+          "label": "Notes ready after actual tab click",
+          "atMs": 773.9000000357628,
+          "timeOrigin": 1793862162338.8,
+          "scriptCount": 20,
+          "scriptBodyBytes": 177456
+        },
+        {
+          "label": "Source ready after return tab click",
+          "atMs": 864.8000000119209,
+          "timeOrigin": 1793862162338.8,
+          "scriptCount": 20,
+          "scriptBodyBytes": 177456
+        }
+      ],
+      "readiness": {
+        "phases": [
+          {
+            "label": "Opening your local workspace…",
+            "atMs": 20.30000001192093
+          },
+          {
+            "label": "Opening the retained source reader…",
+            "atMs": 108
+          },
+          {
+            "label": "retained-source",
+            "atMs": 129.70000004768372
+          },
+          {
+            "label": "notes",
+            "atMs": 732.6000000238419
+          },
+          {
+            "label": "retained-source",
+            "atMs": 847
+          }
+        ],
+        "headingAtMs": 119.80000001192093,
+        "sourceAtMs": 119.80000001192093,
+        "notesAtMs": 732.6000000238419,
+        "timeOrigin": 1793862162338.8
+      },
+      "logicalReadingBefore": {
+        "status": "unread",
+        "anchor": "abstract:0",
+        "version_id": "ci:workspace-agent-evaluation:v2",
+        "snoozed_until": null
+      },
+      "logicalReadingRestored": true,
+      "revisionBefore": 34,
+      "revisionAfterRestore": 36,
+      "notesUnchanged": true,
+      "profileSourcesScheduleUnchanged": true,
+      "requests": [
+        {
+          "path": "/workspace/items/ci%3Aworkspace-agent-evaluation",
+          "type": "document",
+          "status": 200,
+          "responseBodyBytes": 6565,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862162339.982,
+          "responseEndMs": 7.482,
+          "navigationStartMs": 1.181884765625,
+          "responseEndSinceNavigationMs": 8.663884765625
+        },
+        {
+          "path": "/_next/static/media/8b355a0d3365113c.p.woff2",
+          "type": "font",
+          "status": 200,
+          "responseBodyBytes": 19892,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862162353.013,
+          "responseEndMs": 6.882,
+          "navigationStartMs": 14.212890625,
+          "responseEndSinceNavigationMs": 21.094890624999998
+        },
+        {
+          "path": "/_next/static/css/f4b04de22fdebcb9.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 7800,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862162353.062,
+          "responseEndMs": 7.373,
+          "navigationStartMs": 14.261962890625,
+          "responseEndSinceNavigationMs": 21.634962890625
+        },
+        {
+          "path": "/_next/static/css/7cd7f3878632625c.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 658,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862162353.0981,
+          "responseEndMs": 6.636,
+          "navigationStartMs": 14.298095703125,
+          "responseEndSinceNavigationMs": 20.934095703125
+        },
+        {
+          "path": "/_next/static/css/8609413464d16cbc.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 3411,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862162353.1333,
+          "responseEndMs": 7.847,
+          "navigationStartMs": 14.333251953125,
+          "responseEndSinceNavigationMs": 22.180251953125
+        },
+        {
+          "path": "/_next/static/css/cfcf98882fdbfc90.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 8327,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862162353.4138,
+          "responseEndMs": 8.563,
+          "navigationStartMs": 14.61376953125,
+          "responseEndSinceNavigationMs": 23.176769531250002
+        },
+        {
+          "path": "/_next/static/css/fadd03207f4f952a.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 433,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862162353.455,
+          "responseEndMs": 7.726,
+          "navigationStartMs": 14.655029296875,
+          "responseEndSinceNavigationMs": 22.381029296875
+        },
+        {
+          "path": "/_next/static/css/5d816b8c0dad564e.css",
+          "type": "stylesheet",
+          "status": 200,
+          "responseBodyBytes": 1046,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862162353.568,
+          "responseEndMs": 7.683,
+          "navigationStartMs": 14.76806640625,
+          "responseEndSinceNavigationMs": 22.45106640625
+        },
+        {
+          "path": "/_next/static/chunks/webpack-2c8141ba4316bf80.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 2770,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862162359.277,
+          "responseEndMs": 11.205,
+          "navigationStartMs": 20.47705078125,
+          "responseEndSinceNavigationMs": 31.68205078125
+        },
+        {
+          "path": "/_next/static/chunks/4bd1b696-e199e788e58acf79.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 64173,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862162359.7478,
+          "responseEndMs": 21.726,
+          "navigationStartMs": 20.94775390625,
+          "responseEndSinceNavigationMs": 42.67375390625
+        },
+        {
+          "path": "/_next/static/chunks/3794-84013bfe205fc83e.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 67242,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862162362.265,
+          "responseEndMs": 33.441,
+          "navigationStartMs": 23.46484375,
+          "responseEndSinceNavigationMs": 56.90584375
+        },
+        {
+          "path": "/_next/static/chunks/main-app-3f3613dc4cfdba82.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 472,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862162362.3772,
+          "responseEndMs": 14.739,
+          "navigationStartMs": 23.5771484375,
+          "responseEndSinceNavigationMs": 38.316148437500004
+        },
+        {
+          "path": "/_next/static/chunks/app/(live)/layout-9632962504747850.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 433,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862162362.457,
+          "responseEndMs": 14.869,
+          "navigationStartMs": 23.656982421875,
+          "responseEndSinceNavigationMs": 38.525982421875
+        },
+        {
+          "path": "/_next/static/chunks/8500-107859ed31978aa3.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 3243,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862162362.513,
+          "responseEndMs": 15.387,
+          "navigationStartMs": 23.712890625,
+          "responseEndSinceNavigationMs": 39.099890625
+        },
+        {
+          "path": "/_next/static/chunks/5296-9e8513b2c0946000.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 1806,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862162362.586,
+          "responseEndMs": 15.628,
+          "navigationStartMs": 23.785888671875,
+          "responseEndSinceNavigationMs": 39.413888671875
+        },
+        {
+          "path": "/_next/static/chunks/8709-a66e5f8db1b68837.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 4239,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862162364.0752,
+          "responseEndMs": 17.304,
+          "navigationStartMs": 25.275146484375,
+          "responseEndSinceNavigationMs": 42.579146484375
+        },
+        {
+          "path": "/_next/static/chunks/app/(live)/template-9a04df137e63add7.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 3250,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862162364.1401,
+          "responseEndMs": 17.752,
+          "navigationStartMs": 25.340087890625,
+          "responseEndSinceNavigationMs": 43.092087890624995
+        },
+        {
+          "path": "/_next/static/chunks/app/global-error-bbbbe76738a8cc66.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 985,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862162364.6929,
+          "responseEndMs": 17.531,
+          "navigationStartMs": 25.892822265625,
+          "responseEndSinceNavigationMs": 43.423822265625
+        },
+        {
+          "path": "/_next/static/chunks/4626-c11f45d2b1552a69.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 2890,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862162364.94,
+          "responseEndMs": 17.638,
+          "navigationStartMs": 26.139892578125,
+          "responseEndSinceNavigationMs": 43.777892578125005
+        },
+        {
+          "path": "/_next/static/chunks/app/(live)/workspace/items/%5Bid%5D/page-119757e6223764a7.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 4034,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862162367.069,
+          "responseEndMs": 21.983,
+          "navigationStartMs": 28.26904296875,
+          "responseEndSinceNavigationMs": 50.252042968750004
+        },
+        {
+          "path": "/_next/static/chunks/2300-48d38c12a9935ce7.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 2290,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862162367.193,
+          "responseEndMs": 21.854,
+          "navigationStartMs": 28.39306640625,
+          "responseEndSinceNavigationMs": 50.24706640625
+        },
+        {
+          "path": "/_next/static/chunks/7214-d0728730539e3f2a.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 2735,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862162367.291,
+          "responseEndMs": 21.72,
+          "navigationStartMs": 28.490966796875,
+          "responseEndSinceNavigationMs": 50.210966796875
+        },
+        {
+          "path": "/_next/static/chunks/app/(workspace)/layout-c1ed5e89f65671f6.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 251,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862162367.317,
+          "responseEndMs": 21.094,
+          "navigationStartMs": 28.516845703125,
+          "responseEndSinceNavigationMs": 49.610845703125
+        },
+        {
+          "path": "/_next/static/chunks/app/not-found-98158f2035361943.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 339,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862162370.576,
+          "responseEndMs": 23.371,
+          "navigationStartMs": 31.77587890625,
+          "responseEndSinceNavigationMs": 55.146878906249995
+        },
+        {
+          "path": "/_next/static/media/c9067fc2f3d1f4e5.woff2",
+          "type": "font",
+          "status": 200,
+          "responseBodyBytes": 13996,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862162372.0347,
+          "responseEndMs": 20.706,
+          "navigationStartMs": 33.234619140625,
+          "responseEndSinceNavigationMs": 53.940619140625
+        },
+        {
+          "path": "/_next/static/media/4a7f5dc07e8cb505.woff2",
+          "type": "font",
+          "status": 200,
+          "responseBodyBytes": 14276,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862162372.427,
+          "responseEndMs": 21.499,
+          "navigationStartMs": 33.626953125,
+          "responseEndSinceNavigationMs": 55.125953124999995
+        },
+        {
+          "path": "/_next/static/chunks/1540.0ad53037a74b0d13.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 2703,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862162415.969,
+          "responseEndMs": 9.798,
+          "navigationStartMs": 77.1689453125,
+          "responseEndSinceNavigationMs": 86.9669453125
+        },
+        {
+          "path": "/_next/static/chunks/2565.fceaebc4527092e1.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 1516,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862162416.1448,
+          "responseEndMs": 6.262,
+          "navigationStartMs": 77.3447265625,
+          "responseEndSinceNavigationMs": 83.6067265625
+        },
+        {
+          "path": "/api/workspace/state",
+          "type": "fetch",
+          "status": 200,
+          "responseBodyBytes": 47272,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862162416.152,
+          "responseEndMs": 34.604,
+          "navigationStartMs": 77.35205078125,
+          "responseEndSinceNavigationMs": 111.95605078125
+        },
+        {
+          "path": "/_next/static/chunks/7882.3614371e86a6bc6f.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 11191,
+          "contentEncoding": "gzip",
+          "startTimeEpochMs": 1793862162448.2908,
+          "responseEndMs": 2.768,
+          "navigationStartMs": 109.49072265625,
+          "responseEndSinceNavigationMs": 112.25872265625
+        },
+        {
+          "path": "/_next/static/chunks/8375.b05e87629f6ce61b.js",
+          "type": "script",
+          "status": 200,
+          "responseBodyBytes": 894,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862162469.4001,
+          "responseEndMs": 13.898,
+          "navigationStartMs": 130.60009765625,
+          "responseEndSinceNavigationMs": 144.49809765625
+        },
+        {
+          "path": "/_next/static/media/b75e973a7f03466f.woff2",
+          "type": "font",
+          "status": 200,
+          "responseBodyBytes": 34416,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862162469.411,
+          "responseEndMs": 11.753,
+          "navigationStartMs": 130.61083984375,
+          "responseEndSinceNavigationMs": 142.36383984375
+        },
+        {
+          "path": "/api/workspace/reading",
+          "type": "fetch",
+          "status": 200,
+          "responseBodyBytes": 201,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862163072.626,
+          "responseEndMs": 15.383,
+          "navigationStartMs": 733.825927734375,
+          "responseEndSinceNavigationMs": 749.208927734375
+        },
+        {
+          "path": "/api/workspace/reading",
+          "type": "fetch",
+          "status": 200,
+          "responseBodyBytes": 206,
+          "contentEncoding": "identity",
+          "startTimeEpochMs": 1793862163186.865,
+          "responseEndMs": 14.392,
+          "navigationStartMs": 848.06494140625,
+          "responseEndSinceNavigationMs": 862.45694140625
+        }
+      ]
+    }
+  ],
+  "writes": [
+    {
+      "name": "desktop-light",
+      "kind": "UI reading position",
+      "path": "/api/workspace/reading",
+      "data": {
+        "status": "unread",
+        "anchor": "notes",
+        "version_id": "ci:workspace-agent-evaluation:v2",
+        "snoozed_until": null
+      }
+    },
+    {
+      "name": "desktop-light",
+      "kind": "UI reading position",
+      "path": "/api/workspace/reading",
+      "data": {
+        "status": "unread",
+        "anchor": "abstract:0",
+        "version_id": "ci:workspace-agent-evaluation:v2",
+        "snoozed_until": null
+      }
+    },
+    {
+      "name": "desktop-dark",
+      "kind": "UI reading position",
+      "path": "/api/workspace/reading",
+      "data": {
+        "status": "unread",
+        "anchor": "notes",
+        "version_id": "ci:workspace-agent-evaluation:v2",
+        "snoozed_until": null
+      }
+    },
+    {
+      "name": "desktop-dark",
+      "kind": "UI reading position",
+      "path": "/api/workspace/reading",
+      "data": {
+        "status": "unread",
+        "anchor": "abstract:0",
+        "version_id": "ci:workspace-agent-evaluation:v2",
+        "snoozed_until": null
+      }
+    },
+    {
+      "name": "mobile-light",
+      "kind": "UI reading position",
+      "path": "/api/workspace/reading",
+      "data": {
+        "status": "unread",
+        "anchor": "notes",
+        "version_id": "ci:workspace-agent-evaluation:v2",
+        "snoozed_until": null
+      }
+    },
+    {
+      "name": "mobile-light",
+      "kind": "UI reading position",
+      "path": "/api/workspace/reading",
+      "data": {
+        "status": "unread",
+        "anchor": "abstract:0",
+        "version_id": "ci:workspace-agent-evaluation:v2",
+        "snoozed_until": null
+      }
+    },
+    {
+      "name": "mobile-dark",
+      "kind": "UI reading position",
+      "path": "/api/workspace/reading",
+      "data": {
+        "status": "unread",
+        "anchor": "notes",
+        "version_id": "ci:workspace-agent-evaluation:v2",
+        "snoozed_until": null
+      }
+    },
+    {
+      "name": "mobile-dark",
+      "kind": "UI reading position",
+      "path": "/api/workspace/reading",
+      "data": {
+        "status": "unread",
+        "anchor": "abstract:0",
+        "version_id": "ci:workspace-agent-evaluation:v2",
+        "snoozed_until": null
+      }
+    }
+  ],
+  "blocked": [],
+  "errors": [],
+  "endedAtUtc": "2026-11-05T07:02:43.283Z",
+  "status": "pass"
+}

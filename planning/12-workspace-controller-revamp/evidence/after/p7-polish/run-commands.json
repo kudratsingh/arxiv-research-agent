@@ -1,0 +1,151 @@
+{
+  "applicationCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+  "scope": "Final successful browser invocations; earlier attempts preserved in pre-fix/logs. Browser launches used approved escalated local execution. CI writer runs serial; readonly contexts independent.",
+  "commands": [
+    {
+      "cwd": "/private/tmp/arxiv-agent-eng-workspace-controller-p7",
+      "command": "env NODE_PATH=/private/tmp/arxiv-agent-eng-workspace-controller/web/node_modules node planning/12-workspace-controller-revamp/evidence/after/p7-polish/read-only-matrix.cjs --phase final --base http://127.0.0.1:3168 --principal controller-p7-preview",
+      "log": "final/logs/controller-p7-guard-final-matrix.log",
+      "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+      "result": "pass"
+    },
+    {
+      "cwd": "/private/tmp/arxiv-agent-eng-workspace-controller-p7",
+      "command": "env NODE_PATH=/private/tmp/arxiv-agent-eng-workspace-controller/web/node_modules node planning/12-workspace-controller-revamp/evidence/after/p7-polish/command-ui.cjs",
+      "log": "final/logs/controller-p7-guard-final-commands.log",
+      "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+      "result": "pass"
+    },
+    {
+      "cwd": "/private/tmp/arxiv-agent-eng-workspace-controller-p7",
+      "command": "env NODE_PATH=/private/tmp/arxiv-agent-eng-workspace-controller/web/node_modules node planning/12-workspace-controller-revamp/evidence/after/p7-polish/geometry-sequence.cjs final http://127.0.0.1:3168 controller-p7-preview",
+      "log": "final/logs/controller-p7-guard-final-geometry.log",
+      "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+      "result": "pass"
+    },
+    {
+      "cwd": "/private/tmp/arxiv-agent-eng-workspace-controller-p7",
+      "command": "env NODE_PATH=/private/tmp/arxiv-agent-eng-workspace-controller/web/node_modules node planning/12-workspace-controller-revamp/evidence/after/p7-polish/drawer-ime-modifier.cjs final",
+      "log": "final/logs/controller-p7-guard-drawer.log",
+      "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+      "result": "pass"
+    },
+    {
+      "cwd": "/private/tmp/arxiv-agent-eng-workspace-controller-p7",
+      "command": "env NODE_PATH=/private/tmp/arxiv-agent-eng-workspace-controller/web/node_modules node planning/12-workspace-controller-revamp/evidence/after/p7-polish/reader-readiness.cjs final http://127.0.0.1:3168 controller-p7-preview",
+      "log": "final/logs/controller-p7-guard-reader-readiness.log",
+      "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+      "result": "pass"
+    },
+    {
+      "cwd": "/private/tmp/arxiv-agent-eng-workspace-controller-p7",
+      "command": "env NODE_PATH=/private/tmp/arxiv-agent-eng-workspace-controller/web/node_modules node planning/12-workspace-controller-revamp/evidence/after/p7-polish/paper-readiness.cjs final http://127.0.0.1:3168 controller-p7-preview",
+      "log": "final/logs/controller-p7-guard-paper-readiness.log",
+      "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+      "result": "pass"
+    },
+    {
+      "cwd": "/private/tmp/arxiv-agent-eng-workspace-controller-p7",
+      "command": "env NODE_PATH=/private/tmp/arxiv-agent-eng-workspace-controller/web/node_modules node planning/12-workspace-controller-revamp/evidence/after/p7-polish/delayed-reader-core.cjs",
+      "log": "final/logs/controller-p7-guard-delayed-reader-core.log",
+      "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+      "result": "pass"
+    },
+    {
+      "cwd": "/private/tmp/arxiv-agent-eng-workspace-controller-p7",
+      "command": "env NODE_PATH=/private/tmp/arxiv-agent-eng-workspace-controller/web/node_modules node planning/12-workspace-controller-revamp/evidence/after/p7-polish/reader-chunk-failure.cjs",
+      "log": "final/logs/controller-p7-guard-reader-chunk-failure.log",
+      "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+      "result": "pass"
+    },
+    {
+      "cwd": "/private/tmp/arxiv-agent-eng-workspace-controller-p7",
+      "command": "env NODE_PATH=/private/tmp/arxiv-agent-eng-workspace-controller/web/node_modules node planning/12-workspace-controller-revamp/evidence/after/p7-polish/reader-module-no-data.cjs",
+      "log": "final/logs/controller-p7-guard-reader-module-no-data.log",
+      "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+      "result": "pass"
+    },
+    {
+      "cwd": "/private/tmp/arxiv-agent-eng-workspace-controller-p7",
+      "command": "env NODE_PATH=/private/tmp/arxiv-agent-eng-workspace-controller/web/node_modules node planning/12-workspace-controller-revamp/evidence/after/p7-polish/reader-stale-module.cjs",
+      "log": "final/logs/controller-p7-guard-reader-stale-module.log",
+      "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+      "result": "pass"
+    },
+    {
+      "cwd": "/private/tmp/arxiv-agent-eng-workspace-controller-p7",
+      "command": "env NODE_PATH=/private/tmp/arxiv-agent-eng-workspace-controller/web/node_modules node planning/12-workspace-controller-revamp/evidence/after/p7-polish/moods-motion.cjs final http://127.0.0.1:3168 controller-p7-preview",
+      "log": "final/logs/controller-p7-guard-moods-motion.log",
+      "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+      "result": "pass"
+    },
+    {
+      "cwd": "/private/tmp/arxiv-agent-eng-workspace-controller-p7",
+      "command": "env NODE_PATH=/private/tmp/arxiv-agent-eng-workspace-controller/web/node_modules node planning/12-workspace-controller-revamp/evidence/after/p7-polish/form-focus.cjs final http://127.0.0.1:3168 controller-p7-preview",
+      "log": "final/logs/controller-p7-guard-form-focus.log",
+      "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+      "result": "pass"
+    },
+    {
+      "cwd": "/private/tmp/arxiv-agent-eng-workspace-controller-p7",
+      "command": "env NODE_PATH=/private/tmp/arxiv-agent-eng-workspace-controller/web/node_modules node planning/12-workspace-controller-revamp/evidence/after/p7-polish/touch-targets.cjs final http://127.0.0.1:3168 controller-p7-preview",
+      "log": "final/logs/controller-p7-guard-touch-targets.log",
+      "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+      "result": "pass"
+    },
+    {
+      "cwd": "/private/tmp/arxiv-agent-eng-workspace-controller-p7",
+      "command": "env NODE_PATH=/private/tmp/arxiv-agent-eng-workspace-controller/web/node_modules node planning/12-workspace-controller-revamp/evidence/after/p7-polish/legacy-readonly.cjs final http://127.0.0.1:3168 controller-p7-preview",
+      "log": "final/logs/controller-p7-guard-legacy.log",
+      "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+      "result": "pass"
+    },
+    {
+      "cwd": "/private/tmp/arxiv-agent-eng-workspace-controller-p7",
+      "command": "env NODE_PATH=/private/tmp/arxiv-agent-eng-workspace-controller/web/node_modules node planning/12-workspace-controller-revamp/evidence/after/p7-polish/legacy-readonly.cjs final http://127.0.0.1:3168 controller-p7-preview --via-workspace",
+      "log": "final/logs/controller-p7-guard-legacy-via-workspace.log",
+      "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+      "result": "pass"
+    },
+    {
+      "cwd": "/private/tmp/arxiv-agent-eng-workspace-controller-p7",
+      "command": "env NODE_PATH=/private/tmp/arxiv-agent-eng-workspace-controller/web/node_modules node planning/12-workspace-controller-revamp/evidence/after/p7-polish/ci/pending-composer-search.cjs",
+      "log": "final/logs/controller-p7-guard-pending-search.log",
+      "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+      "result": "pass"
+    },
+    {
+      "cwd": "/private/tmp/arxiv-agent-eng-workspace-controller-p7",
+      "command": "env NODE_PATH=/private/tmp/arxiv-agent-eng-workspace-controller/web/node_modules node planning/12-workspace-controller-revamp/evidence/after/p7-polish/ci/dirty-review-composer-search.cjs",
+      "log": "final/logs/controller-p7-guard-dirty-review.log",
+      "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+      "result": "pass"
+    },
+    {
+      "cwd": "/private/tmp/arxiv-agent-eng-workspace-controller-p7",
+      "command": "env NODE_PATH=/private/tmp/arxiv-agent-eng-workspace-controller/web/node_modules node planning/12-workspace-controller-revamp/evidence/after/p7-polish/ci/daily-loop.cjs",
+      "log": "final/logs/controller-p7-guard-daily-loop-scroll-agreement.log",
+      "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+      "result": "pass"
+    },
+    {
+      "cwd": "/private/tmp/arxiv-agent-eng-workspace-controller-p7",
+      "command": "env NODE_PATH=/private/tmp/arxiv-agent-eng-workspace-controller/web/node_modules P7_SOURCE_COMMIT=6b2eccf069537d90423359fc74c033f27e665cd6 node planning/12-workspace-controller-revamp/evidence/after/p7-polish/ci/source-notes-transfer.cjs p7",
+      "log": "final/logs/controller-p7-guard-source-notes.log",
+      "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+      "result": "pass"
+    },
+    {
+      "cwd": "/private/tmp/arxiv-agent-eng-workspace-controller-p7/web",
+      "command": "env WORKSPACE_VERIFICATION_PRINCIPAL=controller-p7-ci WORKSPACE_LIVE_URL=http://127.0.0.1:3169 ANTHROPIC_API_KEY=local-preview-disabled USE_MOCK_DATA=true WORKSPACE_SCHEDULE_APPROVED=false npx playwright test --config live-workspace-e2e/playwright.config.ts",
+      "log": "ci/live16/command.log",
+      "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+      "result": "16 passed23.5s"
+    }
+  ],
+  "videoInspectionCommands": [
+    "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.venv/bin/python planning/12-workspace-controller-revamp/evidence/after/p7-polish/inspect-videos.py",
+    "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.venv/bin/python planning/12-workspace-controller-revamp/evidence/after/p7-polish/inspect-native-video-frames.py"
+  ],
+  "teardownCommand": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.venv/bin/python planning/12-workspace-controller-revamp/evidence/after/p7-polish/ci/teardown.py"
+}

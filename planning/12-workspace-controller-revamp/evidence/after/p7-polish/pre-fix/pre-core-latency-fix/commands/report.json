@@ -1,0 +1,1022 @@
+{
+  "base": "http://127.0.0.1:3168",
+  "principal": "controller-p7-preview",
+  "startedAtUtc": "2026-11-05T06:20:34.898Z",
+  "fixture": "synthetic offline preview; browser-local commands only",
+  "cases": [
+    {
+      "name": "desktop-light",
+      "status": "pass",
+      "theme": "light",
+      "options": 22,
+      "scrollChecks": [
+        {
+          "top": 397.078125,
+          "bottom": 456.15625,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 460.15625,
+          "bottom": 519.234375,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 523.234375,
+          "bottom": 582.3125,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 586.3125,
+          "bottom": 645.390625,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 649.390625,
+          "bottom": 708.46875,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 712.46875,
+          "bottom": 771.546875,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 714.546875,
+          "bottom": 773.625,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 714.625,
+          "bottom": 773.703125,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 714.703125,
+          "bottom": 773.78125,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 714.78125,
+          "bottom": 773.859375,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 714.859375,
+          "bottom": 773.9375,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 714.9375,
+          "bottom": 774.015625,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 715.015625,
+          "bottom": 774.09375,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 715.09375,
+          "bottom": 774.171875,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 715.171875,
+          "bottom": 774.25,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 715.25,
+          "bottom": 774.328125,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 715.328125,
+          "bottom": 774.40625,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 715.40625,
+          "bottom": 774.484375,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 714.484375,
+          "bottom": 773.5625,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 714.5625,
+          "bottom": 773.640625,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 714.640625,
+          "bottom": 773.71875,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 334,
+          "bottom": 393.078125,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 397.078125,
+          "bottom": 456.15625,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 460.15625,
+          "bottom": 519.234375,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        }
+      ],
+      "paletteAxe": [],
+      "shortcutsAxe": [],
+      "stateUnchanged": true,
+      "video": null
+    },
+    {
+      "name": "desktop-dark",
+      "status": "pass",
+      "theme": "dark",
+      "options": 22,
+      "scrollChecks": [
+        {
+          "top": 397.078125,
+          "bottom": 456.15625,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 460.15625,
+          "bottom": 519.234375,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 523.234375,
+          "bottom": 582.3125,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 586.3125,
+          "bottom": 645.390625,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 649.390625,
+          "bottom": 708.46875,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 712.46875,
+          "bottom": 771.546875,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 714.546875,
+          "bottom": 773.625,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 714.625,
+          "bottom": 773.703125,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 714.703125,
+          "bottom": 773.78125,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 714.78125,
+          "bottom": 773.859375,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 714.859375,
+          "bottom": 773.9375,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 714.9375,
+          "bottom": 774.015625,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 715.015625,
+          "bottom": 774.09375,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 715.09375,
+          "bottom": 774.171875,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 715.171875,
+          "bottom": 774.25,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 715.25,
+          "bottom": 774.328125,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 715.328125,
+          "bottom": 774.40625,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 715.40625,
+          "bottom": 774.484375,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 714.484375,
+          "bottom": 773.5625,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 714.5625,
+          "bottom": 773.640625,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 714.640625,
+          "bottom": 773.71875,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 334,
+          "bottom": 393.078125,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 397.078125,
+          "bottom": 456.15625,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 460.15625,
+          "bottom": 519.234375,
+          "paneTop": 334,
+          "paneBottom": 774,
+          "height": 59.078125,
+          "selected": "true"
+        }
+      ],
+      "paletteAxe": [],
+      "shortcutsAxe": [],
+      "stateUnchanged": true,
+      "video": "desktop-dark.webm"
+    },
+    {
+      "name": "mobile-light",
+      "status": "pass",
+      "theme": "light",
+      "options": 19,
+      "scrollChecks": [
+        {
+          "top": 323.078125,
+          "bottom": 382.15625,
+          "paneTop": 260,
+          "paneBottom": 700,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 386.15625,
+          "bottom": 464.125,
+          "paneTop": 260,
+          "paneBottom": 700,
+          "height": 77.96875,
+          "selected": "true"
+        },
+        {
+          "top": 468.125,
+          "bottom": 546.09375,
+          "paneTop": 260,
+          "paneBottom": 700,
+          "height": 77.96875,
+          "selected": "true"
+        },
+        {
+          "top": 550.09375,
+          "bottom": 628.0625,
+          "paneTop": 260,
+          "paneBottom": 700,
+          "height": 77.96875,
+          "selected": "true"
+        },
+        {
+          "top": 632.0625,
+          "bottom": 691.140625,
+          "paneTop": 260,
+          "paneBottom": 700,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 641.140625,
+          "bottom": 700.21875,
+          "paneTop": 260,
+          "paneBottom": 700,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 641.21875,
+          "bottom": 700.296875,
+          "paneTop": 260,
+          "paneBottom": 700,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 641.296875,
+          "bottom": 700.375,
+          "paneTop": 260,
+          "paneBottom": 700,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 641.375,
+          "bottom": 700.453125,
+          "paneTop": 260,
+          "paneBottom": 700,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 640.453125,
+          "bottom": 699.53125,
+          "paneTop": 260,
+          "paneBottom": 700,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 640.53125,
+          "bottom": 699.609375,
+          "paneTop": 260,
+          "paneBottom": 700,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 640.609375,
+          "bottom": 699.6875,
+          "paneTop": 260,
+          "paneBottom": 700,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 640.6875,
+          "bottom": 699.765625,
+          "paneTop": 260,
+          "paneBottom": 700,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 640.765625,
+          "bottom": 699.84375,
+          "paneTop": 260,
+          "paneBottom": 700,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 640.84375,
+          "bottom": 699.921875,
+          "paneTop": 260,
+          "paneBottom": 700,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 640.921875,
+          "bottom": 700,
+          "paneTop": 260,
+          "paneBottom": 700,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 641,
+          "bottom": 700.078125,
+          "paneTop": 260,
+          "paneBottom": 700,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 641.078125,
+          "bottom": 700.15625,
+          "paneTop": 260,
+          "paneBottom": 700,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 260,
+          "bottom": 319.078125,
+          "paneTop": 260,
+          "paneBottom": 700,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 323.078125,
+          "bottom": 382.15625,
+          "paneTop": 260,
+          "paneBottom": 700,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 386.15625,
+          "bottom": 464.125,
+          "paneTop": 260,
+          "paneBottom": 700,
+          "height": 77.96875,
+          "selected": "true"
+        }
+      ],
+      "paletteAxe": [],
+      "shortcutsAxe": [],
+      "stateUnchanged": true,
+      "video": "mobile-light.webm"
+    },
+    {
+      "name": "mobile-dark",
+      "status": "pass",
+      "theme": "dark",
+      "options": 19,
+      "scrollChecks": [
+        {
+          "top": 323.078125,
+          "bottom": 382.15625,
+          "paneTop": 260,
+          "paneBottom": 700,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 386.15625,
+          "bottom": 464.125,
+          "paneTop": 260,
+          "paneBottom": 700,
+          "height": 77.96875,
+          "selected": "true"
+        },
+        {
+          "top": 468.125,
+          "bottom": 546.09375,
+          "paneTop": 260,
+          "paneBottom": 700,
+          "height": 77.96875,
+          "selected": "true"
+        },
+        {
+          "top": 550.09375,
+          "bottom": 628.0625,
+          "paneTop": 260,
+          "paneBottom": 700,
+          "height": 77.96875,
+          "selected": "true"
+        },
+        {
+          "top": 632.0625,
+          "bottom": 691.140625,
+          "paneTop": 260,
+          "paneBottom": 700,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 641.140625,
+          "bottom": 700.21875,
+          "paneTop": 260,
+          "paneBottom": 700,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 641.21875,
+          "bottom": 700.296875,
+          "paneTop": 260,
+          "paneBottom": 700,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 641.296875,
+          "bottom": 700.375,
+          "paneTop": 260,
+          "paneBottom": 700,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 641.375,
+          "bottom": 700.453125,
+          "paneTop": 260,
+          "paneBottom": 700,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 640.453125,
+          "bottom": 699.53125,
+          "paneTop": 260,
+          "paneBottom": 700,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 640.53125,
+          "bottom": 699.609375,
+          "paneTop": 260,
+          "paneBottom": 700,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 640.609375,
+          "bottom": 699.6875,
+          "paneTop": 260,
+          "paneBottom": 700,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 640.6875,
+          "bottom": 699.765625,
+          "paneTop": 260,
+          "paneBottom": 700,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 640.765625,
+          "bottom": 699.84375,
+          "paneTop": 260,
+          "paneBottom": 700,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 640.84375,
+          "bottom": 699.921875,
+          "paneTop": 260,
+          "paneBottom": 700,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 640.921875,
+          "bottom": 700,
+          "paneTop": 260,
+          "paneBottom": 700,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 641,
+          "bottom": 700.078125,
+          "paneTop": 260,
+          "paneBottom": 700,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 641.078125,
+          "bottom": 700.15625,
+          "paneTop": 260,
+          "paneBottom": 700,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 260,
+          "bottom": 319.078125,
+          "paneTop": 260,
+          "paneBottom": 700,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 323.078125,
+          "bottom": 382.15625,
+          "paneTop": 260,
+          "paneBottom": 700,
+          "height": 59.078125,
+          "selected": "true"
+        },
+        {
+          "top": 386.15625,
+          "bottom": 464.125,
+          "paneTop": 260,
+          "paneBottom": 700,
+          "height": 77.96875,
+          "selected": "true"
+        }
+      ],
+      "paletteAxe": [],
+      "shortcutsAxe": [],
+      "stateUnchanged": true,
+      "video": null
+    }
+  ],
+  "blocked": [],
+  "errors": [],
+  "chapters": [
+    {
+      "name": "desktop-light",
+      "label": "Collapsed rail excludes hidden page commands",
+      "elapsedMs": 1892
+    },
+    {
+      "name": "desktop-light",
+      "label": "Palette open with focused combobox",
+      "elapsedMs": 1940
+    },
+    {
+      "name": "desktop-light",
+      "label": "Palette Close plain keys remained inside modal",
+      "elapsedMs": 1952
+    },
+    {
+      "name": "desktop-light",
+      "label": "Arrow navigation retained input focus and visible active option",
+      "elapsedMs": 2699
+    },
+    {
+      "name": "desktop-light",
+      "label": "Filtered Enter dispatched Library once",
+      "elapsedMs": 3677
+    },
+    {
+      "name": "desktop-light",
+      "label": "Help Close plain keys remained inside modal",
+      "elapsedMs": 5239
+    },
+    {
+      "name": "desktop-light",
+      "label": "Shortcuts dialog and Escape",
+      "elapsedMs": 5669
+    },
+    {
+      "name": "desktop-light",
+      "label": "Slash row updates after palette changes current paper",
+      "elapsedMs": 8274
+    },
+    {
+      "name": "desktop-light",
+      "label": "Slash suggestions and submitted Next agree; typing guard",
+      "elapsedMs": 8331
+    },
+    {
+      "name": "desktop-light",
+      "label": "Local theme commands restored original theme",
+      "elapsedMs": 8354
+    },
+    {
+      "name": "desktop-light",
+      "label": "Ordinary J works again after modal dismissal",
+      "elapsedMs": 8364
+    },
+    {
+      "name": "desktop-light",
+      "label": "Review modal keys left all ten judgments and reasons blank",
+      "elapsedMs": 10394
+    },
+    {
+      "name": "desktop-dark",
+      "label": "Collapsed rail excludes hidden page commands",
+      "elapsedMs": 1555
+    },
+    {
+      "name": "desktop-dark",
+      "label": "Palette open with focused combobox",
+      "elapsedMs": 1614
+    },
+    {
+      "name": "desktop-dark",
+      "label": "Palette Close plain keys remained inside modal",
+      "elapsedMs": 1627
+    },
+    {
+      "name": "desktop-dark",
+      "label": "Arrow navigation retained input focus and visible active option",
+      "elapsedMs": 2740
+    },
+    {
+      "name": "desktop-dark",
+      "label": "Filtered Enter dispatched Library once",
+      "elapsedMs": 3704
+    },
+    {
+      "name": "desktop-dark",
+      "label": "Help Close plain keys remained inside modal",
+      "elapsedMs": 5381
+    },
+    {
+      "name": "desktop-dark",
+      "label": "Shortcuts dialog and Escape",
+      "elapsedMs": 6089
+    },
+    {
+      "name": "desktop-dark",
+      "label": "Slash row updates after palette changes current paper",
+      "elapsedMs": 8806
+    },
+    {
+      "name": "desktop-dark",
+      "label": "Slash suggestions and submitted Next agree; typing guard",
+      "elapsedMs": 8844
+    },
+    {
+      "name": "desktop-dark",
+      "label": "Local theme commands restored original theme",
+      "elapsedMs": 8867
+    },
+    {
+      "name": "desktop-dark",
+      "label": "Ordinary J works again after modal dismissal",
+      "elapsedMs": 8876
+    },
+    {
+      "name": "desktop-dark",
+      "label": "Review modal keys left all ten judgments and reasons blank",
+      "elapsedMs": 10489
+    },
+    {
+      "name": "mobile-light",
+      "label": "Mobile drawer focus trap and modal ownership",
+      "elapsedMs": 1451
+    },
+    {
+      "name": "mobile-light",
+      "label": "Palette open with focused combobox",
+      "elapsedMs": 2282
+    },
+    {
+      "name": "mobile-light",
+      "label": "Palette Close plain keys remained inside modal",
+      "elapsedMs": 2292
+    },
+    {
+      "name": "mobile-light",
+      "label": "Arrow navigation retained input focus and visible active option",
+      "elapsedMs": 2861
+    },
+    {
+      "name": "mobile-light",
+      "label": "Filtered Enter dispatched Library once",
+      "elapsedMs": 3750
+    },
+    {
+      "name": "mobile-light",
+      "label": "Help Close plain keys remained inside modal",
+      "elapsedMs": 5631
+    },
+    {
+      "name": "mobile-light",
+      "label": "Shortcuts dialog and Escape",
+      "elapsedMs": 6014
+    },
+    {
+      "name": "mobile-light",
+      "label": "Slash row updates after palette changes current paper",
+      "elapsedMs": 8795
+    },
+    {
+      "name": "mobile-light",
+      "label": "Slash suggestions and submitted Next agree; typing guard",
+      "elapsedMs": 8826
+    },
+    {
+      "name": "mobile-light",
+      "label": "Local theme commands restored original theme",
+      "elapsedMs": 8842
+    },
+    {
+      "name": "mobile-light",
+      "label": "Ordinary J works again after modal dismissal",
+      "elapsedMs": 8848
+    },
+    {
+      "name": "mobile-light",
+      "label": "Review modal keys left all ten judgments and reasons blank",
+      "elapsedMs": 10520
+    },
+    {
+      "name": "mobile-dark",
+      "label": "Mobile drawer focus trap and modal ownership",
+      "elapsedMs": 1267
+    },
+    {
+      "name": "mobile-dark",
+      "label": "Palette open with focused combobox",
+      "elapsedMs": 2090
+    },
+    {
+      "name": "mobile-dark",
+      "label": "Palette Close plain keys remained inside modal",
+      "elapsedMs": 2105
+    },
+    {
+      "name": "mobile-dark",
+      "label": "Arrow navigation retained input focus and visible active option",
+      "elapsedMs": 2638
+    },
+    {
+      "name": "mobile-dark",
+      "label": "Filtered Enter dispatched Library once",
+      "elapsedMs": 3495
+    },
+    {
+      "name": "mobile-dark",
+      "label": "Help Close plain keys remained inside modal",
+      "elapsedMs": 5353
+    },
+    {
+      "name": "mobile-dark",
+      "label": "Shortcuts dialog and Escape",
+      "elapsedMs": 5732
+    },
+    {
+      "name": "mobile-dark",
+      "label": "Slash row updates after palette changes current paper",
+      "elapsedMs": 8455
+    },
+    {
+      "name": "mobile-dark",
+      "label": "Slash suggestions and submitted Next agree; typing guard",
+      "elapsedMs": 8481
+    },
+    {
+      "name": "mobile-dark",
+      "label": "Local theme commands restored original theme",
+      "elapsedMs": 8493
+    },
+    {
+      "name": "mobile-dark",
+      "label": "Ordinary J works again after modal dismissal",
+      "elapsedMs": 8501
+    },
+    {
+      "name": "mobile-dark",
+      "label": "Review modal keys left all ten judgments and reasons blank",
+      "elapsedMs": 10074
+    }
+  ],
+  "endedAtUtc": "2026-11-05T06:21:17.645Z",
+  "status": "pass"
+}

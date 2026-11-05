@@ -1,0 +1,11 @@
+{
+  "sourceSha256": "8bc8c40fab1b149aa8276e2d1d0c80f0d6b709a6ba2e6550d2d206d4058d3f97",
+  "timestamp": "2026-11-05T04:43:05.468Z",
+  "method": "Static review only: scoped legacy daily-* class absent from all workspace components and shared ThemeToggle/SkipLink; confirm dynamically generated classes before pruning. Approximate raw-source gzip only, not production budget.",
+  "candidateRules": 0,
+  "removableChars": 0,
+  "sourceGzipBefore": 11245,
+  "sourceGzipAfter": 11245,
+  "approximateGzipSaving": 0,
+  "candidates": []
+}

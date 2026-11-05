@@ -1,0 +1,78 @@
+{
+  "startedAtUtc": "2026-11-05T05:02:04.210Z",
+  "phase": "baseline",
+  "base": "http://127.0.0.1:3148",
+  "principal": "controller-p6-preview",
+  "cases": [
+    {
+      "name": "desktop-light",
+      "status": "fail",
+      "error": "locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: /Show paper 20 of / })\u001b[22m\n\n    at /private/tmp/arxiv-agent-eng-workspace-controller-p7/planning/12-workspace-controller-revamp/evidence/after/p7-polish/geometry-sequence.cjs:27:268",
+      "video": null
+    },
+    {
+      "name": "desktop-dark",
+      "status": "fail",
+      "error": "locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: /Show paper 20 of / })\u001b[22m\n\n    at /private/tmp/arxiv-agent-eng-workspace-controller-p7/planning/12-workspace-controller-revamp/evidence/after/p7-polish/geometry-sequence.cjs:27:268",
+      "video": null
+    },
+    {
+      "name": "mobile-light",
+      "status": "fail",
+      "error": "locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: /Show paper 20 of / })\u001b[22m\n\n    at /private/tmp/arxiv-agent-eng-workspace-controller-p7/planning/12-workspace-controller-revamp/evidence/after/p7-polish/geometry-sequence.cjs:27:268",
+      "video": null
+    },
+    {
+      "name": "mobile-dark",
+      "status": "fail",
+      "error": "locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: /Show paper 20 of / })\u001b[22m\n\n    at /private/tmp/arxiv-agent-eng-workspace-controller-p7/planning/12-workspace-controller-revamp/evidence/after/p7-polish/geometry-sequence.cjs:27:268",
+      "video": null
+    }
+  ],
+  "blocked": [],
+  "errors": [],
+  "chapters": [
+    {
+      "name": "desktop-light",
+      "label": "Initial full title and two abstract lines clear bar",
+      "elapsedMs": 960
+    },
+    {
+      "name": "desktop-light",
+      "label": "Queue click from870 and rapidJJK final wins",
+      "elapsedMs": 1196
+    },
+    {
+      "name": "desktop-dark",
+      "label": "Initial full title and two abstract lines clear bar",
+      "elapsedMs": 862
+    },
+    {
+      "name": "desktop-dark",
+      "label": "Queue click from870 and rapidJJK final wins",
+      "elapsedMs": 1345
+    },
+    {
+      "name": "mobile-light",
+      "label": "Initial full title and two abstract lines clear bar",
+      "elapsedMs": 831
+    },
+    {
+      "name": "mobile-light",
+      "label": "Queue click from870 and rapidJJK final wins",
+      "elapsedMs": 1434
+    },
+    {
+      "name": "mobile-dark",
+      "label": "Initial full title and two abstract lines clear bar",
+      "elapsedMs": 843
+    },
+    {
+      "name": "mobile-dark",
+      "label": "Queue click from870 and rapidJJK final wins",
+      "elapsedMs": 1414
+    }
+  ],
+  "endedAtUtc": "2026-11-05T05:04:13.485Z",
+  "status": "fail"
+}

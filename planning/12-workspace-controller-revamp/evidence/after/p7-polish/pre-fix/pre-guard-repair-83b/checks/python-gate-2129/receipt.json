@@ -1,0 +1,23 @@
+{
+  "head": "2129fedb072a5ad42d1e30a80b0763641d8d7a1e",
+  "db": "workspace_controller_p7_verify_2129",
+  "import_src": "/private/tmp/arxiv-agent-eng-workspace-controller-p7/src/__init__.py",
+  "python_tree": [
+    "4ba84bf2287f911ef2f07184aebd453238b02b35",
+    "45733db270918707018747c63ff989d7959f187e"
+  ],
+  "provider_key": "local-preview-disabled",
+  "frozen_app_no_writes": true,
+  "recorded_at": "2026-11-05T06:31:26.986092+00:00",
+  "passed": 6042,
+  "skipped": 54,
+  "deselected": 53,
+  "seconds": 409.94,
+  "coverage_total_percent": 94.78,
+  "patch_coverage_percent": 99,
+  "database_removed": true,
+  "remaining_connections_before_drop": 0,
+  "actual_provider_contacts": 0,
+  "owner_data_touched": false,
+  "remote_ci": "not this local gate"
+}

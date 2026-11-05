@@ -1,0 +1,82 @@
+[
+  {
+    "video": "final/geometry/desktop-dark.webm",
+    "stateScreenshot": "final/geometry/desktop-dark-far-passage.png",
+    "nativeFrameIndexZeroBased": 104,
+    "totalFrames": 148,
+    "approxSecondsAt25fps": 4.16,
+    "thumbnailMeanAbsoluteRGBDifference": 1.7611999999999999,
+    "decodedFrame": "final/video-inspection/geometry-desktop-dark-far-passage-actual-frame.png",
+    "visualAssessment": "Visually reviewed actual decoded frame; expected lower source/Notes text and fixed player visibly painted. Nearest-frame difference is a matching aid, not pixel-equality assertion."
+  },
+  {
+    "video": "final/geometry/desktop-dark.webm",
+    "stateScreenshot": "final/geometry/desktop-dark-source-bottom.png",
+    "nativeFrameIndexZeroBased": 104,
+    "totalFrames": 148,
+    "approxSecondsAt25fps": 4.16,
+    "thumbnailMeanAbsoluteRGBDifference": 1.7611999999999999,
+    "decodedFrame": "final/video-inspection/geometry-desktop-dark-source-bottom-actual-frame.png",
+    "visualAssessment": "Visually reviewed actual decoded frame; expected lower source/Notes text and fixed player visibly painted. Nearest-frame difference is a matching aid, not pixel-equality assertion."
+  },
+  {
+    "video": "final/geometry/desktop-dark.webm",
+    "stateScreenshot": "final/geometry/desktop-dark-source-footer.png",
+    "nativeFrameIndexZeroBased": 113,
+    "totalFrames": 148,
+    "approxSecondsAt25fps": 4.52,
+    "thumbnailMeanAbsoluteRGBDifference": 1.7383555555555557,
+    "decodedFrame": "final/video-inspection/geometry-desktop-dark-source-footer-actual-frame.png",
+    "visualAssessment": "Visually reviewed actual decoded frame; expected lower source/Notes text and fixed player visibly painted. Nearest-frame difference is a matching aid, not pixel-equality assertion."
+  },
+  {
+    "video": "final/geometry/desktop-dark.webm",
+    "stateScreenshot": "final/geometry/desktop-dark-notes-bottom.png",
+    "nativeFrameIndexZeroBased": 119,
+    "totalFrames": 148,
+    "approxSecondsAt25fps": 4.76,
+    "thumbnailMeanAbsoluteRGBDifference": 1.5262074074074075,
+    "decodedFrame": "final/video-inspection/geometry-desktop-dark-notes-bottom-actual-frame.png",
+    "visualAssessment": "Visually reviewed actual decoded frame; expected lower source/Notes text and fixed player visibly painted. Nearest-frame difference is a matching aid, not pixel-equality assertion."
+  },
+  {
+    "video": "final/geometry/mobile-light.webm",
+    "stateScreenshot": "final/geometry/mobile-light-far-passage.png",
+    "nativeFrameIndexZeroBased": 109,
+    "totalFrames": 151,
+    "approxSecondsAt25fps": 4.36,
+    "thumbnailMeanAbsoluteRGBDifference": 2.5966476733143398,
+    "decodedFrame": "final/video-inspection/geometry-mobile-light-far-passage-actual-frame.png",
+    "visualAssessment": "Visually reviewed actual decoded frame; expected lower source/Notes text and fixed player visibly painted. Nearest-frame difference is a matching aid, not pixel-equality assertion."
+  },
+  {
+    "video": "final/geometry/mobile-light.webm",
+    "stateScreenshot": "final/geometry/mobile-light-source-bottom.png",
+    "nativeFrameIndexZeroBased": 113,
+    "totalFrames": 151,
+    "approxSecondsAt25fps": 4.52,
+    "thumbnailMeanAbsoluteRGBDifference": 1.941889838556505,
+    "decodedFrame": "final/video-inspection/geometry-mobile-light-source-bottom-actual-frame.png",
+    "visualAssessment": "Visually reviewed actual decoded frame; expected lower source/Notes text and fixed player visibly painted. Nearest-frame difference is a matching aid, not pixel-equality assertion."
+  },
+  {
+    "video": "final/geometry/mobile-light.webm",
+    "stateScreenshot": "final/geometry/mobile-light-source-footer.png",
+    "nativeFrameIndexZeroBased": 117,
+    "totalFrames": 151,
+    "approxSecondsAt25fps": 4.68,
+    "thumbnailMeanAbsoluteRGBDifference": 2.510631528964862,
+    "decodedFrame": "final/video-inspection/geometry-mobile-light-source-footer-actual-frame.png",
+    "visualAssessment": "Visually reviewed actual decoded frame; expected lower source/Notes text and fixed player visibly painted. Nearest-frame difference is a matching aid, not pixel-equality assertion."
+  },
+  {
+    "video": "final/geometry/mobile-light.webm",
+    "stateScreenshot": "final/geometry/mobile-light-notes-bottom.png",
+    "nativeFrameIndexZeroBased": 133,
+    "totalFrames": 151,
+    "approxSecondsAt25fps": 5.32,
+    "thumbnailMeanAbsoluteRGBDifference": 1.9936799620132952,
+    "decodedFrame": "final/video-inspection/geometry-mobile-light-notes-bottom-actual-frame.png",
+    "visualAssessment": "Visually reviewed actual decoded frame; expected lower source/Notes text and fixed player visibly painted. Nearest-frame difference is a matching aid, not pixel-equality assertion."
+  }
+]

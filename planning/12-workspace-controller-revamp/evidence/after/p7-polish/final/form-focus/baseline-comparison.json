@@ -1,0 +1,26 @@
+[
+  {
+    "size": "desktop",
+    "theme": "light",
+    "computedFormFocusStyleIdentical": true,
+    "rectComparison": "Route header positions may change; actual final field geometry tested independently."
+  },
+  {
+    "size": "desktop",
+    "theme": "dark",
+    "computedFormFocusStyleIdentical": true,
+    "rectComparison": "Route header positions may change; actual final field geometry tested independently."
+  },
+  {
+    "size": "mobile",
+    "theme": "light",
+    "computedFormFocusStyleIdentical": true,
+    "rectComparison": "Route header positions may change; actual final field geometry tested independently."
+  },
+  {
+    "size": "mobile",
+    "theme": "dark",
+    "computedFormFocusStyleIdentical": true,
+    "rectComparison": "Route header positions may change; actual final field geometry tested independently."
+  }
+]

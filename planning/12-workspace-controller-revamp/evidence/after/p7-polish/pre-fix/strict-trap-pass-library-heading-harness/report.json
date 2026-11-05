@@ -1,0 +1,118 @@
+{
+  "base": "http://127.0.0.1:3168",
+  "principal": "controller-p7-preview",
+  "startedAtUtc": "2026-11-05T06:08:56.296Z",
+  "fixture": "synthetic offline preview; browser-local commands only",
+  "cases": [
+    {
+      "name": "desktop-light",
+      "status": "fail",
+      "error": "Error: expect(locator).toHaveText(expected) failed\n\nLocator:  locator('main h1')\nExpected: \"Library\"\nReceived: \"Keep the source.Keep your thinking.\"\nTimeout:  5000ms\n\nCall log:\n  - Expect \"to.have.text\" with timeout 5000ms\n  - waiting for locator('main h1')\n    14 × locator resolved to <h1 tabindex=\"-1\">…</h1>\n       - unexpected value \"Keep the source.Keep your thinking.\"\n\n    at captureRawStack (/private/tmp/arxiv-agent-eng-workspace-controller/web/node_modules/playwright-core/lib/coreBundle.js:9681:17)\n    at callMatcherAsStep (/private/tmp/arxiv-agent-eng-workspace-controller/web/node_modules/playwright/lib/matchers/expect.js:13310:57)\n    at Object.toHaveText (/private/tmp/arxiv-agent-eng-workspace-controller/web/node_modules/playwright/lib/matchers/expect.js:13300:23)\n    at /private/tmp/arxiv-agent-eng-workspace-controller-p7/planning/12-workspace-controller-revamp/evidence/after/p7-polish/command-ui.cjs:47:274",
+      "video": null
+    },
+    {
+      "name": "desktop-dark",
+      "status": "fail",
+      "error": "Error: expect(locator).toHaveText(expected) failed\n\nLocator:  locator('main h1')\nExpected: \"Library\"\nReceived: \"Keep the source.Keep your thinking.\"\nTimeout:  5000ms\n\nCall log:\n  - Expect \"to.have.text\" with timeout 5000ms\n  - waiting for locator('main h1')\n    14 × locator resolved to <h1 tabindex=\"-1\">…</h1>\n       - unexpected value \"Keep the source.Keep your thinking.\"\n\n    at captureRawStack (/private/tmp/arxiv-agent-eng-workspace-controller/web/node_modules/playwright-core/lib/coreBundle.js:9681:17)\n    at callMatcherAsStep (/private/tmp/arxiv-agent-eng-workspace-controller/web/node_modules/playwright/lib/matchers/expect.js:13310:57)\n    at Object.toHaveText (/private/tmp/arxiv-agent-eng-workspace-controller/web/node_modules/playwright/lib/matchers/expect.js:13300:23)\n    at /private/tmp/arxiv-agent-eng-workspace-controller-p7/planning/12-workspace-controller-revamp/evidence/after/p7-polish/command-ui.cjs:47:274",
+      "video": "desktop-dark.webm"
+    },
+    {
+      "name": "mobile-light",
+      "status": "fail",
+      "error": "Error: expect(locator).toHaveText(expected) failed\n\nLocator:  locator('main h1')\nExpected: \"Library\"\nReceived: \"Keep the source.Keep your thinking.\"\nTimeout:  5000ms\n\nCall log:\n  - Expect \"to.have.text\" with timeout 5000ms\n  - waiting for locator('main h1')\n    14 × locator resolved to <h1 tabindex=\"-1\">…</h1>\n       - unexpected value \"Keep the source.Keep your thinking.\"\n\n    at captureRawStack (/private/tmp/arxiv-agent-eng-workspace-controller/web/node_modules/playwright-core/lib/coreBundle.js:9681:17)\n    at callMatcherAsStep (/private/tmp/arxiv-agent-eng-workspace-controller/web/node_modules/playwright/lib/matchers/expect.js:13310:57)\n    at Object.toHaveText (/private/tmp/arxiv-agent-eng-workspace-controller/web/node_modules/playwright/lib/matchers/expect.js:13300:23)\n    at /private/tmp/arxiv-agent-eng-workspace-controller-p7/planning/12-workspace-controller-revamp/evidence/after/p7-polish/command-ui.cjs:47:274",
+      "video": "mobile-light.webm"
+    },
+    {
+      "name": "mobile-dark",
+      "status": "fail",
+      "error": "Error: expect(locator).toHaveText(expected) failed\n\nLocator:  locator('main h1')\nExpected: \"Library\"\nReceived: \"Keep the source.Keep your thinking.\"\nTimeout:  5000ms\n\nCall log:\n  - Expect \"to.have.text\" with timeout 5000ms\n  - waiting for locator('main h1')\n    14 × locator resolved to <h1 tabindex=\"-1\">…</h1>\n       - unexpected value \"Keep the source.Keep your thinking.\"\n\n    at captureRawStack (/private/tmp/arxiv-agent-eng-workspace-controller/web/node_modules/playwright-core/lib/coreBundle.js:9681:17)\n    at callMatcherAsStep (/private/tmp/arxiv-agent-eng-workspace-controller/web/node_modules/playwright/lib/matchers/expect.js:13310:57)\n    at Object.toHaveText (/private/tmp/arxiv-agent-eng-workspace-controller/web/node_modules/playwright/lib/matchers/expect.js:13300:23)\n    at /private/tmp/arxiv-agent-eng-workspace-controller-p7/planning/12-workspace-controller-revamp/evidence/after/p7-polish/command-ui.cjs:47:274",
+      "video": null
+    }
+  ],
+  "blocked": [],
+  "errors": [],
+  "chapters": [
+    {
+      "name": "desktop-light",
+      "label": "Collapsed rail excludes hidden page commands",
+      "elapsedMs": 1953
+    },
+    {
+      "name": "desktop-light",
+      "label": "Palette open with focused combobox",
+      "elapsedMs": 2002
+    },
+    {
+      "name": "desktop-light",
+      "label": "Palette Close plain keys remained inside modal",
+      "elapsedMs": 2015
+    },
+    {
+      "name": "desktop-light",
+      "label": "Arrow navigation retained input focus and visible active option",
+      "elapsedMs": 2660
+    },
+    {
+      "name": "desktop-dark",
+      "label": "Collapsed rail excludes hidden page commands",
+      "elapsedMs": 1699
+    },
+    {
+      "name": "desktop-dark",
+      "label": "Palette open with focused combobox",
+      "elapsedMs": 1746
+    },
+    {
+      "name": "desktop-dark",
+      "label": "Palette Close plain keys remained inside modal",
+      "elapsedMs": 1758
+    },
+    {
+      "name": "desktop-dark",
+      "label": "Arrow navigation retained input focus and visible active option",
+      "elapsedMs": 2665
+    },
+    {
+      "name": "mobile-light",
+      "label": "Mobile drawer focus trap and modal ownership",
+      "elapsedMs": 1268
+    },
+    {
+      "name": "mobile-light",
+      "label": "Palette open with focused combobox",
+      "elapsedMs": 2089
+    },
+    {
+      "name": "mobile-light",
+      "label": "Palette Close plain keys remained inside modal",
+      "elapsedMs": 2105
+    },
+    {
+      "name": "mobile-light",
+      "label": "Arrow navigation retained input focus and visible active option",
+      "elapsedMs": 2649
+    },
+    {
+      "name": "mobile-dark",
+      "label": "Mobile drawer focus trap and modal ownership",
+      "elapsedMs": 1294
+    },
+    {
+      "name": "mobile-dark",
+      "label": "Palette open with focused combobox",
+      "elapsedMs": 2119
+    },
+    {
+      "name": "mobile-dark",
+      "label": "Palette Close plain keys remained inside modal",
+      "elapsedMs": 2132
+    },
+    {
+      "name": "mobile-dark",
+      "label": "Arrow navigation retained input focus and visible active option",
+      "elapsedMs": 2610
+    }
+  ],
+  "endedAtUtc": "2026-11-05T06:09:31.593Z",
+  "status": "fail"
+}

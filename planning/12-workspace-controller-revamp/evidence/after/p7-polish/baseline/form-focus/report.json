@@ -1,0 +1,144 @@
+{
+  "phase": "baseline",
+  "base": "http://127.0.0.1:3148",
+  "principal": "controller-p6-preview",
+  "startedAtUtc": "2026-11-05T04:57:56.389Z",
+  "cases": [
+    {
+      "size": "desktop",
+      "theme": "light",
+      "status": "pass",
+      "themeState": {
+        "theme": "light",
+        "canvas": "rgb(245, 245, 245)"
+      },
+      "form": {
+        "tag": "TEXTAREA",
+        "type": null,
+        "label": "Your current research question",
+        "value": "How can I build a personalized research agent that identifies useful developments, explains them against real sources, and turns them into small, reproducible experiments within a controlled compute budget?",
+        "focusVisible": true,
+        "font": "15px / 24px fontUi, \"Atkinson Hyperlegible Next Fallback\", ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", sans-serif",
+        "padding": "10px 12px",
+        "border": "1px solid rgb(138, 138, 138)",
+        "borderRadius": "4px",
+        "background": "rgb(255, 255, 255)",
+        "color": "rgb(10, 10, 10)",
+        "outline": "rgb(10, 10, 10) solid 2px",
+        "outlineOffset": "4px",
+        "boxShadow": "none",
+        "rect": {
+          "left": 394,
+          "right": 884,
+          "top": 351.96875,
+          "bottom": 469.96875
+        }
+      },
+      "serverStateUnchanged": true,
+      "screenshot": "desktop-light-form.png"
+    },
+    {
+      "size": "desktop",
+      "theme": "dark",
+      "status": "pass",
+      "themeState": {
+        "theme": "dark",
+        "canvas": "rgb(10, 10, 10)"
+      },
+      "form": {
+        "tag": "TEXTAREA",
+        "type": null,
+        "label": "Your current research question",
+        "value": "How can I build a personalized research agent that identifies useful developments, explains them against real sources, and turns them into small, reproducible experiments within a controlled compute budget?",
+        "focusVisible": true,
+        "font": "15px / 24px fontUi, \"Atkinson Hyperlegible Next Fallback\", ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", sans-serif",
+        "padding": "10px 12px",
+        "border": "1px solid rgb(107, 107, 107)",
+        "borderRadius": "4px",
+        "background": "rgb(20, 20, 20)",
+        "color": "rgb(250, 250, 250)",
+        "outline": "rgb(250, 250, 250) solid 2px",
+        "outlineOffset": "4px",
+        "boxShadow": "none",
+        "rect": {
+          "left": 394,
+          "right": 884,
+          "top": 351.96875,
+          "bottom": 469.96875
+        }
+      },
+      "serverStateUnchanged": true,
+      "screenshot": "desktop-dark-form.png"
+    },
+    {
+      "size": "mobile",
+      "theme": "light",
+      "status": "pass",
+      "themeState": {
+        "theme": "light",
+        "canvas": "rgb(245, 245, 245)"
+      },
+      "form": {
+        "tag": "TEXTAREA",
+        "type": null,
+        "label": "Your current research question",
+        "value": "How can I build a personalized research agent that identifies useful developments, explains them against real sources, and turns them into small, reproducible experiments within a controlled compute budget?",
+        "focusVisible": true,
+        "font": "15px / 24px fontUi, \"Atkinson Hyperlegible Next Fallback\", ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", sans-serif",
+        "padding": "10px 12px",
+        "border": "1px solid rgb(138, 138, 138)",
+        "borderRadius": "4px",
+        "background": "rgb(255, 255, 255)",
+        "color": "rgb(10, 10, 10)",
+        "outline": "rgb(10, 10, 10) solid 2px",
+        "outlineOffset": "4px",
+        "boxShadow": "none",
+        "rect": {
+          "left": 16,
+          "right": 374,
+          "top": 461.5625,
+          "bottom": 579.5625
+        }
+      },
+      "serverStateUnchanged": true,
+      "screenshot": "mobile-light-form.png"
+    },
+    {
+      "size": "mobile",
+      "theme": "dark",
+      "status": "pass",
+      "themeState": {
+        "theme": "dark",
+        "canvas": "rgb(10, 10, 10)"
+      },
+      "form": {
+        "tag": "TEXTAREA",
+        "type": null,
+        "label": "Your current research question",
+        "value": "How can I build a personalized research agent that identifies useful developments, explains them against real sources, and turns them into small, reproducible experiments within a controlled compute budget?",
+        "focusVisible": true,
+        "font": "15px / 24px fontUi, \"Atkinson Hyperlegible Next Fallback\", ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", sans-serif",
+        "padding": "10px 12px",
+        "border": "1px solid rgb(107, 107, 107)",
+        "borderRadius": "4px",
+        "background": "rgb(20, 20, 20)",
+        "color": "rgb(250, 250, 250)",
+        "outline": "rgb(250, 250, 250) solid 2px",
+        "outlineOffset": "4px",
+        "boxShadow": "none",
+        "rect": {
+          "left": 16,
+          "right": 374,
+          "top": 461.5625,
+          "bottom": 579.5625
+        }
+      },
+      "serverStateUnchanged": true,
+      "screenshot": "mobile-dark-form.png"
+    }
+  ],
+  "blocked": [],
+  "errors": [],
+  "endedAtUtc": "2026-11-05T04:58:01.245Z",
+  "status": "pass"
+}

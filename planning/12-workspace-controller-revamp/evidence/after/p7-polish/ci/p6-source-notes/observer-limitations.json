@@ -1,0 +1,17 @@
+{
+  "rawReportPreserved": true,
+  "validFields": [
+    "exact source and title assertions",
+    "actual Source to Notes to Source clicks",
+    "each reading POST status 200 and enabled controls",
+    "explicit stages with visible panel checks and settled network bytes",
+    "readiness.headingAtMs",
+    "readiness.sourceAtMs",
+    "request bytes and request waterfall timings",
+    "logical reading restoration and protected state comparisons"
+  ],
+  "ignoredFields": ["readiness.notesAtMs", "readiness.phases"],
+  "reason": "The initial observer selected Notes using absence of hidden attribute, while this Reader uses CSS data-active. Notes is always mounted but initially invisible. Explicit UI-stage assertions did correctly wait for the actual notes textbox to be visible and the reading POST to finish. No passing UI assertion is weakened.",
+  "matchedComparisonPolicy": "Compare Source heading/source readiness, explicit Source/Notes/Source settled stage timings and JavaScript bytes. Do not compare first Notes timestamp or observer phases between P6 and P7.",
+  "harnessCorrection": "Future observations test Notes getClientRects visibility and observe data-active. Original raw bytes remain unchanged; no application edit was needed."
+}

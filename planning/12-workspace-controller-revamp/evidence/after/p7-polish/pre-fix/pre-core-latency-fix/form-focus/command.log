@@ -1,0 +1,5 @@
+PASS desktop light
+PASS desktop dark
+PASS mobile light
+PASS mobile dark
+{"status":"pass","cases":4,"blocked":[],"errors":[]}

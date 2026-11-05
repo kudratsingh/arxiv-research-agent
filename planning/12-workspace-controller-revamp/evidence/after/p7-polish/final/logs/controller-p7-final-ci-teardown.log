@@ -1,0 +1,23 @@
+{
+  "startedAtUtc": "2026-11-05T08:16:25.392511+00:00",
+  "database": "workspace_controller_p7_ci",
+  "principal": "controller-p7-ci",
+  "ownedRunId": "controller-p7-ci-90342e750ee945018d8ed49c137f5ce3",
+  "stopped": [
+    {
+      "port": 3169,
+      "pid": 82833,
+      "verifiedListener": "p82833\ncnode\nf12\nn127.0.0.1:3169\n"
+    },
+    {
+      "port": 8169,
+      "pid": 10951,
+      "verifiedListener": "p10951\ncPython\nf12\nn127.0.0.1:8169\n"
+    }
+  ],
+  "databaseOwnershipCommentVerified": "controller-p7-ci-90342e750ee945018d8ed49c137f5ce3",
+  "databaseConnectionsBeforeDrop": 0,
+  "databaseDropped": true,
+  "status": "pass",
+  "endedAtUtc": "2026-11-05T08:16:26.379492+00:00"
+}

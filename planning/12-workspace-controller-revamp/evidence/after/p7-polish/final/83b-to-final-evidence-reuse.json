@@ -1,0 +1,6 @@
+{
+  "priorCommit": "83b196eb14b33cd3033453701e93482266366e5f",
+  "finalCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+  "status": "No older-run reuse required for final runtime release: every listed final gate was rerun on6b, including moods/form/touch/legacy16. Original83b snapshots remain under pre-fix/pre-guard-repair-83b with pathmapping.",
+  "patch": "83b-to-final-source.diff"
+}

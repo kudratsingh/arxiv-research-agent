@@ -1,0 +1,9 @@
+
+ RUN  v4.1.11 /private/tmp/arxiv-agent-eng-workspace-controller-p7/web
+
+
+ Test Files  3 passed (3)
+      Tests  83 passed (83)
+   Start at  21:46:01
+   Duration  4.72s (transform 725ms, setup 567ms, import 572ms, tests 6.34s, environment 1.67s)
+

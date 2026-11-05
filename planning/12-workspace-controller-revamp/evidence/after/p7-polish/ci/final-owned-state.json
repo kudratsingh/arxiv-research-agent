@@ -1,0 +1,2212 @@
+{
+  "principal_key_id": "controller-p7-ci",
+  "profile": {
+    "revision": 21,
+    "data": {
+      "topics": [
+        "ml:agents-and-tool-use",
+        "ml:retrieval-and-memory",
+        "ml:evaluation-and-responsible-ml",
+        "ml:reasoning-and-inference-time-compute",
+        "ml:ml-systems-and-efficiency",
+        "ml:machine-learning-for-science",
+        "study:22/control-systems",
+        "ml:embodied-intelligence/model-based-reinforcement-learning",
+        "ml:multimodal-and-perception/3d-perception",
+        "ml:generative-models/controllable-generation",
+        "ml:embodied-intelligence"
+      ],
+      "custom_topics": [],
+      "exclusions": [],
+      "streams": [
+        "core",
+        "rocket-twin",
+        "spatial"
+      ],
+      "minutes": 15,
+      "research_question": "How can I build a personalized research agent that identifies useful developments, explains them against real sources, and turns them into small, reproducible experiments within a controlled compute budget?",
+      "exploration": 0.15,
+      "pinned_entry_id": null
+    }
+  },
+  "works": [
+    {
+      "work_id": "ci:workspace-feed-excerpt",
+      "version_id": "ci:workspace-feed-excerpt:v1",
+      "source_id": "hugging-face-blog",
+      "source_record_id": "ci:workspace-feed-excerpt:v1",
+      "title": "CI fixture \u2014 A feed excerpt about bounded research agents",
+      "url": "https://example.invalid/workspace-ci/workspace-feed-excerpt/v1",
+      "authors": [
+        "CI synthetic author"
+      ],
+      "abstract": "Synthetic feed excerpt for offline browser testing. This short excerpt mentions tool use, agent memory and retrieval. A full article was not acquired, and this fixture establishes no real source freshness or scientific claim.",
+      "access_state": "excerpt",
+      "categories": [
+        "agents",
+        "retrieval",
+        "evaluation"
+      ],
+      "published_at": "2026-11-03T04:42:18.701991+00:00",
+      "updated_at": "2026-11-04T04:42:18.701991+00:00",
+      "published_precision": "second",
+      "updated_precision": "second",
+      "first_seen_at": "2026-11-05T04:42:18.701991+00:00",
+      "fetched_at": "2026-11-05T04:42:18.701991+00:00",
+      "content_hash": "d1db8e334bfeed3f9240c941088f263da94bfc8e4443b02b3e991488bcaf5ed0",
+      "version_label": "v1",
+      "kind": "fixture",
+      "versions": [
+        {
+          "version_id": "ci:workspace-feed-excerpt:v1",
+          "version_label": "v1",
+          "abstract": "Synthetic feed excerpt for offline browser testing. This short excerpt mentions tool use, agent memory and retrieval. A full article was not acquired, and this fixture establishes no real source freshness or scientific claim.",
+          "access_state": "excerpt",
+          "content_hash": "d1db8e334bfeed3f9240c941088f263da94bfc8e4443b02b3e991488bcaf5ed0",
+          "fetched_at": "2026-11-05T04:42:18.701991+00:00",
+          "source_scope": "excerpt",
+          "title": "CI fixture \u2014 A feed excerpt about bounded research agents",
+          "url": "https://example.invalid/workspace-ci/workspace-feed-excerpt/v1",
+          "authors": [
+            "CI synthetic author"
+          ],
+          "reading_access_state": "excerpt",
+          "available_scopes": [
+            "excerpt"
+          ],
+          "retained_materials": [
+            {
+              "material_id": "mat-23c0f710b7ffc1c0ca55af8ea4eaf372",
+              "version_id": "ci:workspace-feed-excerpt:v1",
+              "scope": "excerpt",
+              "format": "text",
+              "quality": "text_extracted",
+              "complete": true,
+              "page_count": null,
+              "retained_pages": [],
+              "first_anchor": null,
+              "warnings": []
+            }
+          ]
+        }
+      ],
+      "reading": {
+        "status": "saved",
+        "anchor": "excerpt:0:225",
+        "version_id": "ci:workspace-feed-excerpt:v1",
+        "snoozed_until": null,
+        "revision": 33,
+        "updated_at": "2026-11-05T08:03:40.030365+00:00",
+        "activity_sequence": 133
+      },
+      "entries": [
+        {
+          "work_id": "ci:workspace-feed-excerpt",
+          "version_id": "ci:workspace-feed-excerpt:v1",
+          "kind": "question",
+          "body": "Verification question: which evidence and baseline should stay fixed in a small reproducible retrieval experiment?",
+          "anchor": "excerpt:0:60",
+          "id": "0be4d8b5-2da1-4ef2-847a-7c749cb0e28e",
+          "revision": 1,
+          "updated_at": "2026-11-05T06:59:21.743767+00:00",
+          "activity_sequence": 89
+        },
+        {
+          "work_id": "ci:workspace-feed-excerpt",
+          "version_id": "ci:workspace-feed-excerpt:v1",
+          "kind": "question",
+          "body": "Keyboard walkthrough mobile 1793861955879: what evidence should I check?",
+          "anchor": "excerpt:0",
+          "id": "1169f369-b443-441e-8fe3-0a95a5cbd075",
+          "revision": 1,
+          "updated_at": "2026-11-05T06:59:15.907588+00:00",
+          "activity_sequence": 82
+        },
+        {
+          "work_id": "ci:workspace-feed-excerpt",
+          "version_id": "ci:workspace-feed-excerpt:v1",
+          "kind": "question",
+          "body": "Walkthrough mobile 1793865811094: which baseline would make this reproducible?",
+          "anchor": "excerpt:0",
+          "id": "1685c13f-1f69-4bc8-9071-c3dc2057dcac",
+          "revision": 1,
+          "updated_at": "2026-11-05T08:03:31.155654+00:00",
+          "activity_sequence": 124
+        },
+        {
+          "work_id": "ci:workspace-feed-excerpt",
+          "version_id": "ci:workspace-feed-excerpt:v1",
+          "kind": "question",
+          "body": "Outage recovery desktop 1793865799862: keep this unsaved question.",
+          "anchor": "excerpt:0",
+          "id": "16ab833d-5022-4ff1-a50d-ea23d88dbfab",
+          "revision": 1,
+          "updated_at": "2026-11-05T08:03:20.235515+00:00",
+          "activity_sequence": 113
+        },
+        {
+          "work_id": "ci:workspace-feed-excerpt",
+          "version_id": "ci:workspace-feed-excerpt:v1",
+          "kind": "question",
+          "body": "Outage recovery desktop 1793861940104: keep this unsaved question.",
+          "anchor": "excerpt:0",
+          "id": "199dc765-0442-4b29-9c74-f003462fe20f",
+          "revision": 1,
+          "updated_at": "2026-11-05T06:59:00.543158+00:00",
+          "activity_sequence": 68
+        },
+        {
+          "work_id": "ci:workspace-feed-excerpt",
+          "version_id": "ci:workspace-feed-excerpt:v1",
+          "kind": "question",
+          "body": "Walkthrough desktop 1793857770063: which baseline would make this reproducible?",
+          "anchor": "excerpt:0",
+          "id": "23d376e1-0597-4ed9-95bb-6ec23407b585",
+          "revision": 1,
+          "updated_at": "2026-11-05T05:49:30.120979+00:00",
+          "activity_sequence": 19
+        },
+        {
+          "work_id": "ci:workspace-feed-excerpt",
+          "version_id": "ci:workspace-feed-excerpt:v1",
+          "kind": "question",
+          "body": "P7 disposable synthetic keyboard loop desktop 2026-11-05T07:07:48.056Z: which retained passage should I verify?",
+          "anchor": "excerpt:0",
+          "id": "25e29d94-0861-4bdb-a6ae-9d90e5fc3561",
+          "revision": 1,
+          "updated_at": "2026-11-05T07:07:49.146565+00:00",
+          "activity_sequence": 99
+        },
+        {
+          "work_id": "ci:workspace-feed-excerpt",
+          "version_id": "ci:workspace-feed-excerpt:v1",
+          "kind": "question",
+          "body": "Outage recovery mobile 1793859659645: keep this unsaved question.",
+          "anchor": "excerpt:0",
+          "id": "2cd59bf3-047b-4bee-a137-a79031f8a891",
+          "revision": 1,
+          "updated_at": "2026-11-05T06:21:01.489203+00:00",
+          "activity_sequence": 56
+        },
+        {
+          "work_id": "ci:workspace-feed-excerpt",
+          "version_id": "ci:workspace-feed-excerpt:v1",
+          "kind": "question",
+          "body": "Keyboard walkthrough desktop 1793857776889: what evidence should I check?",
+          "anchor": "excerpt:0",
+          "id": "39764f84-0b86-45cd-8808-57a0ba7fcdd8",
+          "revision": 1,
+          "updated_at": "2026-11-05T05:49:36.912003+00:00",
+          "activity_sequence": 22
+        },
+        {
+          "work_id": "ci:workspace-feed-excerpt",
+          "version_id": "ci:workspace-feed-excerpt:v1",
+          "kind": "question",
+          "body": "Outage recovery mobile 1793857790745: keep this unsaved question.",
+          "anchor": "excerpt:0",
+          "id": "3bf8bf76-f33e-4b16-9e08-39e6c2bc69bb",
+          "revision": 1,
+          "updated_at": "2026-11-05T05:49:52.617949+00:00",
+          "activity_sequence": 32
+        },
+        {
+          "work_id": "ci:workspace-feed-excerpt",
+          "version_id": "ci:workspace-feed-excerpt:v1",
+          "kind": "question",
+          "body": "Keyboard walkthrough desktop 1793861942770: what evidence should I check?",
+          "anchor": "excerpt:0",
+          "id": "3ee22329-5b93-4099-a720-87a1dfc59460",
+          "revision": 1,
+          "updated_at": "2026-11-05T06:59:02.810404+00:00",
+          "activity_sequence": 70
+        },
+        {
+          "work_id": "ci:workspace-feed-excerpt",
+          "version_id": "ci:workspace-feed-excerpt:v1",
+          "kind": "question",
+          "body": "Verification question: which evidence and baseline should stay fixed in a small reproducible retrieval experiment?",
+          "anchor": "excerpt:0:60",
+          "id": "404a52d1-d921-4223-aa9b-160f5a380129",
+          "revision": 1,
+          "updated_at": "2026-11-05T08:03:40.587495+00:00",
+          "activity_sequence": 134
+        },
+        {
+          "work_id": "ci:workspace-feed-excerpt",
+          "version_id": "ci:workspace-feed-excerpt:v1",
+          "kind": "question",
+          "body": "Keyboard walkthrough mobile 1793857796155: what evidence should I check?",
+          "anchor": "excerpt:0",
+          "id": "459cf0c6-b6fd-494f-8e14-d6b3dd3023d7",
+          "revision": 1,
+          "updated_at": "2026-11-05T05:49:56.181811+00:00",
+          "activity_sequence": 34
+        },
+        {
+          "work_id": "ci:workspace-feed-excerpt",
+          "version_id": "ci:workspace-feed-excerpt:v1",
+          "kind": "question",
+          "body": "Walkthrough desktop 1793859637721: which baseline would make this reproducible?",
+          "anchor": "excerpt:0",
+          "id": "47f8b479-8cad-4e97-b0ab-3c7c1ddc19d9",
+          "revision": 1,
+          "updated_at": "2026-11-05T06:20:37.812990+00:00",
+          "activity_sequence": 43
+        },
+        {
+          "work_id": "ci:workspace-feed-excerpt",
+          "version_id": "ci:workspace-feed-excerpt:v1",
+          "kind": "question",
+          "body": "Keyboard walkthrough mobile 1793859665103: what evidence should I check?",
+          "anchor": "excerpt:0",
+          "id": "49e6bdde-d280-4646-82f2-9bc7514559f7",
+          "revision": 1,
+          "updated_at": "2026-11-05T06:21:05.131836+00:00",
+          "activity_sequence": 58
+        },
+        {
+          "work_id": "ci:workspace-feed-excerpt",
+          "version_id": "ci:workspace-feed-excerpt:v1",
+          "kind": "question",
+          "body": "Verification question: which evidence and baseline should stay fixed in a small reproducible retrieval experiment?",
+          "anchor": "excerpt:0:60",
+          "id": "4caf8a63-1292-449c-8049-6ca72da588c7",
+          "revision": 1,
+          "updated_at": "2026-11-05T05:50:05.442024+00:00",
+          "activity_sequence": 41
+        },
+        {
+          "work_id": "ci:workspace-feed-excerpt",
+          "version_id": "ci:workspace-feed-excerpt:v1",
+          "kind": "question",
+          "body": "Walkthrough mobile 1793857789478: which baseline would make this reproducible?",
+          "anchor": "excerpt:0",
+          "id": "4d4bb0c4-fd01-40d6-b382-70f74b25a466",
+          "revision": 1,
+          "updated_at": "2026-11-05T05:49:49.518377+00:00",
+          "activity_sequence": 31
+        },
+        {
+          "work_id": "ci:workspace-feed-excerpt",
+          "version_id": "ci:workspace-feed-excerpt:v1",
+          "kind": "question",
+          "body": "Verification question: which evidence and baseline should stay fixed in a small reproducible retrieval experiment?",
+          "anchor": "excerpt:0:60",
+          "id": "52375724-58c2-4eb2-9378-cd39d5ba2a2c",
+          "revision": 1,
+          "updated_at": "2026-11-05T08:03:29.029946+00:00",
+          "activity_sequence": 122
+        },
+        {
+          "work_id": "ci:workspace-feed-excerpt",
+          "version_id": "ci:workspace-feed-excerpt:v1",
+          "kind": "question",
+          "body": "Walkthrough desktop 1793865799312: which baseline would make this reproducible?",
+          "anchor": "excerpt:0",
+          "id": "5a110e3b-71da-44d8-a26d-ae4784ff50af",
+          "revision": 1,
+          "updated_at": "2026-11-05T08:03:19.366315+00:00",
+          "activity_sequence": 112
+        },
+        {
+          "work_id": "ci:workspace-feed-excerpt",
+          "version_id": "ci:workspace-feed-excerpt:v1",
+          "kind": "question",
+          "body": "P7 disposable synthetic keyboard loop mobile 2026-11-05T07:09:55.823Z: which retained passage should I verify?",
+          "anchor": "excerpt:0",
+          "id": "7b6e7512-642e-4efe-956f-8edec71aa516",
+          "revision": 1,
+          "updated_at": "2026-11-05T07:09:56.894727+00:00",
+          "activity_sequence": 107
+        },
+        {
+          "work_id": "ci:workspace-feed-excerpt",
+          "version_id": "ci:workspace-feed-excerpt:v1",
+          "kind": "question",
+          "body": "P7 disposable synthetic keyboard loop desktop 2026-11-05T07:09:52.593Z: which retained passage should I verify?",
+          "anchor": "excerpt:0",
+          "id": "857ebc5b-eca2-40f2-a55f-291792b6ad55",
+          "revision": 1,
+          "updated_at": "2026-11-05T07:09:53.680630+00:00",
+          "activity_sequence": 104
+        },
+        {
+          "work_id": "ci:workspace-feed-excerpt",
+          "version_id": "ci:workspace-feed-excerpt:v1",
+          "kind": "question",
+          "body": "Outage recovery desktop 1793857771406: keep this unsaved question.",
+          "anchor": "excerpt:0",
+          "id": "8e271d2b-694f-4468-997b-d8edbeea3686",
+          "revision": 1,
+          "updated_at": "2026-11-05T05:49:33.302944+00:00",
+          "activity_sequence": 20
+        },
+        {
+          "work_id": "ci:workspace-feed-excerpt",
+          "version_id": "ci:workspace-feed-excerpt:v1",
+          "kind": "question",
+          "body": "Walkthrough desktop 1793861939541: which baseline would make this reproducible?",
+          "anchor": "excerpt:0",
+          "id": "9096ba41-81a9-45e2-96a4-f1ac8b090fa1",
+          "revision": 1,
+          "updated_at": "2026-11-05T06:58:59.602778+00:00",
+          "activity_sequence": 67
+        },
+        {
+          "work_id": "ci:workspace-feed-excerpt",
+          "version_id": "ci:workspace-feed-excerpt:v1",
+          "kind": "question",
+          "body": "Verification question: which evidence and baseline should stay fixed in a small reproducible retrieval experiment?",
+          "anchor": "excerpt:0:60",
+          "id": "9be35701-e59f-4189-bdbd-85537c217dc1",
+          "revision": 1,
+          "updated_at": "2026-11-05T06:21:14.728142+00:00",
+          "activity_sequence": 65
+        },
+        {
+          "work_id": "ci:workspace-feed-excerpt",
+          "version_id": "ci:workspace-feed-excerpt:v1",
+          "kind": "question",
+          "body": "Walkthrough mobile 1793859658262: which baseline would make this reproducible?",
+          "anchor": "excerpt:0",
+          "id": "a4e153e6-7ca8-4e0f-a1a1-6a7016a4ce27",
+          "revision": 1,
+          "updated_at": "2026-11-05T06:20:58.316632+00:00",
+          "activity_sequence": 55
+        },
+        {
+          "work_id": "ci:workspace-feed-excerpt",
+          "version_id": "ci:workspace-feed-excerpt:v1",
+          "kind": "question",
+          "body": "Verification question: which evidence and baseline should stay fixed in a small reproducible retrieval experiment?",
+          "anchor": "excerpt:0:60",
+          "id": "abc5fbcf-8d03-4949-96d3-97ca1c08ea64",
+          "revision": 1,
+          "updated_at": "2026-11-05T06:59:10.307695+00:00",
+          "activity_sequence": 77
+        },
+        {
+          "work_id": "ci:workspace-feed-excerpt",
+          "version_id": "ci:workspace-feed-excerpt:v1",
+          "kind": "question",
+          "body": "Keyboard walkthrough desktop 1793859644916: what evidence should I check?",
+          "anchor": "excerpt:0",
+          "id": "be3cd534-4035-4915-9984-fc325181976c",
+          "revision": 1,
+          "updated_at": "2026-11-05T06:20:44.943305+00:00",
+          "activity_sequence": 46
+        },
+        {
+          "work_id": "ci:workspace-feed-excerpt",
+          "version_id": "ci:workspace-feed-excerpt:v1",
+          "kind": "question",
+          "body": "Keyboard walkthrough desktop 1793865802234: what evidence should I check?",
+          "anchor": "excerpt:0",
+          "id": "c5b43360-04d6-480c-b934-1e986ec048de",
+          "revision": 1,
+          "updated_at": "2026-11-05T08:03:22.264535+00:00",
+          "activity_sequence": 115
+        },
+        {
+          "work_id": "ci:workspace-feed-excerpt",
+          "version_id": "ci:workspace-feed-excerpt:v1",
+          "kind": "question",
+          "body": "Keyboard walkthrough mobile 1793865814383: what evidence should I check?",
+          "anchor": "excerpt:0",
+          "id": "c919d2cd-8416-4ae6-a13f-d1dbdb6db7be",
+          "revision": 1,
+          "updated_at": "2026-11-05T08:03:34.407655+00:00",
+          "activity_sequence": 127
+        },
+        {
+          "work_id": "ci:workspace-feed-excerpt",
+          "version_id": "ci:workspace-feed-excerpt:v1",
+          "kind": "question",
+          "body": "Outage recovery mobile 1793861953195: keep this unsaved question.",
+          "anchor": "excerpt:0",
+          "id": "cf8966f2-49b1-4b3c-a284-35df3c00c826",
+          "revision": 1,
+          "updated_at": "2026-11-05T06:59:13.629459+00:00",
+          "activity_sequence": 80
+        },
+        {
+          "work_id": "ci:workspace-feed-excerpt",
+          "version_id": "ci:workspace-feed-excerpt:v1",
+          "kind": "question",
+          "body": "Walkthrough mobile 1793861952545: which baseline would make this reproducible?",
+          "anchor": "excerpt:0",
+          "id": "d2cfc93a-b561-4b96-a476-e8baf839e12a",
+          "revision": 1,
+          "updated_at": "2026-11-05T06:59:12.593628+00:00",
+          "activity_sequence": 79
+        },
+        {
+          "work_id": "ci:workspace-feed-excerpt",
+          "version_id": "ci:workspace-feed-excerpt:v1",
+          "kind": "question",
+          "body": "Outage recovery mobile 1793865811717: keep this unsaved question.",
+          "anchor": "excerpt:0",
+          "id": "d99fcdf6-e229-4b8d-ad7b-f58b1d00e197",
+          "revision": 1,
+          "updated_at": "2026-11-05T08:03:32.165398+00:00",
+          "activity_sequence": 125
+        },
+        {
+          "work_id": "ci:workspace-feed-excerpt",
+          "version_id": "ci:workspace-feed-excerpt:v1",
+          "kind": "question",
+          "body": "Verification question: which evidence and baseline should stay fixed in a small reproducible retrieval experiment?",
+          "anchor": "excerpt:0:60",
+          "id": "d9bf2e77-cee6-414e-8738-9834f0bb63c8",
+          "revision": 1,
+          "updated_at": "2026-11-05T06:20:55.842406+00:00",
+          "activity_sequence": 53
+        },
+        {
+          "work_id": "ci:workspace-feed-excerpt",
+          "version_id": "ci:workspace-feed-excerpt:v1",
+          "kind": "question",
+          "body": "Outage recovery desktop 1793859639223: keep this unsaved question.",
+          "anchor": "excerpt:0",
+          "id": "f73f3b0c-7c0b-4d43-9acf-3c8baef1d7a8",
+          "revision": 1,
+          "updated_at": "2026-11-05T06:20:41.115535+00:00",
+          "activity_sequence": 44
+        },
+        {
+          "work_id": "ci:workspace-feed-excerpt",
+          "version_id": "ci:workspace-feed-excerpt:v1",
+          "kind": "question",
+          "body": "Verification question: which evidence and baseline should stay fixed in a small reproducible retrieval experiment?",
+          "anchor": "excerpt:0:60",
+          "id": "fa96944d-87cf-4346-a37b-8a9a27f77cfe",
+          "revision": 1,
+          "updated_at": "2026-11-05T05:49:47.105274+00:00",
+          "activity_sequence": 29
+        }
+      ],
+      "reasons": [
+        "Matches agent, agent memory, evaluation, memory, retrieval.",
+        "Also shares question terms: agent, real, research."
+      ],
+      "reading_access_state": "excerpt",
+      "available_scopes": [
+        "excerpt"
+      ],
+      "retained_materials": [
+        {
+          "material_id": "mat-23c0f710b7ffc1c0ca55af8ea4eaf372",
+          "version_id": "ci:workspace-feed-excerpt:v1",
+          "scope": "excerpt",
+          "format": "text",
+          "quality": "text_extracted",
+          "complete": true,
+          "page_count": null,
+          "retained_pages": [],
+          "first_anchor": null,
+          "warnings": []
+        }
+      ]
+    },
+    {
+      "work_id": "ci:workspace-agent-evaluation",
+      "version_id": "ci:workspace-agent-evaluation:v2",
+      "source_id": "arxiv-cs-ai",
+      "source_record_id": "ci:workspace-agent-evaluation:v2",
+      "title": "CI fixture \u2014 Agent memory and retrieval evaluation, revision 2",
+      "url": "https://example.invalid/workspace-ci/workspace-agent-evaluation/v2",
+      "authors": [
+        "CI synthetic author"
+      ],
+      "abstract": "Synthetic revised abstract for offline browser testing. Agent memory, retrieval and verification are compared against a fixed evaluation baseline. The mathematical passage \ud83c\udf20 prefix \ud835\udefc + \ud83d\ude80 signal is synthetic source text, not a result. Earlier notes must stay attached to revision 1.",
+      "access_state": "abstract",
+      "categories": [
+        "agents",
+        "retrieval",
+        "evaluation"
+      ],
+      "published_at": "2026-11-03T04:42:18.701991+00:00",
+      "updated_at": "2026-11-05T03:42:18.701991+00:00",
+      "published_precision": "second",
+      "updated_precision": "second",
+      "first_seen_at": "2026-11-05T04:42:18.701991+00:00",
+      "fetched_at": "2026-11-05T04:42:18.701991+00:00",
+      "content_hash": "3511449bb3c8ea91e722bf972fbe90c11f39db4178b2e72505774c39731e4502",
+      "version_label": "v2",
+      "kind": "fixture",
+      "versions": [
+        {
+          "version_id": "ci:workspace-agent-evaluation:v2",
+          "version_label": "v2",
+          "abstract": "Synthetic revised abstract for offline browser testing. Agent memory, retrieval and verification are compared against a fixed evaluation baseline. The mathematical passage \ud83c\udf20 prefix \ud835\udefc + \ud83d\ude80 signal is synthetic source text, not a result. Earlier notes must stay attached to revision 1.",
+          "access_state": "abstract",
+          "content_hash": "3511449bb3c8ea91e722bf972fbe90c11f39db4178b2e72505774c39731e4502",
+          "fetched_at": "2026-11-05T04:42:18.701991+00:00",
+          "source_scope": "abstract",
+          "title": "CI fixture \u2014 Agent memory and retrieval evaluation, revision 2",
+          "url": "https://example.invalid/workspace-ci/workspace-agent-evaluation/v2",
+          "authors": [
+            "CI synthetic author"
+          ],
+          "reading_access_state": "abstract",
+          "available_scopes": [
+            "abstract"
+          ],
+          "retained_materials": [
+            {
+              "material_id": "mat-962b3add8a2ec3886e9f742d663e0b8a",
+              "version_id": "ci:workspace-agent-evaluation:v2",
+              "scope": "abstract",
+              "format": "text",
+              "quality": "text_extracted",
+              "complete": true,
+              "page_count": null,
+              "retained_pages": [],
+              "first_anchor": null,
+              "warnings": []
+            }
+          ]
+        },
+        {
+          "version_id": "ci:workspace-agent-evaluation:v1",
+          "version_label": "v1",
+          "abstract": "Synthetic abstract for offline browser testing. An agent memory and retrieval evaluation uses a fixed baseline and a bounded compute budget. This fixture reports no real experiment or scientific finding.",
+          "access_state": "abstract",
+          "content_hash": "f3bd84e7c591b858ebbc009f41117674bf80aca792c7e47f145277853a1f229b",
+          "fetched_at": "2026-11-05T04:42:18.701991+00:00",
+          "source_scope": "abstract",
+          "title": "CI fixture \u2014 Agent memory and retrieval evaluation, revision 1",
+          "url": "https://example.invalid/workspace-ci/workspace-agent-evaluation/v1",
+          "authors": [
+            "CI synthetic author"
+          ],
+          "reading_access_state": "abstract",
+          "available_scopes": [
+            "abstract"
+          ],
+          "retained_materials": [
+            {
+              "material_id": "mat-39c42701b85284b52f4e6abca4673e97",
+              "version_id": "ci:workspace-agent-evaluation:v1",
+              "scope": "abstract",
+              "format": "text",
+              "quality": "text_extracted",
+              "complete": true,
+              "page_count": null,
+              "retained_pages": [],
+              "first_anchor": null,
+              "warnings": []
+            }
+          ]
+        }
+      ],
+      "reading": {
+        "status": "unread",
+        "anchor": "abstract:0",
+        "version_id": "ci:workspace-agent-evaluation:v2",
+        "snoozed_until": null,
+        "revision": 68,
+        "updated_at": "2026-11-05T08:11:24.669699+00:00",
+        "activity_sequence": 167
+      },
+      "entries": [
+        {
+          "work_id": "ci:workspace-agent-evaluation",
+          "version_id": "ci:workspace-agent-evaluation:v2",
+          "kind": "question",
+          "body": "Later question mobile 1793861956214: how is retrieval measured?",
+          "anchor": "abstract:0",
+          "id": "08eac028-b650-4e0e-9991-fdaa9c742c53",
+          "revision": 1,
+          "updated_at": "2026-11-05T06:59:16.660297+00:00",
+          "activity_sequence": 84
+        },
+        {
+          "work_id": "ci:workspace-agent-evaluation",
+          "version_id": "ci:workspace-agent-evaluation:v2",
+          "kind": "question",
+          "body": "P7 disposable synthetic keyboard loop mobile 2026-11-05T08:08:24.829Z: which retained passage should I verify?",
+          "anchor": "abstract:0",
+          "id": "4ad4dfb4-722f-47dc-8bcd-630279ea1b2a",
+          "revision": 1,
+          "updated_at": "2026-11-05T08:08:25.921771+00:00",
+          "activity_sequence": 146
+        },
+        {
+          "work_id": "ci:workspace-agent-evaluation",
+          "version_id": "ci:workspace-agent-evaluation:v1",
+          "kind": "question",
+          "body": "Earlier question desktop 1793861943189: which baseline stays fixed? Edited after inspecting the retained version.",
+          "anchor": "abstract:0",
+          "id": "4cd5ab94-7b65-464c-8691-9f403425f676",
+          "revision": 2,
+          "updated_at": "2026-11-05T06:59:05.094854+00:00",
+          "activity_sequence": 73
+        },
+        {
+          "work_id": "ci:workspace-agent-evaluation",
+          "version_id": "ci:workspace-agent-evaluation:v1",
+          "kind": "question",
+          "body": "Earlier question mobile 1793859666189: which baseline stays fixed? Edited after inspecting the retained version.",
+          "anchor": "abstract:0",
+          "id": "4fdb4e40-fe64-4484-8bd6-567f31111045",
+          "revision": 2,
+          "updated_at": "2026-11-05T06:21:09.385125+00:00",
+          "activity_sequence": 61
+        },
+        {
+          "work_id": "ci:workspace-agent-evaluation",
+          "version_id": "ci:workspace-agent-evaluation:v2",
+          "kind": "question",
+          "body": "P7 disposable synthetic keyboard loop desktop 2026-11-05T08:09:35.814Z: which retained passage should I verify?",
+          "anchor": "abstract:0",
+          "id": "55af744b-1ea9-4658-8087-eaeafc4e4500",
+          "revision": 1,
+          "updated_at": "2026-11-05T08:09:36.951897+00:00",
+          "activity_sequence": 149
+        },
+        {
+          "work_id": "ci:workspace-agent-evaluation",
+          "version_id": "ci:workspace-agent-evaluation:v1",
+          "kind": "question",
+          "body": "Earlier question desktop 1793865802574: which baseline stays fixed? Edited after inspecting the retained version.",
+          "anchor": "abstract:0",
+          "id": "58a20353-2f35-434c-bf2d-281236a54090",
+          "revision": 2,
+          "updated_at": "2026-11-05T08:03:24.279654+00:00",
+          "activity_sequence": 118
+        },
+        {
+          "work_id": "ci:workspace-agent-evaluation",
+          "version_id": "ci:workspace-agent-evaluation:v2",
+          "kind": "question",
+          "body": "P7 disposable synthetic keyboard loop mobile 2026-11-05T08:11:23.280Z: which retained passage should I verify?",
+          "anchor": "abstract:0",
+          "id": "5cd69b2b-b860-4039-a171-bbde841d7dce",
+          "revision": 1,
+          "updated_at": "2026-11-05T08:11:24.403837+00:00",
+          "activity_sequence": 166
+        },
+        {
+          "work_id": "ci:workspace-agent-evaluation",
+          "version_id": "ci:workspace-agent-evaluation:v2",
+          "kind": "question",
+          "body": "Later question mobile 1793857797155: how is retrieval measured?",
+          "anchor": "abstract:0",
+          "id": "7d398ded-f11a-4793-8957-bf9ecc41d798",
+          "revision": 1,
+          "updated_at": "2026-11-05T05:49:59.060176+00:00",
+          "activity_sequence": 36
+        },
+        {
+          "work_id": "ci:workspace-agent-evaluation",
+          "version_id": "ci:workspace-agent-evaluation:v2",
+          "kind": "question",
+          "body": "Later question desktop 1793859646063: how is retrieval measured?",
+          "anchor": "abstract:0",
+          "id": "838830ee-aafc-4441-a0a4-3c4b78cd1c44",
+          "revision": 1,
+          "updated_at": "2026-11-05T06:20:47.977934+00:00",
+          "activity_sequence": 48
+        },
+        {
+          "work_id": "ci:workspace-agent-evaluation",
+          "version_id": "ci:workspace-agent-evaluation:v2",
+          "kind": "question",
+          "body": "Later question desktop 1793865802574: how is retrieval measured?",
+          "anchor": "abstract:0",
+          "id": "873536ad-a4f4-4b38-92fa-422ad6eac06d",
+          "revision": 1,
+          "updated_at": "2026-11-05T08:03:23.031369+00:00",
+          "activity_sequence": 117
+        },
+        {
+          "work_id": "ci:workspace-agent-evaluation",
+          "version_id": "ci:workspace-agent-evaluation:v2",
+          "kind": "question",
+          "body": "P7 disposable synthetic keyboard loop mobile 2026-11-05T08:09:39.080Z: which retained passage should I verify?",
+          "anchor": "abstract:0",
+          "id": "92951784-6861-4289-97f9-88f0bbd695ee",
+          "revision": 1,
+          "updated_at": "2026-11-05T08:09:40.191036+00:00",
+          "activity_sequence": 152
+        },
+        {
+          "work_id": "ci:workspace-agent-evaluation",
+          "version_id": "ci:workspace-agent-evaluation:v1",
+          "kind": "question",
+          "body": "Earlier question desktop 1793857777943: which baseline stays fixed? Edited after inspecting the retained version.",
+          "anchor": "abstract:0",
+          "id": "9eb4f832-dcb8-43d0-8a29-dd69a9b21471",
+          "revision": 2,
+          "updated_at": "2026-11-05T05:49:41.767442+00:00",
+          "activity_sequence": 25
+        },
+        {
+          "work_id": "ci:workspace-agent-evaluation",
+          "version_id": "ci:workspace-agent-evaluation:v2",
+          "kind": "question",
+          "body": "Later question desktop 1793861943189: how is retrieval measured?",
+          "anchor": "abstract:0",
+          "id": "a1df2739-1d41-4027-8e3b-8d41d786f891",
+          "revision": 1,
+          "updated_at": "2026-11-05T06:59:03.645437+00:00",
+          "activity_sequence": 72
+        },
+        {
+          "work_id": "ci:workspace-agent-evaluation",
+          "version_id": "ci:workspace-agent-evaluation:v1",
+          "kind": "question",
+          "body": "Earlier question mobile 1793861956214: which baseline stays fixed? Edited after inspecting the retained version.",
+          "anchor": "abstract:0",
+          "id": "a49fea34-cb12-4289-b20e-557c269ac526",
+          "revision": 2,
+          "updated_at": "2026-11-05T06:59:17.293507+00:00",
+          "activity_sequence": 85
+        },
+        {
+          "work_id": "ci:workspace-agent-evaluation",
+          "version_id": "ci:workspace-agent-evaluation:v2",
+          "kind": "question",
+          "body": "Later question desktop 1793857777943: how is retrieval measured?",
+          "anchor": "abstract:0",
+          "id": "a8871773-ce0d-4f44-bbda-4323969a24a8",
+          "revision": 1,
+          "updated_at": "2026-11-05T05:49:39.842232+00:00",
+          "activity_sequence": 24
+        },
+        {
+          "work_id": "ci:workspace-agent-evaluation",
+          "version_id": "ci:workspace-agent-evaluation:v1",
+          "kind": "question",
+          "body": "Earlier question mobile 1793865814713: which baseline stays fixed? Edited after inspecting the retained version.",
+          "anchor": "abstract:0",
+          "id": "beae8279-9fb7-4165-9b4d-54bb0417dbb4",
+          "revision": 2,
+          "updated_at": "2026-11-05T08:03:35.796886+00:00",
+          "activity_sequence": 130
+        },
+        {
+          "work_id": "ci:workspace-agent-evaluation",
+          "version_id": "ci:workspace-agent-evaluation:v2",
+          "kind": "question",
+          "body": "Later question mobile 1793865814713: how is retrieval measured?",
+          "anchor": "abstract:0",
+          "id": "c02bcd81-4494-400e-b863-2663c1421221",
+          "revision": 1,
+          "updated_at": "2026-11-05T08:03:35.195493+00:00",
+          "activity_sequence": 129
+        },
+        {
+          "work_id": "ci:workspace-agent-evaluation",
+          "version_id": "ci:workspace-agent-evaluation:v2",
+          "kind": "question",
+          "body": "Later question mobile 1793859666189: how is retrieval measured?",
+          "anchor": "abstract:0",
+          "id": "debec61b-0389-43e7-8337-14027621056e",
+          "revision": 1,
+          "updated_at": "2026-11-05T06:21:08.117885+00:00",
+          "activity_sequence": 60
+        },
+        {
+          "work_id": "ci:workspace-agent-evaluation",
+          "version_id": "ci:workspace-agent-evaluation:v1",
+          "kind": "question",
+          "body": "Earlier question mobile 1793857797155: which baseline stays fixed? Edited after inspecting the retained version.",
+          "anchor": "abstract:0",
+          "id": "e340f065-ddb1-44a6-b64f-c8a8566803c2",
+          "revision": 2,
+          "updated_at": "2026-11-05T05:50:00.302035+00:00",
+          "activity_sequence": 37
+        },
+        {
+          "work_id": "ci:workspace-agent-evaluation",
+          "version_id": "ci:workspace-agent-evaluation:v1",
+          "kind": "question",
+          "body": "Earlier question desktop 1793859646063: which baseline stays fixed? Edited after inspecting the retained version.",
+          "anchor": "abstract:0",
+          "id": "e6356154-8e6a-489e-b3a9-2c2dd685ab70",
+          "revision": 2,
+          "updated_at": "2026-11-05T06:20:50.055148+00:00",
+          "activity_sequence": 49
+        },
+        {
+          "work_id": "ci:workspace-agent-evaluation",
+          "version_id": "ci:workspace-agent-evaluation:v2",
+          "kind": "question",
+          "body": "P7 disposable synthetic keyboard loop desktop 2026-11-05T08:11:20.023Z: which retained passage should I verify?",
+          "anchor": "abstract:0",
+          "id": "e9f16f2d-7c67-42b0-ae9b-a0e32436b6ee",
+          "revision": 1,
+          "updated_at": "2026-11-05T08:11:21.150703+00:00",
+          "activity_sequence": 163
+        }
+      ],
+      "reasons": [
+        "Matches agent, agent memory, evaluation, memory, retrieval.",
+        "Also shares question terms: against, agent."
+      ],
+      "reading_access_state": "abstract",
+      "available_scopes": [
+        "abstract"
+      ],
+      "retained_materials": [
+        {
+          "material_id": "mat-962b3add8a2ec3886e9f742d663e0b8a",
+          "version_id": "ci:workspace-agent-evaluation:v2",
+          "scope": "abstract",
+          "format": "text",
+          "quality": "text_extracted",
+          "complete": true,
+          "page_count": null,
+          "retained_pages": [],
+          "first_anchor": null,
+          "warnings": []
+        }
+      ]
+    },
+    {
+      "work_id": "ci:workspace-retrieval-budget",
+      "version_id": "ci:workspace-retrieval-budget:v1",
+      "source_id": "arxiv-cs-lg",
+      "source_record_id": "ci:workspace-retrieval-budget:v1",
+      "title": "CI fixture \u2014 Retrieval verification within a controlled compute budget",
+      "url": "https://example.invalid/workspace-ci/workspace-retrieval-budget/v1",
+      "authors": [
+        "CI synthetic author"
+      ],
+      "abstract": "Synthetic abstract for offline browser testing. Retrieval, reranking and claim verification are research interests in this fixture. Reproducible evaluation and quality/cost tradeoffs are proposed questions, not measured findings.",
+      "access_state": "abstract",
+      "categories": [
+        "agents",
+        "retrieval",
+        "evaluation"
+      ],
+      "published_at": "2026-11-03T04:42:18.701991+00:00",
+      "updated_at": "2026-11-04T04:42:18.701991+00:00",
+      "published_precision": "second",
+      "updated_precision": "second",
+      "first_seen_at": "2026-11-05T04:42:18.701991+00:00",
+      "fetched_at": "2026-11-05T04:42:18.701991+00:00",
+      "content_hash": "0979c32fd43c03b1b61f7ad75e676c67c9480110fafac18a434ee10f49ca91bf",
+      "version_label": "v1",
+      "kind": "fixture",
+      "versions": [
+        {
+          "version_id": "ci:workspace-retrieval-budget:v1",
+          "version_label": "v1",
+          "abstract": "Synthetic abstract for offline browser testing. Retrieval, reranking and claim verification are research interests in this fixture. Reproducible evaluation and quality/cost tradeoffs are proposed questions, not measured findings.",
+          "access_state": "abstract",
+          "content_hash": "0979c32fd43c03b1b61f7ad75e676c67c9480110fafac18a434ee10f49ca91bf",
+          "fetched_at": "2026-11-05T04:42:18.701991+00:00",
+          "source_scope": "abstract",
+          "title": "CI fixture \u2014 Retrieval verification within a controlled compute budget",
+          "url": "https://example.invalid/workspace-ci/workspace-retrieval-budget/v1",
+          "authors": [
+            "CI synthetic author"
+          ],
+          "reading_access_state": "abstract",
+          "available_scopes": [
+            "abstract"
+          ],
+          "retained_materials": [
+            {
+              "material_id": "mat-a9390c486019742d049b4cecd883c7ea",
+              "version_id": "ci:workspace-retrieval-budget:v1",
+              "scope": "abstract",
+              "format": "text",
+              "quality": "text_extracted",
+              "complete": true,
+              "page_count": null,
+              "retained_pages": [],
+              "first_anchor": null,
+              "warnings": []
+            }
+          ]
+        }
+      ],
+      "reading": {
+        "status": "unread",
+        "anchor": "abstract:0",
+        "version_id": "ci:workspace-retrieval-budget:v1",
+        "snoozed_until": null,
+        "revision": 0,
+        "updated_at": "",
+        "activity_sequence": 0
+      },
+      "entries": [
+        {
+          "work_id": "ci:workspace-retrieval-budget",
+          "version_id": "ci:workspace-retrieval-budget:v1",
+          "kind": "question",
+          "body": "CI pending normal-search proof desktop reader 2026-11-05T08:01:56.691Z: preserve the latest draft until this save completes.",
+          "anchor": "abstract:0",
+          "id": "0edb1699-6fbb-473e-befd-87ccb24f4c70",
+          "revision": 1,
+          "updated_at": "2026-11-05T08:01:57.734213+00:00",
+          "activity_sequence": 109
+        },
+        {
+          "work_id": "ci:workspace-retrieval-budget",
+          "version_id": "ci:workspace-retrieval-budget:v1",
+          "kind": "question",
+          "body": "CI pending normal-search proof mobile reader 2026-11-05T08:02:01.425Z: preserve the latest draft until this save completes.",
+          "anchor": "abstract:0",
+          "id": "bbe40031-3325-4ad7-b23f-84a997b5a70e",
+          "revision": 1,
+          "updated_at": "2026-11-05T08:02:02.662701+00:00",
+          "activity_sequence": 110
+        }
+      ],
+      "reasons": [
+        "Matches agent, compute, evaluation, reproducible, reranking.",
+        "Also shares question terms: budget, compute, controlled, reproducible."
+      ],
+      "reading_access_state": "abstract",
+      "available_scopes": [
+        "abstract"
+      ],
+      "retained_materials": [
+        {
+          "material_id": "mat-a9390c486019742d049b4cecd883c7ea",
+          "version_id": "ci:workspace-retrieval-budget:v1",
+          "scope": "abstract",
+          "format": "text",
+          "quality": "text_extracted",
+          "complete": true,
+          "page_count": null,
+          "retained_pages": [],
+          "first_anchor": null,
+          "warnings": []
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "source_id": "arxiv-cs-lg",
+      "name": "arXiv Machine Learning",
+      "status": "not_checked",
+      "last_success_at": null,
+      "receipt": {
+        "reason": "offline_fixture",
+        "status": "not_checked",
+        "seeded_at": "2026-11-05T04:42:18.701991+00:00",
+        "source_id": "arxiv-cs-lg",
+        "item_count": 0,
+        "limitations": [
+          "Synthetic metadata only; no provider was contacted and no source coverage or freshness is established."
+        ],
+        "request_count": 0,
+        "fixture_revision": "workspace-browser-synthetic-v1",
+        "requested_window": null,
+        "successful_window": null,
+        "fixture_item_count": 1,
+        "fixture_provenance": "workspace-browser-synthetic-v1"
+      }
+    },
+    {
+      "source_id": "arxiv-cs-ai",
+      "name": "arXiv Artificial Intelligence",
+      "status": "not_checked",
+      "last_success_at": null,
+      "receipt": {
+        "reason": "offline_fixture",
+        "status": "not_checked",
+        "seeded_at": "2026-11-05T04:42:18.701991+00:00",
+        "source_id": "arxiv-cs-ai",
+        "item_count": 0,
+        "limitations": [
+          "Synthetic metadata only; no provider was contacted and no source coverage or freshness is established."
+        ],
+        "request_count": 0,
+        "fixture_revision": "workspace-browser-synthetic-v1",
+        "requested_window": null,
+        "successful_window": null,
+        "fixture_item_count": 2,
+        "fixture_provenance": "workspace-browser-synthetic-v1"
+      }
+    },
+    {
+      "source_id": "arxiv-cs-cl",
+      "name": "arXiv Computation and Language",
+      "status": "not_checked",
+      "last_success_at": null,
+      "receipt": {
+        "reason": "offline_fixture",
+        "status": "not_checked",
+        "seeded_at": "2026-11-05T04:42:18.701991+00:00",
+        "source_id": "arxiv-cs-cl",
+        "item_count": 0,
+        "limitations": [
+          "Synthetic metadata only; no provider was contacted and no source coverage or freshness is established."
+        ],
+        "request_count": 0,
+        "fixture_revision": "workspace-browser-synthetic-v1",
+        "requested_window": null,
+        "successful_window": null,
+        "fixture_item_count": 0,
+        "fixture_provenance": "workspace-browser-synthetic-v1"
+      }
+    },
+    {
+      "source_id": "hugging-face-blog",
+      "name": "Hugging Face Blog",
+      "status": "not_checked",
+      "last_success_at": null,
+      "receipt": {
+        "reason": "offline_fixture",
+        "status": "not_checked",
+        "seeded_at": "2026-11-05T04:42:18.701991+00:00",
+        "source_id": "hugging-face-blog",
+        "item_count": 0,
+        "limitations": [
+          "Synthetic metadata only; no provider was contacted and no source coverage or freshness is established."
+        ],
+        "request_count": 0,
+        "fixture_revision": "workspace-browser-synthetic-v1",
+        "requested_window": null,
+        "successful_window": null,
+        "fixture_item_count": 1,
+        "fixture_provenance": "workspace-browser-synthetic-v1"
+      }
+    },
+    {
+      "source_id": "google-research",
+      "name": "Google Research Blog",
+      "status": "not_checked",
+      "last_success_at": null,
+      "receipt": {
+        "reason": "offline_fixture",
+        "status": "not_checked",
+        "seeded_at": "2026-11-05T04:42:18.701991+00:00",
+        "source_id": "google-research",
+        "item_count": 0,
+        "limitations": [
+          "Synthetic metadata only; no provider was contacted and no source coverage or freshness is established."
+        ],
+        "request_count": 0,
+        "fixture_revision": "workspace-browser-synthetic-v1",
+        "requested_window": null,
+        "successful_window": null,
+        "fixture_item_count": 0,
+        "fixture_provenance": "workspace-browser-synthetic-v1"
+      }
+    }
+  ],
+  "editions": [
+    {
+      "id": "e6f16763a1474f5880019975f7f37732",
+      "created_at": "2026-11-05T08:02:05.149033+00:00",
+      "profile_revision": 16,
+      "minutes": 15,
+      "work_ids": [
+        "ci:workspace-retrieval-budget",
+        "ci:workspace-agent-evaluation",
+        "ci:workspace-feed-excerpt"
+      ],
+      "work_versions": {
+        "ci:workspace-feed-excerpt": "ci:workspace-feed-excerpt:v1",
+        "ci:workspace-agent-evaluation": "ci:workspace-agent-evaluation:v2",
+        "ci:workspace-retrieval-budget": "ci:workspace-retrieval-budget:v1"
+      },
+      "coverage": [
+        {
+          "source_id": "arxiv-cs-lg",
+          "name": "arXiv Machine Learning",
+          "status": "not_checked",
+          "last_success_at": null,
+          "receipt": {
+            "reason": "offline_fixture",
+            "status": "not_checked",
+            "seeded_at": "2026-11-05T04:42:18.701991+00:00",
+            "source_id": "arxiv-cs-lg",
+            "item_count": 0,
+            "limitations": [
+              "Synthetic metadata only; no provider was contacted and no source coverage or freshness is established."
+            ],
+            "request_count": 0,
+            "fixture_revision": "workspace-browser-synthetic-v1",
+            "requested_window": null,
+            "successful_window": null,
+            "fixture_item_count": 1,
+            "fixture_provenance": "workspace-browser-synthetic-v1"
+          }
+        },
+        {
+          "source_id": "arxiv-cs-ai",
+          "name": "arXiv Artificial Intelligence",
+          "status": "not_checked",
+          "last_success_at": null,
+          "receipt": {
+            "reason": "offline_fixture",
+            "status": "not_checked",
+            "seeded_at": "2026-11-05T04:42:18.701991+00:00",
+            "source_id": "arxiv-cs-ai",
+            "item_count": 0,
+            "limitations": [
+              "Synthetic metadata only; no provider was contacted and no source coverage or freshness is established."
+            ],
+            "request_count": 0,
+            "fixture_revision": "workspace-browser-synthetic-v1",
+            "requested_window": null,
+            "successful_window": null,
+            "fixture_item_count": 2,
+            "fixture_provenance": "workspace-browser-synthetic-v1"
+          }
+        },
+        {
+          "source_id": "arxiv-cs-cl",
+          "name": "arXiv Computation and Language",
+          "status": "not_checked",
+          "last_success_at": null,
+          "receipt": {
+            "reason": "offline_fixture",
+            "status": "not_checked",
+            "seeded_at": "2026-11-05T04:42:18.701991+00:00",
+            "source_id": "arxiv-cs-cl",
+            "item_count": 0,
+            "limitations": [
+              "Synthetic metadata only; no provider was contacted and no source coverage or freshness is established."
+            ],
+            "request_count": 0,
+            "fixture_revision": "workspace-browser-synthetic-v1",
+            "requested_window": null,
+            "successful_window": null,
+            "fixture_item_count": 0,
+            "fixture_provenance": "workspace-browser-synthetic-v1"
+          }
+        },
+        {
+          "source_id": "hugging-face-blog",
+          "name": "Hugging Face Blog",
+          "status": "not_checked",
+          "last_success_at": null,
+          "receipt": {
+            "reason": "offline_fixture",
+            "status": "not_checked",
+            "seeded_at": "2026-11-05T04:42:18.701991+00:00",
+            "source_id": "hugging-face-blog",
+            "item_count": 0,
+            "limitations": [
+              "Synthetic metadata only; no provider was contacted and no source coverage or freshness is established."
+            ],
+            "request_count": 0,
+            "fixture_revision": "workspace-browser-synthetic-v1",
+            "requested_window": null,
+            "successful_window": null,
+            "fixture_item_count": 1,
+            "fixture_provenance": "workspace-browser-synthetic-v1"
+          }
+        },
+        {
+          "source_id": "google-research",
+          "name": "Google Research Blog",
+          "status": "not_checked",
+          "last_success_at": null,
+          "receipt": {
+            "reason": "offline_fixture",
+            "status": "not_checked",
+            "seeded_at": "2026-11-05T04:42:18.701991+00:00",
+            "source_id": "google-research",
+            "item_count": 0,
+            "limitations": [
+              "Synthetic metadata only; no provider was contacted and no source coverage or freshness is established."
+            ],
+            "request_count": 0,
+            "fixture_revision": "workspace-browser-synthetic-v1",
+            "requested_window": null,
+            "successful_window": null,
+            "fixture_item_count": 0,
+            "fixture_provenance": "workspace-browser-synthetic-v1"
+          }
+        }
+      ],
+      "status": "ready_partial",
+      "allocation": {
+        "slots": 3,
+        "minutes": 15,
+        "rounding": "floor_final_count",
+        "actual_items": 3,
+        "unused_slots": 0,
+        "actual_fraction": 0.0,
+        "requested_fraction": 0.15,
+        "max_exploration_slots": 0,
+        "actual_exploration_slots": 0,
+        "planned_max_exploration_slots": 0
+      }
+    },
+    {
+      "id": "be59248085ac411b96a3eb3a7264bcae",
+      "created_at": "2026-11-05T08:01:59.989860+00:00",
+      "profile_revision": 14,
+      "minutes": 15,
+      "work_ids": [
+        "ci:workspace-retrieval-budget",
+        "ci:workspace-agent-evaluation",
+        "ci:workspace-feed-excerpt"
+      ],
+      "work_versions": {
+        "ci:workspace-feed-excerpt": "ci:workspace-feed-excerpt:v1",
+        "ci:workspace-agent-evaluation": "ci:workspace-agent-evaluation:v2",
+        "ci:workspace-retrieval-budget": "ci:workspace-retrieval-budget:v1"
+      },
+      "coverage": [
+        {
+          "source_id": "arxiv-cs-lg",
+          "name": "arXiv Machine Learning",
+          "status": "not_checked",
+          "last_success_at": null,
+          "receipt": {
+            "reason": "offline_fixture",
+            "status": "not_checked",
+            "seeded_at": "2026-11-05T04:42:18.701991+00:00",
+            "source_id": "arxiv-cs-lg",
+            "item_count": 0,
+            "limitations": [
+              "Synthetic metadata only; no provider was contacted and no source coverage or freshness is established."
+            ],
+            "request_count": 0,
+            "fixture_revision": "workspace-browser-synthetic-v1",
+            "requested_window": null,
+            "successful_window": null,
+            "fixture_item_count": 1,
+            "fixture_provenance": "workspace-browser-synthetic-v1"
+          }
+        },
+        {
+          "source_id": "arxiv-cs-ai",
+          "name": "arXiv Artificial Intelligence",
+          "status": "not_checked",
+          "last_success_at": null,
+          "receipt": {
+            "reason": "offline_fixture",
+            "status": "not_checked",
+            "seeded_at": "2026-11-05T04:42:18.701991+00:00",
+            "source_id": "arxiv-cs-ai",
+            "item_count": 0,
+            "limitations": [
+              "Synthetic metadata only; no provider was contacted and no source coverage or freshness is established."
+            ],
+            "request_count": 0,
+            "fixture_revision": "workspace-browser-synthetic-v1",
+            "requested_window": null,
+            "successful_window": null,
+            "fixture_item_count": 2,
+            "fixture_provenance": "workspace-browser-synthetic-v1"
+          }
+        },
+        {
+          "source_id": "arxiv-cs-cl",
+          "name": "arXiv Computation and Language",
+          "status": "not_checked",
+          "last_success_at": null,
+          "receipt": {
+            "reason": "offline_fixture",
+            "status": "not_checked",
+            "seeded_at": "2026-11-05T04:42:18.701991+00:00",
+            "source_id": "arxiv-cs-cl",
+            "item_count": 0,
+            "limitations": [
+              "Synthetic metadata only; no provider was contacted and no source coverage or freshness is established."
+            ],
+            "request_count": 0,
+            "fixture_revision": "workspace-browser-synthetic-v1",
+            "requested_window": null,
+            "successful_window": null,
+            "fixture_item_count": 0,
+            "fixture_provenance": "workspace-browser-synthetic-v1"
+          }
+        },
+        {
+          "source_id": "hugging-face-blog",
+          "name": "Hugging Face Blog",
+          "status": "not_checked",
+          "last_success_at": null,
+          "receipt": {
+            "reason": "offline_fixture",
+            "status": "not_checked",
+            "seeded_at": "2026-11-05T04:42:18.701991+00:00",
+            "source_id": "hugging-face-blog",
+            "item_count": 0,
+            "limitations": [
+              "Synthetic metadata only; no provider was contacted and no source coverage or freshness is established."
+            ],
+            "request_count": 0,
+            "fixture_revision": "workspace-browser-synthetic-v1",
+            "requested_window": null,
+            "successful_window": null,
+            "fixture_item_count": 1,
+            "fixture_provenance": "workspace-browser-synthetic-v1"
+          }
+        },
+        {
+          "source_id": "google-research",
+          "name": "Google Research Blog",
+          "status": "not_checked",
+          "last_success_at": null,
+          "receipt": {
+            "reason": "offline_fixture",
+            "status": "not_checked",
+            "seeded_at": "2026-11-05T04:42:18.701991+00:00",
+            "source_id": "google-research",
+            "item_count": 0,
+            "limitations": [
+              "Synthetic metadata only; no provider was contacted and no source coverage or freshness is established."
+            ],
+            "request_count": 0,
+            "fixture_revision": "workspace-browser-synthetic-v1",
+            "requested_window": null,
+            "successful_window": null,
+            "fixture_item_count": 0,
+            "fixture_provenance": "workspace-browser-synthetic-v1"
+          }
+        }
+      ],
+      "status": "ready_partial",
+      "allocation": {
+        "slots": 3,
+        "minutes": 15,
+        "rounding": "floor_final_count",
+        "actual_items": 3,
+        "unused_slots": 0,
+        "actual_fraction": 0.0,
+        "requested_fraction": 0.15,
+        "max_exploration_slots": 0,
+        "actual_exploration_slots": 0,
+        "planned_max_exploration_slots": 0
+      }
+    },
+    {
+      "id": "37b6d328d71c4f6fa0174fb05fab36da",
+      "created_at": "2026-11-05T04:42:18.823848+00:00",
+      "profile_revision": 1,
+      "minutes": 15,
+      "work_ids": [
+        "ci:workspace-retrieval-budget",
+        "ci:workspace-feed-excerpt",
+        "ci:workspace-agent-evaluation"
+      ],
+      "work_versions": {
+        "ci:workspace-feed-excerpt": "ci:workspace-feed-excerpt:v1",
+        "ci:workspace-agent-evaluation": "ci:workspace-agent-evaluation:v2",
+        "ci:workspace-retrieval-budget": "ci:workspace-retrieval-budget:v1"
+      },
+      "coverage": [
+        {
+          "source_id": "arxiv-cs-lg",
+          "name": "arXiv Machine Learning",
+          "status": "not_checked",
+          "last_success_at": null,
+          "receipt": {
+            "reason": "offline_fixture",
+            "status": "not_checked",
+            "seeded_at": "2026-11-05T04:42:18.701991+00:00",
+            "source_id": "arxiv-cs-lg",
+            "item_count": 0,
+            "limitations": [
+              "Synthetic metadata only; no provider was contacted and no source coverage or freshness is established."
+            ],
+            "request_count": 0,
+            "fixture_revision": "workspace-browser-synthetic-v1",
+            "requested_window": null,
+            "successful_window": null,
+            "fixture_item_count": 1,
+            "fixture_provenance": "workspace-browser-synthetic-v1"
+          }
+        },
+        {
+          "source_id": "arxiv-cs-ai",
+          "name": "arXiv Artificial Intelligence",
+          "status": "not_checked",
+          "last_success_at": null,
+          "receipt": {
+            "reason": "offline_fixture",
+            "status": "not_checked",
+            "seeded_at": "2026-11-05T04:42:18.701991+00:00",
+            "source_id": "arxiv-cs-ai",
+            "item_count": 0,
+            "limitations": [
+              "Synthetic metadata only; no provider was contacted and no source coverage or freshness is established."
+            ],
+            "request_count": 0,
+            "fixture_revision": "workspace-browser-synthetic-v1",
+            "requested_window": null,
+            "successful_window": null,
+            "fixture_item_count": 2,
+            "fixture_provenance": "workspace-browser-synthetic-v1"
+          }
+        },
+        {
+          "source_id": "arxiv-cs-cl",
+          "name": "arXiv Computation and Language",
+          "status": "not_checked",
+          "last_success_at": null,
+          "receipt": {
+            "reason": "offline_fixture",
+            "status": "not_checked",
+            "seeded_at": "2026-11-05T04:42:18.701991+00:00",
+            "source_id": "arxiv-cs-cl",
+            "item_count": 0,
+            "limitations": [
+              "Synthetic metadata only; no provider was contacted and no source coverage or freshness is established."
+            ],
+            "request_count": 0,
+            "fixture_revision": "workspace-browser-synthetic-v1",
+            "requested_window": null,
+            "successful_window": null,
+            "fixture_item_count": 0,
+            "fixture_provenance": "workspace-browser-synthetic-v1"
+          }
+        },
+        {
+          "source_id": "hugging-face-blog",
+          "name": "Hugging Face Blog",
+          "status": "not_checked",
+          "last_success_at": null,
+          "receipt": {
+            "reason": "offline_fixture",
+            "status": "not_checked",
+            "seeded_at": "2026-11-05T04:42:18.701991+00:00",
+            "source_id": "hugging-face-blog",
+            "item_count": 0,
+            "limitations": [
+              "Synthetic metadata only; no provider was contacted and no source coverage or freshness is established."
+            ],
+            "request_count": 0,
+            "fixture_revision": "workspace-browser-synthetic-v1",
+            "requested_window": null,
+            "successful_window": null,
+            "fixture_item_count": 1,
+            "fixture_provenance": "workspace-browser-synthetic-v1"
+          }
+        },
+        {
+          "source_id": "google-research",
+          "name": "Google Research Blog",
+          "status": "not_checked",
+          "last_success_at": null,
+          "receipt": {
+            "reason": "offline_fixture",
+            "status": "not_checked",
+            "seeded_at": "2026-11-05T04:42:18.701991+00:00",
+            "source_id": "google-research",
+            "item_count": 0,
+            "limitations": [
+              "Synthetic metadata only; no provider was contacted and no source coverage or freshness is established."
+            ],
+            "request_count": 0,
+            "fixture_revision": "workspace-browser-synthetic-v1",
+            "requested_window": null,
+            "successful_window": null,
+            "fixture_item_count": 0,
+            "fixture_provenance": "workspace-browser-synthetic-v1"
+          }
+        }
+      ],
+      "status": "ready_partial",
+      "allocation": {
+        "slots": 3,
+        "minutes": 15,
+        "rounding": "floor_final_count",
+        "actual_items": 3,
+        "unused_slots": 0,
+        "actual_fraction": 0.0,
+        "requested_fraction": 0.15,
+        "max_exploration_slots": 0,
+        "actual_exploration_slots": 0,
+        "planned_max_exploration_slots": 0
+      }
+    }
+  ],
+  "schedule": {
+    "enabled": false,
+    "timezone": "America/Los_Angeles",
+    "local_time": "07:00",
+    "revision": 0,
+    "next_check": null
+  },
+  "tasks": [],
+  "generation": "approval_required",
+  "as_of": "2026-11-05T08:16:25.707401+00:00",
+  "activity": [
+    {
+      "sequence": 167,
+      "entry_id": null,
+      "work_id": "ci:workspace-agent-evaluation",
+      "version_id": "ci:workspace-agent-evaluation:v2",
+      "kind": "reading",
+      "entry_kind": null,
+      "body": "",
+      "anchor": "abstract:0",
+      "revision": 68,
+      "updated_at": "2026-11-05T08:11:24.669699+00:00"
+    },
+    {
+      "sequence": 166,
+      "entry_id": "5cd69b2b-b860-4039-a171-bbde841d7dce",
+      "work_id": "ci:workspace-agent-evaluation",
+      "version_id": "ci:workspace-agent-evaluation:v2",
+      "kind": "entry",
+      "entry_kind": "question",
+      "body": "P7 disposable synthetic keyboard loop mobile 2026-11-05T08:11:23.280Z: which retained passage should I verify?",
+      "anchor": "abstract:0",
+      "revision": 1,
+      "updated_at": "2026-11-05T08:11:24.403837+00:00"
+    },
+    {
+      "sequence": 165,
+      "entry_id": null,
+      "work_id": "ci:workspace-agent-evaluation",
+      "version_id": "ci:workspace-agent-evaluation:v2",
+      "kind": "reading",
+      "entry_kind": null,
+      "body": "",
+      "anchor": "notes",
+      "revision": 67,
+      "updated_at": "2026-11-05T08:11:23.280147+00:00"
+    },
+    {
+      "sequence": 164,
+      "entry_id": null,
+      "work_id": "ci:workspace-agent-evaluation",
+      "version_id": "ci:workspace-agent-evaluation:v2",
+      "kind": "reading",
+      "entry_kind": null,
+      "body": "",
+      "anchor": "abstract:0",
+      "revision": 66,
+      "updated_at": "2026-11-05T08:11:21.421697+00:00"
+    },
+    {
+      "sequence": 163,
+      "entry_id": "e9f16f2d-7c67-42b0-ae9b-a0e32436b6ee",
+      "work_id": "ci:workspace-agent-evaluation",
+      "version_id": "ci:workspace-agent-evaluation:v2",
+      "kind": "entry",
+      "entry_kind": "question",
+      "body": "P7 disposable synthetic keyboard loop desktop 2026-11-05T08:11:20.023Z: which retained passage should I verify?",
+      "anchor": "abstract:0",
+      "revision": 1,
+      "updated_at": "2026-11-05T08:11:21.150703+00:00"
+    },
+    {
+      "sequence": 162,
+      "entry_id": null,
+      "work_id": "ci:workspace-agent-evaluation",
+      "version_id": "ci:workspace-agent-evaluation:v2",
+      "kind": "reading",
+      "entry_kind": null,
+      "body": "",
+      "anchor": "notes",
+      "revision": 65,
+      "updated_at": "2026-11-05T08:11:20.022198+00:00"
+    },
+    {
+      "sequence": 161,
+      "entry_id": null,
+      "work_id": "ci:workspace-agent-evaluation",
+      "version_id": "ci:workspace-agent-evaluation:v2",
+      "kind": "reading",
+      "entry_kind": null,
+      "body": "",
+      "anchor": "abstract:0",
+      "revision": 64,
+      "updated_at": "2026-11-05T08:10:00.250209+00:00"
+    },
+    {
+      "sequence": 160,
+      "entry_id": null,
+      "work_id": "ci:workspace-agent-evaluation",
+      "version_id": "ci:workspace-agent-evaluation:v2",
+      "kind": "reading",
+      "entry_kind": null,
+      "body": "",
+      "anchor": "notes",
+      "revision": 63,
+      "updated_at": "2026-11-05T08:10:00.117971+00:00"
+    },
+    {
+      "sequence": 159,
+      "entry_id": null,
+      "work_id": "ci:workspace-agent-evaluation",
+      "version_id": "ci:workspace-agent-evaluation:v2",
+      "kind": "reading",
+      "entry_kind": null,
+      "body": "",
+      "anchor": "abstract:0",
+      "revision": 62,
+      "updated_at": "2026-11-05T08:09:59.252330+00:00"
+    },
+    {
+      "sequence": 158,
+      "entry_id": null,
+      "work_id": "ci:workspace-agent-evaluation",
+      "version_id": "ci:workspace-agent-evaluation:v2",
+      "kind": "reading",
+      "entry_kind": null,
+      "body": "",
+      "anchor": "notes",
+      "revision": 61,
+      "updated_at": "2026-11-05T08:09:59.122115+00:00"
+    },
+    {
+      "sequence": 157,
+      "entry_id": null,
+      "work_id": "ci:workspace-agent-evaluation",
+      "version_id": "ci:workspace-agent-evaluation:v2",
+      "kind": "reading",
+      "entry_kind": null,
+      "body": "",
+      "anchor": "abstract:0",
+      "revision": 60,
+      "updated_at": "2026-11-05T08:09:58.248680+00:00"
+    },
+    {
+      "sequence": 156,
+      "entry_id": null,
+      "work_id": "ci:workspace-agent-evaluation",
+      "version_id": "ci:workspace-agent-evaluation:v2",
+      "kind": "reading",
+      "entry_kind": null,
+      "body": "",
+      "anchor": "notes",
+      "revision": 59,
+      "updated_at": "2026-11-05T08:09:58.048144+00:00"
+    },
+    {
+      "sequence": 155,
+      "entry_id": null,
+      "work_id": "ci:workspace-agent-evaluation",
+      "version_id": "ci:workspace-agent-evaluation:v2",
+      "kind": "reading",
+      "entry_kind": null,
+      "body": "",
+      "anchor": "abstract:0",
+      "revision": 58,
+      "updated_at": "2026-11-05T08:09:57.066865+00:00"
+    },
+    {
+      "sequence": 154,
+      "entry_id": null,
+      "work_id": "ci:workspace-agent-evaluation",
+      "version_id": "ci:workspace-agent-evaluation:v2",
+      "kind": "reading",
+      "entry_kind": null,
+      "body": "",
+      "anchor": "notes",
+      "revision": 57,
+      "updated_at": "2026-11-05T08:09:56.887081+00:00"
+    },
+    {
+      "sequence": 153,
+      "entry_id": null,
+      "work_id": "ci:workspace-agent-evaluation",
+      "version_id": "ci:workspace-agent-evaluation:v2",
+      "kind": "reading",
+      "entry_kind": null,
+      "body": "",
+      "anchor": "abstract:0",
+      "revision": 56,
+      "updated_at": "2026-11-05T08:09:40.437604+00:00"
+    },
+    {
+      "sequence": 152,
+      "entry_id": "92951784-6861-4289-97f9-88f0bbd695ee",
+      "work_id": "ci:workspace-agent-evaluation",
+      "version_id": "ci:workspace-agent-evaluation:v2",
+      "kind": "entry",
+      "entry_kind": "question",
+      "body": "P7 disposable synthetic keyboard loop mobile 2026-11-05T08:09:39.080Z: which retained passage should I verify?",
+      "anchor": "abstract:0",
+      "revision": 1,
+      "updated_at": "2026-11-05T08:09:40.191036+00:00"
+    },
+    {
+      "sequence": 151,
+      "entry_id": null,
+      "work_id": "ci:workspace-agent-evaluation",
+      "version_id": "ci:workspace-agent-evaluation:v2",
+      "kind": "reading",
+      "entry_kind": null,
+      "body": "",
+      "anchor": "notes",
+      "revision": 55,
+      "updated_at": "2026-11-05T08:09:39.079336+00:00"
+    },
+    {
+      "sequence": 150,
+      "entry_id": null,
+      "work_id": "ci:workspace-agent-evaluation",
+      "version_id": "ci:workspace-agent-evaluation:v2",
+      "kind": "reading",
+      "entry_kind": null,
+      "body": "",
+      "anchor": "abstract:0",
+      "revision": 54,
+      "updated_at": "2026-11-05T08:09:37.240789+00:00"
+    },
+    {
+      "sequence": 149,
+      "entry_id": "55af744b-1ea9-4658-8087-eaeafc4e4500",
+      "work_id": "ci:workspace-agent-evaluation",
+      "version_id": "ci:workspace-agent-evaluation:v2",
+      "kind": "entry",
+      "entry_kind": "question",
+      "body": "P7 disposable synthetic keyboard loop desktop 2026-11-05T08:09:35.814Z: which retained passage should I verify?",
+      "anchor": "abstract:0",
+      "revision": 1,
+      "updated_at": "2026-11-05T08:09:36.951897+00:00"
+    },
+    {
+      "sequence": 148,
+      "entry_id": null,
+      "work_id": "ci:workspace-agent-evaluation",
+      "version_id": "ci:workspace-agent-evaluation:v2",
+      "kind": "reading",
+      "entry_kind": null,
+      "body": "",
+      "anchor": "notes",
+      "revision": 53,
+      "updated_at": "2026-11-05T08:09:35.814595+00:00"
+    }
+  ],
+  "latest_activity": {
+    "sequence": 167,
+    "entry_id": null,
+    "work_id": "ci:workspace-agent-evaluation",
+    "version_id": "ci:workspace-agent-evaluation:v2",
+    "kind": "reading",
+    "entry_kind": null,
+    "body": "",
+    "anchor": "abstract:0",
+    "revision": 68,
+    "updated_at": "2026-11-05T08:11:24.669699+00:00"
+  },
+  "interest_coverage": [
+    {
+      "topic_id": "ml:agents-and-tool-use",
+      "label": "Agents and tool use",
+      "matching_mode": "descendant_terms",
+      "terms": [
+        "agent",
+        "agentic",
+        "tool use",
+        "planning",
+        "autonomous",
+        "context management",
+        "research automation",
+        "agent orchestration",
+        "tool calling",
+        "computer use agents",
+        "coding agents",
+        "long horizon tasks",
+        "multi agent cooperation"
+      ],
+      "descendant_ids": [
+        "ml:agents-and-tool-use/agent-orchestration",
+        "ml:agents-and-tool-use/tool-calling",
+        "ml:agents-and-tool-use/computer-use-agents",
+        "ml:agents-and-tool-use/coding-agents",
+        "ml:agents-and-tool-use/long-horizon-tasks",
+        "ml:agents-and-tool-use/multi-agent-cooperation"
+      ],
+      "source_ids": [
+        "arxiv-cs-lg",
+        "arxiv-cs-ai",
+        "arxiv-cs-cl",
+        "hugging-face-blog",
+        "google-research"
+      ],
+      "status": "limited",
+      "limitations": [
+        "Literal matches in bounded stored metadata only; no comprehensive field monitoring or semantic relevance claim.",
+        "Only the listed connectors are monitored; other publishers, archives and full text are outside this watch.",
+        "One or more configured checks are partial, unavailable, stale or have not succeeded."
+      ]
+    },
+    {
+      "topic_id": "ml:retrieval-and-memory",
+      "label": "Retrieval and memory",
+      "matching_mode": "descendant_terms",
+      "terms": [
+        "retrieval",
+        "rag",
+        "reranking",
+        "knowledge",
+        "memory",
+        "citation graph",
+        "retrieval augmented generation",
+        "retrieval augmented",
+        "embedding models",
+        "long context methods",
+        "agent memory",
+        "knowledge graphs"
+      ],
+      "descendant_ids": [
+        "ml:retrieval-and-memory/retrieval-augmented-generation",
+        "ml:retrieval-and-memory/embedding-models",
+        "ml:retrieval-and-memory/reranking",
+        "ml:retrieval-and-memory/long-context-methods",
+        "ml:retrieval-and-memory/agent-memory",
+        "ml:retrieval-and-memory/knowledge-graphs"
+      ],
+      "source_ids": [
+        "arxiv-cs-lg",
+        "arxiv-cs-ai",
+        "arxiv-cs-cl",
+        "hugging-face-blog",
+        "google-research"
+      ],
+      "status": "limited",
+      "limitations": [
+        "Literal matches in bounded stored metadata only; no comprehensive field monitoring or semantic relevance claim.",
+        "Only the listed connectors are monitored; other publishers, archives and full text are outside this watch.",
+        "One or more configured checks are partial, unavailable, stale or have not succeeded."
+      ]
+    },
+    {
+      "topic_id": "ml:evaluation-and-responsible-ml",
+      "label": "Evaluation and responsible ML",
+      "matching_mode": "descendant_terms",
+      "terms": [
+        "evaluation",
+        "benchmark",
+        "verification",
+        "calibration",
+        "uncertainty",
+        "reproducible",
+        "benchmark design",
+        "contamination and leakage",
+        "factuality and groundedness",
+        "interpretability",
+        "robustness and security",
+        "privacy and unlearning",
+        "fairness and accessibility",
+        "model governance"
+      ],
+      "descendant_ids": [
+        "ml:evaluation-and-responsible-ml/benchmark-design",
+        "ml:evaluation-and-responsible-ml/contamination-and-leakage",
+        "ml:evaluation-and-responsible-ml/factuality-and-groundedness",
+        "ml:evaluation-and-responsible-ml/interpretability",
+        "ml:evaluation-and-responsible-ml/robustness-and-security",
+        "ml:evaluation-and-responsible-ml/privacy-and-unlearning",
+        "ml:evaluation-and-responsible-ml/fairness-and-accessibility",
+        "ml:evaluation-and-responsible-ml/model-governance"
+      ],
+      "source_ids": [
+        "arxiv-cs-lg",
+        "arxiv-cs-ai",
+        "arxiv-cs-cl",
+        "hugging-face-blog",
+        "google-research"
+      ],
+      "status": "limited",
+      "limitations": [
+        "Literal matches in bounded stored metadata only; no comprehensive field monitoring or semantic relevance claim.",
+        "Only the listed connectors are monitored; other publishers, archives and full text are outside this watch.",
+        "One or more configured checks are partial, unavailable, stale or have not succeeded."
+      ]
+    },
+    {
+      "topic_id": "ml:reasoning-and-inference-time-compute",
+      "label": "Reasoning and inference time compute",
+      "matching_mode": "descendant_terms",
+      "terms": [
+        "reasoning",
+        "inference",
+        "test-time",
+        "routing",
+        "compute",
+        "search and planning",
+        "test time scaling",
+        "verifier guided inference",
+        "process supervision",
+        "mathematical reasoning",
+        "programmatic reasoning"
+      ],
+      "descendant_ids": [
+        "ml:reasoning-and-inference-time-compute/search-and-planning",
+        "ml:reasoning-and-inference-time-compute/test-time-scaling",
+        "ml:reasoning-and-inference-time-compute/verifier-guided-inference",
+        "ml:reasoning-and-inference-time-compute/process-supervision",
+        "ml:reasoning-and-inference-time-compute/mathematical-reasoning",
+        "ml:reasoning-and-inference-time-compute/programmatic-reasoning"
+      ],
+      "source_ids": [
+        "arxiv-cs-lg",
+        "arxiv-cs-ai",
+        "arxiv-cs-cl",
+        "hugging-face-blog",
+        "google-research"
+      ],
+      "status": "limited",
+      "limitations": [
+        "Literal matches in bounded stored metadata only; no comprehensive field monitoring or semantic relevance claim.",
+        "Only the listed connectors are monitored; other publishers, archives and full text are outside this watch.",
+        "One or more configured checks are partial, unavailable, stale or have not succeeded."
+      ]
+    },
+    {
+      "topic_id": "ml:ml-systems-and-efficiency",
+      "label": "ML systems and efficiency",
+      "matching_mode": "descendant_terms",
+      "terms": [
+        "inference",
+        "efficient",
+        "caching",
+        "latency",
+        "quantization",
+        "compute",
+        "distributed training",
+        "gpu kernels and compilers",
+        "inference serving",
+        "speculative decoding",
+        "memory and communication efficiency",
+        "training reliability",
+        "on device machine learning"
+      ],
+      "descendant_ids": [
+        "ml:ml-systems-and-efficiency/distributed-training",
+        "ml:ml-systems-and-efficiency/gpu-kernels-and-compilers",
+        "ml:ml-systems-and-efficiency/inference-serving",
+        "ml:ml-systems-and-efficiency/quantization",
+        "ml:ml-systems-and-efficiency/speculative-decoding",
+        "ml:ml-systems-and-efficiency/memory-and-communication-efficiency",
+        "ml:ml-systems-and-efficiency/training-reliability",
+        "ml:ml-systems-and-efficiency/on-device-machine-learning"
+      ],
+      "source_ids": [
+        "arxiv-cs-lg",
+        "arxiv-cs-ai",
+        "arxiv-cs-cl",
+        "hugging-face-blog",
+        "google-research"
+      ],
+      "status": "limited",
+      "limitations": [
+        "Literal matches in bounded stored metadata only; no comprehensive field monitoring or semantic relevance claim.",
+        "Only the listed connectors are monitored; other publishers, archives and full text are outside this watch.",
+        "One or more configured checks are partial, unavailable, stale or have not succeeded."
+      ]
+    },
+    {
+      "topic_id": "ml:machine-learning-for-science",
+      "label": "Machine learning for science",
+      "matching_mode": "descendant_terms",
+      "terms": [
+        "scientific",
+        "simulation",
+        "digital twin",
+        "differentiable",
+        "system identification",
+        "scientific machine learning",
+        "ai for biology",
+        "ai for chemistry and materials",
+        "ai for physics",
+        "weather and climate modeling",
+        "ai for mathematics",
+        "healthcare machine learning",
+        "automated scientific discovery"
+      ],
+      "descendant_ids": [
+        "ml:machine-learning-for-science/scientific-machine-learning",
+        "ml:machine-learning-for-science/ai-for-biology",
+        "ml:machine-learning-for-science/ai-for-chemistry-and-materials",
+        "ml:machine-learning-for-science/ai-for-physics",
+        "ml:machine-learning-for-science/weather-and-climate-modeling",
+        "ml:machine-learning-for-science/ai-for-mathematics",
+        "ml:machine-learning-for-science/healthcare-machine-learning",
+        "ml:machine-learning-for-science/automated-scientific-discovery"
+      ],
+      "source_ids": [
+        "arxiv-cs-lg",
+        "arxiv-cs-ai",
+        "google-research"
+      ],
+      "status": "limited",
+      "limitations": [
+        "Literal matches in bounded stored metadata only; no comprehensive field monitoring or semantic relevance claim.",
+        "Only the listed connectors are monitored; other publishers, archives and full text are outside this watch.",
+        "One or more configured checks are partial, unavailable, stale or have not succeeded."
+      ]
+    },
+    {
+      "topic_id": "study:22/control-systems",
+      "label": "Control systems",
+      "matching_mode": "literal_terms",
+      "terms": [
+        "control",
+        "controller",
+        "pid",
+        "sim-to-real",
+        "model-based",
+        "control systems"
+      ],
+      "descendant_ids": [],
+      "source_ids": [
+        "arxiv-cs-lg",
+        "arxiv-cs-ai",
+        "google-research"
+      ],
+      "status": "limited",
+      "limitations": [
+        "Literal matches in bounded stored metadata only; no comprehensive field monitoring or semantic relevance claim.",
+        "Only the listed connectors are monitored; other publishers, archives and full text are outside this watch.",
+        "One or more configured checks are partial, unavailable, stale or have not succeeded."
+      ]
+    },
+    {
+      "topic_id": "ml:embodied-intelligence/model-based-reinforcement-learning",
+      "label": "Model based reinforcement learning",
+      "matching_mode": "literal_terms",
+      "terms": [
+        "model-based",
+        "reinforcement learning",
+        "control",
+        "world model",
+        "model based reinforcement learning"
+      ],
+      "descendant_ids": [],
+      "source_ids": [
+        "arxiv-cs-lg",
+        "arxiv-cs-ai",
+        "google-research"
+      ],
+      "status": "limited",
+      "limitations": [
+        "Literal matches in bounded stored metadata only; no comprehensive field monitoring or semantic relevance claim.",
+        "Only the listed connectors are monitored; other publishers, archives and full text are outside this watch.",
+        "One or more configured checks are partial, unavailable, stale or have not succeeded."
+      ]
+    },
+    {
+      "topic_id": "ml:multimodal-and-perception/3d-perception",
+      "label": "3D perception",
+      "matching_mode": "literal_terms",
+      "terms": [
+        "3d",
+        "spatial",
+        "scene",
+        "navigation",
+        "3d perception"
+      ],
+      "descendant_ids": [],
+      "source_ids": [
+        "arxiv-cs-lg",
+        "arxiv-cs-ai",
+        "hugging-face-blog"
+      ],
+      "status": "limited",
+      "limitations": [
+        "Literal matches in bounded stored metadata only; no comprehensive field monitoring or semantic relevance claim.",
+        "Only the listed connectors are monitored; other publishers, archives and full text are outside this watch.",
+        "One or more configured checks are partial, unavailable, stale or have not succeeded."
+      ]
+    },
+    {
+      "topic_id": "ml:generative-models/controllable-generation",
+      "label": "Controllable generation",
+      "matching_mode": "literal_terms",
+      "terms": [
+        "controllable",
+        "procedural",
+        "generation",
+        "unreal",
+        "controllable generation"
+      ],
+      "descendant_ids": [],
+      "source_ids": [
+        "arxiv-cs-lg",
+        "arxiv-cs-ai",
+        "hugging-face-blog"
+      ],
+      "status": "limited",
+      "limitations": [
+        "Literal matches in bounded stored metadata only; no comprehensive field monitoring or semantic relevance claim.",
+        "Only the listed connectors are monitored; other publishers, archives and full text are outside this watch.",
+        "One or more configured checks are partial, unavailable, stale or have not succeeded."
+      ]
+    },
+    {
+      "topic_id": "ml:embodied-intelligence",
+      "label": "Embodied intelligence",
+      "matching_mode": "descendant_terms",
+      "terms": [
+        "embodied",
+        "navigation",
+        "sim-to-real",
+        "robot",
+        "robot learning",
+        "imitation learning",
+        "world models",
+        "model-based",
+        "reinforcement learning",
+        "control",
+        "world model",
+        "model based reinforcement learning",
+        "simulation and sim to real",
+        "autonomous systems"
+      ],
+      "descendant_ids": [
+        "ml:embodied-intelligence/robot-learning",
+        "ml:embodied-intelligence/imitation-learning",
+        "ml:embodied-intelligence/world-models",
+        "ml:embodied-intelligence/model-based-reinforcement-learning",
+        "ml:embodied-intelligence/simulation-and-sim-to-real",
+        "ml:embodied-intelligence/autonomous-systems"
+      ],
+      "source_ids": [
+        "arxiv-cs-lg",
+        "arxiv-cs-ai",
+        "hugging-face-blog"
+      ],
+      "status": "limited",
+      "limitations": [
+        "Literal matches in bounded stored metadata only; no comprehensive field monitoring or semantic relevance claim.",
+        "Only the listed connectors are monitored; other publishers, archives and full text are outside this watch.",
+        "One or more configured checks are partial, unavailable, stale or have not succeeded."
+      ]
+    }
+  ],
+  "allocation_previews": [
+    {
+      "minutes": 5,
+      "slots": 1,
+      "requested_fraction": 0.15,
+      "planned_max_exploration_slots": 0,
+      "max_exploration_slots": 0,
+      "actual_exploration_slots": 0,
+      "actual_items": 1,
+      "actual_fraction": 0.0,
+      "unused_slots": 0,
+      "rounding": "floor_final_count"
+    },
+    {
+      "minutes": 15,
+      "slots": 3,
+      "requested_fraction": 0.15,
+      "planned_max_exploration_slots": 0,
+      "max_exploration_slots": 0,
+      "actual_exploration_slots": 0,
+      "actual_items": 3,
+      "actual_fraction": 0.0,
+      "unused_slots": 0,
+      "rounding": "floor_final_count"
+    },
+    {
+      "minutes": 45,
+      "slots": 9,
+      "requested_fraction": 0.15,
+      "planned_max_exploration_slots": 1,
+      "max_exploration_slots": 0,
+      "actual_exploration_slots": 0,
+      "actual_items": 3,
+      "actual_fraction": 0.0,
+      "unused_slots": 6,
+      "rounding": "floor_final_count"
+    }
+  ]
+}

@@ -1,0 +1,987 @@
+{
+  "scope": "Six actual successful-run WebMs completely decoded. Contact sheets visually inspected; all eight critical geometry states inspected as passthrough native frames. Sampling labels in one-fps aids are nominal, not exact timestamps. Original video pixels are retained. No generated animation/video.",
+  "videos": [
+    {
+      "video": "final/commands/desktop-dark.webm",
+      "sha256": "45d87a01ff2a1780ffe6e17ef2b24fe424bf9e5552ac10223dc15b98279d4c91",
+      "bytes": 1650502,
+      "durationSeconds": 11.28,
+      "width": 1440,
+      "height": 1000,
+      "fullDecodeExitCode": 0,
+      "sampleFrames": 13,
+      "contactSheet": "commands-desktop-dark-contact-sheet.png",
+      "frameMetrics": [
+        {
+          "sampleSecond": 0,
+          "extrema": [
+            [
+              16,
+              16
+            ],
+            [
+              16,
+              16
+            ],
+            [
+              16,
+              16
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 1,
+          "extrema": [
+            [
+              16,
+              16
+            ],
+            [
+              16,
+              16
+            ],
+            [
+              16,
+              16
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 2,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 3,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 4,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 5,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 6,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 7,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 8,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 9,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 10,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 11,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 12,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        }
+      ],
+      "visualAssessment": "Visually reviewed actual decoded frames: correct theme, readable controls/content, honest loading states; no clipped final lower source/footer/Notes state. Mechanical focus/geometry assertions recorded in paired report.",
+      "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+      "scope": "Synthetic-labelled preview3168 walkthrough."
+    },
+    {
+      "video": "final/commands/mobile-light.webm",
+      "sha256": "f9d1182a1d21a4a7983ded6363f20e93ef3cc99ff902eb970dda0a81300c2399",
+      "bytes": 1096074,
+      "durationSeconds": 10.52,
+      "width": 390,
+      "height": 844,
+      "fullDecodeExitCode": 0,
+      "sampleFrames": 12,
+      "contactSheet": "commands-mobile-light-contact-sheet.png",
+      "frameMetrics": [
+        {
+          "sampleSecond": 0,
+          "extrema": [
+            [
+              253,
+              253
+            ],
+            [
+              253,
+              253
+            ],
+            [
+              253,
+              253
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 1,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 2,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 3,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 4,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 5,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 6,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 7,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 8,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 9,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 10,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 11,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        }
+      ],
+      "visualAssessment": "Visually reviewed actual decoded frames: correct theme, readable controls/content, honest loading states; no clipped final lower source/footer/Notes state. Mechanical focus/geometry assertions recorded in paired report.",
+      "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+      "scope": "Synthetic-labelled preview3168 walkthrough."
+    },
+    {
+      "video": "final/geometry/desktop-dark.webm",
+      "sha256": "7b0d2fb6e3c80852afdd6612d0ac9ff6b3eee9acb916e7a1b547f73cbda9112a",
+      "bytes": 1311594,
+      "durationSeconds": 6.6,
+      "width": 1440,
+      "height": 1000,
+      "fullDecodeExitCode": 0,
+      "sampleFrames": 8,
+      "contactSheet": "geometry-desktop-dark-contact-sheet.png",
+      "frameMetrics": [
+        {
+          "sampleSecond": 0,
+          "extrema": [
+            [
+              16,
+              16
+            ],
+            [
+              16,
+              16
+            ],
+            [
+              16,
+              16
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 1,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 2,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 3,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 4,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 5,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 6,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 7,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        }
+      ],
+      "visualAssessment": "Visually reviewed actual decoded frames: correct theme, readable controls/content, honest loading states; no clipped final lower source/footer/Notes state. Mechanical focus/geometry assertions recorded in paired report.",
+      "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+      "scope": "Synthetic-labelled preview3168 walkthrough."
+    },
+    {
+      "video": "final/geometry/mobile-light.webm",
+      "sha256": "79e1a6e69fd1433e046a76467753f1dacda528728ff39bc7ee3ac66eb6658f78",
+      "bytes": 901511,
+      "durationSeconds": 6.12,
+      "width": 390,
+      "height": 844,
+      "fullDecodeExitCode": 0,
+      "sampleFrames": 8,
+      "contactSheet": "geometry-mobile-light-contact-sheet.png",
+      "frameMetrics": [
+        {
+          "sampleSecond": 0,
+          "extrema": [
+            [
+              253,
+              253
+            ],
+            [
+              253,
+              253
+            ],
+            [
+              253,
+              253
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 1,
+          "extrema": [
+            [
+              254,
+              254
+            ],
+            [
+              254,
+              254
+            ],
+            [
+              254,
+              254
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 2,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 3,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 4,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 5,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 6,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 7,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        }
+      ],
+      "visualAssessment": "Visually reviewed actual decoded frames: correct theme, readable controls/content, honest loading states; no clipped final lower source/footer/Notes state. Mechanical focus/geometry assertions recorded in paired report.",
+      "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+      "scope": "Synthetic-labelled preview3168 walkthrough."
+    },
+    {
+      "video": "ci/daily-loop/desktop.webm",
+      "sha256": "3163eaa7492e398197e6dd510bd2f5a01adc7e67dfb8ba35348139bb160f9f27",
+      "bytes": 584130,
+      "durationSeconds": 3.92,
+      "width": 1440,
+      "height": 1000,
+      "fullDecodeExitCode": 0,
+      "sampleFrames": 6,
+      "contactSheet": "daily-loop-desktop-contact-sheet.png",
+      "frameMetrics": [
+        {
+          "sampleSecond": 0,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 1,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 2,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 3,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 4,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 5,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        }
+      ],
+      "visualAssessment": "Visually reviewed actual decoded frames: correct theme, readable controls/content, honest loading states; no clipped final lower source/footer/Notes state. Mechanical focus/geometry assertions recorded in paired report.",
+      "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+      "scope": "Additional disposable synthetic CI mechanical keyboard proof, not owner preview or real-source usefulness evidence."
+    },
+    {
+      "video": "ci/daily-loop/mobile.webm",
+      "sha256": "65543bab1268a2e889987ab19db1555026c6cc54ecaf647ae4d05c1b8686059c",
+      "bytes": 461618,
+      "durationSeconds": 3.84,
+      "width": 390,
+      "height": 844,
+      "fullDecodeExitCode": 0,
+      "sampleFrames": 5,
+      "contactSheet": "daily-loop-mobile-contact-sheet.png",
+      "frameMetrics": [
+        {
+          "sampleSecond": 0,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 1,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 2,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 3,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 4,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        }
+      ],
+      "visualAssessment": "Visually reviewed actual decoded frames: correct theme, readable controls/content, honest loading states; no clipped final lower source/footer/Notes state. Mechanical focus/geometry assertions recorded in paired report.",
+      "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+      "scope": "Additional disposable synthetic CI mechanical keyboard proof, not owner preview or real-source usefulness evidence."
+    }
+  ],
+  "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+  "status": "pass"
+}

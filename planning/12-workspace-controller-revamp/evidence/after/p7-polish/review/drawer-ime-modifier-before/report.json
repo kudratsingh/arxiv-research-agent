@@ -1,0 +1,37 @@
+{
+  "phase": "before",
+  "base": "http://127.0.0.1:3168",
+  "startedAtUtc": "2026-11-05T07:44:30.866Z",
+  "scope": "Dispatched KeyboardEvent composition/modifier shapes on actual visible Radar drawer controls; not an OS IME evaluation",
+  "cases": [
+    {
+      "name": "mobile",
+      "status": "diagnostic-complete",
+      "dispatched": {
+        "isComposing": true,
+        "defaultPrevented": true,
+        "accepted": false
+      },
+      "afterIME": {
+        "drawerOpen": false,
+        "active": "<button class=\"ws-sidebar-toggle\" type=\"button\" data-command=\"toggle-sidebar\" aria-label=\"Queue &amp; controls\" aria-expanded=\"false\" aria-controls=\"_R_ubtb_\" aria-keyshortcuts=\"[\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 20 20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M3 5h14M3 10h14M3 15h14\"></path></svg><span class=\"ws-toggle-label\">Queue &amp; controls</span></button>"
+      },
+      "modifier": {
+        "defaultPrevented": true,
+        "accepted": false,
+        "closeStillFocused": false,
+        "active": "<input type=\"radio\" class=\"ew-visually-hidden\" name=\"theme-preference\" checked=\"\" value=\"system\">"
+      },
+      "serverStateUnchanged": true
+    },
+    {
+      "name": "tablet",
+      "status": "fail",
+      "error": "Error: expect(locator).toBeVisible() failed\n\nLocator: getByRole('searchbox', { name: 'Search titles and abstracts', exact: true })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"to.be.visible\" with timeout 5000ms\n  - waiting for getByRole('searchbox', { name: 'Search titles and abstracts', exact: true })\n\n    at captureRawStack (/private/tmp/arxiv-agent-eng-workspace-controller/web/node_modules/playwright-core/lib/coreBundle.js:9681:17)\n    at callMatcherAsStep (/private/tmp/arxiv-agent-eng-workspace-controller/web/node_modules/playwright/lib/matchers/expect.js:13310:57)\n    at Object.toBeVisible (/private/tmp/arxiv-agent-eng-workspace-controller/web/node_modules/playwright/lib/matchers/expect.js:13300:23)\n    at /private/tmp/arxiv-agent-eng-workspace-controller-p7/planning/12-workspace-controller-revamp/evidence/after/p7-polish/drawer-ime-modifier.cjs:4:1069"
+    }
+  ],
+  "blocked": [],
+  "errors": [],
+  "endedAtUtc": "2026-11-05T07:44:38.444Z",
+  "status": "fail"
+}

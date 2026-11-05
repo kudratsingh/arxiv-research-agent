@@ -1,0 +1,16 @@
+-vsync is deprecated. Use -fps_mode
+[libvpx @ 0x75a2c24000] v1.14.1
+Input #0, matroska,webm, from 'planning/12-workspace-controller-revamp/evidence/after/p7-polish/final/commands/desktop-dark.webm':
+  Metadata:
+    ENCODER         : Lavf61.1.100
+  Duration: 00:00:11.24, start: 0.000000, bitrate: 1142 kb/s
+  Stream #0:0(eng): Video: vp8 (libvpx), yuv420p(tv, progressive), 1440x1000, SAR 1:1 DAR 36:25, 25 fps, 25 tbr, 1k tbn (default)
+      Metadata:
+        ENCODER         : Lavc61.3.100 libvpx
+        DURATION        : 00:00:11.240000000
+[AVFilterGraph @ 0x75a3050000] No option name near '1'
+[AVFilterGraph @ 0x75a3050000] Error parsing a filter description around: 
+[AVFilterGraph @ 0x75a3050000] Error parsing filterchain 'fps=1' around: 
+[vost#0:0/png @ 0x75a2c78000] Error initializing a simple filtergraph
+Error opening output file /private/tmp/controller-p7-video-54lxtiib/%04d.png.
+Error opening output files: Invalid argument

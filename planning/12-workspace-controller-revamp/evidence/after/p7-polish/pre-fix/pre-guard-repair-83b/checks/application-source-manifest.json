@@ -1,0 +1,147 @@
+{
+  "base_commit": "dff860e16e89c22382bce88d98f64645dfdcbfc8",
+  "application_commit": "83b196eb14b33cd3033453701e93482266366e5f",
+  "freeze": "final-with-eager-paper-and-reader-module-state",
+  "scope": "changed/new/deleted web application source and budgets; tests reported separately",
+  "files": [
+    {
+      "path": "web/budgets.json",
+      "sha256": "244e862038cb332496eceac57e9424aa720806e92f8e538ebc01ecfde98671c0",
+      "state": "present"
+    },
+    {
+      "path": "web/components/workspace/CommandSuggestions.tsx",
+      "sha256": "4bfbda964b8527b3b55f7bf8544dd8bba713d1ea16b65d7cdd0d05d4978fab5f",
+      "state": "present"
+    },
+    {
+      "path": "web/components/workspace/Common.tsx",
+      "sha256": "f685ea852beede91d8c3ae43a953a63bdc5fde8d24c0cdfe287d35161d3434af",
+      "state": "present"
+    },
+    {
+      "path": "web/components/workspace/Composer.tsx",
+      "sha256": "962a32136e6730bda3d7a24434e9fd3e2594d55c38da71634ea3259446ab5f15",
+      "state": "present"
+    },
+    {
+      "path": "web/components/workspace/GenerationBoundary.tsx",
+      "sha256": "68384b964906be4bfaddb1215151efbf626bbce562bed52644c249de1aaba313",
+      "state": "present"
+    },
+    {
+      "path": "web/components/workspace/Interests.tsx",
+      "sha256": "cad70d386809dc72b018addcc90affe7d325b32ab499dbfd234392032153c1fa",
+      "state": "present"
+    },
+    {
+      "path": "web/components/workspace/Library.tsx",
+      "sha256": "9b6ba5900a0ec5cab63b31328855130d1af83c2e3d968b21d07d7efece6684d8",
+      "state": "present"
+    },
+    {
+      "path": "web/components/workspace/Operations.tsx",
+      "sha256": "51adb2196de8725af797f355847625548499b71f6826d39e894ed8b775238e19",
+      "state": "present"
+    },
+    {
+      "path": "web/components/workspace/Radar.tsx",
+      "sha256": "f138550411603af9d381eec40caeb2ec84519c90cfbd90d1cfa7253874882409",
+      "state": "present"
+    },
+    {
+      "path": "web/components/workspace/Reader.tsx",
+      "sha256": "bd590a77b60fe6fddd964de25ad35c1d849553ed6d07359773886518e5537c1d",
+      "state": "present"
+    },
+    {
+      "path": "web/components/workspace/ReaderContent.tsx",
+      "sha256": "1587ee121f98e13c8e5105e638e0e5e6901ffaaeb7c0c36314bb848d2e2f5c31",
+      "state": "present"
+    },
+    {
+      "path": "web/components/workspace/ReaderControls.tsx",
+      "sha256": "8096fc30a15cf450c45fcfb73842c3ae330ba1ff5dcc48e7239a1f824a970235",
+      "state": "present"
+    },
+    {
+      "path": "web/components/workspace/Shell.tsx",
+      "sha256": "9e4dc4b5b98a68be99ae545e8d88517a21382870928a3a621cccecd2ef23edcb",
+      "state": "present"
+    },
+    {
+      "path": "web/components/workspace/Today.tsx",
+      "sha256": "e355de0daedddad3e1c96a7a44bf02df3e3fc4983a28b0bff4a800469ae96f0b",
+      "state": "present"
+    },
+    {
+      "path": "web/components/workspace/WorkspaceDialogs.tsx",
+      "sha256": "fe3fdc1ba094ca5eac084e5e8ad117c81bca75a33c39bc0d0a7883c13adc8da2",
+      "state": "present"
+    },
+    {
+      "path": "web/components/workspace/controller.css",
+      "sha256": "0fed35bc374b571a32ed6afc6253f8aca9b0a218bf1c9e7f4c1ae04ad5acd39a",
+      "state": "present"
+    },
+    {
+      "path": "web/components/workspace/workspace.css",
+      "sha256": null,
+      "state": "deleted"
+    },
+    {
+      "path": "web/lib/workspace/commandRegistry.ts",
+      "sha256": "63953c5f79839ba30d488d21db412b627931f893e380cbdff00e258e095f0ea6",
+      "state": "present"
+    },
+    {
+      "path": "web/lib/workspace/commandTargets.ts",
+      "sha256": "09fbc74790adebc5afc2995434bf831f6b3e7b1bef320ef85c2a2214d43d90cb",
+      "state": "present"
+    },
+    {
+      "path": "web/lib/workspace/commands.ts",
+      "sha256": "ba2fb826a25abb2a9169446eea437e0f0bf9b016d5de55ba237ef3b96e79dd0a",
+      "state": "present"
+    },
+    {
+      "path": "web/lib/workspace/dispatch.ts",
+      "sha256": "100802bacdc9337a4feb7f6ace3399c0f6fc18204581022ce4a1e079eaca41f3",
+      "state": "present"
+    },
+    {
+      "path": "web/lib/workspace/drafts.ts",
+      "sha256": "e03c469a5f6a494eafff6e72fe70a231ae6e3f6dd8c6587adea7b81db88270ce",
+      "state": "present"
+    },
+    {
+      "path": "web/lib/workspace/navigationRuntime.ts",
+      "sha256": "9661f44f2fe99dbe18c8f1dcf9a5f49af4996e0030924fce4e839addff91238a",
+      "state": "present"
+    },
+    {
+      "path": "web/lib/workspace/readerModule.ts",
+      "sha256": "7b468e49ded1628888f01fd6c2567f5475aae4db97099d53abdc6a51b969f04c",
+      "state": "present"
+    }
+  ],
+  "preserved": [
+    {
+      "path": "web/components/daily/daily.css",
+      "sha256": "747302599ab95bdf53f431b335d5b9a59c0784aa93240c58a66a05a915513e70",
+      "byte_identical_to_base": true
+    },
+    {
+      "path": "web/components/features/workspace.css",
+      "sha256": "7d7c782972d84310ccf050cdc7e8b5c6acce96b56c055a43ac47ff18f1dcac43",
+      "byte_identical_to_base": true
+    },
+    {
+      "path": "web/app/tokens.css",
+      "sha256": "f2db32c99371080dcbcb30dd041dc8def809dad6125c192c4462591576c9c8b4",
+      "byte_identical_to_base": true
+    }
+  ],
+  "application_files_sha256": "1d1fc3b2d3e0b8461f00eefdb71faa217f2b8ef569416b4b59155bfc9d95f7a4",
+  "web_source_and_tests_tree": "e840ff840453335fbe4ed20994949b894e6f191b"
+}

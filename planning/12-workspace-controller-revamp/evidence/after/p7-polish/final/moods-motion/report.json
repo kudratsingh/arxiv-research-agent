@@ -1,0 +1,536 @@
+{
+  "startedAtUtc": "2026-11-05T08:13:13.387Z",
+  "base": "http://127.0.0.1:3168",
+  "principal": "controller-p7-preview",
+  "scope": "Injected latency/outage/empty states from captured synthetic preview state; no source or service reliability claim",
+  "cases": [
+    {
+      "name": "desktop-light-no-preference",
+      "status": "pass",
+      "evidence": [
+        {
+          "mode": "busy",
+          "mood": "busy",
+          "animated": [
+            {
+              "class": "ws-mascot",
+              "mood": "idle",
+              "animation": "ws-jazzy-hop"
+            },
+            {
+              "class": "ws-mascot-eyes",
+              "mood": null,
+              "animation": "ws-jazzy-blink"
+            },
+            {
+              "class": "ws-mascot",
+              "mood": "busy",
+              "animation": "ws-jazzy-hop"
+            }
+          ],
+          "screenshot": "desktop-light-no-preference-busy.png"
+        },
+        {
+          "mode": "outage",
+          "mood": "alert",
+          "animated": [
+            {
+              "class": "ws-mascot-eyes",
+              "mood": null,
+              "animation": "ws-jazzy-blink"
+            }
+          ],
+          "screenshot": "desktop-light-no-preference-outage.png"
+        },
+        {
+          "mode": "empty",
+          "mood": "sleepy",
+          "animated": [
+            {
+              "class": "ws-mascot-eyes",
+              "mood": null,
+              "animation": "ws-jazzy-blink"
+            }
+          ],
+          "screenshot": "desktop-light-no-preference-empty.png"
+        }
+      ],
+      "paperAnimations": [
+        {
+          "options": {
+            "duration": 170,
+            "easing": "ease-out"
+          },
+          "frames": [
+            {
+              "opacity": 0.55,
+              "transform": "translateY(6px)"
+            },
+            {
+              "opacity": 1,
+              "transform": "translateY(0)"
+            }
+          ]
+        }
+      ],
+      "injected": [
+        {
+          "scenario": "busy",
+          "path": "/api/workspace/state",
+          "forwarded": false
+        },
+        {
+          "scenario": "outage",
+          "path": "/api/workspace/state",
+          "forwarded": false
+        },
+        {
+          "scenario": "empty",
+          "path": "/api/workspace/state",
+          "forwarded": false
+        }
+      ],
+      "serverStateUnchanged": true
+    },
+    {
+      "name": "desktop-light-reduce",
+      "status": "pass",
+      "evidence": [
+        {
+          "mode": "busy",
+          "mood": "busy",
+          "animated": [],
+          "screenshot": "desktop-light-reduce-busy.png"
+        },
+        {
+          "mode": "outage",
+          "mood": "alert",
+          "animated": [],
+          "screenshot": "desktop-light-reduce-outage.png"
+        },
+        {
+          "mode": "empty",
+          "mood": "sleepy",
+          "animated": [],
+          "screenshot": "desktop-light-reduce-empty.png"
+        }
+      ],
+      "paperAnimations": [],
+      "injected": [
+        {
+          "scenario": "busy",
+          "path": "/api/workspace/state",
+          "forwarded": false
+        },
+        {
+          "scenario": "outage",
+          "path": "/api/workspace/state",
+          "forwarded": false
+        },
+        {
+          "scenario": "empty",
+          "path": "/api/workspace/state",
+          "forwarded": false
+        }
+      ],
+      "serverStateUnchanged": true
+    },
+    {
+      "name": "desktop-dark-no-preference",
+      "status": "pass",
+      "evidence": [
+        {
+          "mode": "busy",
+          "mood": "busy",
+          "animated": [
+            {
+              "class": "ws-mascot",
+              "mood": "idle",
+              "animation": "ws-jazzy-hop"
+            },
+            {
+              "class": "ws-mascot-eyes",
+              "mood": null,
+              "animation": "ws-jazzy-blink"
+            },
+            {
+              "class": "ws-mascot",
+              "mood": "busy",
+              "animation": "ws-jazzy-hop"
+            }
+          ],
+          "screenshot": "desktop-dark-no-preference-busy.png"
+        },
+        {
+          "mode": "outage",
+          "mood": "alert",
+          "animated": [
+            {
+              "class": "ws-mascot-eyes",
+              "mood": null,
+              "animation": "ws-jazzy-blink"
+            }
+          ],
+          "screenshot": "desktop-dark-no-preference-outage.png"
+        },
+        {
+          "mode": "empty",
+          "mood": "sleepy",
+          "animated": [
+            {
+              "class": "ws-mascot-eyes",
+              "mood": null,
+              "animation": "ws-jazzy-blink"
+            }
+          ],
+          "screenshot": "desktop-dark-no-preference-empty.png"
+        }
+      ],
+      "paperAnimations": [
+        {
+          "options": {
+            "duration": 170,
+            "easing": "ease-out"
+          },
+          "frames": [
+            {
+              "opacity": 0.55,
+              "transform": "translateY(6px)"
+            },
+            {
+              "opacity": 1,
+              "transform": "translateY(0)"
+            }
+          ]
+        }
+      ],
+      "injected": [
+        {
+          "scenario": "busy",
+          "path": "/api/workspace/state",
+          "forwarded": false
+        },
+        {
+          "scenario": "outage",
+          "path": "/api/workspace/state",
+          "forwarded": false
+        },
+        {
+          "scenario": "empty",
+          "path": "/api/workspace/state",
+          "forwarded": false
+        }
+      ],
+      "serverStateUnchanged": true
+    },
+    {
+      "name": "desktop-dark-reduce",
+      "status": "pass",
+      "evidence": [
+        {
+          "mode": "busy",
+          "mood": "busy",
+          "animated": [],
+          "screenshot": "desktop-dark-reduce-busy.png"
+        },
+        {
+          "mode": "outage",
+          "mood": "alert",
+          "animated": [],
+          "screenshot": "desktop-dark-reduce-outage.png"
+        },
+        {
+          "mode": "empty",
+          "mood": "sleepy",
+          "animated": [],
+          "screenshot": "desktop-dark-reduce-empty.png"
+        }
+      ],
+      "paperAnimations": [],
+      "injected": [
+        {
+          "scenario": "busy",
+          "path": "/api/workspace/state",
+          "forwarded": false
+        },
+        {
+          "scenario": "outage",
+          "path": "/api/workspace/state",
+          "forwarded": false
+        },
+        {
+          "scenario": "empty",
+          "path": "/api/workspace/state",
+          "forwarded": false
+        }
+      ],
+      "serverStateUnchanged": true
+    },
+    {
+      "name": "mobile-light-no-preference",
+      "status": "pass",
+      "evidence": [
+        {
+          "mode": "busy",
+          "mood": "busy",
+          "animated": [
+            {
+              "class": "ws-mascot",
+              "mood": "idle",
+              "animation": "ws-jazzy-hop"
+            },
+            {
+              "class": "ws-mascot-eyes",
+              "mood": null,
+              "animation": "ws-jazzy-blink"
+            },
+            {
+              "class": "ws-mascot",
+              "mood": "busy",
+              "animation": "ws-jazzy-hop"
+            }
+          ],
+          "screenshot": "mobile-light-no-preference-busy.png"
+        },
+        {
+          "mode": "outage",
+          "mood": "alert",
+          "animated": [
+            {
+              "class": "ws-mascot-eyes",
+              "mood": null,
+              "animation": "ws-jazzy-blink"
+            }
+          ],
+          "screenshot": "mobile-light-no-preference-outage.png"
+        },
+        {
+          "mode": "empty",
+          "mood": "sleepy",
+          "animated": [
+            {
+              "class": "ws-mascot-eyes",
+              "mood": null,
+              "animation": "ws-jazzy-blink"
+            }
+          ],
+          "screenshot": "mobile-light-no-preference-empty.png"
+        }
+      ],
+      "paperAnimations": [
+        {
+          "options": {
+            "duration": 170,
+            "easing": "ease-out"
+          },
+          "frames": [
+            {
+              "opacity": 0.55,
+              "transform": "translateY(6px)"
+            },
+            {
+              "opacity": 1,
+              "transform": "translateY(0)"
+            }
+          ]
+        }
+      ],
+      "injected": [
+        {
+          "scenario": "busy",
+          "path": "/api/workspace/state",
+          "forwarded": false
+        },
+        {
+          "scenario": "outage",
+          "path": "/api/workspace/state",
+          "forwarded": false
+        },
+        {
+          "scenario": "empty",
+          "path": "/api/workspace/state",
+          "forwarded": false
+        }
+      ],
+      "serverStateUnchanged": true
+    },
+    {
+      "name": "mobile-light-reduce",
+      "status": "pass",
+      "evidence": [
+        {
+          "mode": "busy",
+          "mood": "busy",
+          "animated": [],
+          "screenshot": "mobile-light-reduce-busy.png"
+        },
+        {
+          "mode": "outage",
+          "mood": "alert",
+          "animated": [],
+          "screenshot": "mobile-light-reduce-outage.png"
+        },
+        {
+          "mode": "empty",
+          "mood": "sleepy",
+          "animated": [],
+          "screenshot": "mobile-light-reduce-empty.png"
+        }
+      ],
+      "paperAnimations": [],
+      "injected": [
+        {
+          "scenario": "busy",
+          "path": "/api/workspace/state",
+          "forwarded": false
+        },
+        {
+          "scenario": "outage",
+          "path": "/api/workspace/state",
+          "forwarded": false
+        },
+        {
+          "scenario": "empty",
+          "path": "/api/workspace/state",
+          "forwarded": false
+        }
+      ],
+      "serverStateUnchanged": true
+    },
+    {
+      "name": "mobile-dark-no-preference",
+      "status": "pass",
+      "evidence": [
+        {
+          "mode": "busy",
+          "mood": "busy",
+          "animated": [
+            {
+              "class": "ws-mascot",
+              "mood": "idle",
+              "animation": "ws-jazzy-hop"
+            },
+            {
+              "class": "ws-mascot-eyes",
+              "mood": null,
+              "animation": "ws-jazzy-blink"
+            },
+            {
+              "class": "ws-mascot",
+              "mood": "busy",
+              "animation": "ws-jazzy-hop"
+            }
+          ],
+          "screenshot": "mobile-dark-no-preference-busy.png"
+        },
+        {
+          "mode": "outage",
+          "mood": "alert",
+          "animated": [
+            {
+              "class": "ws-mascot-eyes",
+              "mood": null,
+              "animation": "ws-jazzy-blink"
+            }
+          ],
+          "screenshot": "mobile-dark-no-preference-outage.png"
+        },
+        {
+          "mode": "empty",
+          "mood": "sleepy",
+          "animated": [
+            {
+              "class": "ws-mascot-eyes",
+              "mood": null,
+              "animation": "ws-jazzy-blink"
+            }
+          ],
+          "screenshot": "mobile-dark-no-preference-empty.png"
+        }
+      ],
+      "paperAnimations": [
+        {
+          "options": {
+            "duration": 170,
+            "easing": "ease-out"
+          },
+          "frames": [
+            {
+              "opacity": 0.55,
+              "transform": "translateY(6px)"
+            },
+            {
+              "opacity": 1,
+              "transform": "translateY(0)"
+            }
+          ]
+        }
+      ],
+      "injected": [
+        {
+          "scenario": "busy",
+          "path": "/api/workspace/state",
+          "forwarded": false
+        },
+        {
+          "scenario": "outage",
+          "path": "/api/workspace/state",
+          "forwarded": false
+        },
+        {
+          "scenario": "empty",
+          "path": "/api/workspace/state",
+          "forwarded": false
+        }
+      ],
+      "serverStateUnchanged": true
+    },
+    {
+      "name": "mobile-dark-reduce",
+      "status": "pass",
+      "evidence": [
+        {
+          "mode": "busy",
+          "mood": "busy",
+          "animated": [],
+          "screenshot": "mobile-dark-reduce-busy.png"
+        },
+        {
+          "mode": "outage",
+          "mood": "alert",
+          "animated": [],
+          "screenshot": "mobile-dark-reduce-outage.png"
+        },
+        {
+          "mode": "empty",
+          "mood": "sleepy",
+          "animated": [],
+          "screenshot": "mobile-dark-reduce-empty.png"
+        }
+      ],
+      "paperAnimations": [],
+      "injected": [
+        {
+          "scenario": "busy",
+          "path": "/api/workspace/state",
+          "forwarded": false
+        },
+        {
+          "scenario": "outage",
+          "path": "/api/workspace/state",
+          "forwarded": false
+        },
+        {
+          "scenario": "empty",
+          "path": "/api/workspace/state",
+          "forwarded": false
+        }
+      ],
+      "serverStateUnchanged": true
+    }
+  ],
+  "blocked": [],
+  "errors": [],
+  "endedAtUtc": "2026-11-05T08:13:33.107Z",
+  "status": "pass"
+}

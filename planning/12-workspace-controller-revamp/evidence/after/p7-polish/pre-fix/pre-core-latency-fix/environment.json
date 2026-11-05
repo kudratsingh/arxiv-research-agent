@@ -1,0 +1,13 @@
+{
+  "node": "v22.23.2",
+  "platform": "darwin",
+  "arch": "arm64",
+  "playwright": "1.62.1",
+  "chromium": {
+    "name": "chromium",
+    "revision": "1234",
+    "installByDefault": true,
+    "browserVersion": "151.0.7922.34",
+    "title": "Chrome for Testing"
+  }
+}

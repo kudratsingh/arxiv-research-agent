@@ -1,0 +1,15 @@
+FAIL desktop Error: expect(received).toBe(expected) // Object.is equality
+
+Expected: true
+Received: false
+
+Call Log:
+- Timeout 5000ms exceeded while waiting on the predicate
+FAIL mobile Error: expect(received).toBe(expected) // Object.is equality
+
+Expected: true
+Received: false
+
+Call Log:
+- Timeout 5000ms exceeded while waiting on the predicate
+{"status":"fail","cases":2,"writes":[{"name":"desktop","path":"/api/workspace/reading","work":"ci:workspace-agent-evaluation","forwarded":true},{"name":"desktop","path":"/api/workspace/entries","work":"ci:workspace-agent-evaluation","forwarded":false,"injection":"held then409"},{"name":"desktop","path":"/api/workspace/reading","work":"ci:workspace-agent-evaluation","forwarded":true,"kind":"restore own logicalreadingfields"},{"name":"mobile","path":"/api/workspace/reading","work":"ci:workspace-agent-evaluation","forwarded":true},{"name":"mobile","path":"/api/workspace/entries","work":"ci:workspace-agent-evaluation","forwarded":false,"injection":"held then409"},{"name":"mobile","path":"/api/workspace/reading","work":"ci:workspace-agent-evaluation","forwarded":true,"kind":"restore own logicalreadingfields"}],"blocked":[],"errors":[]}

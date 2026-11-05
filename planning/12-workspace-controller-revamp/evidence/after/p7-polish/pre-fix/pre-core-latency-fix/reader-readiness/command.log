@@ -1,0 +1,5 @@
+PASS desktop-light settledJS 229247 sourceMs 577.8000000119209
+PASS desktop-dark settledJS 229247 sourceMs 488.39999997615814
+PASS mobile-light settledJS 177182 sourceMs 480.30000001192093
+PASS mobile-dark settledJS 177182 sourceMs 517
+{"status":"pass","cases":4,"blocked":[],"errors":[]}

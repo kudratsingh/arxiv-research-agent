@@ -1,0 +1,13 @@
+PASS desktop-light-today JS 224211 titleDOM 567.8999999761581 abstractDOM 567.8999999761581
+PASS desktop-light-radar JS 223355 titleDOM 498 abstractDOM 498
+PASS desktop-light-library JS 223367 titleDOM 494.10000002384186 abstractDOM 494.2000000476837
+PASS desktop-dark-today JS 224211 titleDOM 500.69999998807907 abstractDOM 500.69999998807907
+PASS desktop-dark-radar JS 223355 titleDOM 491.10000002384186 abstractDOM 491.10000002384186
+PASS desktop-dark-library JS 223367 titleDOM 490.89999997615814 abstractDOM 490.89999997615814
+PASS mobile-light-today JS 172146 titleDOM 496.4000000357628 abstractDOM 496.4000000357628
+PASS mobile-light-radar JS 171290 titleDOM 490.30000001192093 abstractDOM 490.30000001192093
+PASS mobile-light-library JS 171302 titleDOM 487.60000002384186 abstractDOM 487.60000002384186
+PASS mobile-dark-today JS 172146 titleDOM 494.39999997615814 abstractDOM 494.39999997615814
+PASS mobile-dark-radar JS 171290 titleDOM 490.30000001192093 abstractDOM 490.30000001192093
+PASS mobile-dark-library JS 171302 titleDOM 487 abstractDOM 487
+{"status":"pass","cases":12,"blocked":[],"errors":[]}

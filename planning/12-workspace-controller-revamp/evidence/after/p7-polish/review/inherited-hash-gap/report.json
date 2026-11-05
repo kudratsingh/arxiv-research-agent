@@ -1,0 +1,109 @@
+{
+  "base": "http://127.0.0.1:3148",
+  "startedAtUtc": "2026-11-05T05:07:06.914Z",
+  "blocked": [],
+  "errors": [],
+  "scope": "P6 unchanged production baseline; inherited same-document fragment investigation",
+  "fixture": {
+    "principal": "controller-p6-preview",
+    "work": "arxiv:2611.99800",
+    "version": "arxiv:2611.99800:v1",
+    "abstractUnicodeLength": 4059,
+    "range": "abstract:2500:2520",
+    "quote": "is intentionally lon"
+  },
+  "afterForward": {
+    "url": "http://127.0.0.1:3148/workspace/items/arxiv%3A2611.99800?version=arxiv%3A2611.99800%3Av1&return_to=%2Fworkspace%2Ftoday%3Ffocus%3Darxiv%253A2611.99800#abstract%3A0",
+    "hash": "#abstract:0",
+    "historyState": {
+      "__NA": true,
+      "__PRIVATE_NEXTJS_INTERNALS_TREE": {
+        "tree": [
+          "",
+          {
+            "children": [
+              "(live)",
+              {
+                "children": [
+                  "workspace",
+                  {
+                    "children": [
+                      "items",
+                      {
+                        "children": [
+                          [
+                            "id",
+                            "arxiv%3A2611.99800",
+                            "d",
+                            []
+                          ],
+                          {
+                            "children": [
+                              "__PAGE__",
+                              {},
+                              null,
+                              null,
+                              0,
+                              "?version=arxiv%3A2611.99800%3Av1&return_to=%2Fworkspace%2Ftoday%3Ffocus%3Darxiv%253A2611.99800"
+                            ]
+                          },
+                          null,
+                          null,
+                          0
+                        ]
+                      },
+                      null,
+                      null,
+                      0
+                    ]
+                  },
+                  null,
+                  null,
+                  0
+                ]
+              },
+              null,
+              null,
+              0
+            ]
+          },
+          null,
+          null,
+          16
+        ],
+        "renderedSearch": "?version=arxiv%3A2611.99800%3Av1&return_to=%2Fworkspace%2Ftoday%3Ffocus%3Darxiv%253A2611.99800"
+      },
+      "workspaceScroll": 359
+    },
+    "readyState": "complete",
+    "sourceText": "This synthetic fixture examines navigation and reading continuity in a local preview. It is generated solely for interface verification and makes no scientific claim. Each passage is intentionally long enough to test scrolling, paper transitions, and the exact return to a retained source. This synthetic fixture examines navigation and reading continuity in a local preview. It is generated solely for interface verification and makes no scientific claim. Each passage is intentionally long enough to test scrolling, paper transitions, and the exact return to a retained source. This synthetic fixture examines navigation and reading continuity in a local preview. It is generated solely for interface verification and makes no scientific claim. Each passage is intentionally long enough to test scrolling, paper transitions, and the exact return to a retained source. This synthetic fixture examines navigation and reading continuity in a local preview. It is generated solely for interface verification and makes no scientific claim. Each passage is intentionally long enough to test scrolling, paper transitions, and the exact return to a retained source. This synthetic fixture examines navigation and reading continuity in a local preview. It is generated solely for interface verification and makes no scientific claim. Each passage is intentionally long enough to test scrolling, paper transitions, and the exact return to a retained source. This synthetic fixture examines navigation and reading continuity in a local preview. It is generated solely for interface verification and makes no scientific claim. Each passage is intentionally long enough to test scrolling, paper transitions, and the exact return to a retained source. This synthetic fixture examines navigation and reading continuity in a local preview. It is generated solely for interface verification and makes no scientific claim. Each passage is intentionally long enough to test scrolling, paper transitions, and the exact return to a retained source. This synthetic fixture examines navigation and reading continuity in a local preview. It is generated solely for interface verification and makes no scientific claim. Each passage is intentionally long enough to test scrolling, paper transitions, and the exact return to a retained source. This synthetic fixture examines navigation and reading continuity in a local preview. It is generated solely for interface verification and makes no scientific claim. Each passage is intentionally long enough to test scrolling, paper transitions, and the exact return to a retained source. This synthetic fixture examines navigation and reading continuity in a local preview. It is generated solely for interface verification and makes no scientific claim. Each passage is intentionally long enough to test scrolling, paper transitions, and the exact return to a retained source. This synthetic fixture examines navigation and reading continuity in a local preview. It is generated solely for interface verification and makes no scientific claim. Each passage is intentionally long enough to test scrolling, paper transitions, and the exact return to a retained source. This synthetic fixture examines navigation and reading continuity in a local preview. It is generated solely for interface verification and makes no scientific claim. Each passage is intentionally long enough to test scrolling, paper transitions, and the exact return to a retained source. This synthetic fixture examines navigation and reading continuity in a local preview. It is generated solely for interface verification and makes no scientific claim. Each passage is intentionally long enough to test scrolling, paper transitions, and the exact return to a retained source. This synthetic fixture examines navigation and reading continuity in a local preview. It is generated solely for interface verification and makes no scientific claim. Each passage is intentionally long enough to test scrolling, paper transitions, and the exact return to a retained source.",
+    "markTexts": [],
+    "hashEvents": [],
+    "versionLabel": null
+  },
+  "requestedUrl": "http://127.0.0.1:3148/workspace/items/arxiv%3A2611.99800?version=arxiv%3A2611.99800%3Av1&return_to=%2Fworkspace%2Ftoday%3Ffocus%3Darxiv%253A2611.99800#abstract:2500:2520",
+  "sameDocumentTarget": true,
+  "markCreated": false,
+  "markAssertion": "expect(locator).toHaveText(expected) failed\n\nLocator: locator('mark#source-anchor')\nExpected: \"is intentionally lon\"\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"to.have.text\" with timeout 5000ms\n  - waiting for locator('mark#source-anchor')\n",
+  "afterHash": {
+    "url": "http://127.0.0.1:3148/workspace/items/arxiv%3A2611.99800?version=arxiv%3A2611.99800%3Av1&return_to=%2Fworkspace%2Ftoday%3Ffocus%3Darxiv%253A2611.99800#abstract:2500:2520",
+    "hash": "#abstract:2500:2520",
+    "historyState": null,
+    "readyState": "complete",
+    "sourceText": "This synthetic fixture examines navigation and reading continuity in a local preview. It is generated solely for interface verification and makes no scientific claim. Each passage is intentionally long enough to test scrolling, paper transitions, and the exact return to a retained source. This synthetic fixture examines navigation and reading continuity in a local preview. It is generated solely for interface verification and makes no scientific claim. Each passage is intentionally long enough to test scrolling, paper transitions, and the exact return to a retained source. This synthetic fixture examines navigation and reading continuity in a local preview. It is generated solely for interface verification and makes no scientific claim. Each passage is intentionally long enough to test scrolling, paper transitions, and the exact return to a retained source. This synthetic fixture examines navigation and reading continuity in a local preview. It is generated solely for interface verification and makes no scientific claim. Each passage is intentionally long enough to test scrolling, paper transitions, and the exact return to a retained source. This synthetic fixture examines navigation and reading continuity in a local preview. It is generated solely for interface verification and makes no scientific claim. Each passage is intentionally long enough to test scrolling, paper transitions, and the exact return to a retained source. This synthetic fixture examines navigation and reading continuity in a local preview. It is generated solely for interface verification and makes no scientific claim. Each passage is intentionally long enough to test scrolling, paper transitions, and the exact return to a retained source. This synthetic fixture examines navigation and reading continuity in a local preview. It is generated solely for interface verification and makes no scientific claim. Each passage is intentionally long enough to test scrolling, paper transitions, and the exact return to a retained source. This synthetic fixture examines navigation and reading continuity in a local preview. It is generated solely for interface verification and makes no scientific claim. Each passage is intentionally long enough to test scrolling, paper transitions, and the exact return to a retained source. This synthetic fixture examines navigation and reading continuity in a local preview. It is generated solely for interface verification and makes no scientific claim. Each passage is intentionally long enough to test scrolling, paper transitions, and the exact return to a retained source. This synthetic fixture examines navigation and reading continuity in a local preview. It is generated solely for interface verification and makes no scientific claim. Each passage is intentionally long enough to test scrolling, paper transitions, and the exact return to a retained source. This synthetic fixture examines navigation and reading continuity in a local preview. It is generated solely for interface verification and makes no scientific claim. Each passage is intentionally long enough to test scrolling, paper transitions, and the exact return to a retained source. This synthetic fixture examines navigation and reading continuity in a local preview. It is generated solely for interface verification and makes no scientific claim. Each passage is intentionally long enough to test scrolling, paper transitions, and the exact return to a retained source. This synthetic fixture examines navigation and reading continuity in a local preview. It is generated solely for interface verification and makes no scientific claim. Each passage is intentionally long enough to test scrolling, paper transitions, and the exact return to a retained source. This synthetic fixture examines navigation and reading continuity in a local preview. It is generated solely for interface verification and makes no scientific claim. Each passage is intentionally long enough to test scrolling, paper transitions, and the exact return to a retained source.",
+    "markTexts": [],
+    "hashEvents": [
+      {
+        "oldURL": "http://127.0.0.1:3148/workspace/items/arxiv%3A2611.99800?version=arxiv%3A2611.99800%3Av1&return_to=%2Fworkspace%2Ftoday%3Ffocus%3Darxiv%253A2611.99800#abstract%3A0",
+        "newURL": "http://127.0.0.1:3148/workspace/items/arxiv%3A2611.99800?version=arxiv%3A2611.99800%3Av1&return_to=%2Fworkspace%2Ftoday%3Ffocus%3Darxiv%253A2611.99800#abstract:2500:2520",
+        "at": 2080.199999988079
+      }
+    ],
+    "versionLabel": null
+  },
+  "actualSourceUnicodeLength": 4059,
+  "screenshot": "after-forward-far-hash-no-mark.png",
+  "reproduced": true,
+  "serverStateUnchanged": true,
+  "endedAtUtc": "2026-11-05T05:07:14.746Z"
+}

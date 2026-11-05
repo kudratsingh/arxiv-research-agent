@@ -1,0 +1,10 @@
+{
+  "gate_head": "2129fedb072a5ad42d1e30a80b0763641d8d7a1e",
+  "verified_application_head": "6b2eccf069537d90423359fc74c033f27e665cd6",
+  "matching_python_src_and_tests_trees": [
+    "4ba84bf2287f911ef2f07184aebd453238b02b35",
+    "45733db270918707018747c63ff989d7959f187e"
+  ],
+  "python_dependency_files_unchanged": true,
+  "scope": "Python gate was executed at the recorded gate head; later changes are frontend-only. This is source-equivalence verification, not a new test run or remote CI claim."
+}

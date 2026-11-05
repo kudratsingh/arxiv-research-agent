@@ -1,0 +1,3477 @@
+{
+  "phase": "baseline",
+  "base": "http://127.0.0.1:3148",
+  "principal": "controller-p6-preview",
+  "application": "P6 dff860e production preview; source binding verified separately",
+  "fixture": "synthetic offline preview; no source freshness or model acceptance",
+  "startedAtUtc": "2026-11-05T04:34:38.968Z",
+  "cases": [
+    {
+      "size": "mobile",
+      "width": 390,
+      "height": 844,
+      "theme": "light",
+      "route": "today",
+      "status": "pass",
+      "heading": "What changed.",
+      "url": "http://127.0.0.1:3148/workspace/today?focus=arxiv%3A2611.99800",
+      "themeState": {
+        "attribute": "light",
+        "canvas": "rgb(245, 245, 245)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 0,
+          "top": 124,
+          "width": 390,
+          "height": 3512.734375,
+          "overflowY": "visible"
+        },
+        "heading": {
+          "top": 222.5625,
+          "bottom": 247.5625,
+          "left": 16,
+          "right": 364.40625
+        },
+        "bar": {
+          "left": 12,
+          "right": 378,
+          "top": 712,
+          "bottom": 832
+        },
+        "paper": {
+          "top": 398.34375,
+          "bottom": 550.96875,
+          "left": 16,
+          "right": 374
+        }
+      },
+      "axeRun": true,
+      "violations": [],
+      "screenshot": "mobile-light-today.png",
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "mobile",
+      "width": 390,
+      "height": 844,
+      "theme": "light",
+      "route": "radar",
+      "status": "pass",
+      "heading": "A wider view.\nYour terms, your pace.",
+      "url": "http://127.0.0.1:3148/workspace/radar?q=agent&days=0&focus=arxiv%3A2611.99800&as_of=2026-11-05T04%3A34%3A40.861454%2B00%3A00",
+      "themeState": {
+        "attribute": "light",
+        "canvas": "rgb(245, 245, 245)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 0,
+          "top": 124,
+          "width": 390,
+          "height": 3495.578125,
+          "overflowY": "visible"
+        },
+        "heading": {
+          "top": 311.578125,
+          "bottom": 366.765625,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "left": 12,
+          "right": 378,
+          "top": 712,
+          "bottom": 832
+        },
+        "paper": {
+          "top": 486.765625,
+          "bottom": 639.390625,
+          "left": 16,
+          "right": 374
+        }
+      },
+      "axeRun": true,
+      "violations": [],
+      "screenshot": "mobile-light-radar.png",
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "mobile",
+      "width": 390,
+      "height": 844,
+      "theme": "light",
+      "route": "library",
+      "status": "pass",
+      "heading": "Keep the source.\nKeep your thinking.",
+      "url": "http://127.0.0.1:3148/workspace/library?view=notes",
+      "themeState": {
+        "attribute": "light",
+        "canvas": "rgb(245, 245, 245)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 0,
+          "top": 124,
+          "width": 390,
+          "height": 1682.609375,
+          "overflowY": "visible"
+        },
+        "heading": {
+          "top": 278.1875,
+          "bottom": 333.375,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "left": 12,
+          "right": 378,
+          "top": 712,
+          "bottom": 832
+        },
+        "paper": {
+          "top": 410.375,
+          "bottom": 563,
+          "left": 16,
+          "right": 374
+        }
+      },
+      "axeRun": true,
+      "violations": [],
+      "screenshot": "mobile-light-library.png",
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "mobile",
+      "width": 390,
+      "height": 844,
+      "theme": "light",
+      "route": "reader",
+      "status": "pass",
+      "heading": "CI synthetic long abstract agent navigation study",
+      "url": "http://127.0.0.1:3148/workspace/items/arxiv%3A2611.99800?version=arxiv%3A2611.99800%3Av1#abstract:0",
+      "themeState": {
+        "attribute": "light",
+        "canvas": "rgb(245, 245, 245)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 0,
+          "top": -393,
+          "width": 390,
+          "height": 4045.625,
+          "overflowY": "visible"
+        },
+        "heading": {
+          "top": -199.8125,
+          "bottom": -138.46875,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "left": 12,
+          "right": 378,
+          "top": 666,
+          "bottom": 832
+        },
+        "paper": null
+      },
+      "axeRun": true,
+      "violations": [],
+      "screenshot": "mobile-light-reader.png",
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "mobile",
+      "width": 390,
+      "height": 844,
+      "theme": "light",
+      "route": "interests",
+      "status": "pass",
+      "heading": "Follow a field.\nOr your own question.",
+      "url": "http://127.0.0.1:3148/workspace/interests",
+      "themeState": {
+        "attribute": "light",
+        "canvas": "rgb(245, 245, 245)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 0,
+          "top": 124,
+          "width": 390,
+          "height": 4398.765625,
+          "overflowY": "visible"
+        },
+        "heading": {
+          "top": 294,
+          "bottom": 353.78125,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "left": 12,
+          "right": 378,
+          "top": 680,
+          "bottom": 832
+        },
+        "paper": null
+      },
+      "axeRun": true,
+      "violations": [],
+      "screenshot": "mobile-light-interests.png",
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "mobile",
+      "width": 390,
+      "height": 844,
+      "theme": "light",
+      "route": "operations",
+      "status": "pass",
+      "heading": "Know what was checked.\nAnd what wasn’t.",
+      "url": "http://127.0.0.1:3148/workspace/operations",
+      "themeState": {
+        "attribute": "light",
+        "canvas": "rgb(245, 245, 245)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 0,
+          "top": 124,
+          "width": 390,
+          "height": 1761.40625,
+          "overflowY": "visible"
+        },
+        "heading": {
+          "top": 325.578125,
+          "bottom": 385.359375,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "left": 12,
+          "right": 378,
+          "top": 604,
+          "bottom": 832
+        },
+        "paper": null
+      },
+      "axeRun": true,
+      "violations": [],
+      "screenshot": "mobile-light-operations.png",
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "mobile",
+      "width": 390,
+      "height": 844,
+      "theme": "light",
+      "route": "review",
+      "status": "pass",
+      "heading": "What deserves\nyour attention?",
+      "url": "http://127.0.0.1:3148/workspace/review?packet=review-16b09c0def9049bab7e7bbb7429c401a",
+      "themeState": {
+        "attribute": "light",
+        "canvas": "rgb(245, 245, 245)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 0,
+          "top": 124,
+          "width": 390,
+          "height": 8782.328125,
+          "overflowY": "visible"
+        },
+        "heading": {
+          "top": 342.375,
+          "bottom": 402.15625,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "left": 12,
+          "right": 378,
+          "top": 630,
+          "bottom": 832
+        },
+        "paper": null
+      },
+      "axeRun": true,
+      "violations": [],
+      "screenshot": "mobile-light-review.png",
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "mobile",
+      "width": 390,
+      "height": 844,
+      "theme": "dark",
+      "route": "today",
+      "status": "pass",
+      "heading": "What changed.",
+      "url": "http://127.0.0.1:3148/workspace/today?focus=arxiv%3A2611.99800",
+      "themeState": {
+        "attribute": "dark",
+        "canvas": "rgb(10, 10, 10)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 0,
+          "top": 124,
+          "width": 390,
+          "height": 3512.734375,
+          "overflowY": "visible"
+        },
+        "heading": {
+          "top": 222.5625,
+          "bottom": 247.5625,
+          "left": 16,
+          "right": 364.40625
+        },
+        "bar": {
+          "left": 12,
+          "right": 378,
+          "top": 712,
+          "bottom": 832
+        },
+        "paper": {
+          "top": 398.34375,
+          "bottom": 550.96875,
+          "left": 16,
+          "right": 374
+        }
+      },
+      "axeRun": true,
+      "violations": [],
+      "screenshot": "mobile-dark-today.png",
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "mobile",
+      "width": 390,
+      "height": 844,
+      "theme": "dark",
+      "route": "radar",
+      "status": "pass",
+      "heading": "A wider view.\nYour terms, your pace.",
+      "url": "http://127.0.0.1:3148/workspace/radar?q=agent&days=0&focus=arxiv%3A2611.99800&as_of=2026-11-05T04%3A34%3A48.852258%2B00%3A00",
+      "themeState": {
+        "attribute": "dark",
+        "canvas": "rgb(10, 10, 10)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 0,
+          "top": 124,
+          "width": 390,
+          "height": 3495.578125,
+          "overflowY": "visible"
+        },
+        "heading": {
+          "top": 311.578125,
+          "bottom": 366.765625,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "left": 12,
+          "right": 378,
+          "top": 712,
+          "bottom": 832
+        },
+        "paper": {
+          "top": 486.765625,
+          "bottom": 639.390625,
+          "left": 16,
+          "right": 374
+        }
+      },
+      "axeRun": true,
+      "violations": [],
+      "screenshot": "mobile-dark-radar.png",
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "mobile",
+      "width": 390,
+      "height": 844,
+      "theme": "dark",
+      "route": "library",
+      "status": "pass",
+      "heading": "Keep the source.\nKeep your thinking.",
+      "url": "http://127.0.0.1:3148/workspace/library?view=notes",
+      "themeState": {
+        "attribute": "dark",
+        "canvas": "rgb(10, 10, 10)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 0,
+          "top": 124,
+          "width": 390,
+          "height": 1682.609375,
+          "overflowY": "visible"
+        },
+        "heading": {
+          "top": 278.1875,
+          "bottom": 333.375,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "left": 12,
+          "right": 378,
+          "top": 712,
+          "bottom": 832
+        },
+        "paper": {
+          "top": 410.375,
+          "bottom": 563,
+          "left": 16,
+          "right": 374
+        }
+      },
+      "axeRun": true,
+      "violations": [],
+      "screenshot": "mobile-dark-library.png",
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "mobile",
+      "width": 390,
+      "height": 844,
+      "theme": "dark",
+      "route": "reader",
+      "status": "pass",
+      "heading": "CI synthetic long abstract agent navigation study",
+      "url": "http://127.0.0.1:3148/workspace/items/arxiv%3A2611.99800?version=arxiv%3A2611.99800%3Av1#abstract:0",
+      "themeState": {
+        "attribute": "dark",
+        "canvas": "rgb(10, 10, 10)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 0,
+          "top": -393,
+          "width": 390,
+          "height": 4045.625,
+          "overflowY": "visible"
+        },
+        "heading": {
+          "top": -199.8125,
+          "bottom": -138.46875,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "left": 12,
+          "right": 378,
+          "top": 666,
+          "bottom": 832
+        },
+        "paper": null
+      },
+      "axeRun": true,
+      "violations": [],
+      "screenshot": "mobile-dark-reader.png",
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "mobile",
+      "width": 390,
+      "height": 844,
+      "theme": "dark",
+      "route": "interests",
+      "status": "pass",
+      "heading": "Follow a field.\nOr your own question.",
+      "url": "http://127.0.0.1:3148/workspace/interests",
+      "themeState": {
+        "attribute": "dark",
+        "canvas": "rgb(10, 10, 10)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 0,
+          "top": 124,
+          "width": 390,
+          "height": 4398.765625,
+          "overflowY": "visible"
+        },
+        "heading": {
+          "top": 294,
+          "bottom": 353.78125,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "left": 12,
+          "right": 378,
+          "top": 680,
+          "bottom": 832
+        },
+        "paper": null
+      },
+      "axeRun": true,
+      "violations": [],
+      "screenshot": "mobile-dark-interests.png",
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "mobile",
+      "width": 390,
+      "height": 844,
+      "theme": "dark",
+      "route": "operations",
+      "status": "pass",
+      "heading": "Know what was checked.\nAnd what wasn’t.",
+      "url": "http://127.0.0.1:3148/workspace/operations",
+      "themeState": {
+        "attribute": "dark",
+        "canvas": "rgb(10, 10, 10)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 0,
+          "top": 124,
+          "width": 390,
+          "height": 1761.40625,
+          "overflowY": "visible"
+        },
+        "heading": {
+          "top": 325.578125,
+          "bottom": 385.359375,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "left": 12,
+          "right": 378,
+          "top": 604,
+          "bottom": 832
+        },
+        "paper": null
+      },
+      "axeRun": true,
+      "violations": [],
+      "screenshot": "mobile-dark-operations.png",
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "mobile",
+      "width": 390,
+      "height": 844,
+      "theme": "dark",
+      "route": "review",
+      "status": "pass",
+      "heading": "What deserves\nyour attention?",
+      "url": "http://127.0.0.1:3148/workspace/review?packet=review-16b09c0def9049bab7e7bbb7429c401a",
+      "themeState": {
+        "attribute": "dark",
+        "canvas": "rgb(10, 10, 10)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 0,
+          "top": 124,
+          "width": 390,
+          "height": 8782.328125,
+          "overflowY": "visible"
+        },
+        "heading": {
+          "top": 342.375,
+          "bottom": 402.15625,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "left": 12,
+          "right": 378,
+          "top": 630,
+          "bottom": 832
+        },
+        "paper": null
+      },
+      "axeRun": true,
+      "violations": [],
+      "screenshot": "mobile-dark-review.png",
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "tablet768",
+      "width": 768,
+      "height": 900,
+      "theme": "light",
+      "route": "today",
+      "status": "pass",
+      "heading": "What changed.",
+      "url": "http://127.0.0.1:3148/workspace/today?focus=arxiv%3A2611.99800",
+      "themeState": {
+        "attribute": "light",
+        "canvas": "rgb(245, 245, 245)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 80,
+          "top": 8,
+          "width": 680,
+          "height": 884,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 192.1875,
+          "bottom": 217.1875,
+          "left": 104,
+          "right": 343.109375
+        },
+        "bar": {
+          "left": 100,
+          "right": 740,
+          "top": 680,
+          "bottom": 876
+        },
+        "paper": {
+          "top": 404.484375,
+          "bottom": 572.484375,
+          "left": 104,
+          "right": 736
+        }
+      },
+      "axeRun": false,
+      "violations": [],
+      "screenshot": null,
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "tablet768",
+      "width": 768,
+      "height": 900,
+      "theme": "light",
+      "route": "radar",
+      "status": "pass",
+      "heading": "A wider view.\nYour terms, your pace.",
+      "url": "http://127.0.0.1:3148/workspace/radar?q=agent&days=0&focus=arxiv%3A2611.99800&as_of=2026-11-05T04%3A34%3A56.695974%2B00%3A00",
+      "themeState": {
+        "attribute": "light",
+        "canvas": "rgb(245, 245, 245)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 80,
+          "top": 8,
+          "width": 680,
+          "height": 884,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 194.390625,
+          "bottom": 254.171875,
+          "left": 104,
+          "right": 733.484375
+        },
+        "bar": {
+          "left": 100,
+          "right": 740,
+          "top": 680,
+          "bottom": 876
+        },
+        "paper": {
+          "top": 368.765625,
+          "bottom": 536.765625,
+          "left": 104,
+          "right": 736
+        }
+      },
+      "axeRun": false,
+      "violations": [],
+      "screenshot": null,
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "tablet768",
+      "width": 768,
+      "height": 900,
+      "theme": "light",
+      "route": "library",
+      "status": "pass",
+      "heading": "Keep the source.\nKeep your thinking.",
+      "url": "http://127.0.0.1:3148/workspace/library?view=notes",
+      "themeState": {
+        "attribute": "light",
+        "canvas": "rgb(245, 245, 245)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 80,
+          "top": 8,
+          "width": 680,
+          "height": 884,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 190.1875,
+          "bottom": 249.96875,
+          "left": 104,
+          "right": 578.390625
+        },
+        "bar": {
+          "left": 100,
+          "right": 740,
+          "top": 680,
+          "bottom": 876
+        },
+        "paper": {
+          "top": 335.5625,
+          "bottom": 503.5625,
+          "left": 104,
+          "right": 736
+        }
+      },
+      "axeRun": false,
+      "violations": [],
+      "screenshot": null,
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "tablet768",
+      "width": 768,
+      "height": 900,
+      "theme": "light",
+      "route": "reader",
+      "status": "pass",
+      "heading": "CI synthetic long abstract agent navigation study",
+      "url": "http://127.0.0.1:3148/workspace/items/arxiv%3A2611.99800?version=arxiv%3A2611.99800%3Av1#abstract:0",
+      "themeState": {
+        "attribute": "light",
+        "canvas": "rgb(245, 245, 245)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 80,
+          "top": 8,
+          "width": 680,
+          "height": 884,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": -162.8125,
+          "bottom": -132.140625,
+          "left": 104,
+          "right": 736
+        },
+        "bar": {
+          "left": 100,
+          "right": 740,
+          "top": 688,
+          "bottom": 876
+        },
+        "paper": null
+      },
+      "axeRun": false,
+      "violations": [],
+      "screenshot": null,
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "tablet768",
+      "width": 768,
+      "height": 900,
+      "theme": "light",
+      "route": "interests",
+      "status": "pass",
+      "heading": "Follow a field.\nOr your own question.",
+      "url": "http://127.0.0.1:3148/workspace/interests",
+      "themeState": {
+        "attribute": "light",
+        "canvas": "rgb(245, 245, 245)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 80,
+          "top": 8,
+          "width": 680,
+          "height": 884,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 192,
+          "bottom": 256.375,
+          "left": 104,
+          "right": 611.046875
+        },
+        "bar": {
+          "left": 100,
+          "right": 740,
+          "top": 697,
+          "bottom": 876
+        },
+        "paper": null
+      },
+      "axeRun": false,
+      "violations": [],
+      "screenshot": null,
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "tablet768",
+      "width": 768,
+      "height": 900,
+      "theme": "light",
+      "route": "operations",
+      "status": "pass",
+      "heading": "Know what was checked.\nAnd what wasn’t.",
+      "url": "http://127.0.0.1:3148/workspace/operations",
+      "themeState": {
+        "attribute": "light",
+        "canvas": "rgb(245, 245, 245)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 80,
+          "top": 8,
+          "width": 680,
+          "height": 884,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 194.390625,
+          "bottom": 258.765625,
+          "left": 104,
+          "right": 644.984375
+        },
+        "bar": {
+          "left": 100,
+          "right": 740,
+          "top": 676,
+          "bottom": 876
+        },
+        "paper": null
+      },
+      "axeRun": false,
+      "violations": [],
+      "screenshot": null,
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "tablet768",
+      "width": 768,
+      "height": 900,
+      "theme": "light",
+      "route": "review",
+      "status": "pass",
+      "heading": "What deserves\nyour attention?",
+      "url": "http://127.0.0.1:3148/workspace/review?packet=review-16b09c0def9049bab7e7bbb7429c401a",
+      "themeState": {
+        "attribute": "light",
+        "canvas": "rgb(245, 245, 245)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 80,
+          "top": 8,
+          "width": 680,
+          "height": 884,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 192,
+          "bottom": 256.375,
+          "left": 104,
+          "right": 736
+        },
+        "bar": {
+          "left": 100,
+          "right": 740,
+          "top": 716,
+          "bottom": 876
+        },
+        "paper": null
+      },
+      "axeRun": false,
+      "violations": [],
+      "screenshot": null,
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "tablet768",
+      "width": 768,
+      "height": 900,
+      "theme": "dark",
+      "route": "today",
+      "status": "pass",
+      "heading": "What changed.",
+      "url": "http://127.0.0.1:3148/workspace/today?focus=arxiv%3A2611.99800",
+      "themeState": {
+        "attribute": "dark",
+        "canvas": "rgb(10, 10, 10)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 80,
+          "top": 8,
+          "width": 680,
+          "height": 884,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 192.1875,
+          "bottom": 217.1875,
+          "left": 104,
+          "right": 343.109375
+        },
+        "bar": {
+          "left": 100,
+          "right": 740,
+          "top": 680,
+          "bottom": 876
+        },
+        "paper": {
+          "top": 404.484375,
+          "bottom": 572.484375,
+          "left": 104,
+          "right": 736
+        }
+      },
+      "axeRun": false,
+      "violations": [],
+      "screenshot": null,
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "tablet768",
+      "width": 768,
+      "height": 900,
+      "theme": "dark",
+      "route": "radar",
+      "status": "pass",
+      "heading": "A wider view.\nYour terms, your pace.",
+      "url": "http://127.0.0.1:3148/workspace/radar?q=agent&days=0&focus=arxiv%3A2611.99800&as_of=2026-11-05T04%3A35%3A01.989738%2B00%3A00",
+      "themeState": {
+        "attribute": "dark",
+        "canvas": "rgb(10, 10, 10)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 80,
+          "top": 8,
+          "width": 680,
+          "height": 884,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 194.390625,
+          "bottom": 254.171875,
+          "left": 104,
+          "right": 733.484375
+        },
+        "bar": {
+          "left": 100,
+          "right": 740,
+          "top": 680,
+          "bottom": 876
+        },
+        "paper": {
+          "top": 368.765625,
+          "bottom": 536.765625,
+          "left": 104,
+          "right": 736
+        }
+      },
+      "axeRun": false,
+      "violations": [],
+      "screenshot": null,
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "tablet768",
+      "width": 768,
+      "height": 900,
+      "theme": "dark",
+      "route": "library",
+      "status": "pass",
+      "heading": "Keep the source.\nKeep your thinking.",
+      "url": "http://127.0.0.1:3148/workspace/library?view=notes",
+      "themeState": {
+        "attribute": "dark",
+        "canvas": "rgb(10, 10, 10)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 80,
+          "top": 8,
+          "width": 680,
+          "height": 884,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 190.1875,
+          "bottom": 249.96875,
+          "left": 104,
+          "right": 578.390625
+        },
+        "bar": {
+          "left": 100,
+          "right": 740,
+          "top": 680,
+          "bottom": 876
+        },
+        "paper": {
+          "top": 335.5625,
+          "bottom": 503.5625,
+          "left": 104,
+          "right": 736
+        }
+      },
+      "axeRun": false,
+      "violations": [],
+      "screenshot": null,
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "tablet768",
+      "width": 768,
+      "height": 900,
+      "theme": "dark",
+      "route": "reader",
+      "status": "pass",
+      "heading": "CI synthetic long abstract agent navigation study",
+      "url": "http://127.0.0.1:3148/workspace/items/arxiv%3A2611.99800?version=arxiv%3A2611.99800%3Av1#abstract:0",
+      "themeState": {
+        "attribute": "dark",
+        "canvas": "rgb(10, 10, 10)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 80,
+          "top": 8,
+          "width": 680,
+          "height": 884,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": -162.8125,
+          "bottom": -132.140625,
+          "left": 104,
+          "right": 736
+        },
+        "bar": {
+          "left": 100,
+          "right": 740,
+          "top": 688,
+          "bottom": 876
+        },
+        "paper": null
+      },
+      "axeRun": false,
+      "violations": [],
+      "screenshot": null,
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "tablet768",
+      "width": 768,
+      "height": 900,
+      "theme": "dark",
+      "route": "interests",
+      "status": "pass",
+      "heading": "Follow a field.\nOr your own question.",
+      "url": "http://127.0.0.1:3148/workspace/interests",
+      "themeState": {
+        "attribute": "dark",
+        "canvas": "rgb(10, 10, 10)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 80,
+          "top": 8,
+          "width": 680,
+          "height": 884,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 192,
+          "bottom": 256.375,
+          "left": 104,
+          "right": 611.046875
+        },
+        "bar": {
+          "left": 100,
+          "right": 740,
+          "top": 697,
+          "bottom": 876
+        },
+        "paper": null
+      },
+      "axeRun": false,
+      "violations": [],
+      "screenshot": null,
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "tablet768",
+      "width": 768,
+      "height": 900,
+      "theme": "dark",
+      "route": "operations",
+      "status": "pass",
+      "heading": "Know what was checked.\nAnd what wasn’t.",
+      "url": "http://127.0.0.1:3148/workspace/operations",
+      "themeState": {
+        "attribute": "dark",
+        "canvas": "rgb(10, 10, 10)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 80,
+          "top": 8,
+          "width": 680,
+          "height": 884,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 194.390625,
+          "bottom": 258.765625,
+          "left": 104,
+          "right": 644.984375
+        },
+        "bar": {
+          "left": 100,
+          "right": 740,
+          "top": 676,
+          "bottom": 876
+        },
+        "paper": null
+      },
+      "axeRun": false,
+      "violations": [],
+      "screenshot": null,
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "tablet768",
+      "width": 768,
+      "height": 900,
+      "theme": "dark",
+      "route": "review",
+      "status": "pass",
+      "heading": "What deserves\nyour attention?",
+      "url": "http://127.0.0.1:3148/workspace/review?packet=review-16b09c0def9049bab7e7bbb7429c401a",
+      "themeState": {
+        "attribute": "dark",
+        "canvas": "rgb(10, 10, 10)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 80,
+          "top": 8,
+          "width": 680,
+          "height": 884,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 192,
+          "bottom": 256.375,
+          "left": 104,
+          "right": 736
+        },
+        "bar": {
+          "left": 100,
+          "right": 740,
+          "top": 716,
+          "bottom": 876
+        },
+        "paper": null
+      },
+      "axeRun": false,
+      "violations": [],
+      "screenshot": null,
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "tablet1024",
+      "width": 1024,
+      "height": 900,
+      "theme": "light",
+      "route": "today",
+      "status": "pass",
+      "heading": "What changed.",
+      "url": "http://127.0.0.1:3148/workspace/today?focus=arxiv%3A2611.99800",
+      "themeState": {
+        "attribute": "light",
+        "canvas": "rgb(245, 245, 245)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 356,
+          "top": 8,
+          "width": 660,
+          "height": 884,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 192.1875,
+          "bottom": 217.1875,
+          "left": 388,
+          "right": 627.109375
+        },
+        "bar": {
+          "left": 376,
+          "right": 996,
+          "top": 680,
+          "bottom": 876
+        },
+        "paper": {
+          "top": 404.484375,
+          "bottom": 572.484375,
+          "left": 388,
+          "right": 984
+        }
+      },
+      "axeRun": false,
+      "violations": [],
+      "screenshot": null,
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "tablet1024",
+      "width": 1024,
+      "height": 900,
+      "theme": "light",
+      "route": "radar",
+      "status": "pass",
+      "heading": "A wider view.\nYour terms, your pace.",
+      "url": "http://127.0.0.1:3148/workspace/radar?q=agent&days=0&focus=arxiv%3A2611.99800&as_of=2026-11-05T04%3A35%3A07.381218%2B00%3A00",
+      "themeState": {
+        "attribute": "light",
+        "canvas": "rgb(245, 245, 245)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 356,
+          "top": 8,
+          "width": 660,
+          "height": 884,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 194.390625,
+          "bottom": 265.015625,
+          "left": 388,
+          "right": 984
+        },
+        "bar": {
+          "left": 376,
+          "right": 996,
+          "top": 680,
+          "bottom": 876
+        },
+        "paper": {
+          "top": 405.203125,
+          "bottom": 573.203125,
+          "left": 388,
+          "right": 984
+        }
+      },
+      "axeRun": false,
+      "violations": [],
+      "screenshot": null,
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "tablet1024",
+      "width": 1024,
+      "height": 900,
+      "theme": "light",
+      "route": "library",
+      "status": "pass",
+      "heading": "Keep the source.\nKeep your thinking.",
+      "url": "http://127.0.0.1:3148/workspace/library?view=notes",
+      "themeState": {
+        "attribute": "light",
+        "canvas": "rgb(245, 245, 245)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 356,
+          "top": 8,
+          "width": 660,
+          "height": 884,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 190.1875,
+          "bottom": 260.8125,
+          "left": 388,
+          "right": 862.390625
+        },
+        "bar": {
+          "left": 376,
+          "right": 996,
+          "top": 680,
+          "bottom": 876
+        },
+        "paper": {
+          "top": 346.40625,
+          "bottom": 514.40625,
+          "left": 388,
+          "right": 984
+        }
+      },
+      "axeRun": false,
+      "violations": [],
+      "screenshot": null,
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "tablet1024",
+      "width": 1024,
+      "height": 900,
+      "theme": "light",
+      "route": "reader",
+      "status": "pass",
+      "heading": "CI synthetic long abstract agent navigation study",
+      "url": "http://127.0.0.1:3148/workspace/items/arxiv%3A2611.99800?version=arxiv%3A2611.99800%3Av1#abstract:0",
+      "themeState": {
+        "attribute": "light",
+        "canvas": "rgb(245, 245, 245)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 356,
+          "top": 8,
+          "width": 660,
+          "height": 884,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": -203.8125,
+          "bottom": -131.34375,
+          "left": 388,
+          "right": 984
+        },
+        "bar": {
+          "left": 376,
+          "right": 996,
+          "top": 688,
+          "bottom": 876
+        },
+        "paper": null
+      },
+      "axeRun": false,
+      "violations": [],
+      "screenshot": null,
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "tablet1024",
+      "width": 1024,
+      "height": 900,
+      "theme": "light",
+      "route": "interests",
+      "status": "pass",
+      "heading": "Follow a field.\nOr your own question.",
+      "url": "http://127.0.0.1:3148/workspace/interests",
+      "themeState": {
+        "attribute": "light",
+        "canvas": "rgb(245, 245, 245)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 356,
+          "top": 8,
+          "width": 660,
+          "height": 884,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 192,
+          "bottom": 262.625,
+          "left": 388,
+          "right": 895.046875
+        },
+        "bar": {
+          "left": 376,
+          "right": 996,
+          "top": 697,
+          "bottom": 876
+        },
+        "paper": null
+      },
+      "axeRun": false,
+      "violations": [],
+      "screenshot": null,
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "tablet1024",
+      "width": 1024,
+      "height": 900,
+      "theme": "light",
+      "route": "operations",
+      "status": "pass",
+      "heading": "Know what was checked.\nAnd what wasn’t.",
+      "url": "http://127.0.0.1:3148/workspace/operations",
+      "themeState": {
+        "attribute": "light",
+        "canvas": "rgb(245, 245, 245)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 356,
+          "top": 8,
+          "width": 660,
+          "height": 884,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 194.390625,
+          "bottom": 265.015625,
+          "left": 388,
+          "right": 928.984375
+        },
+        "bar": {
+          "left": 376,
+          "right": 996,
+          "top": 676,
+          "bottom": 876
+        },
+        "paper": null
+      },
+      "axeRun": false,
+      "violations": [],
+      "screenshot": null,
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "tablet1024",
+      "width": 1024,
+      "height": 900,
+      "theme": "light",
+      "route": "review",
+      "status": "pass",
+      "heading": "What deserves\nyour attention?",
+      "url": "http://127.0.0.1:3148/workspace/review?packet=review-16b09c0def9049bab7e7bbb7429c401a",
+      "themeState": {
+        "attribute": "light",
+        "canvas": "rgb(245, 245, 245)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 356,
+          "top": 8,
+          "width": 660,
+          "height": 884,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 192,
+          "bottom": 262.625,
+          "left": 388,
+          "right": 984
+        },
+        "bar": {
+          "left": 376,
+          "right": 996,
+          "top": 716,
+          "bottom": 876
+        },
+        "paper": null
+      },
+      "axeRun": false,
+      "violations": [],
+      "screenshot": null,
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "tablet1024",
+      "width": 1024,
+      "height": 900,
+      "theme": "dark",
+      "route": "today",
+      "status": "pass",
+      "heading": "What changed.",
+      "url": "http://127.0.0.1:3148/workspace/today?focus=arxiv%3A2611.99800",
+      "themeState": {
+        "attribute": "dark",
+        "canvas": "rgb(10, 10, 10)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 356,
+          "top": 8,
+          "width": 660,
+          "height": 884,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 192.1875,
+          "bottom": 217.1875,
+          "left": 388,
+          "right": 627.109375
+        },
+        "bar": {
+          "left": 376,
+          "right": 996,
+          "top": 680,
+          "bottom": 876
+        },
+        "paper": {
+          "top": 404.484375,
+          "bottom": 572.484375,
+          "left": 388,
+          "right": 984
+        }
+      },
+      "axeRun": false,
+      "violations": [],
+      "screenshot": null,
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "tablet1024",
+      "width": 1024,
+      "height": 900,
+      "theme": "dark",
+      "route": "radar",
+      "status": "pass",
+      "heading": "A wider view.\nYour terms, your pace.",
+      "url": "http://127.0.0.1:3148/workspace/radar?q=agent&days=0&focus=arxiv%3A2611.99800&as_of=2026-11-05T04%3A35%3A12.786229%2B00%3A00",
+      "themeState": {
+        "attribute": "dark",
+        "canvas": "rgb(10, 10, 10)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 356,
+          "top": 8,
+          "width": 660,
+          "height": 884,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 194.390625,
+          "bottom": 265.015625,
+          "left": 388,
+          "right": 984
+        },
+        "bar": {
+          "left": 376,
+          "right": 996,
+          "top": 680,
+          "bottom": 876
+        },
+        "paper": {
+          "top": 405.203125,
+          "bottom": 573.203125,
+          "left": 388,
+          "right": 984
+        }
+      },
+      "axeRun": false,
+      "violations": [],
+      "screenshot": null,
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "tablet1024",
+      "width": 1024,
+      "height": 900,
+      "theme": "dark",
+      "route": "library",
+      "status": "pass",
+      "heading": "Keep the source.\nKeep your thinking.",
+      "url": "http://127.0.0.1:3148/workspace/library?view=notes",
+      "themeState": {
+        "attribute": "dark",
+        "canvas": "rgb(10, 10, 10)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 356,
+          "top": 8,
+          "width": 660,
+          "height": 884,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 190.1875,
+          "bottom": 260.8125,
+          "left": 388,
+          "right": 862.390625
+        },
+        "bar": {
+          "left": 376,
+          "right": 996,
+          "top": 680,
+          "bottom": 876
+        },
+        "paper": {
+          "top": 346.40625,
+          "bottom": 514.40625,
+          "left": 388,
+          "right": 984
+        }
+      },
+      "axeRun": false,
+      "violations": [],
+      "screenshot": null,
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "tablet1024",
+      "width": 1024,
+      "height": 900,
+      "theme": "dark",
+      "route": "reader",
+      "status": "pass",
+      "heading": "CI synthetic long abstract agent navigation study",
+      "url": "http://127.0.0.1:3148/workspace/items/arxiv%3A2611.99800?version=arxiv%3A2611.99800%3Av1#abstract:0",
+      "themeState": {
+        "attribute": "dark",
+        "canvas": "rgb(10, 10, 10)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 356,
+          "top": 8,
+          "width": 660,
+          "height": 884,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": -203.8125,
+          "bottom": -131.34375,
+          "left": 388,
+          "right": 984
+        },
+        "bar": {
+          "left": 376,
+          "right": 996,
+          "top": 688,
+          "bottom": 876
+        },
+        "paper": null
+      },
+      "axeRun": false,
+      "violations": [],
+      "screenshot": null,
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "tablet1024",
+      "width": 1024,
+      "height": 900,
+      "theme": "dark",
+      "route": "interests",
+      "status": "pass",
+      "heading": "Follow a field.\nOr your own question.",
+      "url": "http://127.0.0.1:3148/workspace/interests",
+      "themeState": {
+        "attribute": "dark",
+        "canvas": "rgb(10, 10, 10)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 356,
+          "top": 8,
+          "width": 660,
+          "height": 884,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 192,
+          "bottom": 262.625,
+          "left": 388,
+          "right": 895.046875
+        },
+        "bar": {
+          "left": 376,
+          "right": 996,
+          "top": 697,
+          "bottom": 876
+        },
+        "paper": null
+      },
+      "axeRun": false,
+      "violations": [],
+      "screenshot": null,
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "tablet1024",
+      "width": 1024,
+      "height": 900,
+      "theme": "dark",
+      "route": "operations",
+      "status": "pass",
+      "heading": "Know what was checked.\nAnd what wasn’t.",
+      "url": "http://127.0.0.1:3148/workspace/operations",
+      "themeState": {
+        "attribute": "dark",
+        "canvas": "rgb(10, 10, 10)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 356,
+          "top": 8,
+          "width": 660,
+          "height": 884,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 194.390625,
+          "bottom": 265.015625,
+          "left": 388,
+          "right": 928.984375
+        },
+        "bar": {
+          "left": 376,
+          "right": 996,
+          "top": 676,
+          "bottom": 876
+        },
+        "paper": null
+      },
+      "axeRun": false,
+      "violations": [],
+      "screenshot": null,
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "tablet1024",
+      "width": 1024,
+      "height": 900,
+      "theme": "dark",
+      "route": "review",
+      "status": "pass",
+      "heading": "What deserves\nyour attention?",
+      "url": "http://127.0.0.1:3148/workspace/review?packet=review-16b09c0def9049bab7e7bbb7429c401a",
+      "themeState": {
+        "attribute": "dark",
+        "canvas": "rgb(10, 10, 10)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 356,
+          "top": 8,
+          "width": 660,
+          "height": 884,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 192,
+          "bottom": 262.625,
+          "left": 388,
+          "right": 984
+        },
+        "bar": {
+          "left": 376,
+          "right": 996,
+          "top": 716,
+          "bottom": 876
+        },
+        "paper": null
+      },
+      "axeRun": false,
+      "violations": [],
+      "screenshot": null,
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "tablet1280",
+      "width": 1280,
+      "height": 900,
+      "theme": "light",
+      "route": "today",
+      "status": "pass",
+      "heading": "What changed.",
+      "url": "http://127.0.0.1:3148/workspace/today?focus=arxiv%3A2611.99800",
+      "themeState": {
+        "attribute": "light",
+        "canvas": "rgb(245, 245, 245)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 356,
+          "top": 8,
+          "width": 916,
+          "height": 884,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 170.1875,
+          "bottom": 195.1875,
+          "left": 388,
+          "right": 627.109375
+        },
+        "bar": {
+          "left": 404,
+          "right": 1224,
+          "top": 680,
+          "bottom": 876
+        },
+        "paper": {
+          "top": 382.484375,
+          "bottom": 551.703125,
+          "left": 388,
+          "right": 1240
+        }
+      },
+      "axeRun": false,
+      "violations": [],
+      "screenshot": null,
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "tablet1280",
+      "width": 1280,
+      "height": 900,
+      "theme": "light",
+      "route": "radar",
+      "status": "pass",
+      "heading": "A wider view.\nYour terms, your pace.",
+      "url": "http://127.0.0.1:3148/workspace/radar?q=agent&days=0&focus=arxiv%3A2611.99800&as_of=2026-11-05T04%3A35%3A18.155704%2B00%3A00",
+      "themeState": {
+        "attribute": "light",
+        "canvas": "rgb(245, 245, 245)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 356,
+          "top": 8,
+          "width": 916,
+          "height": 884,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 172.390625,
+          "bottom": 255.171875,
+          "left": 388,
+          "right": 1017.484375
+        },
+        "bar": {
+          "left": 404,
+          "right": 1224,
+          "top": 680,
+          "bottom": 876
+        },
+        "paper": {
+          "top": 369.765625,
+          "bottom": 538.984375,
+          "left": 388,
+          "right": 1240
+        }
+      },
+      "axeRun": false,
+      "violations": [],
+      "screenshot": null,
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "tablet1280",
+      "width": 1280,
+      "height": 900,
+      "theme": "light",
+      "route": "library",
+      "status": "pass",
+      "heading": "Keep the source.\nKeep your thinking.",
+      "url": "http://127.0.0.1:3148/workspace/library?view=notes",
+      "themeState": {
+        "attribute": "light",
+        "canvas": "rgb(245, 245, 245)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 356,
+          "top": 8,
+          "width": 916,
+          "height": 884,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 168.1875,
+          "bottom": 250.96875,
+          "left": 388,
+          "right": 862.390625
+        },
+        "bar": {
+          "left": 404,
+          "right": 1224,
+          "top": 680,
+          "bottom": 876
+        },
+        "paper": {
+          "top": 336.5625,
+          "bottom": 505.78125,
+          "left": 388,
+          "right": 1240
+        }
+      },
+      "axeRun": false,
+      "violations": [],
+      "screenshot": null,
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "tablet1280",
+      "width": 1280,
+      "height": 900,
+      "theme": "light",
+      "route": "reader",
+      "status": "pass",
+      "heading": "CI synthetic long abstract agent navigation study",
+      "url": "http://127.0.0.1:3148/workspace/items/arxiv%3A2611.99800?version=arxiv%3A2611.99800%3Av1#abstract:0",
+      "themeState": {
+        "attribute": "light",
+        "canvas": "rgb(245, 245, 245)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 356,
+          "top": 8,
+          "width": 916,
+          "height": 884,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": -173.8125,
+          "bottom": -131.34375,
+          "left": 388,
+          "right": 1208
+        },
+        "bar": {
+          "left": 404,
+          "right": 1224,
+          "top": 688,
+          "bottom": 876
+        },
+        "paper": null
+      },
+      "axeRun": false,
+      "violations": [],
+      "screenshot": null,
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "tablet1280",
+      "width": 1280,
+      "height": 900,
+      "theme": "light",
+      "route": "interests",
+      "status": "pass",
+      "heading": "Follow a field.\nOr your own question.",
+      "url": "http://127.0.0.1:3148/workspace/interests",
+      "themeState": {
+        "attribute": "light",
+        "canvas": "rgb(245, 245, 245)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 356,
+          "top": 8,
+          "width": 916,
+          "height": 884,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 170,
+          "bottom": 257.375,
+          "left": 388,
+          "right": 895.046875
+        },
+        "bar": {
+          "left": 404,
+          "right": 1224,
+          "top": 697,
+          "bottom": 876
+        },
+        "paper": null
+      },
+      "axeRun": false,
+      "violations": [],
+      "screenshot": null,
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "tablet1280",
+      "width": 1280,
+      "height": 900,
+      "theme": "light",
+      "route": "operations",
+      "status": "pass",
+      "heading": "Know what was checked.\nAnd what wasn’t.",
+      "url": "http://127.0.0.1:3148/workspace/operations",
+      "themeState": {
+        "attribute": "light",
+        "canvas": "rgb(245, 245, 245)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 356,
+          "top": 8,
+          "width": 916,
+          "height": 884,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 172.390625,
+          "bottom": 259.765625,
+          "left": 388,
+          "right": 928.984375
+        },
+        "bar": {
+          "left": 404,
+          "right": 1224,
+          "top": 725,
+          "bottom": 876
+        },
+        "paper": null
+      },
+      "axeRun": false,
+      "violations": [],
+      "screenshot": null,
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "tablet1280",
+      "width": 1280,
+      "height": 900,
+      "theme": "light",
+      "route": "review",
+      "status": "pass",
+      "heading": "What deserves\nyour attention?",
+      "url": "http://127.0.0.1:3148/workspace/review?packet=review-16b09c0def9049bab7e7bbb7429c401a",
+      "themeState": {
+        "attribute": "light",
+        "canvas": "rgb(245, 245, 245)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 356,
+          "top": 8,
+          "width": 916,
+          "height": 884,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 170,
+          "bottom": 257.375,
+          "left": 388,
+          "right": 1041.0625
+        },
+        "bar": {
+          "left": 404,
+          "right": 1224,
+          "top": 716,
+          "bottom": 876
+        },
+        "paper": null
+      },
+      "axeRun": false,
+      "violations": [],
+      "screenshot": null,
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "tablet1280",
+      "width": 1280,
+      "height": 900,
+      "theme": "dark",
+      "route": "today",
+      "status": "pass",
+      "heading": "What changed.",
+      "url": "http://127.0.0.1:3148/workspace/today?focus=arxiv%3A2611.99800",
+      "themeState": {
+        "attribute": "dark",
+        "canvas": "rgb(10, 10, 10)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 356,
+          "top": 8,
+          "width": 916,
+          "height": 884,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 170.1875,
+          "bottom": 195.1875,
+          "left": 388,
+          "right": 627.109375
+        },
+        "bar": {
+          "left": 404,
+          "right": 1224,
+          "top": 680,
+          "bottom": 876
+        },
+        "paper": {
+          "top": 382.484375,
+          "bottom": 551.703125,
+          "left": 388,
+          "right": 1240
+        }
+      },
+      "axeRun": false,
+      "violations": [],
+      "screenshot": null,
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "tablet1280",
+      "width": 1280,
+      "height": 900,
+      "theme": "dark",
+      "route": "radar",
+      "status": "pass",
+      "heading": "A wider view.\nYour terms, your pace.",
+      "url": "http://127.0.0.1:3148/workspace/radar?q=agent&days=0&focus=arxiv%3A2611.99800&as_of=2026-11-05T04%3A35%3A23.563168%2B00%3A00",
+      "themeState": {
+        "attribute": "dark",
+        "canvas": "rgb(10, 10, 10)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 356,
+          "top": 8,
+          "width": 916,
+          "height": 884,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 172.390625,
+          "bottom": 255.171875,
+          "left": 388,
+          "right": 1017.484375
+        },
+        "bar": {
+          "left": 404,
+          "right": 1224,
+          "top": 680,
+          "bottom": 876
+        },
+        "paper": {
+          "top": 369.765625,
+          "bottom": 538.984375,
+          "left": 388,
+          "right": 1240
+        }
+      },
+      "axeRun": false,
+      "violations": [],
+      "screenshot": null,
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "tablet1280",
+      "width": 1280,
+      "height": 900,
+      "theme": "dark",
+      "route": "library",
+      "status": "pass",
+      "heading": "Keep the source.\nKeep your thinking.",
+      "url": "http://127.0.0.1:3148/workspace/library?view=notes",
+      "themeState": {
+        "attribute": "dark",
+        "canvas": "rgb(10, 10, 10)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 356,
+          "top": 8,
+          "width": 916,
+          "height": 884,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 168.1875,
+          "bottom": 250.96875,
+          "left": 388,
+          "right": 862.390625
+        },
+        "bar": {
+          "left": 404,
+          "right": 1224,
+          "top": 680,
+          "bottom": 876
+        },
+        "paper": {
+          "top": 336.5625,
+          "bottom": 505.78125,
+          "left": 388,
+          "right": 1240
+        }
+      },
+      "axeRun": false,
+      "violations": [],
+      "screenshot": null,
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "tablet1280",
+      "width": 1280,
+      "height": 900,
+      "theme": "dark",
+      "route": "reader",
+      "status": "pass",
+      "heading": "CI synthetic long abstract agent navigation study",
+      "url": "http://127.0.0.1:3148/workspace/items/arxiv%3A2611.99800?version=arxiv%3A2611.99800%3Av1#abstract:0",
+      "themeState": {
+        "attribute": "dark",
+        "canvas": "rgb(10, 10, 10)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 356,
+          "top": 8,
+          "width": 916,
+          "height": 884,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": -173.8125,
+          "bottom": -131.34375,
+          "left": 388,
+          "right": 1208
+        },
+        "bar": {
+          "left": 404,
+          "right": 1224,
+          "top": 688,
+          "bottom": 876
+        },
+        "paper": null
+      },
+      "axeRun": false,
+      "violations": [],
+      "screenshot": null,
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "tablet1280",
+      "width": 1280,
+      "height": 900,
+      "theme": "dark",
+      "route": "interests",
+      "status": "pass",
+      "heading": "Follow a field.\nOr your own question.",
+      "url": "http://127.0.0.1:3148/workspace/interests",
+      "themeState": {
+        "attribute": "dark",
+        "canvas": "rgb(10, 10, 10)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 356,
+          "top": 8,
+          "width": 916,
+          "height": 884,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 170,
+          "bottom": 257.375,
+          "left": 388,
+          "right": 895.046875
+        },
+        "bar": {
+          "left": 404,
+          "right": 1224,
+          "top": 697,
+          "bottom": 876
+        },
+        "paper": null
+      },
+      "axeRun": false,
+      "violations": [],
+      "screenshot": null,
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "tablet1280",
+      "width": 1280,
+      "height": 900,
+      "theme": "dark",
+      "route": "operations",
+      "status": "pass",
+      "heading": "Know what was checked.\nAnd what wasn’t.",
+      "url": "http://127.0.0.1:3148/workspace/operations",
+      "themeState": {
+        "attribute": "dark",
+        "canvas": "rgb(10, 10, 10)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 356,
+          "top": 8,
+          "width": 916,
+          "height": 884,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 172.390625,
+          "bottom": 259.765625,
+          "left": 388,
+          "right": 928.984375
+        },
+        "bar": {
+          "left": 404,
+          "right": 1224,
+          "top": 725,
+          "bottom": 876
+        },
+        "paper": null
+      },
+      "axeRun": false,
+      "violations": [],
+      "screenshot": null,
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "tablet1280",
+      "width": 1280,
+      "height": 900,
+      "theme": "dark",
+      "route": "review",
+      "status": "pass",
+      "heading": "What deserves\nyour attention?",
+      "url": "http://127.0.0.1:3148/workspace/review?packet=review-16b09c0def9049bab7e7bbb7429c401a",
+      "themeState": {
+        "attribute": "dark",
+        "canvas": "rgb(10, 10, 10)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 356,
+          "top": 8,
+          "width": 916,
+          "height": 884,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 170,
+          "bottom": 257.375,
+          "left": 388,
+          "right": 1041.0625
+        },
+        "bar": {
+          "left": 404,
+          "right": 1224,
+          "top": 716,
+          "bottom": 876
+        },
+        "paper": null
+      },
+      "axeRun": false,
+      "violations": [],
+      "screenshot": null,
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "desktop",
+      "width": 1440,
+      "height": 1000,
+      "theme": "light",
+      "route": "today",
+      "status": "pass",
+      "heading": "What changed.",
+      "url": "http://127.0.0.1:3148/workspace/today?focus=arxiv%3A2611.99800",
+      "themeState": {
+        "attribute": "light",
+        "canvas": "rgb(245, 245, 245)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 356,
+          "top": 8,
+          "width": 1076,
+          "height": 984,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 170.1875,
+          "bottom": 195.1875,
+          "left": 444,
+          "right": 683.109375
+        },
+        "bar": {
+          "left": 484,
+          "right": 1304,
+          "top": 780,
+          "bottom": 976
+        },
+        "paper": {
+          "top": 382.484375,
+          "bottom": 558.109375,
+          "left": 444,
+          "right": 1344
+        }
+      },
+      "axeRun": true,
+      "violations": [],
+      "screenshot": "desktop-light-today.png",
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "desktop",
+      "width": 1440,
+      "height": 1000,
+      "theme": "light",
+      "route": "radar",
+      "status": "pass",
+      "heading": "A wider view.\nYour terms, your pace.",
+      "url": "http://127.0.0.1:3148/workspace/radar?q=agent&days=0&focus=arxiv%3A2611.99800&as_of=2026-11-05T04%3A35%3A29.745290%2B00%3A00",
+      "themeState": {
+        "attribute": "light",
+        "canvas": "rgb(245, 245, 245)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 356,
+          "top": 8,
+          "width": 1076,
+          "height": 984,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 172.390625,
+          "bottom": 255.171875,
+          "left": 394,
+          "right": 1023.484375
+        },
+        "bar": {
+          "left": 484,
+          "right": 1304,
+          "top": 780,
+          "bottom": 976
+        },
+        "paper": {
+          "top": 369.765625,
+          "bottom": 545.390625,
+          "left": 394,
+          "right": 1394
+        }
+      },
+      "axeRun": true,
+      "violations": [],
+      "screenshot": "desktop-light-radar.png",
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "desktop",
+      "width": 1440,
+      "height": 1000,
+      "theme": "light",
+      "route": "library",
+      "status": "pass",
+      "heading": "Keep the source.\nKeep your thinking.",
+      "url": "http://127.0.0.1:3148/workspace/library?view=notes",
+      "themeState": {
+        "attribute": "light",
+        "canvas": "rgb(245, 245, 245)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 356,
+          "top": 8,
+          "width": 1076,
+          "height": 984,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 168.1875,
+          "bottom": 250.96875,
+          "left": 394,
+          "right": 868.390625
+        },
+        "bar": {
+          "left": 484,
+          "right": 1304,
+          "top": 780,
+          "bottom": 976
+        },
+        "paper": {
+          "top": 336.5625,
+          "bottom": 512.1875,
+          "left": 394,
+          "right": 1394
+        }
+      },
+      "axeRun": true,
+      "violations": [],
+      "screenshot": "desktop-light-library.png",
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "desktop",
+      "width": 1440,
+      "height": 1000,
+      "theme": "light",
+      "route": "reader",
+      "status": "pass",
+      "heading": "CI synthetic long abstract agent navigation study",
+      "url": "http://127.0.0.1:3148/workspace/items/arxiv%3A2611.99800?version=arxiv%3A2611.99800%3Av1#abstract:0",
+      "themeState": {
+        "attribute": "light",
+        "canvas": "rgb(245, 245, 245)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 356,
+          "top": 8,
+          "width": 1076,
+          "height": 984,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": -173.8125,
+          "bottom": -131.34375,
+          "left": 444,
+          "right": 1264
+        },
+        "bar": {
+          "left": 484,
+          "right": 1304,
+          "top": 788,
+          "bottom": 976
+        },
+        "paper": null
+      },
+      "axeRun": true,
+      "violations": [],
+      "screenshot": "desktop-light-reader.png",
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "desktop",
+      "width": 1440,
+      "height": 1000,
+      "theme": "light",
+      "route": "interests",
+      "status": "pass",
+      "heading": "Follow a field.\nOr your own question.",
+      "url": "http://127.0.0.1:3148/workspace/interests",
+      "themeState": {
+        "attribute": "light",
+        "canvas": "rgb(245, 245, 245)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 356,
+          "top": 8,
+          "width": 1076,
+          "height": 984,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 170,
+          "bottom": 257.375,
+          "left": 394,
+          "right": 901.046875
+        },
+        "bar": {
+          "left": 484,
+          "right": 1304,
+          "top": 797,
+          "bottom": 976
+        },
+        "paper": null
+      },
+      "axeRun": true,
+      "violations": [],
+      "screenshot": "desktop-light-interests.png",
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "desktop",
+      "width": 1440,
+      "height": 1000,
+      "theme": "light",
+      "route": "operations",
+      "status": "pass",
+      "heading": "Know what was checked.\nAnd what wasn’t.",
+      "url": "http://127.0.0.1:3148/workspace/operations",
+      "themeState": {
+        "attribute": "light",
+        "canvas": "rgb(245, 245, 245)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 356,
+          "top": 8,
+          "width": 1076,
+          "height": 984,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 172.390625,
+          "bottom": 259.765625,
+          "left": 394,
+          "right": 934.984375
+        },
+        "bar": {
+          "left": 484,
+          "right": 1304,
+          "top": 825,
+          "bottom": 976
+        },
+        "paper": null
+      },
+      "axeRun": true,
+      "violations": [],
+      "screenshot": "desktop-light-operations.png",
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "desktop",
+      "width": 1440,
+      "height": 1000,
+      "theme": "light",
+      "route": "review",
+      "status": "pass",
+      "heading": "What deserves\nyour attention?",
+      "url": "http://127.0.0.1:3148/workspace/review?packet=review-16b09c0def9049bab7e7bbb7429c401a",
+      "themeState": {
+        "attribute": "light",
+        "canvas": "rgb(245, 245, 245)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 356,
+          "top": 8,
+          "width": 1076,
+          "height": 984,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 170,
+          "bottom": 257.375,
+          "left": 394,
+          "right": 1047.0625
+        },
+        "bar": {
+          "left": 484,
+          "right": 1304,
+          "top": 816,
+          "bottom": 976
+        },
+        "paper": null
+      },
+      "axeRun": true,
+      "violations": [],
+      "screenshot": "desktop-light-review.png",
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "desktop",
+      "width": 1440,
+      "height": 1000,
+      "theme": "dark",
+      "route": "today",
+      "status": "pass",
+      "heading": "What changed.",
+      "url": "http://127.0.0.1:3148/workspace/today?focus=arxiv%3A2611.99800",
+      "themeState": {
+        "attribute": "dark",
+        "canvas": "rgb(10, 10, 10)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 356,
+          "top": 8,
+          "width": 1076,
+          "height": 984,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 170.1875,
+          "bottom": 195.1875,
+          "left": 444,
+          "right": 683.109375
+        },
+        "bar": {
+          "left": 484,
+          "right": 1304,
+          "top": 780,
+          "bottom": 976
+        },
+        "paper": {
+          "top": 382.484375,
+          "bottom": 558.109375,
+          "left": 444,
+          "right": 1344
+        }
+      },
+      "axeRun": true,
+      "violations": [],
+      "screenshot": "desktop-dark-today.png",
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "desktop",
+      "width": 1440,
+      "height": 1000,
+      "theme": "dark",
+      "route": "radar",
+      "status": "pass",
+      "heading": "A wider view.\nYour terms, your pace.",
+      "url": "http://127.0.0.1:3148/workspace/radar?q=agent&days=0&focus=arxiv%3A2611.99800&as_of=2026-11-05T04%3A35%3A38.307262%2B00%3A00",
+      "themeState": {
+        "attribute": "dark",
+        "canvas": "rgb(10, 10, 10)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 356,
+          "top": 8,
+          "width": 1076,
+          "height": 984,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 172.390625,
+          "bottom": 255.171875,
+          "left": 394,
+          "right": 1023.484375
+        },
+        "bar": {
+          "left": 484,
+          "right": 1304,
+          "top": 780,
+          "bottom": 976
+        },
+        "paper": {
+          "top": 369.765625,
+          "bottom": 545.390625,
+          "left": 394,
+          "right": 1394
+        }
+      },
+      "axeRun": true,
+      "violations": [],
+      "screenshot": "desktop-dark-radar.png",
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "desktop",
+      "width": 1440,
+      "height": 1000,
+      "theme": "dark",
+      "route": "library",
+      "status": "pass",
+      "heading": "Keep the source.\nKeep your thinking.",
+      "url": "http://127.0.0.1:3148/workspace/library?view=notes",
+      "themeState": {
+        "attribute": "dark",
+        "canvas": "rgb(10, 10, 10)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 356,
+          "top": 8,
+          "width": 1076,
+          "height": 984,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 168.1875,
+          "bottom": 250.96875,
+          "left": 394,
+          "right": 868.390625
+        },
+        "bar": {
+          "left": 484,
+          "right": 1304,
+          "top": 780,
+          "bottom": 976
+        },
+        "paper": {
+          "top": 336.5625,
+          "bottom": 512.1875,
+          "left": 394,
+          "right": 1394
+        }
+      },
+      "axeRun": true,
+      "violations": [],
+      "screenshot": "desktop-dark-library.png",
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "desktop",
+      "width": 1440,
+      "height": 1000,
+      "theme": "dark",
+      "route": "reader",
+      "status": "pass",
+      "heading": "CI synthetic long abstract agent navigation study",
+      "url": "http://127.0.0.1:3148/workspace/items/arxiv%3A2611.99800?version=arxiv%3A2611.99800%3Av1#abstract:0",
+      "themeState": {
+        "attribute": "dark",
+        "canvas": "rgb(10, 10, 10)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 356,
+          "top": 8,
+          "width": 1076,
+          "height": 984,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": -173.8125,
+          "bottom": -131.34375,
+          "left": 444,
+          "right": 1264
+        },
+        "bar": {
+          "left": 484,
+          "right": 1304,
+          "top": 788,
+          "bottom": 976
+        },
+        "paper": null
+      },
+      "axeRun": true,
+      "violations": [],
+      "screenshot": "desktop-dark-reader.png",
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "desktop",
+      "width": 1440,
+      "height": 1000,
+      "theme": "dark",
+      "route": "interests",
+      "status": "pass",
+      "heading": "Follow a field.\nOr your own question.",
+      "url": "http://127.0.0.1:3148/workspace/interests",
+      "themeState": {
+        "attribute": "dark",
+        "canvas": "rgb(10, 10, 10)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 356,
+          "top": 8,
+          "width": 1076,
+          "height": 984,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 170,
+          "bottom": 257.375,
+          "left": 394,
+          "right": 901.046875
+        },
+        "bar": {
+          "left": 484,
+          "right": 1304,
+          "top": 797,
+          "bottom": 976
+        },
+        "paper": null
+      },
+      "axeRun": true,
+      "violations": [],
+      "screenshot": "desktop-dark-interests.png",
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "desktop",
+      "width": 1440,
+      "height": 1000,
+      "theme": "dark",
+      "route": "operations",
+      "status": "pass",
+      "heading": "Know what was checked.\nAnd what wasn’t.",
+      "url": "http://127.0.0.1:3148/workspace/operations",
+      "themeState": {
+        "attribute": "dark",
+        "canvas": "rgb(10, 10, 10)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 356,
+          "top": 8,
+          "width": 1076,
+          "height": 984,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 172.390625,
+          "bottom": 259.765625,
+          "left": 394,
+          "right": 934.984375
+        },
+        "bar": {
+          "left": 484,
+          "right": 1304,
+          "top": 825,
+          "bottom": 976
+        },
+        "paper": null
+      },
+      "axeRun": true,
+      "violations": [],
+      "screenshot": "desktop-dark-operations.png",
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    },
+    {
+      "size": "desktop",
+      "width": 1440,
+      "height": 1000,
+      "theme": "dark",
+      "route": "review",
+      "status": "pass",
+      "heading": "What deserves\nyour attention?",
+      "url": "http://127.0.0.1:3148/workspace/review?packet=review-16b09c0def9049bab7e7bbb7429c401a",
+      "themeState": {
+        "attribute": "dark",
+        "canvas": "rgb(10, 10, 10)"
+      },
+      "geometry": {
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "stage": {
+          "left": 356,
+          "top": 8,
+          "width": 1076,
+          "height": 984,
+          "overflowY": "auto"
+        },
+        "heading": {
+          "top": 170,
+          "bottom": 257.375,
+          "left": 394,
+          "right": 1047.0625
+        },
+        "bar": {
+          "left": 484,
+          "right": 1304,
+          "top": 816,
+          "bottom": 976
+        },
+        "paper": null
+      },
+      "axeRun": true,
+      "violations": [],
+      "screenshot": "desktop-dark-review.png",
+      "csp": {
+        "present": true,
+        "nonce": true,
+        "unsafeEval": false
+      }
+    }
+  ],
+  "labelChecks": [
+    {
+      "size": "mobile",
+      "theme": "light",
+      "count": 10,
+      "allBlank": true,
+      "unchanged": true,
+      "protectedDataSha256Before": "cf5982877f2105aaea46bd832d1d7e95a3eed0caee7d0a2faa9631be62f22179",
+      "protectedDataSha256After": "cf5982877f2105aaea46bd832d1d7e95a3eed0caee7d0a2faa9631be62f22179"
+    },
+    {
+      "size": "mobile",
+      "theme": "dark",
+      "count": 10,
+      "allBlank": true,
+      "unchanged": true,
+      "protectedDataSha256Before": "cf5982877f2105aaea46bd832d1d7e95a3eed0caee7d0a2faa9631be62f22179",
+      "protectedDataSha256After": "cf5982877f2105aaea46bd832d1d7e95a3eed0caee7d0a2faa9631be62f22179"
+    },
+    {
+      "size": "tablet768",
+      "theme": "light",
+      "count": 10,
+      "allBlank": true,
+      "unchanged": true,
+      "protectedDataSha256Before": "cf5982877f2105aaea46bd832d1d7e95a3eed0caee7d0a2faa9631be62f22179",
+      "protectedDataSha256After": "cf5982877f2105aaea46bd832d1d7e95a3eed0caee7d0a2faa9631be62f22179"
+    },
+    {
+      "size": "tablet768",
+      "theme": "dark",
+      "count": 10,
+      "allBlank": true,
+      "unchanged": true,
+      "protectedDataSha256Before": "cf5982877f2105aaea46bd832d1d7e95a3eed0caee7d0a2faa9631be62f22179",
+      "protectedDataSha256After": "cf5982877f2105aaea46bd832d1d7e95a3eed0caee7d0a2faa9631be62f22179"
+    },
+    {
+      "size": "tablet1024",
+      "theme": "light",
+      "count": 10,
+      "allBlank": true,
+      "unchanged": true,
+      "protectedDataSha256Before": "cf5982877f2105aaea46bd832d1d7e95a3eed0caee7d0a2faa9631be62f22179",
+      "protectedDataSha256After": "cf5982877f2105aaea46bd832d1d7e95a3eed0caee7d0a2faa9631be62f22179"
+    },
+    {
+      "size": "tablet1024",
+      "theme": "dark",
+      "count": 10,
+      "allBlank": true,
+      "unchanged": true,
+      "protectedDataSha256Before": "cf5982877f2105aaea46bd832d1d7e95a3eed0caee7d0a2faa9631be62f22179",
+      "protectedDataSha256After": "cf5982877f2105aaea46bd832d1d7e95a3eed0caee7d0a2faa9631be62f22179"
+    },
+    {
+      "size": "tablet1280",
+      "theme": "light",
+      "count": 10,
+      "allBlank": true,
+      "unchanged": true,
+      "protectedDataSha256Before": "cf5982877f2105aaea46bd832d1d7e95a3eed0caee7d0a2faa9631be62f22179",
+      "protectedDataSha256After": "cf5982877f2105aaea46bd832d1d7e95a3eed0caee7d0a2faa9631be62f22179"
+    },
+    {
+      "size": "tablet1280",
+      "theme": "dark",
+      "count": 10,
+      "allBlank": true,
+      "unchanged": true,
+      "protectedDataSha256Before": "cf5982877f2105aaea46bd832d1d7e95a3eed0caee7d0a2faa9631be62f22179",
+      "protectedDataSha256After": "cf5982877f2105aaea46bd832d1d7e95a3eed0caee7d0a2faa9631be62f22179"
+    },
+    {
+      "size": "desktop",
+      "theme": "light",
+      "count": 10,
+      "allBlank": true,
+      "unchanged": true,
+      "protectedDataSha256Before": "cf5982877f2105aaea46bd832d1d7e95a3eed0caee7d0a2faa9631be62f22179",
+      "protectedDataSha256After": "cf5982877f2105aaea46bd832d1d7e95a3eed0caee7d0a2faa9631be62f22179"
+    },
+    {
+      "size": "desktop",
+      "theme": "dark",
+      "count": 10,
+      "allBlank": true,
+      "unchanged": true,
+      "protectedDataSha256Before": "cf5982877f2105aaea46bd832d1d7e95a3eed0caee7d0a2faa9631be62f22179",
+      "protectedDataSha256After": "cf5982877f2105aaea46bd832d1d7e95a3eed0caee7d0a2faa9631be62f22179"
+    }
+  ],
+  "blocked": [],
+  "errors": [],
+  "securityPolicyViolations": [],
+  "endedAtUtc": "2026-11-05T04:35:45.486Z",
+  "status": "pass"
+}

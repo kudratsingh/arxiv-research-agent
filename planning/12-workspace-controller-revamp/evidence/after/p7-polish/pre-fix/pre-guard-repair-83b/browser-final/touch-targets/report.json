@@ -1,0 +1,1926 @@
+{
+  "phase": "final",
+  "base": "http://127.0.0.1:3168",
+  "principal": "controller-p7-preview",
+  "startedAtUtc": "2026-11-05T07:12:54.719Z",
+  "cases": [
+    {
+      "name": "today",
+      "theme": "light",
+      "pointerCoarse": true,
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "label": "Queue & controls",
+          "command": "toggle-sidebar",
+          "width": 132.046875,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-sidebar-toggle"
+        },
+        {
+          "tag": "A",
+          "label": "Today",
+          "command": null,
+          "width": 75.671875,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Radar",
+          "command": null,
+          "width": 75.53125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Library",
+          "command": null,
+          "width": 81.5,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Interests",
+          "command": null,
+          "width": 92.53125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Sources & checks",
+          "command": null,
+          "width": 140.328125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Review",
+          "command": null,
+          "width": 82.203125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Open command palette",
+          "command": "command-palette",
+          "width": 44,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-sidebar-toggle ws-palette-trigger"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Open search",
+          "command": null,
+          "width": 60,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-composer-toggle"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Previous paper",
+          "command": "prev",
+          "width": 44,
+          "height": 44,
+          "disabled": true,
+          "class": ""
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Next paper",
+          "command": "next",
+          "width": 44,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Unsave CI synthetic long abstract agent navigation study",
+          "command": "save",
+          "width": 51.390625,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-player-action"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Dismiss CI synthetic long abstract agent navigation study",
+          "command": "dismiss",
+          "width": 54.421875,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-player-action"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Snooze one day CI synthetic long abstract agent navigation study",
+          "command": "snooze",
+          "width": 97.203125,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-player-action"
+        }
+      ],
+      "small": []
+    },
+    {
+      "name": "radar",
+      "theme": "light",
+      "pointerCoarse": true,
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "label": "Queue & controls",
+          "command": "toggle-sidebar",
+          "width": 132.046875,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-sidebar-toggle"
+        },
+        {
+          "tag": "A",
+          "label": "Today",
+          "command": null,
+          "width": 75.671875,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Radar",
+          "command": null,
+          "width": 75.53125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Library",
+          "command": null,
+          "width": 81.5,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Interests",
+          "command": null,
+          "width": 92.53125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Sources & checks",
+          "command": null,
+          "width": 140.328125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Review",
+          "command": null,
+          "width": 82.203125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Open command palette",
+          "command": "command-palette",
+          "width": 44,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-sidebar-toggle ws-palette-trigger"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Open search",
+          "command": null,
+          "width": 60,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-composer-toggle"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Previous paper",
+          "command": "prev",
+          "width": 44,
+          "height": 44,
+          "disabled": true,
+          "class": ""
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Next paper",
+          "command": "next",
+          "width": 44,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Unsave CI synthetic long abstract agent navigation study",
+          "command": "save",
+          "width": 51.390625,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-player-action"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Dismiss CI synthetic long abstract agent navigation study",
+          "command": "dismiss",
+          "width": 54.421875,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-player-action"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Snooze one day CI synthetic long abstract agent navigation study",
+          "command": "snooze",
+          "width": 97.203125,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-player-action"
+        }
+      ],
+      "small": []
+    },
+    {
+      "name": "library",
+      "theme": "light",
+      "pointerCoarse": true,
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "label": "Queue & controls",
+          "command": "toggle-sidebar",
+          "width": 132.046875,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-sidebar-toggle"
+        },
+        {
+          "tag": "A",
+          "label": "Today",
+          "command": null,
+          "width": 75.671875,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Radar",
+          "command": null,
+          "width": 75.53125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Library",
+          "command": null,
+          "width": 81.5,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Interests",
+          "command": null,
+          "width": 92.53125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Sources & checks",
+          "command": null,
+          "width": 140.328125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Review",
+          "command": null,
+          "width": 82.203125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Open command palette",
+          "command": "command-palette",
+          "width": 44,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-sidebar-toggle ws-palette-trigger"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Open search",
+          "command": null,
+          "width": 60,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-composer-toggle"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Previous paper",
+          "command": "prev",
+          "width": 44,
+          "height": 44,
+          "disabled": true,
+          "class": ""
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Next paper",
+          "command": "next",
+          "width": 44,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Unsave Sparse Mixture-of-Experts Inference on a Single GPU via Expert Caching",
+          "command": "save",
+          "width": 51.390625,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-player-action"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Dismiss Sparse Mixture-of-Experts Inference on a Single GPU via Expert Caching",
+          "command": "dismiss",
+          "width": 54.421875,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-player-action"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Snooze one day Sparse Mixture-of-Experts Inference on a Single GPU via Expert Caching",
+          "command": "snooze",
+          "width": 97.203125,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-player-action"
+        }
+      ],
+      "small": []
+    },
+    {
+      "name": "reader",
+      "theme": "light",
+      "pointerCoarse": true,
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "label": "Queue & controls",
+          "command": "toggle-sidebar",
+          "width": 132.046875,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-sidebar-toggle"
+        },
+        {
+          "tag": "A",
+          "label": "Today",
+          "command": null,
+          "width": 75.671875,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Radar",
+          "command": null,
+          "width": 75.53125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Library",
+          "command": null,
+          "width": 81.5,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Interests",
+          "command": null,
+          "width": 92.53125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Sources & checks",
+          "command": null,
+          "width": 140.328125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Review",
+          "command": null,
+          "width": 82.203125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Open command palette",
+          "command": "command-palette",
+          "width": 44,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-sidebar-toggle ws-palette-trigger"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Find retained PDF excerpts",
+          "command": null,
+          "width": 324,
+          "height": 44,
+          "disabled": false,
+          "class": "daily-secondary"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Open search",
+          "command": null,
+          "width": 72.5625,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-composer-toggle"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Previous paper",
+          "command": "prev",
+          "width": 97.15625,
+          "height": 44,
+          "disabled": true,
+          "class": ""
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Remove from saved items",
+          "command": "save",
+          "width": 156.265625,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Mark read",
+          "command": "mark-read",
+          "width": 70.65625,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Archive",
+          "command": "dismiss",
+          "width": 56.328125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        }
+      ],
+      "small": []
+    },
+    {
+      "name": "interests",
+      "theme": "light",
+      "pointerCoarse": true,
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "label": "Queue & controls",
+          "command": "toggle-sidebar",
+          "width": 132.046875,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-sidebar-toggle"
+        },
+        {
+          "tag": "A",
+          "label": "Today",
+          "command": null,
+          "width": 75.671875,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Radar",
+          "command": null,
+          "width": 75.53125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Library",
+          "command": null,
+          "width": 81.5,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Interests",
+          "command": null,
+          "width": 92.53125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Sources & checks",
+          "command": null,
+          "width": 140.328125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Review",
+          "command": null,
+          "width": 82.203125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Open command palette",
+          "command": "command-palette",
+          "width": 44,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-sidebar-toggle ws-palette-trigger"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Open search",
+          "command": null,
+          "width": 72.5625,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-composer-toggle"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Save interests and question",
+          "command": null,
+          "width": 344,
+          "height": 44,
+          "disabled": false,
+          "class": "daily-button"
+        }
+      ],
+      "small": []
+    },
+    {
+      "name": "operations",
+      "theme": "light",
+      "pointerCoarse": true,
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "label": "Queue & controls",
+          "command": "toggle-sidebar",
+          "width": 132.046875,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-sidebar-toggle"
+        },
+        {
+          "tag": "A",
+          "label": "Today",
+          "command": null,
+          "width": 75.671875,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Radar",
+          "command": null,
+          "width": 75.53125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Library",
+          "command": null,
+          "width": 81.5,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Interests",
+          "command": null,
+          "width": 92.53125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Sources & checks",
+          "command": null,
+          "width": 140.328125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Review",
+          "command": null,
+          "width": 82.203125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Open command palette",
+          "command": "command-palette",
+          "width": 44,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-sidebar-toggle ws-palette-trigger"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Open search",
+          "command": null,
+          "width": 72.5625,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-composer-toggle"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Previous source",
+          "command": "prev",
+          "width": 88.15625,
+          "height": 44,
+          "disabled": true,
+          "class": "daily-secondary"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Next source",
+          "command": "next",
+          "width": 63.421875,
+          "height": 44,
+          "disabled": false,
+          "class": "daily-secondary"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Check arXiv Machine Learning now",
+          "command": "check-sources",
+          "width": 255.671875,
+          "height": 44,
+          "disabled": true,
+          "class": "daily-secondary"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Save preferences · keep schedule disabled",
+          "command": null,
+          "width": 303.4375,
+          "height": 44,
+          "disabled": false,
+          "class": "daily-button"
+        }
+      ],
+      "small": []
+    },
+    {
+      "name": "review",
+      "theme": "light",
+      "pointerCoarse": true,
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "label": "Queue & controls",
+          "command": "toggle-sidebar",
+          "width": 132.046875,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-sidebar-toggle"
+        },
+        {
+          "tag": "A",
+          "label": "Today",
+          "command": null,
+          "width": 75.671875,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Radar",
+          "command": null,
+          "width": 75.53125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Library",
+          "command": null,
+          "width": 81.5,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Interests",
+          "command": null,
+          "width": 92.53125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Sources & checks",
+          "command": null,
+          "width": 140.328125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Review",
+          "command": null,
+          "width": 82.203125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Open command palette",
+          "command": "command-palette",
+          "width": 44,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-sidebar-toggle ws-palette-trigger"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Save judgment for candidate 1",
+          "command": null,
+          "width": 224.6875,
+          "height": 44,
+          "disabled": true,
+          "class": "daily-secondary"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Save judgment for candidate 2",
+          "command": null,
+          "width": 226.65625,
+          "height": 44,
+          "disabled": true,
+          "class": "daily-secondary"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Save judgment for candidate 3",
+          "command": null,
+          "width": 227,
+          "height": 44,
+          "disabled": true,
+          "class": "daily-secondary"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Save judgment for candidate 4",
+          "command": null,
+          "width": 227.453125,
+          "height": 44,
+          "disabled": true,
+          "class": "daily-secondary"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Save judgment for candidate 5",
+          "command": null,
+          "width": 227.140625,
+          "height": 44,
+          "disabled": true,
+          "class": "daily-secondary"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Save judgment for candidate 6",
+          "command": null,
+          "width": 227.34375,
+          "height": 44,
+          "disabled": true,
+          "class": "daily-secondary"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Save judgment for candidate 7",
+          "command": null,
+          "width": 226.09375,
+          "height": 44,
+          "disabled": true,
+          "class": "daily-secondary"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Save judgment for candidate 8",
+          "command": null,
+          "width": 227.46875,
+          "height": 44,
+          "disabled": true,
+          "class": "daily-secondary"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Save judgment for candidate 9",
+          "command": null,
+          "width": 227,
+          "height": 44,
+          "disabled": true,
+          "class": "daily-secondary"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Save judgment for candidate 10",
+          "command": null,
+          "width": 233.828125,
+          "height": 44,
+          "disabled": true,
+          "class": "daily-secondary"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Open search",
+          "command": null,
+          "width": 72.5625,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-composer-toggle"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Previous candidate",
+          "command": "prev",
+          "width": 133.5,
+          "height": 44,
+          "disabled": true,
+          "class": ""
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Next candidate",
+          "command": "next",
+          "width": 106.046875,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        }
+      ],
+      "small": []
+    },
+    {
+      "name": "today",
+      "theme": "dark",
+      "pointerCoarse": true,
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "label": "Queue & controls",
+          "command": "toggle-sidebar",
+          "width": 132.046875,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-sidebar-toggle"
+        },
+        {
+          "tag": "A",
+          "label": "Today",
+          "command": null,
+          "width": 75.671875,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Radar",
+          "command": null,
+          "width": 75.53125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Library",
+          "command": null,
+          "width": 81.5,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Interests",
+          "command": null,
+          "width": 92.53125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Sources & checks",
+          "command": null,
+          "width": 140.328125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Review",
+          "command": null,
+          "width": 82.203125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Open command palette",
+          "command": "command-palette",
+          "width": 44,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-sidebar-toggle ws-palette-trigger"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Open search",
+          "command": null,
+          "width": 60,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-composer-toggle"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Previous paper",
+          "command": "prev",
+          "width": 44,
+          "height": 44,
+          "disabled": true,
+          "class": ""
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Next paper",
+          "command": "next",
+          "width": 44,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Unsave CI synthetic long abstract agent navigation study",
+          "command": "save",
+          "width": 51.390625,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-player-action"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Dismiss CI synthetic long abstract agent navigation study",
+          "command": "dismiss",
+          "width": 54.421875,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-player-action"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Snooze one day CI synthetic long abstract agent navigation study",
+          "command": "snooze",
+          "width": 97.203125,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-player-action"
+        }
+      ],
+      "small": []
+    },
+    {
+      "name": "radar",
+      "theme": "dark",
+      "pointerCoarse": true,
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "label": "Queue & controls",
+          "command": "toggle-sidebar",
+          "width": 132.046875,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-sidebar-toggle"
+        },
+        {
+          "tag": "A",
+          "label": "Today",
+          "command": null,
+          "width": 75.671875,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Radar",
+          "command": null,
+          "width": 75.53125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Library",
+          "command": null,
+          "width": 81.5,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Interests",
+          "command": null,
+          "width": 92.53125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Sources & checks",
+          "command": null,
+          "width": 140.328125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Review",
+          "command": null,
+          "width": 82.203125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Open command palette",
+          "command": "command-palette",
+          "width": 44,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-sidebar-toggle ws-palette-trigger"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Open search",
+          "command": null,
+          "width": 60,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-composer-toggle"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Previous paper",
+          "command": "prev",
+          "width": 44,
+          "height": 44,
+          "disabled": true,
+          "class": ""
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Next paper",
+          "command": "next",
+          "width": 44,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Unsave CI synthetic long abstract agent navigation study",
+          "command": "save",
+          "width": 51.390625,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-player-action"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Dismiss CI synthetic long abstract agent navigation study",
+          "command": "dismiss",
+          "width": 54.421875,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-player-action"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Snooze one day CI synthetic long abstract agent navigation study",
+          "command": "snooze",
+          "width": 97.203125,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-player-action"
+        }
+      ],
+      "small": []
+    },
+    {
+      "name": "library",
+      "theme": "dark",
+      "pointerCoarse": true,
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "label": "Queue & controls",
+          "command": "toggle-sidebar",
+          "width": 132.046875,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-sidebar-toggle"
+        },
+        {
+          "tag": "A",
+          "label": "Today",
+          "command": null,
+          "width": 75.671875,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Radar",
+          "command": null,
+          "width": 75.53125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Library",
+          "command": null,
+          "width": 81.5,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Interests",
+          "command": null,
+          "width": 92.53125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Sources & checks",
+          "command": null,
+          "width": 140.328125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Review",
+          "command": null,
+          "width": 82.203125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Open command palette",
+          "command": "command-palette",
+          "width": 44,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-sidebar-toggle ws-palette-trigger"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Open search",
+          "command": null,
+          "width": 60,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-composer-toggle"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Previous paper",
+          "command": "prev",
+          "width": 44,
+          "height": 44,
+          "disabled": true,
+          "class": ""
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Next paper",
+          "command": "next",
+          "width": 44,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Unsave Sparse Mixture-of-Experts Inference on a Single GPU via Expert Caching",
+          "command": "save",
+          "width": 51.390625,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-player-action"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Dismiss Sparse Mixture-of-Experts Inference on a Single GPU via Expert Caching",
+          "command": "dismiss",
+          "width": 54.421875,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-player-action"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Snooze one day Sparse Mixture-of-Experts Inference on a Single GPU via Expert Caching",
+          "command": "snooze",
+          "width": 97.203125,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-player-action"
+        }
+      ],
+      "small": []
+    },
+    {
+      "name": "reader",
+      "theme": "dark",
+      "pointerCoarse": true,
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "label": "Queue & controls",
+          "command": "toggle-sidebar",
+          "width": 132.046875,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-sidebar-toggle"
+        },
+        {
+          "tag": "A",
+          "label": "Today",
+          "command": null,
+          "width": 75.671875,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Radar",
+          "command": null,
+          "width": 75.53125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Library",
+          "command": null,
+          "width": 81.5,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Interests",
+          "command": null,
+          "width": 92.53125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Sources & checks",
+          "command": null,
+          "width": 140.328125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Review",
+          "command": null,
+          "width": 82.203125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Open command palette",
+          "command": "command-palette",
+          "width": 44,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-sidebar-toggle ws-palette-trigger"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Find retained PDF excerpts",
+          "command": null,
+          "width": 324,
+          "height": 44,
+          "disabled": false,
+          "class": "daily-secondary"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Open search",
+          "command": null,
+          "width": 72.5625,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-composer-toggle"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Previous paper",
+          "command": "prev",
+          "width": 97.15625,
+          "height": 44,
+          "disabled": true,
+          "class": ""
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Remove from saved items",
+          "command": "save",
+          "width": 156.265625,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Mark read",
+          "command": "mark-read",
+          "width": 70.65625,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Archive",
+          "command": "dismiss",
+          "width": 56.328125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        }
+      ],
+      "small": []
+    },
+    {
+      "name": "interests",
+      "theme": "dark",
+      "pointerCoarse": true,
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "label": "Queue & controls",
+          "command": "toggle-sidebar",
+          "width": 132.046875,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-sidebar-toggle"
+        },
+        {
+          "tag": "A",
+          "label": "Today",
+          "command": null,
+          "width": 75.671875,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Radar",
+          "command": null,
+          "width": 75.53125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Library",
+          "command": null,
+          "width": 81.5,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Interests",
+          "command": null,
+          "width": 92.53125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Sources & checks",
+          "command": null,
+          "width": 140.328125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Review",
+          "command": null,
+          "width": 82.203125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Open command palette",
+          "command": "command-palette",
+          "width": 44,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-sidebar-toggle ws-palette-trigger"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Open search",
+          "command": null,
+          "width": 72.5625,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-composer-toggle"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Save interests and question",
+          "command": null,
+          "width": 344,
+          "height": 44,
+          "disabled": false,
+          "class": "daily-button"
+        }
+      ],
+      "small": []
+    },
+    {
+      "name": "operations",
+      "theme": "dark",
+      "pointerCoarse": true,
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "label": "Queue & controls",
+          "command": "toggle-sidebar",
+          "width": 132.046875,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-sidebar-toggle"
+        },
+        {
+          "tag": "A",
+          "label": "Today",
+          "command": null,
+          "width": 75.671875,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Radar",
+          "command": null,
+          "width": 75.53125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Library",
+          "command": null,
+          "width": 81.5,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Interests",
+          "command": null,
+          "width": 92.53125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Sources & checks",
+          "command": null,
+          "width": 140.328125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Review",
+          "command": null,
+          "width": 82.203125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Open command palette",
+          "command": "command-palette",
+          "width": 44,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-sidebar-toggle ws-palette-trigger"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Open search",
+          "command": null,
+          "width": 72.5625,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-composer-toggle"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Previous source",
+          "command": "prev",
+          "width": 88.15625,
+          "height": 44,
+          "disabled": true,
+          "class": "daily-secondary"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Next source",
+          "command": "next",
+          "width": 63.421875,
+          "height": 44,
+          "disabled": false,
+          "class": "daily-secondary"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Check arXiv Machine Learning now",
+          "command": "check-sources",
+          "width": 255.671875,
+          "height": 44,
+          "disabled": true,
+          "class": "daily-secondary"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Save preferences · keep schedule disabled",
+          "command": null,
+          "width": 303.4375,
+          "height": 44,
+          "disabled": false,
+          "class": "daily-button"
+        }
+      ],
+      "small": []
+    },
+    {
+      "name": "review",
+      "theme": "dark",
+      "pointerCoarse": true,
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "label": "Queue & controls",
+          "command": "toggle-sidebar",
+          "width": 132.046875,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-sidebar-toggle"
+        },
+        {
+          "tag": "A",
+          "label": "Today",
+          "command": null,
+          "width": 75.671875,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Radar",
+          "command": null,
+          "width": 75.53125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Library",
+          "command": null,
+          "width": 81.5,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Interests",
+          "command": null,
+          "width": 92.53125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Sources & checks",
+          "command": null,
+          "width": 140.328125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "A",
+          "label": "Review",
+          "command": null,
+          "width": 82.203125,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Open command palette",
+          "command": "command-palette",
+          "width": 44,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-sidebar-toggle ws-palette-trigger"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Save judgment for candidate 1",
+          "command": null,
+          "width": 224.6875,
+          "height": 44,
+          "disabled": true,
+          "class": "daily-secondary"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Save judgment for candidate 2",
+          "command": null,
+          "width": 226.65625,
+          "height": 44,
+          "disabled": true,
+          "class": "daily-secondary"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Save judgment for candidate 3",
+          "command": null,
+          "width": 227,
+          "height": 44,
+          "disabled": true,
+          "class": "daily-secondary"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Save judgment for candidate 4",
+          "command": null,
+          "width": 227.453125,
+          "height": 44,
+          "disabled": true,
+          "class": "daily-secondary"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Save judgment for candidate 5",
+          "command": null,
+          "width": 227.140625,
+          "height": 44,
+          "disabled": true,
+          "class": "daily-secondary"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Save judgment for candidate 6",
+          "command": null,
+          "width": 227.34375,
+          "height": 44,
+          "disabled": true,
+          "class": "daily-secondary"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Save judgment for candidate 7",
+          "command": null,
+          "width": 226.09375,
+          "height": 44,
+          "disabled": true,
+          "class": "daily-secondary"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Save judgment for candidate 8",
+          "command": null,
+          "width": 227.46875,
+          "height": 44,
+          "disabled": true,
+          "class": "daily-secondary"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Save judgment for candidate 9",
+          "command": null,
+          "width": 227,
+          "height": 44,
+          "disabled": true,
+          "class": "daily-secondary"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Save judgment for candidate 10",
+          "command": null,
+          "width": 233.828125,
+          "height": 44,
+          "disabled": true,
+          "class": "daily-secondary"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Open search",
+          "command": null,
+          "width": 72.5625,
+          "height": 44,
+          "disabled": false,
+          "class": "ws-composer-toggle"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Previous candidate",
+          "command": "prev",
+          "width": 133.5,
+          "height": 44,
+          "disabled": true,
+          "class": ""
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Next candidate",
+          "command": "next",
+          "width": 106.046875,
+          "height": 44,
+          "disabled": false,
+          "class": ""
+        }
+      ],
+      "small": []
+    }
+  ],
+  "blocked": [],
+  "errors": [],
+  "endedAtUtc": "2026-11-05T07:13:06.024Z",
+  "small": [],
+  "measurementStatus": "pass",
+  "targetStatus": "pass"
+}

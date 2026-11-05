@@ -1,0 +1,55 @@
+{
+  "base": "http://127.0.0.1:3168",
+  "startedAtUtc": "2026-11-05T06:52:07.136Z",
+  "scope": "Missing synthetic work plus explicitly intercepted503, no editor-module request or backend mutation",
+  "cases": [
+    {
+      "name": "desktop",
+      "mode": "missing-item",
+      "status": "pass",
+      "coreRequests": [],
+      "injected": [],
+      "serverStateUnchanged": true
+    },
+    {
+      "name": "desktop",
+      "mode": "intercepted-data-outage",
+      "status": "pass",
+      "coreRequests": [],
+      "injected": [
+        {
+          "path": "/api/workspace/state",
+          "forwarded": false,
+          "status": 503
+        }
+      ],
+      "serverStateUnchanged": true
+    },
+    {
+      "name": "mobile",
+      "mode": "missing-item",
+      "status": "pass",
+      "coreRequests": [],
+      "injected": [],
+      "serverStateUnchanged": true
+    },
+    {
+      "name": "mobile",
+      "mode": "intercepted-data-outage",
+      "status": "pass",
+      "coreRequests": [],
+      "injected": [
+        {
+          "path": "/api/workspace/state",
+          "forwarded": false,
+          "status": 503
+        }
+      ],
+      "serverStateUnchanged": true
+    }
+  ],
+  "blocked": [],
+  "errors": [],
+  "endedAtUtc": "2026-11-05T06:52:12.230Z",
+  "status": "pass"
+}

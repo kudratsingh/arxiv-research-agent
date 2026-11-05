@@ -1,0 +1,164 @@
+{
+  "base": "http://127.0.0.1:3168",
+  "applicationCommit": "164a1595082881081ef8cd3ebf38461998838cfd",
+  "cases": [
+    {
+      "name": "desktop",
+      "rows": 22,
+      "trace": [
+        {
+          "label": "before Tab",
+          "hasFocus": true,
+          "active": "<input id=\"_r_4_-search\" role=\"combobox\" aria-autocomplete=\"list\" aria-expanded=\"true\" aria-controls=\"_r_4_\" aria-activedescendant=\"_r_4_-2\" placeholder=\"Find a command…\" value=\"\">",
+          "insideDialog": true,
+          "dialogOpen": true,
+          "progress": 1,
+          "url": "http://127.0.0.1:3168/workspace/today?focus=arxiv%3A2611.99800"
+        },
+        {
+          "label": "Tab 1",
+          "hasFocus": true,
+          "active": "<ul class=\"ws-queue\" role=\"listbox\" id=\"_r_4_\" aria-label=\"Available commands\"><li role=\"presentation\"><button class=\"ws-queue-row\" type=\"button\" role=\"option\" id=\"_r_4_-0\" aria-selected=\"false\" aria-label=\"Next paper\" tabindex=\"-1\"><span class=\"ws-queue-text\"><span class=\"ws-queue-title\">Next paper</span><small class=\"ws-queue-meta\">This page</small></span><kbd aria-hidden=\"true\">J ArrowRight</kbd></button></li><li role=\"presentation\"><button class=\"ws-queue-row\" type=\"button\" role=\"option\" id=\"_r_4_-1\" aria-selected=\"false\" aria-label=\"Open in reader\" tabindex=\"-1\"><span class=\"ws-queue-text\"><span class=\"ws-queue-title\">Open in reader</span><small class=\"ws-queue-meta\">This page</small></span><kbd aria-hidden=\"true\">O Enter</kbd></button></li><li role=\"presentation\"><button class=\"ws-queue-row\" type=\"button\" role=\"option\" id=\"_r_4_-2\" aria-selected=\"true\" aria-label=\"Unsave CI synthetic long abstract agent navigation study\" tabindex=\"-1\"><span class=\"ws-queue-text\"><span class=\"ws-queue-title\">Unsave CI synthetic long abstract agent navigation study</span><small class=\"ws-queue-meta\">This page</small></span><kbd aria-hidden=\"true\">S</kbd></button></li><li role=\"presentation\"><bu",
+          "insideDialog": true,
+          "dialogOpen": true,
+          "progress": 1,
+          "url": "http://127.0.0.1:3168/workspace/today?focus=arxiv%3A2611.99800"
+        },
+        {
+          "label": "Tab 2",
+          "hasFocus": false,
+          "active": "<body><div hidden=\"\"><!--$--><!--/$--></div><div class=\"daily-app workspace-app ws-app font-ui\" data-workspace-path=\"/workspace/today\" data-viewport=\"desktop\" data-rail=\"false\" data-drawer=\"closed\"><a href=\"#main\" class=\"ew-visually-hidden ew-skip-link ew-focusable focus-visible:rounded-md focus-visible:border focus-visible:border-border-strong focus-visible:bg-surface focus-visible:px-4 focus-visible:py-2 focus-visible:text-ui-sm focus-visible:font-medium focus-visible:text-ink focus-visible:shadow-elev-2\">Skip to main content</a><span class=\"sr-only\" data-workspace-announcement=\"\" aria-live=\"polite\" aria-atomic=\"true\"></span><aside class=\"ws-sidebar\" aria-label=\"Workspace controls\" tabindex=\"-1\"><div class=\"ws-brand-row\"><a class=\"ws-brand\" title=\"Research workspace · Jazzy\" href=\"/workspace/today\"><span class=\"ws-mascot-wrap\" data-mood=\"idle\" aria-hidden=\"true\"><svg class=\"ws-mascot\" data-mood=\"idle\" width=\"28\" height=\"28\" viewBox=\"0 0 16 16\" shape-rendering=\"crispEdges\" aria-hidden=\"true\"><path class=\"ws-mascot-body\" d=\"M3 1h1v1h-1zM4 1h1v1h-1zM5 1h1v1h-1zM6 1h1v1h-1zM7 1h1v1h-1zM8 1h1v1h-1zM9 1h1v1h-1zM10 1h1v1h-1zM11 1h1v1h-1zM12 1h1v1h-1zM2 2h1v1h-1zM3 2h1v1h-1zM6 2h1v1h-1zM",
+          "insideDialog": false,
+          "dialogOpen": true,
+          "progress": 1,
+          "url": "http://127.0.0.1:3168/workspace/today?focus=arxiv%3A2611.99800"
+        },
+        {
+          "label": "J after focus boundary",
+          "hasFocus": false,
+          "active": "<body><div hidden=\"\"><!--$--><!--/$--></div><div class=\"daily-app workspace-app ws-app font-ui\" data-workspace-path=\"/workspace/today\" data-viewport=\"desktop\" data-rail=\"false\" data-drawer=\"closed\"><a href=\"#main\" class=\"ew-visually-hidden ew-skip-link ew-focusable focus-visible:rounded-md focus-visible:border focus-visible:border-border-strong focus-visible:bg-surface focus-visible:px-4 focus-visible:py-2 focus-visible:text-ui-sm focus-visible:font-medium focus-visible:text-ink focus-visible:shadow-elev-2\">Skip to main content</a><span class=\"sr-only\" data-workspace-announcement=\"\" aria-live=\"polite\" aria-atomic=\"true\"></span><aside class=\"ws-sidebar\" aria-label=\"Workspace controls\" tabindex=\"-1\"><div class=\"ws-brand-row\"><a class=\"ws-brand\" title=\"Research workspace · Jazzy\" href=\"/workspace/today\"><span class=\"ws-mascot-wrap\" data-mood=\"idle\" aria-hidden=\"true\"><svg class=\"ws-mascot\" data-mood=\"idle\" width=\"28\" height=\"28\" viewBox=\"0 0 16 16\" shape-rendering=\"crispEdges\" aria-hidden=\"true\"><path class=\"ws-mascot-body\" d=\"M3 1h1v1h-1zM4 1h1v1h-1zM5 1h1v1h-1zM6 1h1v1h-1zM7 1h1v1h-1zM8 1h1v1h-1zM9 1h1v1h-1zM10 1h1v1h-1zM11 1h1v1h-1zM12 1h1v1h-1zM2 2h1v1h-1zM3 2h1v1h-1zM6 2h1v1h-1zM",
+          "insideDialog": false,
+          "dialogOpen": true,
+          "progress": 1,
+          "url": "http://127.0.0.1:3168/workspace/today?focus=arxiv%3A2611.99800"
+        },
+        {
+          "label": "Tab 3",
+          "hasFocus": true,
+          "active": "<button type=\"button\" class=\"ws-sidebar-toggle ws-dialog-close\">Close <kbd aria-hidden=\"true\">Esc</kbd></button>",
+          "insideDialog": true,
+          "dialogOpen": true,
+          "progress": 1,
+          "url": "http://127.0.0.1:3168/workspace/today?focus=arxiv%3A2611.99800"
+        },
+        {
+          "label": "Tab 4",
+          "hasFocus": true,
+          "active": "<input id=\"_r_4_-search\" role=\"combobox\" aria-autocomplete=\"list\" aria-expanded=\"true\" aria-controls=\"_r_4_\" aria-activedescendant=\"_r_4_-2\" placeholder=\"Find a command…\" value=\"\">",
+          "insideDialog": true,
+          "dialogOpen": true,
+          "progress": 1,
+          "url": "http://127.0.0.1:3168/workspace/today?focus=arxiv%3A2611.99800"
+        },
+        {
+          "label": "Tab 5",
+          "hasFocus": true,
+          "active": "<ul class=\"ws-queue\" role=\"listbox\" id=\"_r_4_\" aria-label=\"Available commands\"><li role=\"presentation\"><button class=\"ws-queue-row\" type=\"button\" role=\"option\" id=\"_r_4_-0\" aria-selected=\"false\" aria-label=\"Next paper\" tabindex=\"-1\"><span class=\"ws-queue-text\"><span class=\"ws-queue-title\">Next paper</span><small class=\"ws-queue-meta\">This page</small></span><kbd aria-hidden=\"true\">J ArrowRight</kbd></button></li><li role=\"presentation\"><button class=\"ws-queue-row\" type=\"button\" role=\"option\" id=\"_r_4_-1\" aria-selected=\"false\" aria-label=\"Open in reader\" tabindex=\"-1\"><span class=\"ws-queue-text\"><span class=\"ws-queue-title\">Open in reader</span><small class=\"ws-queue-meta\">This page</small></span><kbd aria-hidden=\"true\">O Enter</kbd></button></li><li role=\"presentation\"><button class=\"ws-queue-row\" type=\"button\" role=\"option\" id=\"_r_4_-2\" aria-selected=\"true\" aria-label=\"Unsave CI synthetic long abstract agent navigation study\" tabindex=\"-1\"><span class=\"ws-queue-text\"><span class=\"ws-queue-title\">Unsave CI synthetic long abstract agent navigation study</span><small class=\"ws-queue-meta\">This page</small></span><kbd aria-hidden=\"true\">S</kbd></button></li><li role=\"presentation\"><bu",
+          "insideDialog": true,
+          "dialogOpen": true,
+          "progress": 1,
+          "url": "http://127.0.0.1:3168/workspace/today?focus=arxiv%3A2611.99800"
+        },
+        {
+          "label": "Tab 6",
+          "hasFocus": false,
+          "active": "<body><div hidden=\"\"><!--$--><!--/$--></div><div class=\"daily-app workspace-app ws-app font-ui\" data-workspace-path=\"/workspace/today\" data-viewport=\"desktop\" data-rail=\"false\" data-drawer=\"closed\"><a href=\"#main\" class=\"ew-visually-hidden ew-skip-link ew-focusable focus-visible:rounded-md focus-visible:border focus-visible:border-border-strong focus-visible:bg-surface focus-visible:px-4 focus-visible:py-2 focus-visible:text-ui-sm focus-visible:font-medium focus-visible:text-ink focus-visible:shadow-elev-2\">Skip to main content</a><span class=\"sr-only\" data-workspace-announcement=\"\" aria-live=\"polite\" aria-atomic=\"true\"></span><aside class=\"ws-sidebar\" aria-label=\"Workspace controls\" tabindex=\"-1\"><div class=\"ws-brand-row\"><a class=\"ws-brand\" title=\"Research workspace · Jazzy\" href=\"/workspace/today\"><span class=\"ws-mascot-wrap\" data-mood=\"idle\" aria-hidden=\"true\"><svg class=\"ws-mascot\" data-mood=\"idle\" width=\"28\" height=\"28\" viewBox=\"0 0 16 16\" shape-rendering=\"crispEdges\" aria-hidden=\"true\"><path class=\"ws-mascot-body\" d=\"M3 1h1v1h-1zM4 1h1v1h-1zM5 1h1v1h-1zM6 1h1v1h-1zM7 1h1v1h-1zM8 1h1v1h-1zM9 1h1v1h-1zM10 1h1v1h-1zM11 1h1v1h-1zM12 1h1v1h-1zM2 2h1v1h-1zM3 2h1v1h-1zM6 2h1v1h-1zM",
+          "insideDialog": false,
+          "dialogOpen": true,
+          "progress": 1,
+          "url": "http://127.0.0.1:3168/workspace/today?focus=arxiv%3A2611.99800"
+        }
+      ]
+    },
+    {
+      "name": "mobile",
+      "rows": 19,
+      "trace": [
+        {
+          "label": "before Tab",
+          "hasFocus": true,
+          "active": "<input id=\"_r_4_-search\" role=\"combobox\" aria-autocomplete=\"list\" aria-expanded=\"true\" aria-controls=\"_r_4_\" aria-activedescendant=\"_r_4_-2\" placeholder=\"Find a command…\" value=\"\">",
+          "insideDialog": true,
+          "dialogOpen": true,
+          "progress": 1,
+          "url": "http://127.0.0.1:3168/workspace/today?focus=arxiv%3A2611.99800"
+        },
+        {
+          "label": "Tab 1",
+          "hasFocus": true,
+          "active": "<ul class=\"ws-queue\" role=\"listbox\" id=\"_r_4_\" aria-label=\"Available commands\"><li role=\"presentation\"><button class=\"ws-queue-row\" type=\"button\" role=\"option\" id=\"_r_4_-0\" aria-selected=\"false\" aria-label=\"Next paper\" tabindex=\"-1\"><span class=\"ws-queue-text\"><span class=\"ws-queue-title\">Next paper</span><small class=\"ws-queue-meta\">This page</small></span><kbd aria-hidden=\"true\">J ArrowRight</kbd></button></li><li role=\"presentation\"><button class=\"ws-queue-row\" type=\"button\" role=\"option\" id=\"_r_4_-1\" aria-selected=\"false\" aria-label=\"Open in reader\" tabindex=\"-1\"><span class=\"ws-queue-text\"><span class=\"ws-queue-title\">Open in reader</span><small class=\"ws-queue-meta\">This page</small></span><kbd aria-hidden=\"true\">O Enter</kbd></button></li><li role=\"presentation\"><button class=\"ws-queue-row\" type=\"button\" role=\"option\" id=\"_r_4_-2\" aria-selected=\"true\" aria-label=\"Unsave CI synthetic long abstract agent navigation study\" tabindex=\"-1\"><span class=\"ws-queue-text\"><span class=\"ws-queue-title\">Unsave CI synthetic long abstract agent navigation study</span><small class=\"ws-queue-meta\">This page</small></span><kbd aria-hidden=\"true\">S</kbd></button></li><li role=\"presentation\"><bu",
+          "insideDialog": true,
+          "dialogOpen": true,
+          "progress": 1,
+          "url": "http://127.0.0.1:3168/workspace/today?focus=arxiv%3A2611.99800"
+        },
+        {
+          "label": "Tab 2",
+          "hasFocus": false,
+          "active": "<body><div hidden=\"\"><!--$--><!--/$--></div><div class=\"daily-app workspace-app ws-app font-ui\" data-workspace-path=\"/workspace/today\" data-viewport=\"mobile\" data-rail=\"false\" data-drawer=\"closed\"><a href=\"#main\" class=\"ew-visually-hidden ew-skip-link ew-focusable focus-visible:rounded-md focus-visible:border focus-visible:border-border-strong focus-visible:bg-surface focus-visible:px-4 focus-visible:py-2 focus-visible:text-ui-sm focus-visible:font-medium focus-visible:text-ink focus-visible:shadow-elev-2\">Skip to main content</a><span class=\"sr-only\" data-workspace-announcement=\"\" aria-live=\"polite\" aria-atomic=\"true\"></span><aside class=\"ws-sidebar\" aria-label=\"Workspace controls\" tabindex=\"-1\"><div class=\"ws-brand-row\"><a class=\"ws-brand\" title=\"Research workspace · Jazzy\" href=\"/workspace/today\"><span class=\"ws-mascot-wrap\" data-mood=\"idle\" aria-hidden=\"true\"><svg class=\"ws-mascot\" data-mood=\"idle\" width=\"28\" height=\"28\" viewBox=\"0 0 16 16\" shape-rendering=\"crispEdges\" aria-hidden=\"true\"><path class=\"ws-mascot-body\" d=\"M3 1h1v1h-1zM4 1h1v1h-1zM5 1h1v1h-1zM6 1h1v1h-1zM7 1h1v1h-1zM8 1h1v1h-1zM9 1h1v1h-1zM10 1h1v1h-1zM11 1h1v1h-1zM12 1h1v1h-1zM2 2h1v1h-1zM3 2h1v1h-1zM6 2h1v1h-1zM7",
+          "insideDialog": false,
+          "dialogOpen": true,
+          "progress": 1,
+          "url": "http://127.0.0.1:3168/workspace/today?focus=arxiv%3A2611.99800"
+        },
+        {
+          "label": "J after focus boundary",
+          "hasFocus": false,
+          "active": "<body><div hidden=\"\"><!--$--><!--/$--></div><div class=\"daily-app workspace-app ws-app font-ui\" data-workspace-path=\"/workspace/today\" data-viewport=\"mobile\" data-rail=\"false\" data-drawer=\"closed\"><a href=\"#main\" class=\"ew-visually-hidden ew-skip-link ew-focusable focus-visible:rounded-md focus-visible:border focus-visible:border-border-strong focus-visible:bg-surface focus-visible:px-4 focus-visible:py-2 focus-visible:text-ui-sm focus-visible:font-medium focus-visible:text-ink focus-visible:shadow-elev-2\">Skip to main content</a><span class=\"sr-only\" data-workspace-announcement=\"\" aria-live=\"polite\" aria-atomic=\"true\"></span><aside class=\"ws-sidebar\" aria-label=\"Workspace controls\" tabindex=\"-1\"><div class=\"ws-brand-row\"><a class=\"ws-brand\" title=\"Research workspace · Jazzy\" href=\"/workspace/today\"><span class=\"ws-mascot-wrap\" data-mood=\"idle\" aria-hidden=\"true\"><svg class=\"ws-mascot\" data-mood=\"idle\" width=\"28\" height=\"28\" viewBox=\"0 0 16 16\" shape-rendering=\"crispEdges\" aria-hidden=\"true\"><path class=\"ws-mascot-body\" d=\"M3 1h1v1h-1zM4 1h1v1h-1zM5 1h1v1h-1zM6 1h1v1h-1zM7 1h1v1h-1zM8 1h1v1h-1zM9 1h1v1h-1zM10 1h1v1h-1zM11 1h1v1h-1zM12 1h1v1h-1zM2 2h1v1h-1zM3 2h1v1h-1zM6 2h1v1h-1zM7",
+          "insideDialog": false,
+          "dialogOpen": true,
+          "progress": 1,
+          "url": "http://127.0.0.1:3168/workspace/today?focus=arxiv%3A2611.99800"
+        },
+        {
+          "label": "Tab 3",
+          "hasFocus": true,
+          "active": "<button type=\"button\" class=\"ws-sidebar-toggle ws-dialog-close\">Close <kbd aria-hidden=\"true\">Esc</kbd></button>",
+          "insideDialog": true,
+          "dialogOpen": true,
+          "progress": 1,
+          "url": "http://127.0.0.1:3168/workspace/today?focus=arxiv%3A2611.99800"
+        },
+        {
+          "label": "Tab 4",
+          "hasFocus": true,
+          "active": "<input id=\"_r_4_-search\" role=\"combobox\" aria-autocomplete=\"list\" aria-expanded=\"true\" aria-controls=\"_r_4_\" aria-activedescendant=\"_r_4_-2\" placeholder=\"Find a command…\" value=\"\">",
+          "insideDialog": true,
+          "dialogOpen": true,
+          "progress": 1,
+          "url": "http://127.0.0.1:3168/workspace/today?focus=arxiv%3A2611.99800"
+        },
+        {
+          "label": "Tab 5",
+          "hasFocus": true,
+          "active": "<ul class=\"ws-queue\" role=\"listbox\" id=\"_r_4_\" aria-label=\"Available commands\"><li role=\"presentation\"><button class=\"ws-queue-row\" type=\"button\" role=\"option\" id=\"_r_4_-0\" aria-selected=\"false\" aria-label=\"Next paper\" tabindex=\"-1\"><span class=\"ws-queue-text\"><span class=\"ws-queue-title\">Next paper</span><small class=\"ws-queue-meta\">This page</small></span><kbd aria-hidden=\"true\">J ArrowRight</kbd></button></li><li role=\"presentation\"><button class=\"ws-queue-row\" type=\"button\" role=\"option\" id=\"_r_4_-1\" aria-selected=\"false\" aria-label=\"Open in reader\" tabindex=\"-1\"><span class=\"ws-queue-text\"><span class=\"ws-queue-title\">Open in reader</span><small class=\"ws-queue-meta\">This page</small></span><kbd aria-hidden=\"true\">O Enter</kbd></button></li><li role=\"presentation\"><button class=\"ws-queue-row\" type=\"button\" role=\"option\" id=\"_r_4_-2\" aria-selected=\"true\" aria-label=\"Unsave CI synthetic long abstract agent navigation study\" tabindex=\"-1\"><span class=\"ws-queue-text\"><span class=\"ws-queue-title\">Unsave CI synthetic long abstract agent navigation study</span><small class=\"ws-queue-meta\">This page</small></span><kbd aria-hidden=\"true\">S</kbd></button></li><li role=\"presentation\"><bu",
+          "insideDialog": true,
+          "dialogOpen": true,
+          "progress": 1,
+          "url": "http://127.0.0.1:3168/workspace/today?focus=arxiv%3A2611.99800"
+        },
+        {
+          "label": "Tab 6",
+          "hasFocus": false,
+          "active": "<body><div hidden=\"\"><!--$--><!--/$--></div><div class=\"daily-app workspace-app ws-app font-ui\" data-workspace-path=\"/workspace/today\" data-viewport=\"mobile\" data-rail=\"false\" data-drawer=\"closed\"><a href=\"#main\" class=\"ew-visually-hidden ew-skip-link ew-focusable focus-visible:rounded-md focus-visible:border focus-visible:border-border-strong focus-visible:bg-surface focus-visible:px-4 focus-visible:py-2 focus-visible:text-ui-sm focus-visible:font-medium focus-visible:text-ink focus-visible:shadow-elev-2\">Skip to main content</a><span class=\"sr-only\" data-workspace-announcement=\"\" aria-live=\"polite\" aria-atomic=\"true\"></span><aside class=\"ws-sidebar\" aria-label=\"Workspace controls\" tabindex=\"-1\"><div class=\"ws-brand-row\"><a class=\"ws-brand\" title=\"Research workspace · Jazzy\" href=\"/workspace/today\"><span class=\"ws-mascot-wrap\" data-mood=\"idle\" aria-hidden=\"true\"><svg class=\"ws-mascot\" data-mood=\"idle\" width=\"28\" height=\"28\" viewBox=\"0 0 16 16\" shape-rendering=\"crispEdges\" aria-hidden=\"true\"><path class=\"ws-mascot-body\" d=\"M3 1h1v1h-1zM4 1h1v1h-1zM5 1h1v1h-1zM6 1h1v1h-1zM7 1h1v1h-1zM8 1h1v1h-1zM9 1h1v1h-1zM10 1h1v1h-1zM11 1h1v1h-1zM12 1h1v1h-1zM2 2h1v1h-1zM3 2h1v1h-1zM6 2h1v1h-1zM7",
+          "insideDialog": false,
+          "dialogOpen": true,
+          "progress": 1,
+          "url": "http://127.0.0.1:3168/workspace/today?focus=arxiv%3A2611.99800"
+        }
+      ]
+    }
+  ],
+  "blocked": [],
+  "errors": []
+}

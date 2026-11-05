@@ -1,6 +1,6 @@
 # STATUS: workspace controller revamp
 
-Updated: **2026-11-04 UTC**. State: **G6 supporting screens and owner-authorized paper/navigation refinement verified under E27. G7 consolidation remains pending.**
+Updated: **2026-11-05 UTC**. State: **G7 PASS at application 6b2eccf. G8 local verification ready; root integration, publication and exact pushed-head CI remain pending.**
 
 The implementing agent updates this file at every gate (G0–G8). Numbers are
 pasted from command output and never typed by hand.
@@ -56,8 +56,8 @@ pasted from command output and never typed by hand.
 | G4 Reader | `a933a71` (verified source; evidence attribution below) | 2026-11-04 06:05 UTC | PASS under E27 | See phase evidence and measurements below |
 | G5 Radar & Library | `ade234b` (verified source; evidence attribution below) | 2026-11-04 07:19 UTC | PASS under E27 | See phase evidence and measurements below |
 | G6 Interests · Sources · Review | `fda9d7616e8cbd0d882bcc41510a997ade117bf9` (verified application tree; source binding below) | 2026-11-04 | PASS under E27 | [P6 preview, browser walkthrough and recordings](evidence/after/p6-supporting-workflow/README.md); local checks below |
-| G7 Polish | | | | |
-| G8 Verify & ship | | | | |
+| G7 Polish | `6b2eccf069537d90423359fc74c033f27e665cd6` (verified frozen application source) | 2026-11-05 | PASS | [Mechanical checks](evidence/after/p7-polish/checks/README.md); [independent final runtime, screenshots and recordings](evidence/after/p7-polish/README.md); [bounded static repair review](evidence/after/p7-polish/review/g8-repair-6b2eccf.md) |
+| G8 Verify & ship | Application `6b2eccf`; later commits are documentation only | 2026-11-05 | LOCAL READY; publication/remote CI pending | S1–S8 mapping and root Python/source-equivalence below; root owns original-branch integration/rebase/push and exact pushed-head CI |
 
 ## Deviations from the kit
 
@@ -549,7 +549,7 @@ PASS      All self-hosted font files (woff2, latin subset) — 103,476 B (101.1 
 PASS      `/today` first-load JS, excl. polyfill — 153,592 B (150.0 KiB) against 163,840 B (160.0 KiB)
 PASS      `/interests` first-load JS, excl. polyfill — 153,046 B (149.5 KiB) against 163,840 B (160.0 KiB)
 PASS      `/library` first-load JS, excl. polyfill — 152,564 B (149.0 KiB) against 163,840 B (160.0 KiB)
-PASS      `/library/items/[id]` first-load JS, excl. polyfill — 156,273 B (152.6 KiB) against 163,840 B (160.0 KiB)
+PASS      `/library/items/[id]` first-load JS, excl. polyfill — 156,275 B (152.6 KiB) against 163,840 B (160.0 KiB)
 PASS      `/workspace/today` first-load JS, excl. polyfill — 167,200 B (163.3 KiB) against 169,984 B (166.0 KiB)
 PASS      `/workspace/radar` first-load JS, excl. polyfill — 161,210 B (157.4 KiB) against 169,984 B (166.0 KiB)
 PASS      `/workspace/interests` first-load JS, excl. polyfill — 168,324 B (164.4 KiB) against 169,984 B (166.0 KiB)
@@ -1260,3 +1260,256 @@ than requiring synchronous mount; its label and interaction assertions remain.
 Provider contacts/spend for this frontend task remain zero; recurrence remains
 disabled. No owner data, credentials, qualification checkout, PR or merge was
 accessed. Stop before full P7.
+
+## P7 / WO-7.1–7.5 — frozen source and mechanical gates
+
+The owner explicitly authorized continuing into P7 in a fresh isolated checkout
+from `dff860e16e89c22382bce88d98f64645dfdcbfc8`. Temporary branch
+`codex/workspace-controller-p7` has eight bounded local source commits:
+
+- `342461d` — lazy native command palette, shortcut help, and slash suggestions.
+- `62b2ce9` — scoped CSS consolidation, Jazzy treatment and bounded component loading.
+- `164a159` — exact Reader fragment and terminal-route readiness reliability.
+- `5d9e708` — strict native-dialog keyboard focus containment.
+- `2129fed` — sidebar hidden-control containing block and desktop native-anchor scroll ownership.
+- `83b196e` — eager focused-paper rendering and bounded cached Reader module-state loading.
+- `99b11db` — drawer composition and browser modifier-key preservation.
+- `6b2eccf069537d90423359fc74c033f27e665cd6` — shared search/route navigation veto before intent and checkpoint recording.
+
+These are local commits; no push, PR, merge or remote-CI result is claimed.
+The [27-file application manifest](evidence/after/p7-polish/checks/application-source-manifest.json)
+verifies that final committed source/configuration bytes equal the revised
+production build freeze. Its canonical application-file list hashes to
+`a6027ab5d464aa2aac2963cc4553234e6eb40c6ff8ab2259af41d5d8595b031a`.
+
+The command registry derives availability, labels and context from current
+controls, including portaled bars, the sidebar and mobile drawer. Disabled or
+CSS-hidden page controls are unavailable; existing theme/export/footer menu
+commands deliberately remain callable through their native controls. Palette
+and slash actions re-resolve the exact label and current paper/candidate context
+before dispatch. Inline choices use the same resolver/order as Enter. Ordinary
+page shortcuts are inert while any modal owns focus; IME composition is guarded
+locally and globally. Native dialog focus returns to the invoker, and arrow
+navigation keeps the active option visible. Plain Tab/Shift-Tab wrap between
+Close and the palette input (or help Close alone); the scrollable listbox is
+excluded from the tab order. Browser modifier-Tab and composition remain native.
+No capability or request body was removed or replaced by a fictional action.
+
+The independent original83b G8 review found a separate search bypass: direct
+ordinary search could leave a pending Reader/Interests save while working draft
+recovery meant no beforeunload warning. The repaired source shares an explicit
+cancelable navigation request with Reader/Interests/Review's existing blocked
+states. Ordinary search and route/slash commands consult it before recording
+intent, checkpointing or assigning a location. Refused searches retain the query
+and current draft and show the existing page notice plus a search refusal hint.
+Managed Composer forms skip generic submit capture; early non-anchor clicks do
+not create checkpoints. Accepted navigation retains the exact query/filter and
+sanitized cosmetic intent contracts. This fixes app-initiated navigation only;
+it does not blanket-fix browser chrome, history or unavailable draft storage.
+The separate drawer trap now respects composition and browser modifier-Tab.
+The original83b findings and expected-red counterfactual remain preserved;
+the final bounded repair review reports no remaining confirmed P1/P2.
+
+Cold observations exposed an approximately 300 ms mandatory-content reveal delay
+in an interim React.lazy/Suspense approach. Final FocusPaper is eager in Today,
+Radar and Library and still fits every unchanged JavaScript ceiling. Reader
+loads code after real item data through an explicit cached-module/inflight
+loader with stale/unmount guards, visible busy/error states and explicit retry.
+Its original principal/work/version/entry key remains unchanged; ordinary hash
+changes do not remount its editor. Successful loads clear prior errors, including
+failure followed by a new exact version. No-data/unavailable views skip the
+heavy editor import. Only component code is cached, never principal/item data.
+These changes remove the observed interim reveal plateau; they do not establish
+uniformly faster performance than P6 or a total transferred-JavaScript reduction.
+Matched runtime observations are reported separately below.
+
+The bounded inherited Reader hash fix updates only the viewed passage/panel:
+Unicode ranges, single-offset anchors, named panels and existing typed retained
+material anchors synchronize without remounting the editor. Work/version and
+material checks remain authoritative; draft text, `draft.anchor`, pending saves
+and saved-entry context stay attached. Saved-entry priority applies on the mount
+frame; later explicit hash/history events remain authoritative. Fresh exact
+navigation waits for the requested rendered mark and visible panel. Terminal
+unavailable routes settle their own heading, including list routes without a
+success-only wrapper; actual history restoration retains priority and subsequent
+scroll checkpoints resume. This does **not** solve the separately documented
+broader unsaved-draft browser Back/Forward limitation.
+
+Independent browser geometry also proved a desktop containing-block defect:
+four absolutely positioned hidden ThemeToggle controls used BODY rather than
+the unpositioned sidebar, extending HTML to 1,242 px over a 1,000 px app/body. Native
+`#notes` navigation then moved the outer document 242 px as well as main. The
+scoped sidebar `position: relative` correction contains those controls in ASIDE;
+the one-property causal diagnostic restores HTML 1,000 / window 0 and keeps the brand
+visible. No global html/body overflow rule, window-scroll patch or mobile scroll
+policy change was introduced. The final native-anchor/sidebar regression is part
+of the independent browser acceptance package.
+
+### Exact-source local checks
+
+All commands ran from this isolated `web/` with the disabled provider sentinel,
+mock data and recurrence false. Build and Vitest did not overlap. The two steps
+`npm run build` then unchanged `node scripts/route-budgets.mjs` are the exact
+build/budget steps of `npm run budgets`.
+
+| Check | Actual result | Evidence |
+|---|---|---|
+| Full `npm test -- --coverage` | **201 files, 4,079 tests passed; exit 0** | [Full log](evidence/after/p7-polish/checks/final-coverage.log) |
+| Coverage | **98.20% statements (5679/5783), 94.18% branches (4759/5053), 93.33% functions (1877/2011), 99.46% lines (4651/4676)** | [Machine summary](evidence/after/p7-polish/checks/coverage-summary.json) |
+| `npm run lint` | **exit 0, zero warnings** | [Log](evidence/after/p7-polish/checks/lint.log) |
+| `npm run typecheck` | **exit 0** | [Log](evidence/after/p7-polish/checks/typecheck.log) |
+| Production build | **exit 0** | [Log](evidence/after/p7-polish/checks/final-build.log) |
+| Route budgets | **all 20 gated rows pass; exit 0** | [Full report](evidence/after/p7-polish/checks/final-budgets.log) |
+| Source hygiene | **`git diff --check` passes; zero backend/dependency/contract changes** | [Source manifest](evidence/after/p7-polish/checks/application-source-manifest.json) |
+
+Coverage floors remain **98.15/94/92.2/99.11**. No exclusions, measurement-script
+changes, JavaScript ceiling movement or source-contract loosening were used.
+An earlier full run passed all 4,055 tests but measured 98.14% statements. The
+added real slash-form submit/stale-paper regression covers an actual execution
+path. Existing lazy-content assertions now wait for real content readiness;
+request bodies, versions, saved anchors, drafts, conflicts and honesty assertions
+remain. Each test edit has its reason in the relevant source commit body.
+
+| Budget row | Measured / unchanged ceiling (B) |
+|---|---|
+| `/workspace/today` | **167,986 / 169,984** |
+| `/workspace/radar` | **167,097 / 169,984** |
+| `/workspace/interests` | **164,870 / 169,984** |
+| `/workspace/library` | **167,151 / 169,984** |
+| `/workspace/items/[id]` | **161,034 / 169,984** |
+| `/workspace/operations` | **162,301 / 169,984** |
+| `/workspace/review` | **164,237 / 169,984** |
+
+Reader's official first-load union is **161,034 B** versus G6's **169,925 B**;
+the editor still loads after real item data. That deferral does not reduce the
+total code required for a normal Reader session. Actual matched settled
+JavaScript response-body transfer, including lazy scripts, is:
+
+| Cold observation | P6 (B) | Final P7 (B) | Change (B) |
+|---|---|---|---|
+| Reader desktop | 225,945 | 230,347 | +4,402 |
+| Reader mobile | 173,880 | 178,289 | +4,409 |
+| Today desktop | 221,893 | 224,886 | +2,993 |
+| Today mobile | 169,828 | 172,828 | +3,000 |
+
+[Paired observations and exact DOM times](evidence/after/p7-polish/checks/observed-content-readiness-and-transfer.json)
+retain both themes. Final cold Reader source DOM times are 192–221 ms and Today
+title DOM times 191–227 ms. The interim approximately 300 ms reveal plateau is absent;
+these are single loopback observations, not a speed benchmark or uniform
+performance improvement over P6. In particular, settled JavaScript increased.
+
+### E27 closure and E58 implementation deviation under owner-authorized scope
+
+`components/workspace/workspace.css` is deleted after required rules are folded
+into scoped `controller.css`; dead/overridden declarations are removed.
+The root implementation agent chose to retain `daily-app`/`daily.css` rather
+than perform E58's planned removal. This reversible implementation deviation
+reuses byte-identical form/focus foundations to meet the owner-authorized
+legacy-preservation and CSS-cap requirements without duplicating the same rules.
+It is **not a budget exception** or a new owner-specific E58 instruction. `daily.css`, `components/features/workspace.css` and shared
+`app/tokens.css` remain byte-identical to the base, with hashes in the manifest.
+
+Final emitted CSS is **23,940 B**. The preauthorized ratchet is
+`ceil(23940 * 1.06 / 512) * 512 = 25,600 B`, leaving **1,660 B / 6.93%** and
+remaining below the unchanged **26,624 B** hard cap. The reported derived
+transfer ceiling mechanically moves from 319,488 to 327,680 B by the same 8,192 B
+delta; its final measured transfer is 319,723 B. The append-only ratchet record,
+pinned literals and six-percent/cap regression live in `web/budgets.json` and
+`web/tests/budgets.test.ts`. Every JavaScript and font ceiling stays unchanged.
+
+### Isolation and remaining acceptance
+
+P7 preview uses only 3168/API8168 and a new synthetic principal/database on
+verification PostgreSQL 15458. Independent browser regression uses only its own
+3169/API8169 principal/database. Owner 3137/API8137/PG15438, original
+preview 3148/API8148 and pilot 3158 remain untouched. Provider contacts/spend,
+real-source refreshes and new recurrence are zero. No qualification checkout, real
+credential, owner data, API code or future mode UI is in this phase's scope.
+
+The independent [browser package](evidence/after/p7-polish/README.md) owns final
+responsive/theme/axe, native geometry, command/modal/IME, reduced motion,
+legacy preview, total transfer, delayed-chunk, keyboard-loop and video evidence.
+Its final runtime release at application `6b2eccf` is green. The original `83b` G8 HOLD,
+counterfactual failures and unsuccessful/obsolete harness attempts remain
+explicitly separate, with unchanged bound logs and path mappings. G8 shipping
+still requires root-owned integration, rebase checks, publication and exact
+pushed-head CI; no P9 work or new paid evaluation is authorized by this gate.
+
+### G8 success-criteria evidence map — application 6b2eccf
+
+This maps the existing S1–S8 criteria to actual local source/runtime evidence;
+it is not a claim of publication or remote CI. Final runtime receipts are linked
+from the independent browser package and the final acceptance section below.
+
+| Criterion | Exact-source local proof |
+|---|---|
+| S1 One focused paper, instant stepping and context | [Full frontend checks](evidence/after/p7-polish/checks/gate-summary.json) cover one article, prev/next, queue order, URL/reload/history, exact versions and draft guards. [Native geometry](evidence/after/p7-polish/final/geometry/report.json) checks queue/rapid keys, player focus, Reader return and actual Back/Forward passage positions in all four primary contexts. |
+| S2 Ordered visible queue and progress | [Desktop dark Today](evidence/after/p7-polish/final/desktop-dark-today.png), [responsive matrix](evidence/after/p7-polish/final/report.json) and the full controller tests show the ordered queue, current row and n/N readout. |
+| S3 One sidebar with reachable controls | [Responsive matrix](evidence/after/p7-polish/final/report.json), [current enabled command registry/dialog verification](evidence/after/p7-polish/final/commands/report.json) and existing capability/body tests cover the single sidebar, native controls, mobile drawer and footer actions. Native Notes navigation additionally retains desktop outer scroll 0 and the visible brand/sidebar. |
+| S4 Floating composer/action bar | [Desktop Today](evidence/after/p7-polish/final/desktop-dark-today.png), [mobile Today](evidence/after/p7-polish/final/mobile-light-today.png) and [actual lower-content geometry](evidence/after/p7-polish/final/geometry/report.json) demonstrate the bar and full title/abstract/Notes clearance. |
+| S5 Scoped high contrast in both themes | Byte-identical scoped tokens, [palette contrast tests](../../web/tests/workspace/palette.test.ts) in the [full passing suite](evidence/after/p7-polish/checks/final-coverage.log), [primary-route axe matrix](evidence/after/p7-polish/final/report.json) and [dialog axe checks](evidence/after/p7-polish/final/commands/report.json). |
+| S6 Jazzy and restrained polish | [Actual busy/outage/empty and normal/reduced-motion observations](evidence/after/p7-polish/final/moods-motion/report.json), before/final captures and [command/geometry evidence](evidence/after/p7-polish/README.md). No new artwork or dependency replaces Jazzy. |
+| S7 Preserved capabilities and truth | [4,079 passing frontend tests](evidence/after/p7-polish/checks/final-coverage.log), unchanged request/version/draft/conflict assertions, zero provider contacts or real-source refreshes, [root Python gate](evidence/after/p7-polish/checks/python-gate-2129/receipt.json), [backend source equivalence](evidence/after/p7-polish/checks/python-gate-2129/source-equivalence.json), [final real-loopback live16 and keyboard-loop evidence](evidence/after/p7-polish/README.md). |
+| S8 Mobile use | [390px light Today](evidence/after/p7-polish/final/mobile-light-today.png), [390px dark Today](evidence/after/p7-polish/final/mobile-dark-today.png), [all 70 route/theme/width cases](evidence/after/p7-polish/final/report.json) and [four-context native geometry](evidence/after/p7-polish/final/geometry/report.json) cover nav/drawer reachability, no horizontal overflow and actual content/player clearance. |
+
+The root-owned Python gate ran at `2129fed`, not at a later documentation or
+frontend-performance commit: **6042 passed, 54 skipped, 53 deselected in 409.94s;
+94.78% total / 99% patch coverage**. The copied receipt records the exact import
+path, disabled provider key, isolated DB removal and zero remaining connections.
+The later application head has identical `src` and root `tests` tree hashes
+`4ba84bf2287f911ef2f07184aebd453238b02b35` /
+`45733db270918707018747c63ff989d7959f187e`, and unchanged Python dependencies.
+This is explicit source-equivalent attribution, not a fabricated rerun.
+
+G8 publication remains pending root integration into the requested user branch,
+rebase checks and push. No PR, merge, remote-CI pass, new mode UI or P9 work is
+claimed by this local evidence.
+
+
+### Final G7 acceptance and documentation integration
+
+The independent browser owner released G7 on the frozen application
+`6b2eccf069537d90423359fc74c033f27e665cd6`. Fresh results are **70/70** responsive
+route/theme/width cases, **28** primary axe scans with zero violations, **8**
+dialog axe scans with zero violations, four native geometry contexts, four command
+contexts, eight mood/motion contexts, four form contexts and fourteen touch-target
+measurements. All sixteen direct/client-route legacy comparisons are pixel,
+computed-state and axe equivalent to P6. The unchanged live suite is **16/16,
+23.5 s**. Actual held-save search guards pass four Reader/Interests contexts;
+dirty Review passes two; drawer composition/modifiers pass 390 px and 900 px.
+The two keyboard daily loops, twelve cold paper observations, four cold Reader
+observations, ten module-boundary cases and four Source→Notes→Source observations
+also pass. Ten review labels remain blank. All six final WebMs fully decode and
+were visually reviewed, including actual lower-content frames.
+
+The [browser table and raw receipts](evidence/after/p7-polish/README.md) define
+these mechanical checks' scope. The [original full G8 review](evidence/after/p7-polish/review/g8-full-diff-83b.md)
+retains its `83b` HOLD; [original-source counterfactual evidence](evidence/after/p7-polish/review/original-guard-counterfactual/receipt-direct.json)
+and the [bounded repaired-source review](evidence/after/p7-polish/review/g8-repair-6b2eccf.md)
+show why the final guard repair closes those findings. No remaining confirmed
+P1/P2 was found in that repair review. This does not erase the original failure
+or broaden the separate history/storage limitation.
+
+[Owned-CI teardown](evidence/after/p7-polish/ci/teardown.json) verifies only
+Node 82833 / API 10951 were stopped and only `workspace_controller_p7_ci` was
+dropped after its unique ownership comment and zero connections were checked.
+Preview 3168/API 8168 remains available; owner, original preview, pilot and shared
+PostgreSQL listener identities are unchanged. Provider contacts, source refreshes
+and recurrence activation remain zero.
+
+The four additive two-mode planning commits were integrated after runtime release:
+`ebcc509`→`bf0a2ce`, `59c086e`→`b355aef`, `8105901`→`a3a5867`, and
+`cc901e0`→`c197bd2`. They add planning/index corrections, with no mode UI or data
+migration. The [mode-kit status](../14-explore-and-research-modes/STATUS.md)
+retains `dff860e` as kit-start provenance and reflects current G7 results.
+Fresh [documented-claims and repository-hygiene checks](evidence/after/p7-polish/checks/documented-claims-and-hygiene.log)
+pass **66/66 in 9.18 s**. [Documentation/source-equivalence receipt](evidence/after/p7-polish/checks/documentation-integration.json)
+records 275 resolved local links, all 27 matching application paths, the 1,244
+verified browser-artifact hashes and unchanged application/backend trees. Source,
+docs, JSON and harness whitespace checks pass; byte-preserved terminal logs and
+captured patch context retain their reported whitespace diagnostics, explicitly
+counted in that receipt.
+
+**G7 is PASS. G8 is locally verified and ready for root integration; publication,
+rebase checks and exact pushed-head remote CI remain pending.** No push, PR,
+merge, P9 or mode implementation is claimed here.

@@ -1,0 +1,531 @@
+{
+  "base": "http://127.0.0.1:3169",
+  "principal": "controller-p7-ci",
+  "startedAtUtc": "2026-11-05T08:01:56.488Z",
+  "scope": "Working browser storage and held actual own-CI Reader/Interests save; no normal-search unload until complete; logical profile restored",
+  "cases": [
+    {
+      "name": "desktop",
+      "mode": "reader",
+      "status": "pass",
+      "workingSessionStorage": true,
+      "pendingUrl": "http://127.0.0.1:3169/workspace/items/ci%3Aworkspace-retrieval-budget?version=ci%3Aworkspace-retrieval-budget%3Av1#notes",
+      "intentBefore": null,
+      "navigationIntentUnchanged": true,
+      "historyUnchanged": true,
+      "historyBefore": {
+        "length": 2,
+        "state": {
+          "__NA": true,
+          "__PRIVATE_NEXTJS_INTERNALS_TREE": {
+            "tree": [
+              "",
+              {
+                "children": [
+                  "(live)",
+                  {
+                    "children": [
+                      "workspace",
+                      {
+                        "children": [
+                          "items",
+                          {
+                            "children": [
+                              [
+                                "id",
+                                "ci%3Aworkspace-retrieval-budget",
+                                "d",
+                                []
+                              ],
+                              {
+                                "children": [
+                                  "__PAGE__",
+                                  {},
+                                  null,
+                                  null,
+                                  0,
+                                  "?version=ci%3Aworkspace-retrieval-budget%3Av1"
+                                ]
+                              },
+                              null,
+                              null,
+                              0
+                            ]
+                          },
+                          null,
+                          null,
+                          0
+                        ]
+                      },
+                      null,
+                      null,
+                      0
+                    ]
+                  },
+                  null,
+                  null,
+                  0
+                ]
+              },
+              null,
+              null,
+              16
+            ],
+            "renderedSearch": "?version=ci%3Aworkspace-retrieval-budget%3Av1"
+          },
+          "workspaceScroll": 1671
+        }
+      },
+      "helpGeometry": {
+        "top": 835,
+        "bottom": 853,
+        "left": 497,
+        "right": 1291,
+        "height": 1000,
+        "width": 1440
+      },
+      "pendingDraftGeometry": {
+        "top": 166.515625,
+        "bottom": 332.515625,
+        "left": 908,
+        "right": 1319,
+        "usableTop": 24,
+        "barTop": 744,
+        "hit": true,
+        "windowScroll": 0,
+        "mainScroll": 1671,
+        "horizontalOverflow": 0,
+        "wheelSteps": 0,
+        "trace": [
+          {
+            "top": 166.515625,
+            "bottom": 332.515625,
+            "left": 908,
+            "right": 1319,
+            "usableTop": 24,
+            "barTop": 744,
+            "hit": true,
+            "windowScroll": 0,
+            "mainScroll": 1671,
+            "horizontalOverflow": 0
+          }
+        ]
+      },
+      "mobileCloseSearchFocused": false,
+      "unloadWhilePending": 0,
+      "latestDraftPreserved": true,
+      "saveAcknowledged": true,
+      "ordinarySearchAfterCompletion": true,
+      "slashBlockedWhilePending": true,
+      "slashAllowedAfterCompletion": true,
+      "finalUrl": "http://127.0.0.1:3169/workspace/library"
+    },
+    {
+      "name": "desktop",
+      "mode": "interests",
+      "status": "pass",
+      "workingSessionStorage": true,
+      "pendingUrl": "http://127.0.0.1:3169/workspace/interests",
+      "intentBefore": null,
+      "navigationIntentUnchanged": true,
+      "historyUnchanged": true,
+      "historyBefore": {
+        "length": 2,
+        "state": {
+          "__NA": true,
+          "__PRIVATE_NEXTJS_INTERNALS_TREE": {
+            "tree": [
+              "",
+              {
+                "children": [
+                  "(live)",
+                  {
+                    "children": [
+                      "workspace",
+                      {
+                        "children": [
+                          "interests",
+                          {
+                            "children": [
+                              "__PAGE__",
+                              {},
+                              null,
+                              null,
+                              0,
+                              ""
+                            ]
+                          },
+                          null,
+                          null,
+                          0
+                        ]
+                      },
+                      null,
+                      null,
+                      0
+                    ]
+                  },
+                  null,
+                  null,
+                  0
+                ]
+              },
+              null,
+              null,
+              16
+            ],
+            "renderedSearch": ""
+          }
+        }
+      },
+      "helpGeometry": {
+        "top": 838.609375,
+        "bottom": 856.609375,
+        "left": 497,
+        "right": 1291,
+        "height": 1000,
+        "width": 1440
+      },
+      "pendingDraftGeometry": {
+        "top": 365.96875,
+        "bottom": 483.96875,
+        "left": 394,
+        "right": 884,
+        "usableTop": 24,
+        "barTop": 747.609375,
+        "hit": true,
+        "windowScroll": 0,
+        "mainScroll": 0,
+        "horizontalOverflow": 0,
+        "wheelSteps": 0,
+        "trace": [
+          {
+            "top": 365.96875,
+            "bottom": 483.96875,
+            "left": 394,
+            "right": 884,
+            "usableTop": 24,
+            "barTop": 747.609375,
+            "hit": true,
+            "windowScroll": 0,
+            "mainScroll": 0,
+            "horizontalOverflow": 0
+          }
+        ]
+      },
+      "mobileCloseSearchFocused": false,
+      "unloadWhilePending": 0,
+      "latestDraftPreserved": true,
+      "saveAcknowledged": true,
+      "ordinarySearchAfterCompletion": true,
+      "slashBlockedWhilePending": true,
+      "slashAllowedAfterCompletion": true,
+      "finalUrl": "http://127.0.0.1:3169/workspace/library"
+    },
+    {
+      "name": "mobile",
+      "mode": "reader",
+      "status": "pass",
+      "workingSessionStorage": true,
+      "pendingUrl": "http://127.0.0.1:3169/workspace/items/ci%3Aworkspace-retrieval-budget?version=ci%3Aworkspace-retrieval-budget%3Av1#notes",
+      "intentBefore": null,
+      "navigationIntentUnchanged": true,
+      "historyUnchanged": true,
+      "historyBefore": {
+        "length": 2,
+        "state": {
+          "__NA": true,
+          "__PRIVATE_NEXTJS_INTERNALS_TREE": {
+            "tree": [
+              "",
+              {
+                "children": [
+                  "(live)",
+                  {
+                    "children": [
+                      "workspace",
+                      {
+                        "children": [
+                          "items",
+                          {
+                            "children": [
+                              [
+                                "id",
+                                "ci%3Aworkspace-retrieval-budget",
+                                "d",
+                                []
+                              ],
+                              {
+                                "children": [
+                                  "__PAGE__",
+                                  {},
+                                  null,
+                                  null,
+                                  0,
+                                  "?version=ci%3Aworkspace-retrieval-budget%3Av1"
+                                ]
+                              },
+                              null,
+                              null,
+                              0
+                            ]
+                          },
+                          null,
+                          null,
+                          0
+                        ]
+                      },
+                      null,
+                      null,
+                      0
+                    ]
+                  },
+                  null,
+                  null,
+                  0
+                ]
+              },
+              null,
+              null,
+              16
+            ],
+            "renderedSearch": "?version=ci%3Aworkspace-retrieval-budget%3Av1"
+          },
+          "workspaceScroll": 574
+        }
+      },
+      "helpGeometry": {
+        "top": 649,
+        "bottom": 685,
+        "left": 96.421875,
+        "right": 367,
+        "height": 844,
+        "width": 390
+      },
+      "pendingDraftGeometry": {
+        "top": 370.375,
+        "bottom": 536.375,
+        "left": 33,
+        "right": 357,
+        "usableTop": 16,
+        "barTop": 560,
+        "hit": true,
+        "windowScroll": 597,
+        "mainScroll": 0,
+        "horizontalOverflow": 0,
+        "wheelSteps": 1,
+        "trace": [
+          {
+            "top": 393.375,
+            "bottom": 559.375,
+            "left": 33,
+            "right": 357,
+            "usableTop": 16,
+            "barTop": 560,
+            "hit": true,
+            "windowScroll": 574,
+            "mainScroll": 0,
+            "horizontalOverflow": 0
+          },
+          {
+            "top": 370.375,
+            "bottom": 536.375,
+            "left": 33,
+            "right": 357,
+            "usableTop": 16,
+            "barTop": 560,
+            "hit": true,
+            "windowScroll": 597,
+            "mainScroll": 0,
+            "horizontalOverflow": 0
+          }
+        ]
+      },
+      "mobileCloseSearchFocused": true,
+      "unloadWhilePending": 0,
+      "latestDraftPreserved": true,
+      "saveAcknowledged": true,
+      "ordinarySearchAfterCompletion": true,
+      "slashBlockedWhilePending": true,
+      "slashAllowedAfterCompletion": true,
+      "finalUrl": "http://127.0.0.1:3169/workspace/library"
+    },
+    {
+      "name": "mobile",
+      "mode": "interests",
+      "status": "pass",
+      "workingSessionStorage": true,
+      "pendingUrl": "http://127.0.0.1:3169/workspace/interests",
+      "intentBefore": null,
+      "navigationIntentUnchanged": true,
+      "historyUnchanged": true,
+      "historyBefore": {
+        "length": 2,
+        "state": {
+          "__NA": true,
+          "__PRIVATE_NEXTJS_INTERNALS_TREE": {
+            "tree": [
+              "",
+              {
+                "children": [
+                  "(live)",
+                  {
+                    "children": [
+                      "workspace",
+                      {
+                        "children": [
+                          "interests",
+                          {
+                            "children": [
+                              "__PAGE__",
+                              {},
+                              null,
+                              null,
+                              0,
+                              ""
+                            ]
+                          },
+                          null,
+                          null,
+                          0
+                        ]
+                      },
+                      null,
+                      null,
+                      0
+                    ]
+                  },
+                  null,
+                  null,
+                  0
+                ]
+              },
+              null,
+              null,
+              16
+            ],
+            "renderedSearch": ""
+          }
+        }
+      },
+      "helpGeometry": {
+        "top": 623.609375,
+        "bottom": 659.609375,
+        "left": 96.421875,
+        "right": 367,
+        "height": 844,
+        "width": 390
+      },
+      "pendingDraftGeometry": {
+        "top": 392.75,
+        "bottom": 510.75,
+        "left": 16,
+        "right": 374,
+        "usableTop": 16,
+        "barTop": 534.609375,
+        "hit": true,
+        "windowScroll": 124,
+        "mainScroll": 0,
+        "horizontalOverflow": 0,
+        "wheelSteps": 1,
+        "trace": [
+          {
+            "top": 516.75,
+            "bottom": 634.75,
+            "left": 16,
+            "right": 374,
+            "usableTop": 16,
+            "barTop": 534.609375,
+            "hit": false,
+            "windowScroll": 0,
+            "mainScroll": 0,
+            "horizontalOverflow": 0
+          },
+          {
+            "top": 392.75,
+            "bottom": 510.75,
+            "left": 16,
+            "right": 374,
+            "usableTop": 16,
+            "barTop": 534.609375,
+            "hit": true,
+            "windowScroll": 124,
+            "mainScroll": 0,
+            "horizontalOverflow": 0
+          }
+        ]
+      },
+      "mobileCloseSearchFocused": true,
+      "unloadWhilePending": 0,
+      "latestDraftPreserved": true,
+      "saveAcknowledged": true,
+      "ordinarySearchAfterCompletion": true,
+      "slashBlockedWhilePending": true,
+      "slashAllowedAfterCompletion": true,
+      "finalUrl": "http://127.0.0.1:3169/workspace/library"
+    }
+  ],
+  "writes": [
+    {
+      "name": "desktop",
+      "mode": "reader",
+      "path": "/api/workspace/entries",
+      "work": "ci:workspace-retrieval-budget",
+      "forwarded": true
+    },
+    {
+      "name": "desktop",
+      "mode": "interests",
+      "path": "/api/workspace/profile",
+      "work": null,
+      "forwarded": true
+    },
+    {
+      "name": "desktop",
+      "mode": "interests",
+      "path": "/api/workspace/edition",
+      "work": null,
+      "forwarded": true
+    },
+    {
+      "name": "desktop",
+      "mode": "interests",
+      "path": "/api/workspace/profile",
+      "kind": "restore own logical profile data",
+      "forwarded": true
+    },
+    {
+      "name": "mobile",
+      "mode": "reader",
+      "path": "/api/workspace/entries",
+      "work": "ci:workspace-retrieval-budget",
+      "forwarded": true
+    },
+    {
+      "name": "mobile",
+      "mode": "interests",
+      "path": "/api/workspace/profile",
+      "work": null,
+      "forwarded": true
+    },
+    {
+      "name": "mobile",
+      "mode": "interests",
+      "path": "/api/workspace/edition",
+      "work": null,
+      "forwarded": true
+    },
+    {
+      "name": "mobile",
+      "mode": "interests",
+      "path": "/api/workspace/profile",
+      "kind": "restore own logical profile data",
+      "forwarded": true
+    }
+  ],
+  "blocked": [],
+  "errors": [],
+  "navigationIntentKey": "arxiv.workspace.navigation-intent.v1",
+  "endedAtUtc": "2026-11-05T08:02:06.594Z",
+  "status": "pass"
+}

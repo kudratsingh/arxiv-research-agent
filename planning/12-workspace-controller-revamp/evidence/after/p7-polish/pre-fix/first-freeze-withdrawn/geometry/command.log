@@ -1,0 +1,8 @@
+PASS desktop-light
+PASS desktop-dark
+FAIL mobile-light AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+
+  assert(sourceLower.bottom<=sourceLower.barTop+1)
+
+PASS mobile-dark
+{"status":"fail","cases":4,"blocked":[],"errors":[]}

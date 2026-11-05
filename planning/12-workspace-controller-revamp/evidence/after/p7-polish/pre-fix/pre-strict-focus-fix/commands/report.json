@@ -1,0 +1,118 @@
+{
+  "base": "http://127.0.0.1:3168",
+  "principal": "controller-p7-preview",
+  "startedAtUtc": "2026-11-05T05:53:48.857Z",
+  "fixture": "synthetic offline preview; browser-local commands only",
+  "cases": [
+    {
+      "name": "desktop-light",
+      "status": "fail",
+      "error": "AssertionError [ERR_ASSERTION]: Tab escaped modal\n    at /private/tmp/arxiv-agent-eng-workspace-controller-p7/planning/12-workspace-controller-revamp/evidence/after/p7-polish/command-ui.cjs:43:58",
+      "video": null
+    },
+    {
+      "name": "desktop-dark",
+      "status": "fail",
+      "error": "AssertionError [ERR_ASSERTION]: Tab escaped modal\n    at /private/tmp/arxiv-agent-eng-workspace-controller-p7/planning/12-workspace-controller-revamp/evidence/after/p7-polish/command-ui.cjs:43:58",
+      "video": "desktop-dark.webm"
+    },
+    {
+      "name": "mobile-light",
+      "status": "fail",
+      "error": "AssertionError [ERR_ASSERTION]: Tab escaped modal\n    at /private/tmp/arxiv-agent-eng-workspace-controller-p7/planning/12-workspace-controller-revamp/evidence/after/p7-polish/command-ui.cjs:43:58\n    at runNextTicks (node:internal/process/task_queues:64:5)\n    at process.processImmediate (node:internal/timers:452:9)\n    at process.callbackTrampoline (node:internal/async_hooks:130:17)",
+      "video": "mobile-light.webm"
+    },
+    {
+      "name": "mobile-dark",
+      "status": "fail",
+      "error": "AssertionError [ERR_ASSERTION]: Tab escaped modal\n    at /private/tmp/arxiv-agent-eng-workspace-controller-p7/planning/12-workspace-controller-revamp/evidence/after/p7-polish/command-ui.cjs:43:58",
+      "video": null
+    }
+  ],
+  "blocked": [],
+  "errors": [],
+  "chapters": [
+    {
+      "name": "desktop-light",
+      "label": "Collapsed rail excludes hidden page commands",
+      "elapsedMs": 1304
+    },
+    {
+      "name": "desktop-light",
+      "label": "Palette open with focused combobox",
+      "elapsedMs": 1354
+    },
+    {
+      "name": "desktop-light",
+      "label": "Palette Close plain keys remained inside modal",
+      "elapsedMs": 1366
+    },
+    {
+      "name": "desktop-light",
+      "label": "Arrow navigation retained input focus and visible active option",
+      "elapsedMs": 2000
+    },
+    {
+      "name": "desktop-dark",
+      "label": "Collapsed rail excludes hidden page commands",
+      "elapsedMs": 1859
+    },
+    {
+      "name": "desktop-dark",
+      "label": "Palette open with focused combobox",
+      "elapsedMs": 1907
+    },
+    {
+      "name": "desktop-dark",
+      "label": "Palette Close plain keys remained inside modal",
+      "elapsedMs": 1917
+    },
+    {
+      "name": "desktop-dark",
+      "label": "Arrow navigation retained input focus and visible active option",
+      "elapsedMs": 2716
+    },
+    {
+      "name": "mobile-light",
+      "label": "Mobile drawer focus trap and modal ownership",
+      "elapsedMs": 1277
+    },
+    {
+      "name": "mobile-light",
+      "label": "Palette open with focused combobox",
+      "elapsedMs": 2100
+    },
+    {
+      "name": "mobile-light",
+      "label": "Palette Close plain keys remained inside modal",
+      "elapsedMs": 2119
+    },
+    {
+      "name": "mobile-light",
+      "label": "Arrow navigation retained input focus and visible active option",
+      "elapsedMs": 2675
+    },
+    {
+      "name": "mobile-dark",
+      "label": "Mobile drawer focus trap and modal ownership",
+      "elapsedMs": 1261
+    },
+    {
+      "name": "mobile-dark",
+      "label": "Palette open with focused combobox",
+      "elapsedMs": 2079
+    },
+    {
+      "name": "mobile-dark",
+      "label": "Palette Close plain keys remained inside modal",
+      "elapsedMs": 2092
+    },
+    {
+      "name": "mobile-dark",
+      "label": "Arrow navigation retained input focus and visible active option",
+      "elapsedMs": 2591
+    }
+  ],
+  "endedAtUtc": "2026-11-05T05:53:59.710Z",
+  "status": "fail"
+}

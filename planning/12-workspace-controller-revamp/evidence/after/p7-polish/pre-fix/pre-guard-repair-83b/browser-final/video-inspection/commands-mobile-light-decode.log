@@ -1,0 +1,30 @@
+[libvpx @ 0x75a5030000] v1.14.1
+Input #0, matroska,webm, from 'planning/12-workspace-controller-revamp/evidence/after/p7-polish/final/commands/mobile-light.webm':
+  Metadata:
+    ENCODER         : Lavf61.1.100
+  Duration: 00:00:10.48, start: 0.000000, bitrate: 874 kb/s
+  Stream #0:0(eng): Video: vp8 (libvpx), yuv420p(tv, progressive), 390x844, SAR 1:1 DAR 195:422, 25 fps, 25 tbr, 1k tbn (default)
+      Metadata:
+        ENCODER         : Lavc61.3.100 libvpx
+        DURATION        : 00:00:10.480000000
+[libvpx @ 0x75a5030700] v1.14.1
+Stream mapping:
+  Stream #0:0 -> #0:0 (vp8 (libvpx) -> png (native))
+[swscaler @ 0x75a57ac000] [swscaler @ 0x75a57ec000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[swscaler @ 0x75a57ac000] [swscaler @ 0x75a5800000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[swscaler @ 0x75a57ac000] [swscaler @ 0x75a5810000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[swscaler @ 0x75a57ac000] [swscaler @ 0x75a5820000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[swscaler @ 0x75a57ac000] [swscaler @ 0x75a5830000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[swscaler @ 0x75a57ac000] [swscaler @ 0x75a5840000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[swscaler @ 0x75a57ac000] [swscaler @ 0x75a5850000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[swscaler @ 0x75a57ac000] [swscaler @ 0x75a5860000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[swscaler @ 0x75a57ac000] [swscaler @ 0x75a5870000] No accelerated colorspace conversion found from yuv420p to rgb24.
+Output #0, image2, to '/private/tmp/controller-p7-video-n_6t4hm7/%04d.png':
+  Metadata:
+    encoder         : Lavf61.1.100
+  Stream #0:0(eng): Video: png, rgb24(pc, gbr/unknown/unknown, progressive), 390x844 [SAR 1:1 DAR 195:422], q=2-31, 200 kb/s, 1 fps, 1 tbn (default)
+      Metadata:
+        DURATION        : 00:00:10.480000000
+        encoder         : Lavc61.3.100 png
+[out#0/image2 @ 0x75a502c180] video:1500KiB audio:0KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: unknown
+frame=   12 fps=0.0 q=-0.0 Lsize=N/A time=00:00:12.00 bitrate=N/A dup=0 drop=251 speed= 102x    

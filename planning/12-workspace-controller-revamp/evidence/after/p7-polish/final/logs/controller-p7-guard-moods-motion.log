@@ -1,0 +1,9 @@
+PASS desktop-light-no-preference
+PASS desktop-light-reduce
+PASS desktop-dark-no-preference
+PASS desktop-dark-reduce
+PASS mobile-light-no-preference
+PASS mobile-light-reduce
+PASS mobile-dark-no-preference
+PASS mobile-dark-reduce
+{"status":"pass","cases":8,"blocked":[],"errors":[]}

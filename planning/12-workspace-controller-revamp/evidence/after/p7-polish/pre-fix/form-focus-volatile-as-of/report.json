@@ -1,0 +1,36 @@
+{
+  "phase": "baseline",
+  "base": "http://127.0.0.1:3148",
+  "principal": "controller-p6-preview",
+  "startedAtUtc": "2026-11-05T04:56:25.186Z",
+  "cases": [
+    {
+      "size": "desktop",
+      "theme": "light",
+      "status": "fail",
+      "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n... Skipped lines\n\n  {\n    activity: [\n      {\n        anchor: 'abstract:0',\n        body: '',\n...\n    ],\n+   as_of: '2026-11-05T04:56:26.799506+00:00',\n-   as_of: '2026-11-05T04:56:25.673846+00:00',\n    editions: [\n      {\n        allocation: {},\n        coverage: [\n          {\n\n    at /private/tmp/arxiv-agent-eng-workspace-controller-p7/planning/12-workspace-controller-revamp/evidence/after/p7-polish/form-focus.cjs:23:93"
+    },
+    {
+      "size": "desktop",
+      "theme": "dark",
+      "status": "fail",
+      "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n... Skipped lines\n\n  {\n    activity: [\n      {\n        anchor: 'abstract:0',\n        body: '',\n...\n    ],\n+   as_of: '2026-11-05T04:56:27.933146+00:00',\n-   as_of: '2026-11-05T04:56:26.954584+00:00',\n    editions: [\n      {\n        allocation: {},\n        coverage: [\n          {\n\n    at /private/tmp/arxiv-agent-eng-workspace-controller-p7/planning/12-workspace-controller-revamp/evidence/after/p7-polish/form-focus.cjs:23:93"
+    },
+    {
+      "size": "mobile",
+      "theme": "light",
+      "status": "fail",
+      "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n... Skipped lines\n\n  {\n    activity: [\n      {\n        anchor: 'abstract:0',\n        body: '',\n...\n    ],\n+   as_of: '2026-11-05T04:56:28.995813+00:00',\n-   as_of: '2026-11-05T04:56:28.078492+00:00',\n    editions: [\n      {\n        allocation: {},\n        coverage: [\n          {\n\n    at /private/tmp/arxiv-agent-eng-workspace-controller-p7/planning/12-workspace-controller-revamp/evidence/after/p7-polish/form-focus.cjs:23:93"
+    },
+    {
+      "size": "mobile",
+      "theme": "dark",
+      "status": "fail",
+      "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n... Skipped lines\n\n  {\n    activity: [\n      {\n        anchor: 'abstract:0',\n        body: '',\n...\n    ],\n+   as_of: '2026-11-05T04:56:30.045158+00:00',\n-   as_of: '2026-11-05T04:56:29.145008+00:00',\n    editions: [\n      {\n        allocation: {},\n        coverage: [\n          {\n\n    at /private/tmp/arxiv-agent-eng-workspace-controller-p7/planning/12-workspace-controller-revamp/evidence/after/p7-polish/form-focus.cjs:23:93"
+    }
+  ],
+  "blocked": [],
+  "errors": [],
+  "endedAtUtc": "2026-11-05T04:56:30.193Z",
+  "status": "fail"
+}

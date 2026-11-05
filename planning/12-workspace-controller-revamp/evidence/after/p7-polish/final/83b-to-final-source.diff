@@ -1,0 +1,265 @@
+diff --git a/web/components/workspace/CandidateReview.tsx b/web/components/workspace/CandidateReview.tsx
+index 9deba4b..b0520f0 100644
+--- a/web/components/workspace/CandidateReview.tsx
++++ b/web/components/workspace/CandidateReview.tsx
+@@ -2,6 +2,7 @@
+ 
+ import Link from "next/link";
+ import { useSearchParams } from "next/navigation";
++import { blockWorkspaceNavigation } from "@/lib/workspace/navigationGuard";
+ import { useCallback, useEffect, useRef, useState } from "react";
+ import {
+   displayDate,
+@@ -53,16 +54,18 @@ export function CandidateReview() {
+   const locked = preparing || reloading || saving;
+   useEffect(() => {
+     if (!dirtyCount && !locked) return;
++    const refuse = () => setNotice(dirtyCount ? "Save or discard your unsaved judgments before leaving this review. You can open sources in a new tab to keep this review open." : "Wait for the current review request to finish before leaving.");
++    const release = blockWorkspaceNavigation(refuse);
+     const click = (event: MouseEvent) => {
+       if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+       const link = event.target instanceof Element ? event.target.closest<HTMLAnchorElement>("a[href]") : null;
+       if (!link || link.hasAttribute("download") || link.target === "_blank" || link.getAttribute("href")?.startsWith("#")) return;
+       event.preventDefault(); event.stopPropagation();
+-      setNotice(dirtyCount ? "Save or discard your unsaved judgments before leaving this review. You can open sources in a new tab to keep this review open." : "Wait for the current review request to finish before leaving.");
++      refuse();
+     };
+     const unload = (event: BeforeUnloadEvent) => { if (dirtyCount) { event.preventDefault(); event.returnValue = ""; } };
+     document.addEventListener("click", click, true); window.addEventListener("beforeunload", unload);
+-    return () => { document.removeEventListener("click", click, true); window.removeEventListener("beforeunload", unload); };
++    return () => { release(); document.removeEventListener("click", click, true); window.removeEventListener("beforeunload", unload); };
+   }, [dirtyCount, locked]);
+ 
+   useEffect(() => {
+diff --git a/web/components/workspace/Composer.tsx b/web/components/workspace/Composer.tsx
+index f65628e..49fdd1a 100644
+--- a/web/components/workspace/Composer.tsx
++++ b/web/components/workspace/Composer.tsx
+@@ -5,6 +5,7 @@ import { dispatchWorkspaceCommand, dispatchWorkspacePrefix } from "@/lib/workspa
+ import { Icon } from "./Icon";
+ import { useQueryParam } from "@/lib/workspace/urlState";
+ import { useSidebarViewport } from "./useSidebarPreference";
++import { navigateWorkspace } from "@/lib/workspace/navigation";
+ 
+ const CommandSuggestions = lazy(() => import("./CommandSuggestions"));
+ 
+@@ -52,12 +53,12 @@ export function Composer(): React.ReactElement {
+       const value = current.get(key);
+       if (value !== null) params.set(key, value);
+     }
+-    // Full navigation preserves the existing route contract without a router dependency.
+-    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+-    location.assign(`/workspace/radar?${params.toString()}`);
++    if (!navigateWorkspace(`/workspace/radar?${params.toString()}`, "paper")) {
++      setHelp("Search stayed here. Finish your save or save/copy your draft before leaving.");
++    }
+   }
+   return (
+-    <form role="search" className="ws-composer ws-composer-shell" data-expanded={expanded} onSubmit={submit}>
++    <form role="search" className="ws-composer ws-composer-shell" data-guarded-navigation="" data-expanded={expanded} onSubmit={submit}>
+       <button ref={toggleRef} className="ws-composer-toggle" type="button" hidden={!mobile}
+         aria-label={expanded ? "Close search" : "Open search"} aria-expanded={expanded} aria-controls={fieldsId}
+         data-command={mobile && expanded ? "escape" : undefined} onClick={toggle}>
+diff --git a/web/components/workspace/Interests.tsx b/web/components/workspace/Interests.tsx
+index 32dfc8b..619c231 100644
+--- a/web/components/workspace/Interests.tsx
++++ b/web/components/workspace/Interests.tsx
+@@ -10,6 +10,7 @@ import {
+   type WorkspaceState,
+ } from "@/lib/workspace/api";
+ import { useWorkspace } from "@/lib/workspace/useWorkspace";
++import { blockWorkspaceNavigation } from "@/lib/workspace/navigationGuard";
+ import { LoadingState, Message, ServiceNotice } from "./Common";
+ import { AllocationReceipt } from "./AllocationReceipt";
+ import { InterestCoverage } from "./InterestCoverage";
+@@ -53,16 +54,18 @@ function InterestsEditor({ state, setState, error }: { state: WorkspaceState; se
+   const unsafeDraft = draft !== null && !draftStorage;
+   useEffect(() => {
+     if (!unsafeDraft && !busy) return;
++    const refuse = () => setNotice(unsafeDraft ? "Save or copy your interest changes before leaving. Browser draft recovery is unavailable." : "Wait for this preference save to finish before leaving.");
++    const release = blockWorkspaceNavigation(refuse);
+     const click = (event: MouseEvent) => {
+       if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+       const link = event.target instanceof Element ? event.target.closest<HTMLAnchorElement>("a[href]") : null;
+       if (!link || link.hasAttribute("download") || link.target === "_blank" || link.getAttribute("href")?.startsWith("#")) return;
+       event.preventDefault(); event.stopPropagation();
+-      setNotice(unsafeDraft ? "Save or copy your interest changes before leaving. Browser draft recovery is unavailable." : "Wait for this preference save to finish before leaving.");
++      refuse();
+     };
+     const unload = (event: BeforeUnloadEvent) => { if (unsafeDraft) { event.preventDefault(); event.returnValue = ""; } };
+     document.addEventListener("click", click, true); window.addEventListener("beforeunload", unload);
+-    return () => { document.removeEventListener("click", click, true); window.removeEventListener("beforeunload", unload); };
++    return () => { release(); document.removeEventListener("click", click, true); window.removeEventListener("beforeunload", unload); };
+   }, [unsafeDraft, busy]);
+   function cache(value: InterestDraft | null) {
+     try { storeInterestDraft(owner, value); setDraftStorage(true); return true; }
+diff --git a/web/components/workspace/ReaderContent.tsx b/web/components/workspace/ReaderContent.tsx
+index c185aaa..1a9b0ca 100644
+--- a/web/components/workspace/ReaderContent.tsx
++++ b/web/components/workspace/ReaderContent.tsx
+@@ -1,6 +1,7 @@
+ "use client";
+ import Link from "next/link";
+ import { settleReaderTarget } from "@/lib/workspace/navigation";
++import { blockWorkspaceNavigation } from "@/lib/workspace/navigationGuard";
+ import { lazy, Suspense, useEffect, useRef, useState } from "react";
+ import {
+   displayDate, errorMessage, readerHref, requestId, readingMaterial, workspaceRequest,
+@@ -141,6 +142,8 @@ export default function ReaderContent({
+   const navigationBlocked = busy || unsafeDraft;
+   useEffect(() => {
+     if (!navigationBlocked) return;
++    const refuse = () => setNotice(unsafeDraft ? DRAFT_NAVIGATION_NOTICE : "Wait for the current save to finish before leaving this source version.");
++    const release = blockWorkspaceNavigation(refuse);
+     function guardLink(event: MouseEvent) {
+       if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+       const target = event.target instanceof Element ? event.target.closest("a[href]") : null;
+@@ -149,7 +152,7 @@ export default function ReaderContent({
+       if (!destination || destination.startsWith("#") || target.target.toLowerCase() === "_blank") return;
+       event.preventDefault();
+       event.stopPropagation();
+-      if (unsafeDraft) setNotice(DRAFT_NAVIGATION_NOTICE);
++      refuse();
+     }
+     function warnBeforeUnload(event: BeforeUnloadEvent) {
+       if (!unsafeDraft) return;
+@@ -159,6 +162,7 @@ export default function ReaderContent({
+     document.addEventListener("click", guardLink, true);
+     window.addEventListener("beforeunload", warnBeforeUnload);
+     return () => {
++      release();
+       document.removeEventListener("click", guardLink, true);
+       window.removeEventListener("beforeunload", warnBeforeUnload);
+     };
+diff --git a/web/components/workspace/Shell.tsx b/web/components/workspace/Shell.tsx
+index 9c70d10..6217d58 100644
+--- a/web/components/workspace/Shell.tsx
++++ b/web/components/workspace/Shell.tsx
+@@ -64,6 +64,7 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
+     const toggleButton = toggleRef.current;
+     closeRef.current?.focus();
+     const trap = (event: KeyboardEvent) => {
++      if (event.isComposing || event.key === "Tab" && (event.ctrlKey || event.metaKey || event.altKey)) return;
+       if (event.target instanceof Element && event.target.closest(".ws-command-dialog")) return;
+       if (event.key === "Escape") {
+         event.preventDefault();
+diff --git a/web/lib/workspace/dispatch.ts b/web/lib/workspace/dispatch.ts
+index ea6abdc..6788289 100644
+--- a/web/lib/workspace/dispatch.ts
++++ b/web/lib/workspace/dispatch.ts
+@@ -1,4 +1,5 @@
+-import { requestWorkspaceNavigation } from "./navigation";
++import { navigateWorkspace } from "./navigation";
++import { allowWorkspaceNavigation } from "./navigationGuard";
+ import { commandsForPrefix, type WorkspaceCommand } from "./commands";
+ import { resolveWorkspaceCommand } from "./commandTargets";
+ 
+@@ -6,8 +7,9 @@ export function dispatchWorkspaceCommand(command: WorkspaceCommand): boolean {
+   if (document.querySelector(".ws-command-dialog[open]")) return false;
+   const target = resolveWorkspaceCommand(command);
+   if (!target) return false;
+-  if ("href" in target) { requestWorkspaceNavigation(target.href); location.assign(target.href); }
+-  else target.element[target.action]();
++  if ("href" in target) return navigateWorkspace(target.href);
++  if (target.element instanceof HTMLAnchorElement && !target.element.hasAttribute("download") && target.element.target !== "_blank" && !target.element.getAttribute("href")?.startsWith("#") && !allowWorkspaceNavigation(target.element.href)) return false;
++  target.element[target.action]();
+   return true;
+ }
+ 
+diff --git a/web/lib/workspace/navigation.ts b/web/lib/workspace/navigation.ts
+index b80ac78..449f214 100644
+--- a/web/lib/workspace/navigation.ts
++++ b/web/lib/workspace/navigation.ts
+@@ -1,6 +1,8 @@
+ "use client";
+ import { useEffect } from "react";
++import { allowWorkspaceNavigation } from "./navigationGuard";
+ import type { NavigationAction } from "./navigationRuntime";
++export const NAVIGATION_INTENT_KEY = "arxiv.workspace.navigation-intent.v1";
+ 
+ export const navigationState = {
+   engine: null as ((action: NavigationAction) => void) | null,
+@@ -13,8 +15,22 @@ function send(action: NavigationAction) {
+ }
+ export function requestWorkspaceNavigation(href: string, kind: "paper" | "route" = "route") {
+   navigationState.readerHistory = false;
++  if (!navigationState.engine) {
++    const destination = new URL(href, location.href);
++    if (destination.origin === location.origin && destination.pathname.startsWith("/workspace/")) {
++      const top = window.matchMedia?.("(max-width: 767px)").matches ? window.scrollY : document.getElementById("main")?.scrollTop ?? window.scrollY;
++      try { history.replaceState({ ...history.state, workspaceScroll: top }, "", location.href); } catch { /* History quotas do not block navigation. */ }
++      try { sessionStorage.setItem(NAVIGATION_INTENT_KEY, JSON.stringify({ kind, path: destination.pathname, at: Date.now(), exactReader: destination.pathname.startsWith("/workspace/items/") && (destination.searchParams.has("entry") || Boolean(destination.hash)) })); } catch { /* Navigation remains usable without cosmetic storage. */ }
++    }
++  }
+   send({ type: "request", href, kind, base: location.href });
+ }
++export function navigateWorkspace(href: string, kind: "paper" | "route" = "route"): boolean {
++  if (!allowWorkspaceNavigation(href)) return false;
++  requestWorkspaceNavigation(href, kind);
++  location.assign(href);
++  return true;
++}
+ export function requestPaperNavigation() { requestWorkspaceNavigation(location.href, "paper"); }
+ export function settleWorkspaceContent(target: HTMLElement, content?: HTMLElement, focus = false) {
+   send({ type: "settle", target, content, focus });
+@@ -33,19 +49,21 @@ export function useWorkspaceNavigation(path: string) {
+     const initialPaper = document.querySelector<HTMLElement>(".ws-focus")?.dataset.paperKey;
+     const capture = (event: Event) => {
+       if (event.type === "popstate") navigationState.readerHistory = true;
+-      else if (!navigationState.engine) {
++      else if (!navigationState.engine && (event.type === "submit" || event.target instanceof Element && event.target.closest("a[href]"))) {
+         try { history.replaceState({ ...history.state, workspaceScroll: window.scrollY || document.getElementById("main")?.scrollTop || 0 }, "", location.href); } catch { /* Navigation remains available when history is restricted. */ }
+       }
+       if (!navigationState.engine && event.type === "submit" && event.target instanceof HTMLFormElement && event.target.matches(".ws-composer")) {
+         const query = String(new FormData(event.target).get("q") ?? "").trim();
+         if (query && !query.startsWith("/")) {
+-          try { sessionStorage.setItem("arxiv.workspace.navigation-intent.v1", JSON.stringify({ kind: "paper", path: "/workspace/radar", at: Date.now() })); } catch { /* Search still works without cosmetic restoration. */ }
++          try { sessionStorage.setItem(NAVIGATION_INTENT_KEY, JSON.stringify({ kind: "paper", path: "/workspace/radar", at: Date.now() })); } catch { /* Search still works without cosmetic restoration. */ }
+         }
+       }
+       send({ type: "event", event, base: location.href, prevented: event.defaultPrevented });
+     };
+     const guardedCapture = (event: Event) => {
+       const target = event.target;
++      // Managed Composer submits record intent only after their shared veto succeeds.
++      if (event.type === "submit" && target instanceof HTMLFormElement && target.hasAttribute("data-guarded-navigation")) return;
+       const commit = () => { if (!event.defaultPrevented) capture(event); };
+       target?.addEventListener(event.type, commit, { capture: true, once: true });
+       // Native UI dispatch runs microtasks between listeners; clean up after dispatch.
+diff --git a/web/lib/workspace/navigationGuard.ts b/web/lib/workspace/navigationGuard.ts
+new file mode 100644
+index 0000000..df06826
+--- /dev/null
++++ b/web/lib/workspace/navigationGuard.ts
+@@ -0,0 +1,12 @@
++const NAVIGATION_REQUEST = "arxiv:workspace-navigation-request";
++
++/** Explicit navigation shares the same draft/pending-write veto as real links. */
++export function allowWorkspaceNavigation(href: string): boolean {
++  return document.dispatchEvent(new CustomEvent(NAVIGATION_REQUEST, { cancelable: true, detail: { href } }));
++}
++
++export function blockWorkspaceNavigation(onBlocked: () => void): () => void {
++  const block = (event: Event) => { event.preventDefault(); onBlocked(); };
++  document.addEventListener(NAVIGATION_REQUEST, block);
++  return () => document.removeEventListener(NAVIGATION_REQUEST, block);
++}
+diff --git a/web/lib/workspace/navigationRuntime.ts b/web/lib/workspace/navigationRuntime.ts
+index 5ec475c..dd46fc5 100644
+--- a/web/lib/workspace/navigationRuntime.ts
++++ b/web/lib/workspace/navigationRuntime.ts
+@@ -1,4 +1,4 @@
+-import { navigationState as bridge } from "./navigation";
++import { navigationState as bridge, NAVIGATION_INTENT_KEY } from "./navigation";
+ 
+ export type NavigationAction =
+   | { type: "request"; href: string; kind: "paper" | "route"; base: string }
+@@ -6,7 +6,7 @@ export type NavigationAction =
+   | { type: "reader"; target: HTMLElement; explicit: boolean }
+   | { type: "event"; event: Event; base: string; prevented: boolean };
+ type Intent = { exactReader?: boolean; kind: "paper" | "route" | "history"; path: string; at: number; top?: number };
+-const INTENT_KEY = "arxiv.workspace.navigation-intent.v1";
++const INTENT_KEY = NAVIGATION_INTENT_KEY;
+ const state = { intent: null as Intent | null };
+ function clearIntent() {
+   state.intent = null;

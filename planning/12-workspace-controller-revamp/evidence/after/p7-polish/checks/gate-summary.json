@@ -1,0 +1,242 @@
+{
+  "application_commit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+  "application_manifest": "application-source-manifest.json",
+  "checks_utc": "2026-11-05",
+  "provider_boundary": "ANTHROPIC_API_KEY=local-preview-disabled; USE_MOCK_DATA=true; WORKSPACE_SCHEDULE_APPROVED=false; synthetic isolated services only",
+  "suite": {
+    "Test Files": {
+      "passed": 201,
+      "total": 201
+    },
+    "Tests": {
+      "passed": 4079,
+      "total": 4079
+    }
+  },
+  "coverage": {
+    "lines": {
+      "total": 4676,
+      "covered": 4651,
+      "skipped": 0,
+      "pct": 99.46
+    },
+    "statements": {
+      "total": 5783,
+      "covered": 5679,
+      "skipped": 0,
+      "pct": 98.2
+    },
+    "functions": {
+      "total": 2011,
+      "covered": 1877,
+      "skipped": 0,
+      "pct": 93.33
+    },
+    "branches": {
+      "total": 5053,
+      "covered": 4759,
+      "skipped": 0,
+      "pct": 94.18
+    },
+    "branchesTrue": {
+      "total": 0,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 100
+    }
+  },
+  "unchanged_coverage_floors": {
+    "statements": 98.15,
+    "branches": 94.0,
+    "functions": 92.2,
+    "lines": 99.11
+  },
+  "budget_rows": [
+    {
+      "status": "PASS",
+      "label": "`/` first-load JS, excl. polyfill",
+      "measured_bytes": 166409,
+      "ceiling_bytes": 166912
+    },
+    {
+      "status": "PASS",
+      "label": "`/c/[id]` first-load JS, excl. polyfill",
+      "measured_bytes": 192307,
+      "ceiling_bytes": 192512
+    },
+    {
+      "status": "PASS",
+      "label": "`/learn` first-load JS, excl. polyfill",
+      "measured_bytes": 165124,
+      "ceiling_bytes": 166912
+    },
+    {
+      "status": "PASS",
+      "label": "`/learn/paths/[id]` first-load JS, excl. polyfill",
+      "measured_bytes": 166042,
+      "ceiling_bytes": 169984
+    },
+    {
+      "status": "PASS",
+      "label": "`/learn/sessions/[id]` first-load JS, excl. polyfill",
+      "measured_bytes": 186790,
+      "ceiling_bytes": 188416
+    },
+    {
+      "status": "PASS",
+      "label": "`/learn/progress` first-load JS, excl. polyfill",
+      "measured_bytes": 168446,
+      "ceiling_bytes": 169984
+    },
+    {
+      "status": "PASS",
+      "label": "Shared framework/runtime chunk",
+      "measured_bytes": 134263,
+      "ceiling_bytes": 139264
+    },
+    {
+      "status": "PASS",
+      "label": "All emitted CSS",
+      "measured_bytes": 23940,
+      "ceiling_bytes": 25600
+    },
+    {
+      "status": "PASS",
+      "label": "All self-hosted font files (woff2, latin subset)",
+      "measured_bytes": 103476,
+      "ceiling_bytes": 109568
+    },
+    {
+      "status": "PASS",
+      "label": "`/today` first-load JS, excl. polyfill",
+      "measured_bytes": 153764,
+      "ceiling_bytes": 163840
+    },
+    {
+      "status": "PASS",
+      "label": "`/interests` first-load JS, excl. polyfill",
+      "measured_bytes": 153223,
+      "ceiling_bytes": 163840
+    },
+    {
+      "status": "PASS",
+      "label": "`/library` first-load JS, excl. polyfill",
+      "measured_bytes": 152737,
+      "ceiling_bytes": 163840
+    },
+    {
+      "status": "PASS",
+      "label": "`/library/items/[id]` first-load JS, excl. polyfill",
+      "measured_bytes": 156444,
+      "ceiling_bytes": 163840
+    },
+    {
+      "status": "PASS",
+      "label": "`/workspace/today` first-load JS, excl. polyfill",
+      "measured_bytes": 167986,
+      "ceiling_bytes": 169984
+    },
+    {
+      "status": "PASS",
+      "label": "`/workspace/radar` first-load JS, excl. polyfill",
+      "measured_bytes": 167097,
+      "ceiling_bytes": 169984
+    },
+    {
+      "status": "PASS",
+      "label": "`/workspace/interests` first-load JS, excl. polyfill",
+      "measured_bytes": 164870,
+      "ceiling_bytes": 169984
+    },
+    {
+      "status": "PASS",
+      "label": "`/workspace/library` first-load JS, excl. polyfill",
+      "measured_bytes": 167151,
+      "ceiling_bytes": 169984
+    },
+    {
+      "status": "PASS",
+      "label": "`/workspace/items/[id]` first-load JS, excl. polyfill",
+      "measured_bytes": 161034,
+      "ceiling_bytes": 169984
+    },
+    {
+      "status": "PASS",
+      "label": "`/workspace/operations` first-load JS, excl. polyfill",
+      "measured_bytes": 162301,
+      "ceiling_bytes": 169984
+    },
+    {
+      "status": "PASS",
+      "label": "`/workspace/review` first-load JS, excl. polyfill",
+      "measured_bytes": 164237,
+      "ceiling_bytes": 169984
+    }
+  ],
+  "commands": [
+    {
+      "command": "npm run lint",
+      "exit_code": 0,
+      "log": "lint.log"
+    },
+    {
+      "command": "npm run typecheck",
+      "exit_code": 0,
+      "log": "typecheck.log"
+    },
+    {
+      "command": "npm run build",
+      "exit_code": 0,
+      "log": "final-build.log"
+    },
+    {
+      "command": "node scripts/route-budgets.mjs",
+      "exit_code": 0,
+      "log": "final-budgets.log"
+    },
+    {
+      "command": "npm test -- --coverage",
+      "exit_code": 0,
+      "log": "final-coverage.log"
+    }
+  ],
+  "scope_limit": "Mechanical frontend checks only; browser acceptance receipts are owned and reported separately.",
+  "pure_helper_coverage": {
+    "commands.ts": {
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "lines": 100
+    },
+    "queue.ts": {
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "lines": 100
+    },
+    "urlState.ts": {
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "lines": 100
+    },
+    "drafts.ts": {
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "lines": 100
+    },
+    "readerModule.ts": {
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "lines": 100
+    },
+    "navigationGuard.ts": {
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "lines": 100
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "observed_at_utc": "2026-11-05T06:06:56.692081+00:00",
+  "original_controller_head": "dff860e16e89c22382bce88d98f64645dfdcbfc8",
+  "original_controller_clean": true,
+  "listener_receipt": "service-listeners-before-final.txt",
+  "scope": "Read-only git status/head and selected listening ports only; no process environment or database content inspected.",
+  "p7_preview_ports": [
+    3168,
+    8168
+  ],
+  "browser_owned_ci_ports": [
+    3169,
+    8169
+  ],
+  "preserved_sibling_ports": [
+    3137,
+    8137,
+    15438,
+    3148,
+    8148,
+    3158,
+    8158,
+    15458
+  ]
+}

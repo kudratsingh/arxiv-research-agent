@@ -1,0 +1,529 @@
+{
+  "status": "pass",
+  "runtimeRelease": "G7 local Chromium mechanical runtime released; final app source unchanged",
+  "completedAtUtc": "2026-11-05T08:18:18.577298+00:00",
+  "applicationCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+  "sourceTree": "3a5f4ac92db86c519dcfffbd371ade7872c7c811",
+  "webGitTree": "e4f4f72d1b49f1647fb116e52105c90b03c0335c",
+  "buildId": "5OYFfRwG4lvr66GcP9lc0",
+  "binding": "final/source-binding.json",
+  "reports": [
+    {
+      "path": "final/report.json",
+      "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+      "cases": 70,
+      "status": "pass",
+      "scope": "responsive routes/themes/widths;28axe scans,42tablet cases,CSP"
+    },
+    {
+      "path": "final/commands/report.json",
+      "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+      "cases": 4,
+      "status": "pass",
+      "scope": "strict palette/help/drawer keyboard guards;8dialogaxe"
+    },
+    {
+      "path": "final/moods-motion/report.json",
+      "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+      "cases": 8,
+      "status": "pass",
+      "scope": "busy/outage/empty;normal/reduced motion"
+    },
+    {
+      "path": "final/geometry/report.json",
+      "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+      "cases": 4,
+      "status": "pass",
+      "scope": "nativequeue/history/hash/lastlinepaint/hit"
+    },
+    {
+      "path": "final/reader-readiness/report.json",
+      "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+      "cases": 4,
+      "status": "pass",
+      "scope": "coldexactretainedpassage/readiness/settledJS"
+    },
+    {
+      "path": "final/paper-readiness/report.json",
+      "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+      "cases": 12,
+      "status": "pass",
+      "scope": "freshToday/Radar/Library title+abstractreadiness/settledJS"
+    },
+    {
+      "path": "final/delayed-reader-core/report.json",
+      "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+      "cases": 2,
+      "status": "pass",
+      "scope": "heldrealchunk/latesthash"
+    },
+    {
+      "path": "final/reader-chunk-failure/report.json",
+      "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+      "cases": 2,
+      "status": "pass",
+      "scope": "deliberatechunkabort/explicitretry"
+    },
+    {
+      "path": "final/reader-module-no-data/report.json",
+      "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+      "cases": 4,
+      "status": "pass",
+      "scope": "missingretaineditem/intercepted503skipseditor"
+    },
+    {
+      "path": "final/reader-stale-module/report.json",
+      "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+      "cases": 2,
+      "status": "pass",
+      "scope": "heldchunknavigateaway/nextwork"
+    },
+    {
+      "path": "final/legacy/report.json",
+      "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+      "cases": 8,
+      "status": "pass",
+      "scope": "fictionalToday/Workbenchdirect"
+    },
+    {
+      "path": "final/legacy-via-workspace/report.json",
+      "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+      "cases": 8,
+      "status": "pass",
+      "scope": "legacyafterrealclientnavigation"
+    },
+    {
+      "path": "final/form-focus/report.json",
+      "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+      "cases": 4,
+      "status": "pass",
+      "scope": "actualkeyboardoutline/computedstyles"
+    },
+    {
+      "path": "final/touch-targets/report.json",
+      "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+      "cases": 14,
+      "status": "pass",
+      "scope": "coarsevisiblecontroltargets44px"
+    },
+    {
+      "path": "final/drawer-ime-modifier/report.json",
+      "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+      "cases": 2,
+      "status": "pass",
+      "scope": "composition/modifierKeyboardEventshapes390/900"
+    },
+    {
+      "path": "ci/pending-composer-search/report.json",
+      "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+      "cases": 4,
+      "status": "pass",
+      "scope": "heldReader/Interestsordinary+slashsearch"
+    },
+    {
+      "path": "ci/dirty-review-composer-search/report.json",
+      "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+      "cases": 2,
+      "status": "pass",
+      "scope": "unsaveddraft/ordinary+slash/discard/nofeedbackPOST"
+    },
+    {
+      "path": "ci/daily-loop/report.json",
+      "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+      "cases": 2,
+      "status": "pass",
+      "scope": "keyboardpending/conflict/retry/Readerreturn"
+    },
+    {
+      "path": "ci/p7-source-notes/report.json",
+      "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+      "cases": 4,
+      "status": "pass",
+      "scope": "matchedSource/Notes/storedreading/restoration"
+    }
+  ],
+  "existingLiveRegression": {
+    "path": "ci/live16/results.json",
+    "tests": 16,
+    "status": "pass",
+    "seconds": 23.5,
+    "suiteSourceUnchanged": true,
+    "scope": "Disposable canonical CI; two local explicit synthetic $0 workflow cases, no provider execution"
+  },
+  "accessibility": {
+    "workspaceRouteScans": 28,
+    "workspaceViolations": 0,
+    "dialogScans": 8,
+    "dialogViolations": 0,
+    "legacyWorkbenchViolations": 0,
+    "legacyFictionalTodayInheritedModerateRegionRule": "two preview-banner text nodes; identical P6/final; no serious/critical"
+  },
+  "legacyPixels": {
+    "comparisons": 16,
+    "allExact": true,
+    "path": "final/legacy-comparison.json"
+  },
+  "previewJudgments": {
+    "candidates": 10,
+    "labelsBlank": true,
+    "reasonsBlank": true,
+    "protectedStateUnchangedAcrossReadOnlyRuns": true
+  },
+  "stateBoundaries": {
+    "ownerWrites": 0,
+    "previewWrites": 0,
+    "providerCalls": 0,
+    "sourceRefreshRequestsForwarded": 0,
+    "realGenerationRequests": 0,
+    "recurrenceEnabled": false,
+    "ciSyntheticWorkflowCases": 2,
+    "ciWrites": "Explicit isolated reading/questions/profile restoration/reviewprepare and existing16 mechanical fixtures; all confined controller-p7-ci. No owner judgment fabricated.",
+    "ciLogicalReadingRestored": true,
+    "ciProfileDataRestored": true
+  },
+  "performance": {
+    "scope": "Single local observations, not causal speed benchmark or transfer reduction. Official initialJS metric unchanged; additional mandatory Reader chunk exists and settled totals include it. Final Reader bytes grow4402desktop/4409mobile vsP6.",
+    "observations": {
+      "reader-readiness": [
+        {
+          "name": "desktop-light",
+          "baselineJavaScriptResponseBodyBytes": 225945,
+          "finalJavaScriptResponseBodyBytes": 230347,
+          "deltaBytes": 4402,
+          "finalRequiredContentDOMAtMs": 220.80000001192093,
+          "finalVisibleReadyAtMs": null,
+          "phases": [
+            {
+              "label": "Opening your local workspace\u2026",
+              "atMs": 22.400000035762787
+            },
+            {
+              "label": "Opening the retained source reader\u2026",
+              "atMs": 209.30000001192093
+            },
+            {
+              "label": "retained-source",
+              "atMs": 220.80000001192093
+            }
+          ]
+        },
+        {
+          "name": "desktop-dark",
+          "baselineJavaScriptResponseBodyBytes": 225945,
+          "finalJavaScriptResponseBodyBytes": 230347,
+          "deltaBytes": 4402,
+          "finalRequiredContentDOMAtMs": 208.39999997615814,
+          "finalVisibleReadyAtMs": null,
+          "phases": [
+            {
+              "label": "Opening your local workspace\u2026",
+              "atMs": 17.299999952316284
+            },
+            {
+              "label": "Opening the retained source reader\u2026",
+              "atMs": 195.39999997615814
+            },
+            {
+              "label": "retained-source",
+              "atMs": 208.39999997615814
+            }
+          ]
+        },
+        {
+          "name": "mobile-light",
+          "baselineJavaScriptResponseBodyBytes": 173880,
+          "finalJavaScriptResponseBodyBytes": 178289,
+          "deltaBytes": 4409,
+          "finalRequiredContentDOMAtMs": 200.4000000357628,
+          "finalVisibleReadyAtMs": null,
+          "phases": [
+            {
+              "label": "Opening your local workspace\u2026",
+              "atMs": 16.700000047683716
+            },
+            {
+              "label": "Opening the retained source reader\u2026",
+              "atMs": 188.80000001192093
+            },
+            {
+              "label": "retained-source",
+              "atMs": 200.4000000357628
+            }
+          ]
+        },
+        {
+          "name": "mobile-dark",
+          "baselineJavaScriptResponseBodyBytes": 173880,
+          "finalJavaScriptResponseBodyBytes": 178289,
+          "deltaBytes": 4409,
+          "finalRequiredContentDOMAtMs": 192.0999999642372,
+          "finalVisibleReadyAtMs": null,
+          "phases": [
+            {
+              "label": "Opening your local workspace\u2026",
+              "atMs": 17.80000001192093
+            },
+            {
+              "label": "Opening the retained source reader\u2026",
+              "atMs": 180.5999999642372
+            },
+            {
+              "label": "retained-source",
+              "atMs": 192.0999999642372
+            }
+          ]
+        }
+      ],
+      "paper-readiness": [
+        {
+          "name": "desktop-light-today",
+          "baselineJavaScriptResponseBodyBytes": 221893,
+          "finalJavaScriptResponseBodyBytes": 224886,
+          "deltaBytes": 2993,
+          "finalRequiredContentDOMAtMs": 198.5,
+          "finalVisibleReadyAtMs": 281.0999999642372,
+          "phases": [
+            {
+              "label": "Opening your local workspace\u2026",
+              "atMs": 19.399999976158142
+            },
+            {
+              "label": "focused-paper",
+              "atMs": 198.5
+            }
+          ]
+        },
+        {
+          "name": "desktop-light-radar",
+          "baselineJavaScriptResponseBodyBytes": 221184,
+          "finalJavaScriptResponseBodyBytes": 223996,
+          "deltaBytes": 2812,
+          "finalRequiredContentDOMAtMs": 244.19999998807907,
+          "finalVisibleReadyAtMs": 284.80000001192093,
+          "phases": [
+            {
+              "label": "Opening your local workspace\u2026",
+              "atMs": 21
+            },
+            {
+              "label": "focused-paper",
+              "atMs": 244.19999998807907
+            }
+          ]
+        },
+        {
+          "name": "desktop-light-library",
+          "baselineJavaScriptResponseBodyBytes": 221238,
+          "finalJavaScriptResponseBodyBytes": 224050,
+          "deltaBytes": 2812,
+          "finalRequiredContentDOMAtMs": 189.69999998807907,
+          "finalVisibleReadyAtMs": 268,
+          "phases": [
+            {
+              "label": "Opening your local workspace\u2026",
+              "atMs": 15.699999988079071
+            },
+            {
+              "label": "focused-paper",
+              "atMs": 189.69999998807907
+            }
+          ]
+        },
+        {
+          "name": "desktop-dark-today",
+          "baselineJavaScriptResponseBodyBytes": 221893,
+          "finalJavaScriptResponseBodyBytes": 224886,
+          "deltaBytes": 2993,
+          "finalRequiredContentDOMAtMs": 200.30000001192093,
+          "finalVisibleReadyAtMs": 279.7000000476837,
+          "phases": [
+            {
+              "label": "Opening your local workspace\u2026",
+              "atMs": 17.80000001192093
+            },
+            {
+              "label": "focused-paper",
+              "atMs": 200.30000001192093
+            }
+          ]
+        },
+        {
+          "name": "desktop-dark-radar",
+          "baselineJavaScriptResponseBodyBytes": 221184,
+          "finalJavaScriptResponseBodyBytes": 223996,
+          "deltaBytes": 2812,
+          "finalRequiredContentDOMAtMs": 204.69999998807907,
+          "finalVisibleReadyAtMs": 276.60000002384186,
+          "phases": [
+            {
+              "label": "Opening your local workspace\u2026",
+              "atMs": 16.19999998807907
+            },
+            {
+              "label": "focused-paper",
+              "atMs": 204.69999998807907
+            }
+          ]
+        },
+        {
+          "name": "desktop-dark-library",
+          "baselineJavaScriptResponseBodyBytes": 221238,
+          "finalJavaScriptResponseBodyBytes": 224050,
+          "deltaBytes": 2812,
+          "finalRequiredContentDOMAtMs": 191.80000001192093,
+          "finalVisibleReadyAtMs": 281.30000001192093,
+          "phases": [
+            {
+              "label": "Opening your local workspace\u2026",
+              "atMs": 15.900000035762787
+            },
+            {
+              "label": "focused-paper",
+              "atMs": 191.80000001192093
+            }
+          ]
+        },
+        {
+          "name": "mobile-light-today",
+          "baselineJavaScriptResponseBodyBytes": 169828,
+          "finalJavaScriptResponseBodyBytes": 172828,
+          "deltaBytes": 3000,
+          "finalRequiredContentDOMAtMs": 226.89999997615814,
+          "finalVisibleReadyAtMs": 298.89999997615814,
+          "phases": [
+            {
+              "label": "Opening your local workspace\u2026",
+              "atMs": 43.19999998807907
+            },
+            {
+              "label": "focused-paper",
+              "atMs": 226.89999997615814
+            }
+          ]
+        },
+        {
+          "name": "mobile-light-radar",
+          "baselineJavaScriptResponseBodyBytes": 169119,
+          "finalJavaScriptResponseBodyBytes": 171938,
+          "deltaBytes": 2819,
+          "finalRequiredContentDOMAtMs": 187.79999995231628,
+          "finalVisibleReadyAtMs": 266.0999999642372,
+          "phases": [
+            {
+              "label": "Opening your local workspace\u2026",
+              "atMs": 16
+            },
+            {
+              "label": "focused-paper",
+              "atMs": 187.79999995231628
+            }
+          ]
+        },
+        {
+          "name": "mobile-light-library",
+          "baselineJavaScriptResponseBodyBytes": 169173,
+          "finalJavaScriptResponseBodyBytes": 171992,
+          "deltaBytes": 2819,
+          "finalRequiredContentDOMAtMs": 265.69999998807907,
+          "finalVisibleReadyAtMs": 291.5,
+          "phases": [
+            {
+              "label": "Opening your local workspace\u2026",
+              "atMs": 19.69999998807907
+            },
+            {
+              "label": "focused-paper",
+              "atMs": 265.69999998807907
+            }
+          ]
+        },
+        {
+          "name": "mobile-dark-today",
+          "baselineJavaScriptResponseBodyBytes": 169828,
+          "finalJavaScriptResponseBodyBytes": 172828,
+          "deltaBytes": 3000,
+          "finalRequiredContentDOMAtMs": 191.30000001192093,
+          "finalVisibleReadyAtMs": 269.7000000476837,
+          "phases": [
+            {
+              "label": "Opening your local workspace\u2026",
+              "atMs": 15
+            },
+            {
+              "label": "focused-paper",
+              "atMs": 191.30000001192093
+            }
+          ]
+        },
+        {
+          "name": "mobile-dark-radar",
+          "baselineJavaScriptResponseBodyBytes": 169119,
+          "finalJavaScriptResponseBodyBytes": 171938,
+          "deltaBytes": 2819,
+          "finalRequiredContentDOMAtMs": 189.4000000357628,
+          "finalVisibleReadyAtMs": 261.2000000476837,
+          "phases": [
+            {
+              "label": "Opening your local workspace\u2026",
+              "atMs": 17.100000023841858
+            },
+            {
+              "label": "focused-paper",
+              "atMs": 189.4000000357628
+            }
+          ]
+        },
+        {
+          "name": "mobile-dark-library",
+          "baselineJavaScriptResponseBodyBytes": 169173,
+          "finalJavaScriptResponseBodyBytes": 171992,
+          "deltaBytes": 2819,
+          "finalRequiredContentDOMAtMs": 183.5,
+          "finalVisibleReadyAtMs": 263,
+          "phases": [
+            {
+              "label": "Opening your local workspace\u2026",
+              "atMs": 15.099999964237213
+            },
+            {
+              "label": "focused-paper",
+              "atMs": 183.5
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "recordings": {
+    "actualWebMs": 6,
+    "fullDecodeExitCodes": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "visualReview": "pass",
+    "report": "final/video-inspection/report.json",
+    "nativeCriticalFrames": 8,
+    "nativeFrameReport": "final/video-inspection/critical-native-frames.json"
+  },
+  "teardown": {
+    "path": "ci/teardown.json",
+    "status": "pass",
+    "nodeStopped": 82833,
+    "apiStopped": 10951,
+    "databaseDropped": "workspace_controller_p7_ci",
+    "preservedPreview": "http://127.0.0.1:3168/workspace/today",
+    "ownerP6PilotListenersUnchanged": true
+  },
+  "limitations": [
+    "Chromium only; dispatchedIME/modifierevent shapes are not an OSIME study.",
+    "Captured/intercepted503/conflict/chunkfailures prove software behavior, not provider/source reliability.",
+    "Synthetic preview and disposable CI mechanical evidence; owner usefulness/human judgments/scientific quality remain unassessed.",
+    "Delayed FocusPaper chunk case retired because FocusPaper is eager; actualfreshroute/nativequeue readiness tested instead.",
+    "RemoteCI/PR/push/merge not performed."
+  ],
+  "failureHistory": "pre-fix/ preserves inherited/hash, dialogtrap, containingblock, oldcorelatency, oversizedwheel blankattempts and all obsolete/harnessreadiness observers; no failed/partial clip labelled final."
+}

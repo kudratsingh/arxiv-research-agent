@@ -1,0 +1,52 @@
+{
+  "phase": "final",
+  "base": "http://127.0.0.1:3168",
+  "startedAtUtc": "2026-11-05T08:01:56.239Z",
+  "scope": "Dispatched KeyboardEvent composition/modifier shapes on actual visible Radar drawer controls; not an OS IME evaluation",
+  "cases": [
+    {
+      "name": "mobile",
+      "status": "pass",
+      "dispatched": {
+        "isComposing": true,
+        "defaultPrevented": false,
+        "accepted": true
+      },
+      "afterIME": {
+        "drawerOpen": true,
+        "active": "<input maxlength=\"200\" type=\"search\" value=\"agent\">"
+      },
+      "modifier": {
+        "defaultPrevented": false,
+        "accepted": true,
+        "closeStillFocused": true,
+        "active": "<button type=\"button\" class=\"ws-drawer-close\" data-command=\"escape\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 20 20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 4l12 12M16 4 4 16\"></path></svg>Close controls</button>"
+      },
+      "serverStateUnchanged": true
+    },
+    {
+      "name": "tablet",
+      "status": "pass",
+      "dispatched": {
+        "isComposing": true,
+        "defaultPrevented": false,
+        "accepted": true
+      },
+      "afterIME": {
+        "drawerOpen": true,
+        "active": "<input maxlength=\"200\" type=\"search\" value=\"agent\">"
+      },
+      "modifier": {
+        "defaultPrevented": false,
+        "accepted": true,
+        "closeStillFocused": true,
+        "active": "<button type=\"button\" class=\"ws-drawer-close\" data-command=\"escape\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 20 20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 4l12 12M16 4 4 16\"></path></svg>Close controls</button>"
+      },
+      "serverStateUnchanged": true
+    }
+  ],
+  "blocked": [],
+  "errors": [],
+  "endedAtUtc": "2026-11-05T08:01:59.075Z",
+  "status": "pass"
+}

@@ -1,0 +1,136 @@
+{
+  "base": "http://127.0.0.1:3169",
+  "principal": "controller-p7-ci",
+  "startedAtUtc": "2026-11-05T08:08:20.350Z",
+  "scope": "Disposable synthetic CI; software-only409 and pending-navigation injection",
+  "cases": [
+    {
+      "name": "desktop",
+      "status": "fail",
+      "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n... Skipped lines\n\n  {\n    length: 4,\n    state: {\n      __NA: true,\n      __PRIVATE_NEXTJS_INTERNALS_TREE: {\n...\n      },\n+     workspaceScroll: 1764\n-     workspaceScroll: 509\n    }\n  }\n\n    at /private/tmp/arxiv-agent-eng-workspace-controller-p7/planning/12-workspace-controller-revamp/evidence/after/p7-polish/ci/daily-loop.cjs:22:881",
+      "video": "desktop.webm"
+    },
+    {
+      "name": "mobile",
+      "theme": "light",
+      "status": "pass",
+      "notesTabs": 1,
+      "retryTabs": 20,
+      "returnTabs": 8,
+      "readerUrl": "http://127.0.0.1:3169/workspace/items/ci%3Aworkspace-agent-evaluation?version=ci%3Aworkspace-agent-evaluation%3Av2&return_to=%2Fworkspace%2Ftoday%3Ffocus%3Dci%253Aworkspace-agent-evaluation#abstract%3A0",
+      "savedEntryId": "4ad4dfb4-722f-47dc-8bcd-630279ea1b2a",
+      "savedVersion": "ci:workspace-agent-evaluation:v2",
+      "protectedStateUnchanged": true,
+      "cancelledPreflightObserved": true,
+      "navigationRequests": [
+        {
+          "href": "http://127.0.0.1:3169/workspace/items/ci%3Aworkspace-agent-evaluation?version=ci%3Aworkspace-agent-evaluation%3Av2&return_to=%2Fworkspace%2Ftoday%3Ffocus%3Dci%253Aworkspace-agent-evaluation#abstract%3A0",
+          "pathname": "/workspace/items/ci%3Aworkspace-agent-evaluation",
+          "sameOrigin": true,
+          "defaultPrevented": false
+        },
+        {
+          "href": "http://127.0.0.1:3169/workspace/library",
+          "pathname": "/workspace/library",
+          "sameOrigin": true,
+          "defaultPrevented": true
+        }
+      ],
+      "pendingUrlHistoryIntentDraftUnchanged": true,
+      "acceptedLibraryNavigationRequests": 0,
+      "downstreamLibraryAnchorClicks": 0,
+      "video": "mobile.webm"
+    }
+  ],
+  "writes": [
+    {
+      "name": "desktop",
+      "path": "/api/workspace/reading",
+      "work": "ci:workspace-agent-evaluation",
+      "forwarded": true
+    },
+    {
+      "name": "desktop",
+      "path": "/api/workspace/entries",
+      "work": "ci:workspace-agent-evaluation",
+      "forwarded": false,
+      "injection": "held then409"
+    },
+    {
+      "name": "desktop",
+      "path": "/api/workspace/reading",
+      "work": "ci:workspace-agent-evaluation",
+      "forwarded": true,
+      "kind": "restore own logicalreadingfields"
+    },
+    {
+      "name": "mobile",
+      "path": "/api/workspace/reading",
+      "work": "ci:workspace-agent-evaluation",
+      "forwarded": true
+    },
+    {
+      "name": "mobile",
+      "path": "/api/workspace/entries",
+      "work": "ci:workspace-agent-evaluation",
+      "forwarded": false,
+      "injection": "held then409"
+    },
+    {
+      "name": "mobile",
+      "path": "/api/workspace/entries",
+      "work": "ci:workspace-agent-evaluation",
+      "forwarded": true
+    },
+    {
+      "name": "mobile",
+      "path": "/api/workspace/reading",
+      "work": "ci:workspace-agent-evaluation",
+      "forwarded": true,
+      "kind": "restore own logicalreadingfields"
+    }
+  ],
+  "blocked": [],
+  "errors": [],
+  "chapters": [
+    {
+      "name": "desktop",
+      "label": "Skip-main→J→O→exact Reader",
+      "elapsedMs": 1503
+    },
+    {
+      "name": "desktop",
+      "label": "Keyboard question submitted; request held before server",
+      "elapsedMs": 1577
+    },
+    {
+      "name": "mobile",
+      "label": "Skip-main→J→O→exact Reader",
+      "elapsedMs": 1478
+    },
+    {
+      "name": "mobile",
+      "label": "Keyboard question submitted; request held before server",
+      "elapsedMs": 1560
+    },
+    {
+      "name": "mobile",
+      "label": "Palette route remained blocked during pending entry save",
+      "elapsedMs": 2517
+    },
+    {
+      "name": "mobile",
+      "label": "Injected409 retained question; explicit keyboard retry saved",
+      "elapsedMs": 2621
+    },
+    {
+      "name": "mobile",
+      "label": "Keyboard return to Today→J",
+      "elapsedMs": 2789
+    }
+  ],
+  "navigationIntentKey": "arxiv.workspace.navigation-intent.v1",
+  "navigationRequestEvent": "arxiv:workspace-navigation-request",
+  "endedAtUtc": "2026-11-05T08:08:26.273Z",
+  "status": "fail"
+}

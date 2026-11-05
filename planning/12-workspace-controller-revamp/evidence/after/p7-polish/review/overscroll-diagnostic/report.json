@@ -1,0 +1,11 @@
+{
+  "startedAtUtc": "2026-11-05T06:00:56.559Z",
+  "base": "http://127.0.0.1:3168",
+  "applicationCommit": "164a1595082881081ef8cd3ebf38461998838cfd",
+  "cases": [],
+  "blocked": [],
+  "errors": [
+    "apiRequestContext.get: connect ECONNREFUSED 127.0.0.1:3168\nCall log:\n\u001b[2m  - → GET http://127.0.0.1:3168/api/workspace/state\u001b[22m\n\u001b[2m    - user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36\u001b[22m\n\u001b[2m    - accept: */*\u001b[22m\n\u001b[2m    - accept-encoding: gzip,deflate,br\u001b[22m\n\n    at /private/tmp/arxiv-agent-eng-workspace-controller-p7/planning/12-workspace-controller-revamp/evidence/after/p7-polish/overscroll-diagnostic.cjs:5:841"
+  ],
+  "endedAtUtc": "2026-11-05T06:00:56.975Z"
+}

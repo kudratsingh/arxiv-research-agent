@@ -1,0 +1,53 @@
+▲ Next.js 16.4.4
+- Local:         http://127.0.0.1:3169
+- Network:       http://127.0.0.1:3169
+✓ Ready in 0ms
+✓ Running next.config took 2ms
+{"event":"api_proxy_request","method":"GET","path":"/workspace/state","status":200,"duration_ms":52,"bytes":28474}
+{"event":"api_proxy_request","method":"GET","path":"/workspace/state","status":200,"duration_ms":34,"bytes":28474}
+{"event":"api_proxy_request","method":"POST","path":"/workspace/reading","status":200,"duration_ms":19,"bytes":188}
+{"event":"api_proxy_request","method":"POST","path":"/workspace/reading","status":200,"duration_ms":13,"bytes":193}
+{"event":"api_proxy_request","method":"GET","path":"/workspace/state","status":200,"duration_ms":39,"bytes":29242}
+{"event":"api_proxy_request","method":"GET","path":"/workspace/state","status":200,"duration_ms":24,"bytes":29242}
+{"event":"api_proxy_request","method":"GET","path":"/workspace/state","status":200,"duration_ms":25,"bytes":29242}
+{"event":"api_proxy_request","method":"GET","path":"/workspace/state","status":200,"duration_ms":30,"bytes":29242}
+{"event":"api_proxy_request","method":"POST","path":"/workspace/reading","status":200,"duration_ms":14,"bytes":188}
+{"event":"api_proxy_request","method":"POST","path":"/workspace/reading","status":200,"duration_ms":23,"bytes":193}
+{"event":"api_proxy_request","method":"GET","path":"/workspace/state","status":200,"duration_ms":37,"bytes":29476}
+{"event":"api_proxy_request","method":"POST","path":"/workspace/reading","status":409,"duration_ms":6,"bytes":215}
+{"event":"api_proxy_request","method":"GET","path":"/workspace/state","status":200,"duration_ms":27,"bytes":29735}
+{"event":"api_proxy_request","method":"GET","path":"/workspace/state","status":200,"duration_ms":32,"bytes":29735}
+{"event":"api_proxy_request","method":"POST","path":"/workspace/reading","status":200,"duration_ms":11,"bytes":188}
+{"event":"api_proxy_request","method":"POST","path":"/workspace/reading","status":200,"duration_ms":13,"bytes":193}
+{"event":"api_proxy_request","method":"GET","path":"/workspace/state","status":200,"duration_ms":33,"bytes":29942}
+{"event":"api_proxy_request","method":"GET","path":"/workspace/state","status":200,"duration_ms":28,"bytes":30228}
+{"event":"api_proxy_request","method":"GET","path":"/workspace/state","status":200,"duration_ms":27,"bytes":30228}
+{"event":"api_proxy_request","method":"GET","path":"/workspace/state","status":200,"duration_ms":36,"bytes":30228}
+{"event":"api_proxy_request","method":"POST","path":"/workspace/reading","status":200,"duration_ms":11,"bytes":188}
+{"event":"api_proxy_request","method":"POST","path":"/workspace/reading","status":200,"duration_ms":12,"bytes":193}
+{"event":"api_proxy_request","method":"GET","path":"/workspace/state","status":200,"duration_ms":32,"bytes":30435}
+{"event":"api_proxy_request","method":"GET","path":"/workspace/state","status":200,"duration_ms":29,"bytes":30721}
+{"event":"api_proxy_request","method":"GET","path":"/workspace/state","status":200,"duration_ms":33,"bytes":30721}
+{"event":"api_proxy_request","method":"GET","path":"/workspace/state","status":200,"duration_ms":31,"bytes":30721}
+{"event":"api_proxy_request","method":"POST","path":"/workspace/reading","status":200,"duration_ms":14,"bytes":188}
+{"event":"api_proxy_request","method":"POST","path":"/workspace/reading","status":200,"duration_ms":12,"bytes":195}
+{"event":"api_proxy_request","method":"GET","path":"/workspace/state","status":200,"duration_ms":30,"bytes":31220}
+{"event":"api_proxy_request","method":"GET","path":"/workspace/state","status":200,"duration_ms":27,"bytes":31220}
+{"event":"api_proxy_request","method":"GET","path":"/workspace/state","status":200,"duration_ms":24,"bytes":31220}
+{"event":"api_proxy_request","method":"GET","path":"/workspace/state","status":200,"duration_ms":29,"bytes":31220}
+{"event":"api_proxy_request","method":"POST","path":"/workspace/reading","status":200,"duration_ms":12,"bytes":190}
+{"event":"api_proxy_request","method":"POST","path":"/workspace/reading","status":200,"duration_ms":10,"bytes":195}
+{"event":"api_proxy_request","method":"GET","path":"/workspace/state","status":200,"duration_ms":29,"bytes":31717}
+{"event":"api_proxy_request","method":"GET","path":"/workspace/state","status":200,"duration_ms":26,"bytes":31717}
+{"event":"api_proxy_request","method":"GET","path":"/workspace/state","status":200,"duration_ms":21,"bytes":31717}
+{"event":"api_proxy_request","method":"GET","path":"/workspace/state","status":200,"duration_ms":30,"bytes":31717}
+{"event":"api_proxy_request","method":"POST","path":"/workspace/reading","status":200,"duration_ms":12,"bytes":190}
+{"event":"api_proxy_request","method":"POST","path":"/workspace/reading","status":200,"duration_ms":10,"bytes":195}
+{"event":"api_proxy_request","method":"GET","path":"/workspace/state","status":200,"duration_ms":26,"bytes":32214}
+{"event":"api_proxy_request","method":"GET","path":"/workspace/state","status":200,"duration_ms":24,"bytes":32214}
+{"event":"api_proxy_request","method":"GET","path":"/workspace/state","status":200,"duration_ms":23,"bytes":32214}
+{"event":"api_proxy_request","method":"GET","path":"/workspace/state","status":200,"duration_ms":22,"bytes":32214}
+{"event":"api_proxy_request","method":"POST","path":"/workspace/reading","status":200,"duration_ms":9,"bytes":190}
+{"event":"api_proxy_request","method":"POST","path":"/workspace/reading","status":200,"duration_ms":16,"bytes":195}
+{"event":"api_proxy_request","method":"GET","path":"/workspace/state","status":200,"duration_ms":27,"bytes":32711}
+{"event":"api_proxy_request","method":"GET","path":"/workspace/state","status":200,"duration_ms":23,"bytes":32711}

@@ -1,0 +1,5 @@
+PASS desktop reader
+PASS desktop interests
+PASS mobile reader
+PASS mobile interests
+{"status":"pass","cases":4,"writes":8,"blocked":[],"errors":[]}

@@ -1,0 +1,234 @@
+{
+  "phase": "baseline",
+  "base": "http://127.0.0.1:3148",
+  "principal": "controller-p6-preview",
+  "startedAtUtc": "2026-11-05T05:24:11.357Z",
+  "scope": "Read-only fictional Today preview and main Evidence Workbench, fresh contexts",
+  "navigationMode": "visible workspace→fictional preview→Workbench links",
+  "cases": [
+    {
+      "active": "desktop-light-fictional-today",
+      "size": "desktop",
+      "theme": "light",
+      "route": "/today",
+      "status": "pass",
+      "state": {
+        "theme": "light",
+        "title": "arxiv-research-agent",
+        "headings": [
+          "What changed.What to investigate."
+        ],
+        "bodyOverflow": 0,
+        "documentOverflow": 0,
+        "canvas": "rgb(243, 247, 248)",
+        "font": "500 38px / 45.6px fontReport, \"Literata Fallback\", ui-serif, Georgia, \"Times New Roman\", serif",
+        "focusOutline": "rgb(23, 43, 49) none 3px"
+      },
+      "violations": [
+        {
+          "id": "region",
+          "impact": "moderate",
+          "targets": [
+            [
+              ".daily-preview-bar > strong"
+            ],
+            [
+              ".daily-preview-bar > span:nth-child(3)"
+            ]
+          ]
+        }
+      ],
+      "screenshot": "desktop-light-fictional-today.png"
+    },
+    {
+      "active": "desktop-light-evidence-workbench",
+      "size": "desktop",
+      "theme": "light",
+      "route": "/",
+      "status": "pass",
+      "state": {
+        "theme": "light",
+        "title": "arxiv-research-agent",
+        "headings": [
+          "What should the literature settle?"
+        ],
+        "bodyOverflow": 0,
+        "documentOverflow": 0,
+        "canvas": "rgb(243, 247, 248)",
+        "font": "34px / 40.12px fontUi, \"Atkinson Hyperlegible Next Fallback\", ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", sans-serif",
+        "focusOutline": "rgb(23, 43, 49) none 3px"
+      },
+      "violations": [],
+      "screenshot": "desktop-light-evidence-workbench.png"
+    },
+    {
+      "active": "desktop-dark-fictional-today",
+      "size": "desktop",
+      "theme": "dark",
+      "route": "/today",
+      "status": "pass",
+      "state": {
+        "theme": "dark",
+        "title": "arxiv-research-agent",
+        "headings": [
+          "What changed.What to investigate."
+        ],
+        "bodyOverflow": 0,
+        "documentOverflow": 0,
+        "canvas": "rgb(14, 26, 30)",
+        "font": "500 38px / 45.6px fontReport, \"Literata Fallback\", ui-serif, Georgia, \"Times New Roman\", serif",
+        "focusOutline": "rgb(232, 241, 243) none 3px"
+      },
+      "violations": [
+        {
+          "id": "region",
+          "impact": "moderate",
+          "targets": [
+            [
+              ".daily-preview-bar > strong"
+            ],
+            [
+              ".daily-preview-bar > span:nth-child(3)"
+            ]
+          ]
+        }
+      ],
+      "screenshot": "desktop-dark-fictional-today.png"
+    },
+    {
+      "active": "desktop-dark-evidence-workbench",
+      "size": "desktop",
+      "theme": "dark",
+      "route": "/",
+      "status": "pass",
+      "state": {
+        "theme": "dark",
+        "title": "arxiv-research-agent",
+        "headings": [
+          "What should the literature settle?"
+        ],
+        "bodyOverflow": 0,
+        "documentOverflow": 0,
+        "canvas": "rgb(14, 26, 30)",
+        "font": "34px / 40.12px fontUi, \"Atkinson Hyperlegible Next Fallback\", ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", sans-serif",
+        "focusOutline": "rgb(232, 241, 243) none 3px"
+      },
+      "violations": [],
+      "screenshot": "desktop-dark-evidence-workbench.png"
+    },
+    {
+      "active": "mobile-light-fictional-today",
+      "size": "mobile",
+      "theme": "light",
+      "route": "/today",
+      "status": "pass",
+      "state": {
+        "theme": "light",
+        "title": "arxiv-research-agent",
+        "headings": [
+          "What changed.What to investigate."
+        ],
+        "bodyOverflow": 0,
+        "documentOverflow": 0,
+        "canvas": "rgb(243, 247, 248)",
+        "font": "500 31px / 37.2px fontReport, \"Literata Fallback\", ui-serif, Georgia, \"Times New Roman\", serif",
+        "focusOutline": "rgb(23, 43, 49) none 3px"
+      },
+      "violations": [
+        {
+          "id": "region",
+          "impact": "moderate",
+          "targets": [
+            [
+              ".daily-preview-bar > strong"
+            ],
+            [
+              ".daily-preview-bar > span:nth-child(3)"
+            ]
+          ]
+        }
+      ],
+      "screenshot": "mobile-light-fictional-today.png"
+    },
+    {
+      "active": "mobile-light-evidence-workbench",
+      "size": "mobile",
+      "theme": "light",
+      "route": "/",
+      "status": "pass",
+      "state": {
+        "theme": "light",
+        "title": "arxiv-research-agent",
+        "headings": [
+          "What should the literature settle?"
+        ],
+        "bodyOverflow": 0,
+        "documentOverflow": 0,
+        "canvas": "rgb(243, 247, 248)",
+        "font": "34px / 40.12px fontUi, \"Atkinson Hyperlegible Next Fallback\", ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", sans-serif",
+        "focusOutline": "rgb(23, 43, 49) none 3px"
+      },
+      "violations": [],
+      "screenshot": "mobile-light-evidence-workbench.png"
+    },
+    {
+      "active": "mobile-dark-fictional-today",
+      "size": "mobile",
+      "theme": "dark",
+      "route": "/today",
+      "status": "pass",
+      "state": {
+        "theme": "dark",
+        "title": "arxiv-research-agent",
+        "headings": [
+          "What changed.What to investigate."
+        ],
+        "bodyOverflow": 0,
+        "documentOverflow": 0,
+        "canvas": "rgb(14, 26, 30)",
+        "font": "500 31px / 37.2px fontReport, \"Literata Fallback\", ui-serif, Georgia, \"Times New Roman\", serif",
+        "focusOutline": "rgb(232, 241, 243) none 3px"
+      },
+      "violations": [
+        {
+          "id": "region",
+          "impact": "moderate",
+          "targets": [
+            [
+              ".daily-preview-bar > strong"
+            ],
+            [
+              ".daily-preview-bar > span:nth-child(3)"
+            ]
+          ]
+        }
+      ],
+      "screenshot": "mobile-dark-fictional-today.png"
+    },
+    {
+      "active": "mobile-dark-evidence-workbench",
+      "size": "mobile",
+      "theme": "dark",
+      "route": "/",
+      "status": "pass",
+      "state": {
+        "theme": "dark",
+        "title": "arxiv-research-agent",
+        "headings": [
+          "What should the literature settle?"
+        ],
+        "bodyOverflow": 0,
+        "documentOverflow": 0,
+        "canvas": "rgb(14, 26, 30)",
+        "font": "34px / 40.12px fontUi, \"Atkinson Hyperlegible Next Fallback\", ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", sans-serif",
+        "focusOutline": "rgb(232, 241, 243) none 3px"
+      },
+      "violations": [],
+      "screenshot": "mobile-dark-evidence-workbench.png"
+    }
+  ],
+  "blocked": [],
+  "errors": [],
+  "endedAtUtc": "2026-11-05T05:24:19.062Z",
+  "status": "pass"
+}

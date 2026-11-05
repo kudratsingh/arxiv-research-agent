@@ -1,14 +1,15 @@
 # Two-mode implementation status
 
-Recorded **2026-11-04 America/Los_Angeles**. This kit is an additive planning
+Recorded **2026-11-04 America/Los_Angeles**; controller gate refreshed **2026-11-05 UTC**. This kit is an additive planning
 checkpoint. **No product-mode implementation or owner data migration yet.**
 
 | Item | Current state | Evidence / next boundary |
 |---|---|---|
 | Owner direction | Adopted in conversation | Two modes, shared records, question-free learning, project-driven research |
 | Planning docs | Written locally in this kit | Linked direction, experience, data/ranking, ordered work and separate evaluations |
-| Controller baseline | P0–P6 complete; G7/G8 pending at kit start | Controllerdff860e / G6appfda9d; G6 CSS exception remains, not a final green budget |
-| Frontend continuation | Separate Sol High P7 implementation and verification | Do not count pending polish as mode implementation |
+| Controller kit-start provenance | Controller `dff860e` / G6 app `fda9d` | P0–P6 were complete and G7/G8 pending when this direction kit began; its CSS exception was historical, not final acceptance |
+| Controller current local verification | G7 PASS at application `6b2eccf069537d90423359fc74c033f27e665cd6`; G8 publication/remote CI pending root integration | [Controller gate record](../12-workspace-controller-revamp/STATUS.md): 4,079 frontend tests; CSS 23,940/25,600 B; unchanged JS ceilings; independent final browser/static release |
+| Frontend continuation | P7 local implementation/acceptance complete; publication is separate | No mode UI or product-mode implementation is included in the controller polish |
 | Diagnostic benchmark | Stopped diagnostic; scoped approval closed | q01 development; q02/q03/q04 failed; q05–q10 unrun; unchanged targets and original aggregate |
 | Mode switch / project context | Planned D1/D2 | No fake persistence or silent organizing-question import |
 | Split discovery policies | Planned D3 | Existing ranker topic-gates profile-question terms; new Research must not |
@@ -56,3 +57,13 @@ remains0completed,3failed,6unrun; human quality/usefulness is unmeasured. This
 changes no mode implementation status or benchmark threshold. The separate
 offline ranking followup informs future Research policy, not owner learning
 usefulness. Later paid validation requires fresh explicit owner approval.
+
+
+## Controller integration verification
+
+The four planning commits were cherry-picked after G7 runtime release. The
+controller application remains frozen at `6b2eccf069537d90423359fc74c033f27e665cd6`;
+its current local G7 result is recorded above, independently of this kit's
+`dff860e` starting snapshot. Fresh integrated documented-claims/repository-hygiene
+checks pass **66/66 in 9.18 s**. Publication and exact pushed-head CI are pending
+root integration. No mode UI, backend, source acquisition or owner data changed.

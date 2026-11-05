@@ -1,0 +1,52 @@
+{
+  "base": "http://127.0.0.1:3169",
+  "principal": "controller-p7-ci",
+  "startedAtUtc": "2026-11-05T08:02:22.422Z",
+  "scope": "Owned synthetic CI only: prepare bounded stored-data packet; unsaved mechanical Maybe draft never submitted; working sessionStorage; discard restores every blank judgment",
+  "cases": [
+    {
+      "name": "desktop",
+      "status": "pass",
+      "packetId": "review-9c1599df9eb747c08588df5588217d44",
+      "candidates": 3,
+      "allDurableJudgmentsBlank": true,
+      "normalAndSlashBlockedWhileDirty": true,
+      "urlHistoryTimeOriginIntentUnchanged": true,
+      "beforeUnloadCount": 0,
+      "latestRadioReasonPreserved": true,
+      "draftExplicitlyDiscarded": true,
+      "normalAndSlashAfterDiscard": true,
+      "protectedStateByteIdentical": true
+    },
+    {
+      "name": "mobile",
+      "status": "pass",
+      "packetId": "review-51cfc002e89049bfab2f8d4d715155ee",
+      "candidates": 3,
+      "allDurableJudgmentsBlank": true,
+      "normalAndSlashBlockedWhileDirty": true,
+      "urlHistoryTimeOriginIntentUnchanged": true,
+      "beforeUnloadCount": 0,
+      "latestRadioReasonPreserved": true,
+      "draftExplicitlyDiscarded": true,
+      "normalAndSlashAfterDiscard": true,
+      "protectedStateByteIdentical": true
+    }
+  ],
+  "writes": [
+    {
+      "name": "desktop",
+      "path": "/api/workspace/review/prepare",
+      "kind": "bounded own-CI stored-data packet preparation only"
+    },
+    {
+      "name": "mobile",
+      "path": "/api/workspace/review/prepare",
+      "kind": "bounded own-CI stored-data packet preparation only"
+    }
+  ],
+  "blocked": [],
+  "errors": [],
+  "endedAtUtc": "2026-11-05T08:02:27.384Z",
+  "status": "pass"
+}

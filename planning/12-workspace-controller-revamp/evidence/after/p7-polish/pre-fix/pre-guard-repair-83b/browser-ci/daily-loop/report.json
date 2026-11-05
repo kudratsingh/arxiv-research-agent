@@ -1,0 +1,144 @@
+{
+  "base": "http://127.0.0.1:3169",
+  "principal": "controller-p7-ci",
+  "startedAtUtc": "2026-11-05T07:09:50.531Z",
+  "scope": "Disposable synthetic CI; software-only409 and pending-navigation injection",
+  "cases": [
+    {
+      "name": "desktop",
+      "theme": "dark",
+      "status": "pass",
+      "notesTabs": 1,
+      "retryTabs": 30,
+      "returnTabs": 9,
+      "readerUrl": "http://127.0.0.1:3169/workspace/items/ci%3Aworkspace-feed-excerpt?version=ci%3Aworkspace-feed-excerpt%3Av1&return_to=%2Fworkspace%2Ftoday%3Ffocus%3Dci%253Aworkspace-feed-excerpt#excerpt%3A0%3A225",
+      "savedEntryId": "857ebc5b-eca2-40f2-a55f-291792b6ad55",
+      "savedVersion": "ci:workspace-feed-excerpt:v1",
+      "protectedStateUnchanged": true,
+      "video": "desktop.webm"
+    },
+    {
+      "name": "mobile",
+      "theme": "light",
+      "status": "pass",
+      "notesTabs": 1,
+      "retryTabs": 19,
+      "returnTabs": 7,
+      "readerUrl": "http://127.0.0.1:3169/workspace/items/ci%3Aworkspace-feed-excerpt?version=ci%3Aworkspace-feed-excerpt%3Av1&return_to=%2Fworkspace%2Ftoday%3Ffocus%3Dci%253Aworkspace-feed-excerpt#excerpt%3A0%3A225",
+      "savedEntryId": "7b6e7512-642e-4efe-956f-8edec71aa516",
+      "savedVersion": "ci:workspace-feed-excerpt:v1",
+      "protectedStateUnchanged": true,
+      "video": "mobile.webm"
+    }
+  ],
+  "writes": [
+    {
+      "name": "desktop",
+      "path": "/api/workspace/reading",
+      "work": "ci:workspace-feed-excerpt",
+      "forwarded": true
+    },
+    {
+      "name": "desktop",
+      "path": "/api/workspace/entries",
+      "work": "ci:workspace-feed-excerpt",
+      "forwarded": false,
+      "injection": "held then409"
+    },
+    {
+      "name": "desktop",
+      "path": "/api/workspace/entries",
+      "work": "ci:workspace-feed-excerpt",
+      "forwarded": true
+    },
+    {
+      "name": "desktop",
+      "path": "/api/workspace/reading",
+      "work": "ci:workspace-feed-excerpt",
+      "forwarded": true,
+      "kind": "restore own logicalreadingfields"
+    },
+    {
+      "name": "mobile",
+      "path": "/api/workspace/reading",
+      "work": "ci:workspace-feed-excerpt",
+      "forwarded": true
+    },
+    {
+      "name": "mobile",
+      "path": "/api/workspace/entries",
+      "work": "ci:workspace-feed-excerpt",
+      "forwarded": false,
+      "injection": "held then409"
+    },
+    {
+      "name": "mobile",
+      "path": "/api/workspace/entries",
+      "work": "ci:workspace-feed-excerpt",
+      "forwarded": true
+    },
+    {
+      "name": "mobile",
+      "path": "/api/workspace/reading",
+      "work": "ci:workspace-feed-excerpt",
+      "forwarded": true,
+      "kind": "restore own logicalreadingfields"
+    }
+  ],
+  "blocked": [],
+  "errors": [],
+  "chapters": [
+    {
+      "name": "desktop",
+      "label": "Skip-main→J→O→exact Reader",
+      "elapsedMs": 1591
+    },
+    {
+      "name": "desktop",
+      "label": "Keyboard question submitted; request held before server",
+      "elapsedMs": 1644
+    },
+    {
+      "name": "desktop",
+      "label": "Palette route remained blocked during pending entry save",
+      "elapsedMs": 2588
+    },
+    {
+      "name": "desktop",
+      "label": "Injected409 retained question; explicit keyboard retry saved",
+      "elapsedMs": 2727
+    },
+    {
+      "name": "desktop",
+      "label": "Keyboard return to Today→J",
+      "elapsedMs": 2917
+    },
+    {
+      "name": "mobile",
+      "label": "Skip-main→J→O→exact Reader",
+      "elapsedMs": 1461
+    },
+    {
+      "name": "mobile",
+      "label": "Keyboard question submitted; request held before server",
+      "elapsedMs": 1533
+    },
+    {
+      "name": "mobile",
+      "label": "Palette route remained blocked during pending entry save",
+      "elapsedMs": 2451
+    },
+    {
+      "name": "mobile",
+      "label": "Injected409 retained question; explicit keyboard retry saved",
+      "elapsedMs": 2569
+    },
+    {
+      "name": "mobile",
+      "label": "Keyboard return to Today→J",
+      "elapsedMs": 2735
+    }
+  ],
+  "endedAtUtc": "2026-11-05T07:09:57.283Z",
+  "status": "pass"
+}

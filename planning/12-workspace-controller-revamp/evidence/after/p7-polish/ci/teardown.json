@@ -1,0 +1,51 @@
+{
+  "startedAtUtc": "2026-11-05T08:16:25.392511+00:00",
+  "database": "workspace_controller_p7_ci",
+  "principal": "controller-p7-ci",
+  "ownedRunId": "controller-p7-ci-90342e750ee945018d8ed49c137f5ce3",
+  "before": {
+    "3137": "p12359\ncnode\nf12\nn127.0.0.1:3137\n",
+    "8137": "p12238\ncPython\nf12\nn127.0.0.1:8137\n",
+    "3148": "p73344\ncnode\nf12\nn127.0.0.1:3148\n",
+    "8148": "p25818\ncPython\nf12\nn127.0.0.1:8148\n",
+    "3158": "p91519\ncnode\nf12\nn127.0.0.1:3158\n",
+    "8158": "p91172\ncPython\nf12\nn127.0.0.1:8158\n",
+    "3168": "p82302\ncnode\nf12\nn127.0.0.1:3168\n",
+    "8168": "p95014\ncPython\nf12\nn127.0.0.1:8168\n",
+    "3169": "p82833\ncnode\nf12\nn127.0.0.1:3169\n",
+    "8169": "p10951\ncPython\nf12\nn127.0.0.1:8169\n",
+    "15438": "p90818\nccom.docker.backend\nf86\nn127.0.0.1:15438\n",
+    "15458": "p90818\nccom.docker.backend\nf94\nn127.0.0.1:15458\n"
+  },
+  "stopped": [
+    {
+      "port": 3169,
+      "pid": 82833,
+      "verifiedListener": "p82833\ncnode\nf12\nn127.0.0.1:3169\n"
+    },
+    {
+      "port": 8169,
+      "pid": 10951,
+      "verifiedListener": "p10951\ncPython\nf12\nn127.0.0.1:8169\n"
+    }
+  ],
+  "databaseOwnershipCommentVerified": "controller-p7-ci-90342e750ee945018d8ed49c137f5ce3",
+  "databaseConnectionsBeforeDrop": 0,
+  "databaseDropped": true,
+  "after": {
+    "3137": "p12359\ncnode\nf12\nn127.0.0.1:3137\n",
+    "8137": "p12238\ncPython\nf12\nn127.0.0.1:8137\n",
+    "3148": "p73344\ncnode\nf12\nn127.0.0.1:3148\n",
+    "8148": "p25818\ncPython\nf12\nn127.0.0.1:8148\n",
+    "3158": "p91519\ncnode\nf12\nn127.0.0.1:3158\n",
+    "8158": "p91172\ncPython\nf12\nn127.0.0.1:8158\n",
+    "3168": "p82302\ncnode\nf12\nn127.0.0.1:3168\n",
+    "8168": "p95014\ncPython\nf12\nn127.0.0.1:8168\n",
+    "3169": "",
+    "8169": "",
+    "15438": "p90818\nccom.docker.backend\nf86\nn127.0.0.1:15438\n",
+    "15458": "p90818\nccom.docker.backend\nf94\nn127.0.0.1:15458\n"
+  },
+  "status": "pass",
+  "endedAtUtc": "2026-11-05T08:16:26.379492+00:00"
+}

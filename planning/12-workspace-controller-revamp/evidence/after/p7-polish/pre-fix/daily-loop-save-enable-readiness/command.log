@@ -1,0 +1,15 @@
+PASS desktop
+FAIL mobile Error: expect(locator).toBeFocused() failed
+
+Locator:  getByRole('button', { name: 'Save question', exact: true })
+Expected: focused
+Received: inactive
+Timeout:  5000ms
+
+Call log:
+  - Expect "to.be.focused" with timeout 5000ms
+  - waiting for getByRole('button', { name: 'Save question', exact: true })
+    13 × locator resolved to <button class="daily-button">Save question</button>
+       - unexpected value "inactive"
+
+{"status":"fail","cases":2,"writes":[{"name":"desktop","path":"/api/workspace/reading","work":"ci:workspace-feed-excerpt","forwarded":true},{"name":"desktop","path":"/api/workspace/entries","work":"ci:workspace-feed-excerpt","forwarded":false,"injection":"held then409"},{"name":"desktop","path":"/api/workspace/entries","work":"ci:workspace-feed-excerpt","forwarded":true},{"name":"desktop","path":"/api/workspace/reading","work":"ci:workspace-feed-excerpt","forwarded":true,"kind":"restore own logicalreadingfields"},{"name":"mobile","path":"/api/workspace/reading","work":"ci:workspace-feed-excerpt","forwarded":true},{"name":"mobile","path":"/api/workspace/reading","work":"ci:workspace-feed-excerpt","forwarded":true,"kind":"restore own logicalreadingfields"}],"blocked":[],"errors":[]}

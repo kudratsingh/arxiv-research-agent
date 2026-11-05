@@ -1,0 +1,12 @@
+{
+  "sourceCommit": "83b196eb14b33cd3033453701e93482266366e5f",
+  "status": "pass",
+  "screenshots": [
+    "desktop-light-today.png",
+    "desktop-dark-today.png",
+    "mobile-light-today.png",
+    "mobile-dark-today.png"
+  ],
+  "judgment": "Visually reviewed all four actual screenshots: correct actual theme, full focused title and first abstract lines above fixed player, current queue and honest synthetic preview/source scope visible. Entire long abstract requires normal scrolling, verified separately.",
+  "limitation": "Source83b only; repaired guard-head recapture pending."
+}

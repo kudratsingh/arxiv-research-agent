@@ -1,0 +1,45 @@
+{
+  "application_commit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+  "documentation_integration_head_before_evidence_commit": "c197bd2e18d0f6a991e744329846130350a34697",
+  "documented_claims_hygiene": {
+    "command": "locked Python -m pytest tests/test_documented_claims.py tests/test_repo_hygiene.py -q",
+    "passed": 66,
+    "duration_seconds": 9.18,
+    "log": "documented-claims-and-hygiene.log"
+  },
+  "markdown_links": {
+    "files": 27,
+    "local_targets_checked": 275,
+    "missing": [],
+    "archived_original_base_mapping": {
+      "path": "planning/12-workspace-controller-revamp/evidence/after/p7-polish/pre-fix/readme-before-final.md",
+      "resolve_links_from": "planning/12-workspace-controller-revamp/evidence/after/p7-polish",
+      "reason": "Byte-preserved historical README; original root context explicitly mapped in browser README."
+    }
+  },
+  "source_equivalence": {
+    "web_tree_at_application": "e4f4f72d1b49f1647fb116e52105c90b03c0335c",
+    "web_tree_at_documentation_head": "e4f4f72d1b49f1647fb116e52105c90b03c0335c",
+    "src_tree": "4ba84bf2287f911ef2f07184aebd453238b02b35",
+    "tests_tree": "45733db270918707018747c63ff989d7959f187e",
+    "application_manifest_files_checked": 27,
+    "application_manifest_mismatches": [],
+    "application_working_diff_empty": true
+  },
+  "scope": "Local documentation/link/source-equivalence check only. No provider, owner DB, browser rerun, publication or remote CI claim.",
+  "browser_manifest_verification": {
+    "manifest": "../browser-artifact-hashes.json",
+    "files_checked": 1244,
+    "mismatches": [],
+    "sha256": "00a3a2b3012b9c22961523234dcf4fbad4e78ae56a1d6dd6802fd6a71b602225"
+  },
+  "whitespace_check": {
+    "source_docs_json_scripts_exit_code": 0,
+    "command": "git diff --cached --check -- . :(exclude)*.log :(exclude)*.diff",
+    "raw_artifact_diagnostics_preserved": {
+      "log_terminal_whitespace_and_EOF": 252,
+      "diff_context_blank_line_markers": 8
+    },
+    "reason": "Raw hashed terminal logs and captured patch context retain exact bytes. No whitespace normalization or repository rule change."
+  }
+}

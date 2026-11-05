@@ -1,0 +1,976 @@
+{
+  "scope": "Full actual WebM decode, visual review of contact sheets and critical native frames. One-fps aids have nominal sample labels; critical frame indices come from passthrough decode at the stream 25fps. No generated video frames.",
+  "videos": [
+    {
+      "video": "final/commands/desktop-dark.webm",
+      "sha256": "e3022691add8c5580892f815bfd09ac9606ad9651191b674ea81b98dde6c73b2",
+      "bytes": 1604860,
+      "durationSeconds": 11.24,
+      "width": 1440,
+      "height": 1000,
+      "fullDecodeExitCode": 0,
+      "sampleFrames": 13,
+      "contactSheet": "commands-desktop-dark-contact-sheet.png",
+      "frameMetrics": [
+        {
+          "sampleSecond": 0,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 1,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 2,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 3,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 4,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 5,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 6,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 7,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 8,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 9,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 10,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 11,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 12,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        }
+      ],
+      "visualAssessment": "Reviewed decoded contact sheet: correct dark desktop/light mobile; command and help dialogs, filtered rows, focused controls, route changes and Review are visibly painted. Mechanical keyboard/focus assertions remain in commands report."
+    },
+    {
+      "video": "final/commands/mobile-light.webm",
+      "sha256": "8571dfd26a76715ed20b05c5b4aad90107eb2b9521ea29a53c41e3c525f94a66",
+      "bytes": 1145015,
+      "durationSeconds": 10.48,
+      "width": 390,
+      "height": 844,
+      "fullDecodeExitCode": 0,
+      "sampleFrames": 12,
+      "contactSheet": "commands-mobile-light-contact-sheet.png",
+      "frameMetrics": [
+        {
+          "sampleSecond": 0,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 1,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 2,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 3,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 4,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 5,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 6,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 7,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 8,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 9,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 10,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 11,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        }
+      ],
+      "visualAssessment": "Reviewed decoded contact sheet: correct dark desktop/light mobile; command and help dialogs, filtered rows, focused controls, route changes and Review are visibly painted. Mechanical keyboard/focus assertions remain in commands report."
+    },
+    {
+      "video": "final/geometry/desktop-dark.webm",
+      "sha256": "29359f94fc88e1e36a84bf4d1e6a80c56f61c48bd35d6ee75e9f6b09537c0994",
+      "bytes": 1094906,
+      "durationSeconds": 5.92,
+      "width": 1440,
+      "height": 1000,
+      "fullDecodeExitCode": 0,
+      "sampleFrames": 8,
+      "contactSheet": "geometry-desktop-dark-contact-sheet.png",
+      "frameMetrics": [
+        {
+          "sampleSecond": 0,
+          "extrema": [
+            [
+              16,
+              16
+            ],
+            [
+              16,
+              16
+            ],
+            [
+              16,
+              16
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 1,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 2,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 3,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 4,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 5,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 6,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 7,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        }
+      ],
+      "visualAssessment": "Reviewed actual passthrough frames: retained text, far mark, full source footer and Notes last line visibly painted above player; desktop sidebar/brand remain visible; mobile lower content is not blank. Startup/loading frames retained."
+    },
+    {
+      "video": "final/geometry/mobile-light.webm",
+      "sha256": "b3f6b6b4b8b62e15e05e3dbe10b542abc7868fc31f1b6ab64cc7495f1a4ef3ca",
+      "bytes": 850149,
+      "durationSeconds": 6.04,
+      "width": 390,
+      "height": 844,
+      "fullDecodeExitCode": 0,
+      "sampleFrames": 8,
+      "contactSheet": "geometry-mobile-light-contact-sheet.png",
+      "frameMetrics": [
+        {
+          "sampleSecond": 0,
+          "extrema": [
+            [
+              253,
+              253
+            ],
+            [
+              253,
+              253
+            ],
+            [
+              253,
+              253
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 1,
+          "extrema": [
+            [
+              254,
+              254
+            ],
+            [
+              254,
+              254
+            ],
+            [
+              254,
+              254
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 2,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 3,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 4,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 5,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 6,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 7,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        }
+      ],
+      "visualAssessment": "Reviewed actual passthrough frames: retained text, far mark, full source footer and Notes last line visibly painted above player; desktop sidebar/brand remain visible; mobile lower content is not blank. Startup/loading frames retained."
+    },
+    {
+      "video": "ci/daily-loop/desktop.webm",
+      "sha256": "5c14eadbd8cc903d813c23d9e6d54b61328806cf8d4d6373d155456e1478b188",
+      "bytes": 634618,
+      "durationSeconds": 4.0,
+      "width": 1440,
+      "height": 1000,
+      "fullDecodeExitCode": 0,
+      "sampleFrames": 6,
+      "contactSheet": "daily-loop-desktop-contact-sheet.png",
+      "frameMetrics": [
+        {
+          "sampleSecond": 0,
+          "extrema": [
+            [
+              16,
+              16
+            ],
+            [
+              16,
+              16
+            ],
+            [
+              16,
+              16
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 1,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 2,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 3,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 4,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 5,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        }
+      ],
+      "visualAssessment": "Reviewed decoded contact sheet: real cold loading, Notes editor/pending flow, command refusal and return to next exact paper visibly rendered. Short accelerated mechanical sequence; not a human-paced usability study."
+    },
+    {
+      "video": "ci/daily-loop/mobile.webm",
+      "sha256": "c7f368d10b3d772215f498b72878250a2add9a4d0ef5505fa7d09d9c01b23749",
+      "bytes": 439256,
+      "durationSeconds": 3.76,
+      "width": 390,
+      "height": 844,
+      "fullDecodeExitCode": 0,
+      "sampleFrames": 5,
+      "contactSheet": "daily-loop-mobile-contact-sheet.png",
+      "frameMetrics": [
+        {
+          "sampleSecond": 0,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 1,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 2,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 3,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        },
+        {
+          "sampleSecond": 4,
+          "extrema": [
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ],
+            [
+              0,
+              255
+            ]
+          ]
+        }
+      ],
+      "visualAssessment": "Reviewed decoded contact sheet: real cold loading, Notes editor/pending flow, command refusal and return to next exact paper visibly rendered. Short accelerated mechanical sequence; not a human-paced usability study."
+    }
+  ],
+  "sourceCommit": "83b196eb14b33cd3033453701e93482266366e5f",
+  "criticalNativeFrameReport": "critical-native-frames.json",
+  "status": "pass"
+}

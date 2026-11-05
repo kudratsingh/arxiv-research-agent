@@ -1,0 +1,130 @@
+[
+  {
+    "mode": "legacy",
+    "case": "desktop-light-fictional-today",
+    "computedStateIdentical": true,
+    "axeIdentical": true,
+    "pixelsIdentical": true,
+    "diffBounds": null
+  },
+  {
+    "mode": "legacy",
+    "case": "desktop-light-evidence-workbench",
+    "computedStateIdentical": true,
+    "axeIdentical": true,
+    "pixelsIdentical": true,
+    "diffBounds": null
+  },
+  {
+    "mode": "legacy",
+    "case": "desktop-dark-fictional-today",
+    "computedStateIdentical": true,
+    "axeIdentical": true,
+    "pixelsIdentical": true,
+    "diffBounds": null
+  },
+  {
+    "mode": "legacy",
+    "case": "desktop-dark-evidence-workbench",
+    "computedStateIdentical": true,
+    "axeIdentical": true,
+    "pixelsIdentical": true,
+    "diffBounds": null
+  },
+  {
+    "mode": "legacy",
+    "case": "mobile-light-fictional-today",
+    "computedStateIdentical": true,
+    "axeIdentical": true,
+    "pixelsIdentical": true,
+    "diffBounds": null
+  },
+  {
+    "mode": "legacy",
+    "case": "mobile-light-evidence-workbench",
+    "computedStateIdentical": true,
+    "axeIdentical": true,
+    "pixelsIdentical": true,
+    "diffBounds": null
+  },
+  {
+    "mode": "legacy",
+    "case": "mobile-dark-fictional-today",
+    "computedStateIdentical": true,
+    "axeIdentical": true,
+    "pixelsIdentical": true,
+    "diffBounds": null
+  },
+  {
+    "mode": "legacy",
+    "case": "mobile-dark-evidence-workbench",
+    "computedStateIdentical": true,
+    "axeIdentical": true,
+    "pixelsIdentical": true,
+    "diffBounds": null
+  },
+  {
+    "mode": "legacy-via-workspace",
+    "case": "desktop-light-fictional-today",
+    "computedStateIdentical": true,
+    "axeIdentical": true,
+    "pixelsIdentical": true,
+    "diffBounds": null
+  },
+  {
+    "mode": "legacy-via-workspace",
+    "case": "desktop-light-evidence-workbench",
+    "computedStateIdentical": true,
+    "axeIdentical": true,
+    "pixelsIdentical": true,
+    "diffBounds": null
+  },
+  {
+    "mode": "legacy-via-workspace",
+    "case": "desktop-dark-fictional-today",
+    "computedStateIdentical": true,
+    "axeIdentical": true,
+    "pixelsIdentical": true,
+    "diffBounds": null
+  },
+  {
+    "mode": "legacy-via-workspace",
+    "case": "desktop-dark-evidence-workbench",
+    "computedStateIdentical": true,
+    "axeIdentical": true,
+    "pixelsIdentical": true,
+    "diffBounds": null
+  },
+  {
+    "mode": "legacy-via-workspace",
+    "case": "mobile-light-fictional-today",
+    "computedStateIdentical": true,
+    "axeIdentical": true,
+    "pixelsIdentical": true,
+    "diffBounds": null
+  },
+  {
+    "mode": "legacy-via-workspace",
+    "case": "mobile-light-evidence-workbench",
+    "computedStateIdentical": true,
+    "axeIdentical": true,
+    "pixelsIdentical": true,
+    "diffBounds": null
+  },
+  {
+    "mode": "legacy-via-workspace",
+    "case": "mobile-dark-fictional-today",
+    "computedStateIdentical": true,
+    "axeIdentical": true,
+    "pixelsIdentical": true,
+    "diffBounds": null
+  },
+  {
+    "mode": "legacy-via-workspace",
+    "case": "mobile-dark-evidence-workbench",
+    "computedStateIdentical": true,
+    "axeIdentical": true,
+    "pixelsIdentical": true,
+    "diffBounds": null
+  }
+]

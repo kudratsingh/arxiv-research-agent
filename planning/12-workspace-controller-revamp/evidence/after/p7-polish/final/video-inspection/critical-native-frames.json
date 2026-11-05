@@ -1,0 +1,90 @@
+[
+  {
+    "video": "final/geometry/desktop-dark.webm",
+    "stateScreenshot": "final/geometry/desktop-dark-far-passage.png",
+    "nativeFrameIndexZeroBased": 118,
+    "totalFrames": 165,
+    "approxSecondsAt25fps": 4.72,
+    "thumbnailMeanAbsoluteRGBDifference": 1.7198074074074075,
+    "decodedFrame": "final/video-inspection/geometry-desktop-dark-far-passage-actual-frame.png",
+    "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+    "visualAssessment": "Visually reviewed actual decoded frame; expected retained text/footer/Notes line visibly painted above fixed player. Nearest-frame RGB distance is only a matching aid, not an equality assertion."
+  },
+  {
+    "video": "final/geometry/desktop-dark.webm",
+    "stateScreenshot": "final/geometry/desktop-dark-source-bottom.png",
+    "nativeFrameIndexZeroBased": 118,
+    "totalFrames": 165,
+    "approxSecondsAt25fps": 4.72,
+    "thumbnailMeanAbsoluteRGBDifference": 1.7198074074074075,
+    "decodedFrame": "final/video-inspection/geometry-desktop-dark-source-bottom-actual-frame.png",
+    "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+    "visualAssessment": "Visually reviewed actual decoded frame; expected retained text/footer/Notes line visibly painted above fixed player. Nearest-frame RGB distance is only a matching aid, not an equality assertion."
+  },
+  {
+    "video": "final/geometry/desktop-dark.webm",
+    "stateScreenshot": "final/geometry/desktop-dark-source-footer.png",
+    "nativeFrameIndexZeroBased": 127,
+    "totalFrames": 165,
+    "approxSecondsAt25fps": 5.08,
+    "thumbnailMeanAbsoluteRGBDifference": 1.730325925925926,
+    "decodedFrame": "final/video-inspection/geometry-desktop-dark-source-footer-actual-frame.png",
+    "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+    "visualAssessment": "Visually reviewed actual decoded frame; expected retained text/footer/Notes line visibly painted above fixed player. Nearest-frame RGB distance is only a matching aid, not an equality assertion."
+  },
+  {
+    "video": "final/geometry/desktop-dark.webm",
+    "stateScreenshot": "final/geometry/desktop-dark-notes-bottom.png",
+    "nativeFrameIndexZeroBased": 141,
+    "totalFrames": 165,
+    "approxSecondsAt25fps": 5.64,
+    "thumbnailMeanAbsoluteRGBDifference": 1.6913777777777776,
+    "decodedFrame": "final/video-inspection/geometry-desktop-dark-notes-bottom-actual-frame.png",
+    "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+    "visualAssessment": "Visually reviewed actual decoded frame; expected retained text/footer/Notes line visibly painted above fixed player. Nearest-frame RGB distance is only a matching aid, not an equality assertion."
+  },
+  {
+    "video": "final/geometry/mobile-light.webm",
+    "stateScreenshot": "final/geometry/mobile-light-far-passage.png",
+    "nativeFrameIndexZeroBased": 110,
+    "totalFrames": 153,
+    "approxSecondsAt25fps": 4.4,
+    "thumbnailMeanAbsoluteRGBDifference": 2.4919990503323834,
+    "decodedFrame": "final/video-inspection/geometry-mobile-light-far-passage-actual-frame.png",
+    "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+    "visualAssessment": "Visually reviewed actual decoded frame; expected retained text/footer/Notes line visibly painted above fixed player. Nearest-frame RGB distance is only a matching aid, not an equality assertion."
+  },
+  {
+    "video": "final/geometry/mobile-light.webm",
+    "stateScreenshot": "final/geometry/mobile-light-source-bottom.png",
+    "nativeFrameIndexZeroBased": 117,
+    "totalFrames": 153,
+    "approxSecondsAt25fps": 4.68,
+    "thumbnailMeanAbsoluteRGBDifference": 1.9387274453941121,
+    "decodedFrame": "final/video-inspection/geometry-mobile-light-source-bottom-actual-frame.png",
+    "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+    "visualAssessment": "Visually reviewed actual decoded frame; expected retained text/footer/Notes line visibly painted above fixed player. Nearest-frame RGB distance is only a matching aid, not an equality assertion."
+  },
+  {
+    "video": "final/geometry/mobile-light.webm",
+    "stateScreenshot": "final/geometry/mobile-light-source-footer.png",
+    "nativeFrameIndexZeroBased": 121,
+    "totalFrames": 153,
+    "approxSecondsAt25fps": 4.84,
+    "thumbnailMeanAbsoluteRGBDifference": 2.8904558404558407,
+    "decodedFrame": "final/video-inspection/geometry-mobile-light-source-footer-actual-frame.png",
+    "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+    "visualAssessment": "Visually reviewed actual decoded frame; expected retained text/footer/Notes line visibly painted above fixed player. Nearest-frame RGB distance is only a matching aid, not an equality assertion."
+  },
+  {
+    "video": "final/geometry/mobile-light.webm",
+    "stateScreenshot": "final/geometry/mobile-light-notes-bottom.png",
+    "nativeFrameIndexZeroBased": 138,
+    "totalFrames": 153,
+    "approxSecondsAt25fps": 5.52,
+    "thumbnailMeanAbsoluteRGBDifference": 2.0298812915479583,
+    "decodedFrame": "final/video-inspection/geometry-mobile-light-notes-bottom-actual-frame.png",
+    "sourceCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+    "visualAssessment": "Visually reviewed actual decoded frame; expected retained text/footer/Notes line visibly painted above fixed player. Nearest-frame RGB distance is only a matching aid, not an equality assertion."
+  }
+]

@@ -1,0 +1,53 @@
+FAIL desktop-light Error: expect(locator).toHaveText(expected) failed
+
+Locator:  locator('main h1')
+Expected: "Library"
+Received: "Keep the source.Keep your thinking."
+Timeout:  5000ms
+
+Call log:
+  - Expect "to.have.text" with timeout 5000ms
+  - waiting for locator('main h1')
+    14 × locator resolved to <h1 tabindex="-1">…</h1>
+       - unexpected value "Keep the source.Keep your thinking."
+
+FAIL desktop-dark Error: expect(locator).toHaveText(expected) failed
+
+Locator:  locator('main h1')
+Expected: "Library"
+Received: "Keep the source.Keep your thinking."
+Timeout:  5000ms
+
+Call log:
+  - Expect "to.have.text" with timeout 5000ms
+  - waiting for locator('main h1')
+    14 × locator resolved to <h1 tabindex="-1">…</h1>
+       - unexpected value "Keep the source.Keep your thinking."
+
+FAIL mobile-light Error: expect(locator).toHaveText(expected) failed
+
+Locator:  locator('main h1')
+Expected: "Library"
+Received: "Keep the source.Keep your thinking."
+Timeout:  5000ms
+
+Call log:
+  - Expect "to.have.text" with timeout 5000ms
+  - waiting for locator('main h1')
+    14 × locator resolved to <h1 tabindex="-1">…</h1>
+       - unexpected value "Keep the source.Keep your thinking."
+
+FAIL mobile-dark Error: expect(locator).toHaveText(expected) failed
+
+Locator:  locator('main h1')
+Expected: "Library"
+Received: "Keep the source.Keep your thinking."
+Timeout:  5000ms
+
+Call log:
+  - Expect "to.have.text" with timeout 5000ms
+  - waiting for locator('main h1')
+    14 × locator resolved to <h1 tabindex="-1">…</h1>
+       - unexpected value "Keep the source.Keep your thinking."
+
+{"status":"fail","cases":4,"blocked":[],"errors":[]}

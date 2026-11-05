@@ -1,0 +1,53 @@
+{
+  "base": "http://127.0.0.1:3168",
+  "principal": "controller-p7-preview",
+  "startedAtUtc": "2026-11-05T08:04:19.082Z",
+  "scope": "Software-only network delay of mandatory ReaderContent chunk, actual retained data and browser hash, no source/provider/backend writes",
+  "cases": [
+    {
+      "name": "desktop",
+      "status": "pass",
+      "held": [
+        {
+          "path": "/_next/static/chunks/7882.2890e808f8759bc9.js",
+          "heldAtUtc": "2026-11-05T08:04:19.599Z"
+        }
+      ],
+      "visibleBusyFallback": true,
+      "version": "arxiv:2611.99800:v1",
+      "range": "abstract:2500:2520",
+      "exactQuote": "is intentionally lon",
+      "geometry": {
+        "bottom": 51.34375,
+        "barTop": 788
+      },
+      "serverStateUnchanged": true
+    },
+    {
+      "name": "mobile",
+      "status": "pass",
+      "held": [
+        {
+          "path": "/_next/static/chunks/7882.2890e808f8759bc9.js",
+          "heldAtUtc": "2026-11-05T08:04:21.170Z"
+        }
+      ],
+      "visibleBusyFallback": true,
+      "version": "arxiv:2611.99800:v1",
+      "range": "abstract:2500:2520",
+      "exactQuote": "is intentionally lon",
+      "geometry": {
+        "bottom": 40.109375,
+        "barTop": 666
+      },
+      "serverStateUnchanged": true
+    }
+  ],
+  "blocked": [],
+  "errors": [],
+  "candidatePaths": [
+    "/_next/static/chunks/7882.2890e808f8759bc9.js"
+  ],
+  "endedAtUtc": "2026-11-05T08:04:21.944Z",
+  "status": "pass"
+}

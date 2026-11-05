@@ -1,0 +1,5 @@
+FAIL desktop-light AssertionError [ERR_ASSERTION]: Tab escaped modal
+FAIL desktop-dark AssertionError [ERR_ASSERTION]: Tab escaped modal
+FAIL mobile-light AssertionError [ERR_ASSERTION]: Tab escaped modal
+FAIL mobile-dark AssertionError [ERR_ASSERTION]: Tab escaped modal
+{"status":"fail","cases":4,"blocked":[],"errors":[]}

@@ -1,0 +1,22 @@
+{
+  "priorCommit": "83b196eb14b33cd3033453701e93482266366e5f",
+  "finalCommit": "6b2eccf069537d90423359fc74c033f27e665cd6",
+  "changedFiles": [
+    "web/components/workspace/CandidateReview.tsx",
+    "web/components/workspace/Composer.tsx",
+    "web/components/workspace/Interests.tsx",
+    "web/components/workspace/ReaderContent.tsx",
+    "web/components/workspace/Shell.tsx",
+    "web/lib/workspace/dispatch.ts",
+    "web/lib/workspace/navigation.ts",
+    "web/lib/workspace/navigationGuard.ts",
+    "web/lib/workspace/navigationRuntime.ts",
+    "web/tests/workspace/interests-controller.test.tsx",
+    "web/tests/workspace/navigation.test.tsx",
+    "web/tests/workspace/reader-controller.test.tsx",
+    "web/tests/workspace/review-controller.test.tsx",
+    "web/tests/workspace/shell.test.tsx",
+    "web/tests/workspace/shortcuts.test.tsx"
+  ],
+  "unchangedEvidenceScope": "CSS/legacy/control markup unaffected by shared-veto/drawer repair. Every final browser gate nonetheless rerun on6b; original83b observations remain archived with original source identity."
+}

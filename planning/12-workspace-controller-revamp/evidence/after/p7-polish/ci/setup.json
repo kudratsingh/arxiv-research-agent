@@ -1,0 +1,63 @@
+{
+  "runId": "controller-p7-ci-90342e750ee945018d8ed49c137f5ce3",
+  "preparedAtUtc": "2026-11-05T04:41:40.289624+00:00",
+  "database": "workspace_controller_p7_ci",
+  "principal": "controller-p7-ci",
+  "frontendPort": 3169,
+  "apiPort": 8169,
+  "postgresPort": 15458,
+  "providerConfiguration": "local-preview-disabled",
+  "recurrenceEnabled": false,
+  "fixture": "web/e2e/fixtures/workspace_seed.py",
+  "applicationBinding": "pending final P7 source/build/static-copy freeze; no CI frontend launched yet",
+  "baseCommit": "dff860e16e89c22382bce88d98f64645dfdcbfc8",
+  "databaseCreated": true,
+  "api": {
+    "pid": 10951,
+    "execSession": 45494,
+    "startupAtUtc": "2026-11-05T05:14:58.831+00:00",
+    "worktree": "/private/tmp/arxiv-agent-eng-workspace-controller-p7",
+    "baseCommit": "dff860e16e89c22382bce88d98f64645dfdcbfc8",
+    "backendSourceUnmodified": true,
+    "port": 8169,
+    "verifiedPrincipal": "controller-p7-ci",
+    "verifiedWorks": 3,
+    "verifiedSources": 5,
+    "verifiedScheduleEnabled": false,
+    "generationGuard": "approval_required",
+    "providerSentinel": "local-preview-disabled"
+  },
+  "frontend": {
+    "pid": 55086,
+    "execSession": 10389,
+    "port": 3169,
+    "buildId": "W6dCl7DeLTw2Pl56UM9YG",
+    "applicationCommit": "83b196eb14b33cd3033453701e93482266366e5f",
+    "applicationManifestSha256": "b218733d2f7f12dfb53a8218aad2e23e2950f7cc379375a5c78e9d1ccc161cec",
+    "worktree": "/private/tmp/arxiv-agent-eng-workspace-controller-p7",
+    "providerSentinel": "local-preview-disabled",
+    "recurrenceEnabled": false
+  },
+  "stoppedPreliminaryNodes": [
+    {
+      "pid": 16339,
+      "scope": "P6baseline"
+    },
+    {
+      "pid": 23755,
+      "scope": "firstfreeze"
+    },
+    {
+      "pid": 26712,
+      "scope": "beforestrictfocusfix"
+    },
+    {
+      "pid": 34911,
+      "scope": "beforesidebarfix"
+    },
+    {
+      "pid": 40796,
+      "scope": "beforecorelatencyrepair"
+    }
+  ]
+}

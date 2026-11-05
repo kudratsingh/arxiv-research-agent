@@ -1,0 +1,64 @@
+{
+  "snapshots": [
+    {
+      "label": "unmodified Source",
+      "windowScroll": 0,
+      "documentHeight": 1242,
+      "bodyHeight": 1000,
+      "asidePosition": "static",
+      "offsetParents": [
+        {
+          "tag": "BODY",
+          "id": "",
+          "class": ""
+        },
+        {
+          "tag": "BODY",
+          "id": "",
+          "class": ""
+        },
+        {
+          "tag": "BODY",
+          "id": "",
+          "class": ""
+        },
+        {
+          "tag": "BODY",
+          "id": "",
+          "class": ""
+        }
+      ]
+    },
+    {
+      "label": "unmodified native #notes",
+      "windowScroll": 242,
+      "documentHeight": 1242,
+      "bodyHeight": 1000,
+      "asidePosition": "static",
+      "offsetParents": [
+        {
+          "tag": "BODY",
+          "id": "",
+          "class": ""
+        },
+        {
+          "tag": "BODY",
+          "id": "",
+          "class": ""
+        },
+        {
+          "tag": "BODY",
+          "id": "",
+          "class": ""
+        },
+        {
+          "tag": "BODY",
+          "id": "",
+          "class": ""
+        }
+      ]
+    }
+  ],
+  "blocked": [],
+  "error": "page.addStyleTag: Applying inline style violates the following Content Security Policy directive 'style-src 'self''. Either the 'unsafe-inline' keyword, a hash ('sha256-0/bfSaPoD2CRla0Gk5pAdy7Em2MnF2I+oVWvTXrf2XI='), or a nonce ('nonce-...') is required to enable inline execution. The action has been blocked.\n    at /private/tmp/arxiv-agent-eng-workspace-controller-p7/planning/12-workspace-controller-revamp/evidence/after/p7-polish/theme-containing-block-diagnostic.cjs:7:13"
+}

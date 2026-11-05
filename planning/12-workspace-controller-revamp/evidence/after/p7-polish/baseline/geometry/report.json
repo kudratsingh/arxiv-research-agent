@@ -1,0 +1,118 @@
+{
+  "startedAtUtc": "2026-11-05T05:04:46.519Z",
+  "phase": "baseline",
+  "base": "http://127.0.0.1:3148",
+  "principal": "controller-p6-preview",
+  "cases": [
+    {
+      "name": "desktop-light",
+      "status": "fail",
+      "error": "locator.waitFor: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('mark#source-anchor') to be visible\u001b[22m\n\n    at /private/tmp/arxiv-agent-eng-workspace-controller-p7/planning/12-workspace-controller-revamp/evidence/after/p7-polish/geometry-sequence.cjs:29:172",
+      "video": null
+    },
+    {
+      "name": "desktop-dark",
+      "status": "fail",
+      "error": "locator.waitFor: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('mark#source-anchor') to be visible\u001b[22m\n\n    at /private/tmp/arxiv-agent-eng-workspace-controller-p7/planning/12-workspace-controller-revamp/evidence/after/p7-polish/geometry-sequence.cjs:29:172",
+      "video": null
+    },
+    {
+      "name": "mobile-light",
+      "status": "fail",
+      "error": "locator.waitFor: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('mark#source-anchor') to be visible\u001b[22m\n\n    at /private/tmp/arxiv-agent-eng-workspace-controller-p7/planning/12-workspace-controller-revamp/evidence/after/p7-polish/geometry-sequence.cjs:29:172",
+      "video": null
+    },
+    {
+      "name": "mobile-dark",
+      "status": "fail",
+      "error": "locator.waitFor: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('mark#source-anchor') to be visible\u001b[22m\n\n    at /private/tmp/arxiv-agent-eng-workspace-controller-p7/planning/12-workspace-controller-revamp/evidence/after/p7-polish/geometry-sequence.cjs:29:172",
+      "video": null
+    }
+  ],
+  "blocked": [],
+  "errors": [],
+  "chapters": [
+    {
+      "name": "desktop-light",
+      "label": "Initial full title and two abstract lines clear bar",
+      "elapsedMs": 861
+    },
+    {
+      "name": "desktop-light",
+      "label": "Queue click from870 and rapidJJK final wins",
+      "elapsedMs": 1463
+    },
+    {
+      "name": "desktop-light",
+      "label": "Radar page2",
+      "elapsedMs": 2318
+    },
+    {
+      "name": "desktop-light",
+      "label": "Immediate native Readclick then Back870 and Forward",
+      "elapsedMs": 4263
+    },
+    {
+      "name": "desktop-dark",
+      "label": "Initial full title and two abstract lines clear bar",
+      "elapsedMs": 838
+    },
+    {
+      "name": "desktop-dark",
+      "label": "Queue click from870 and rapidJJK final wins",
+      "elapsedMs": 1343
+    },
+    {
+      "name": "desktop-dark",
+      "label": "Radar page2",
+      "elapsedMs": 2165
+    },
+    {
+      "name": "desktop-dark",
+      "label": "Immediate native Readclick then Back870 and Forward",
+      "elapsedMs": 4139
+    },
+    {
+      "name": "mobile-light",
+      "label": "Initial full title and two abstract lines clear bar",
+      "elapsedMs": 820
+    },
+    {
+      "name": "mobile-light",
+      "label": "Queue click from870 and rapidJJK final wins",
+      "elapsedMs": 1389
+    },
+    {
+      "name": "mobile-light",
+      "label": "Radar page2",
+      "elapsedMs": 2250
+    },
+    {
+      "name": "mobile-light",
+      "label": "Immediate native Readclick then Back870 and Forward",
+      "elapsedMs": 4198
+    },
+    {
+      "name": "mobile-dark",
+      "label": "Initial full title and two abstract lines clear bar",
+      "elapsedMs": 813
+    },
+    {
+      "name": "mobile-dark",
+      "label": "Queue click from870 and rapidJJK final wins",
+      "elapsedMs": 1390
+    },
+    {
+      "name": "mobile-dark",
+      "label": "Radar page2",
+      "elapsedMs": 2267
+    },
+    {
+      "name": "mobile-dark",
+      "label": "Immediate native Readclick then Back870 and Forward",
+      "elapsedMs": 4207
+    }
+  ],
+  "endedAtUtc": "2026-11-05T05:05:44.106Z",
+  "status": "fail"
+}

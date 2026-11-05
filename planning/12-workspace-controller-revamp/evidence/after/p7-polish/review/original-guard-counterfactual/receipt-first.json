@@ -1,0 +1,32 @@
+{
+  "purpose": "Intentional regression demonstration against original source; not a final passing gate",
+  "application_commit": "83b196eb14b33cd3033453701e93482266366e5f",
+  "returncode": 1,
+  "command": [
+    "node",
+    "/private/tmp/arxiv-agent-eng-workspace-controller-p7/web/node_modules/vitest/vitest.mjs",
+    "run",
+    "tests/workspace/interests-controller.test.tsx",
+    "tests/workspace/shell.test.tsx",
+    "-t",
+    "vetoes ordinary and slash search during a pending profile save|keeps .* drawer focus and state during composing Escape"
+  ],
+  "test_files": [
+    {
+      "path": "web/tests/workspace/interests-controller.test.tsx",
+      "sha256": "e582ffa981bfdde13f21db535a1fe4c3cf11c509de98fed7deee95beee8b2b48"
+    },
+    {
+      "path": "web/tests/workspace/shell.test.tsx",
+      "sha256": "2c4638f6cf32a24359d2a6c8839b9edda15c85f0f9e70c47af465ec3738b9f75"
+    }
+  ],
+  "original_source_files": {
+    "web/components/workspace/Composer.tsx": "962a32136e6730bda3d7a24434e9fd3e2594d55c38da71634ea3259446ab5f15",
+    "web/components/workspace/Interests.tsx": "cad70d386809dc72b018addcc90affe7d325b32ab499dbfd234392032153c1fa",
+    "web/components/workspace/Shell.tsx": "9e4dc4b5b98a68be99ae545e8d88517a21382870928a3a621cccecd2ef23edcb"
+  },
+  "provider_key": "disabled sentinel",
+  "owner_data_writes": 0,
+  "provider_contacts": 0
+}

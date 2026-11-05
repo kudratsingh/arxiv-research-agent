@@ -1,0 +1,6 @@
+{
+  "accepted": false,
+  "automatedRawStatusPreserved": "pass",
+  "reason": "The old lower-content assertion checked only bottom below player. Large-wheel end captures are blank on mobile. Actual source/notes last text must be inside both viewport bounds with hit-test and paint proof; no geometry gate accepted from these lower captures. Far/native history/rapid screenshots and assertions remain separate valid observations.",
+  "diagnostic": "../../../../review/overscroll-diagnostic-initial/report.json"
+}
