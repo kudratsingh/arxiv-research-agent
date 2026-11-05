@@ -35,6 +35,28 @@ async function open() {
 }
 
 describe("local command surfaces", () => {
+  it("wraps plain Tab and Shift-Tab inside both dialogs without taking browser modifier or composing keys", async () => {
+    const user = userEvent.setup(); render(<Fixture />);
+    const search = await open(); const dialog = screen.getByRole("dialog");
+    const closeButton = within(dialog).getByRole("button", { name: /^Close/ });
+    expect(within(dialog).getByRole("listbox")).toHaveAttribute("tabindex", "-1");
+    await user.tab(); expect(closeButton).toHaveFocus();
+    await user.tab({ shift: true }); expect(search).toHaveFocus();
+    await user.tab({ shift: true }); expect(closeButton).toHaveFocus();
+    await user.tab(); expect(search).toHaveFocus();
+    for (const modifiers of [{ ctrlKey: true }, { metaKey: true }, { altKey: true }, { isComposing: true }]) {
+      const event = new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true, ...modifiers });
+      act(() => search.dispatchEvent(event)); expect(event.defaultPrevented).toBe(false); expect(search).toHaveFocus();
+    }
+    fireEvent.keyDown(search, { key: "Escape" });
+    fireEvent.keyDown(document.body, { key: "?" });
+    const help = await screen.findByRole("dialog", { name: "Keyboard shortcuts" });
+    const helpClose = within(help).getByRole("button", { name: /^Close/ });
+    expect(helpClose).toHaveFocus(); await user.tab(); expect(helpClose).toHaveFocus();
+    await user.tab({ shift: true }); expect(helpClose).toHaveFocus();
+    expect(save).not.toHaveBeenCalled(); expect(label).not.toHaveBeenCalled();
+  });
+
   it("submits the displayed slash action once and refuses a stale paper context before the observer updates", async () => {
     render(<Fixture />);
     const paper = document.createElement("article"); paper.className = "ws-focus"; paper.dataset.paperKey = "paper-a:v1";

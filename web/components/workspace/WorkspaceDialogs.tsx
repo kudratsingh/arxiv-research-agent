@@ -35,6 +35,14 @@ export default function WorkspaceDialogs({ request, onClose, onCommand }: { requ
     onCancel={event => { event.preventDefault(); close(); }} onKeyDown={event => {
       if (event.nativeEvent.isComposing) return;
       if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); close(); }
+      if (event.key === "Tab" && !event.ctrlKey && !event.metaKey && !event.altKey) {
+        const first = dialog.current!.querySelector<HTMLButtonElement>("button")!;
+        const last = search.current ?? first;
+        if (event.shiftKey ? document.activeElement === first : document.activeElement === last) {
+          event.preventDefault();
+          (event.shiftKey ? last : first).focus();
+        }
+      }
     }}>
     <header className="ws-side-heading"><h2 id={title}>{palette ? "Commands" : "Keyboard shortcuts"}</h2>
       <button type="button" className="ws-sidebar-toggle ws-dialog-close" onClick={() => close()}>Close <kbd aria-hidden="true">Esc</kbd></button></header>
@@ -52,7 +60,7 @@ export default function WorkspaceDialogs({ request, onClose, onCommand }: { requ
             document.getElementById(`${list}-${next}`)?.scrollIntoView?.({ block: "nearest" });
           } else if (event.key === "Enter") { event.preventDefault(); if (rows[index]) close(rows[index]); }
         }} />
-      <ul className="ws-queue" role="listbox" id={list} aria-label="Available commands">{rows.map((row, position) => <li role="presentation" key={row.id}>
+      <ul className="ws-queue" role="listbox" tabIndex={-1} id={list} aria-label="Available commands">{rows.map((row, position) => <li role="presentation" key={row.id}>
         <button className="ws-queue-row" type="button" role="option" id={`${list}-${position}`} aria-selected={position === index} aria-label={row.label}
           tabIndex={-1} onMouseDown={event => event.preventDefault()} onClick={() => close(row)}>
           <span className="ws-queue-text"><span className="ws-queue-title">{row.label}</span><small className="ws-queue-meta">{row.group}</small></span><kbd aria-hidden="true">{row.keys}</kbd>
