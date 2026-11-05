@@ -1,6 +1,6 @@
 # STATUS: workspace controller revamp
 
-Updated: **2026-11-05 UTC**. State: **G7 PASS at application 6b2eccf. G8 local verification ready; root integration, publication and exact pushed-head CI remain pending.**
+Updated: **2026-11-05 UTC**. State: **G7 PASS at application 6b2eccf. G8 local verification is complete; the root shipping checkpoint below accompanies publication on the requested branch. Exact pushed-head remote CI is reported separately, with no remote-CI pass claimed in this record.**
 
 The implementing agent updates this file at every gate (G0–G8). Numbers are
 pasted from command output and never typed by hand.
@@ -57,7 +57,7 @@ pasted from command output and never typed by hand.
 | G5 Radar & Library | `ade234b` (verified source; evidence attribution below) | 2026-11-04 07:19 UTC | PASS under E27 | See phase evidence and measurements below |
 | G6 Interests · Sources · Review | `fda9d7616e8cbd0d882bcc41510a997ade117bf9` (verified application tree; source binding below) | 2026-11-04 | PASS under E27 | [P6 preview, browser walkthrough and recordings](evidence/after/p6-supporting-workflow/README.md); local checks below |
 | G7 Polish | `6b2eccf069537d90423359fc74c033f27e665cd6` (verified frozen application source) | 2026-11-05 | PASS | [Mechanical checks](evidence/after/p7-polish/checks/README.md); [independent final runtime, screenshots and recordings](evidence/after/p7-polish/README.md); [bounded static repair review](evidence/after/p7-polish/review/g8-repair-6b2eccf.md) |
-| G8 Verify & ship | Application `6b2eccf`; later commits are documentation only | 2026-11-05 | LOCAL READY; publication/remote CI pending | S1–S8 mapping and root Python/source-equivalence below; root owns original-branch integration/rebase/push and exact pushed-head CI |
+| G8 Verify & ship | Application `6b2eccf`; shipping record below | 2026-11-05 | PASS local verification; publication with this gate record | S1–S8 mapping, independent reviews, Python/source-equivalence and root shipping checkpoint; remote CI remains a separately attributed result |
 
 ## Deviations from the kit
 
@@ -1530,3 +1530,40 @@ checks pass for seven active helpers and the read-only verifier. Fresh docs/hygi
 checks pass **66/66 in 9.15 s**. No helper was imported/executed or service/database
 action taken. Application `6b2eccf` and web/backend/test trees are unchanged; G7
 remains PASS and G8 publication/exact pushed-head CI remains pending root.
+
+### P8 — root shipping checkpoint
+
+The preceding sections preserve their checkpoint-time status. ROOT integrated
+clean helper/evidence head `8a7cff488abb8d28a02b01dc1f140c8643dd1705` into the
+owner-requested `claude/youthful-dirac-69v19d` branch by rebase/fast-forward, then
+rebased onto freshly fetched `origin/main` at
+`17f9221d9433ad24b3b951245d8a26653c1d4751`. Main already was an ancestor; no
+source conflict, merge commit or application rewrite occurred.
+
+The tested application remains `6b2eccf069537d90423359fc74c033f27e665cd6`, web tree
+`e4f4f72d1b49f1647fb116e52105c90b03c0335c`. Backend/root-test trees remain
+`4ba84bf2287f911ef2f07184aebd453238b02b35` /
+`45733db270918707018747c63ff989d7959f187e`. ROOT independently verified the
+repository-wide Ruff pass, guarded-helper changes and source equivalence. The
+required pre-push Python coverage/diff gate remains explicitly attributed to
+its recorded execution, with identical production/test/coverage inputs; it is
+not relabelled as a new run.
+
+All local G8 criteria are demonstrated by the S1–S8 map, complete frontend gates,
+fresh real-loopback browser checks, legacy comparisons and independent full/delta
+reviews above. **The authorized push of this gate record completes G8 branch
+publication.** Identify its exact publication commit with `git rev-parse HEAD`
+and the matching remote `refs/heads/claude/youthful-dirac-69v19d`; it is distinct
+from the tested application commit. The running synthetic preview remains on
+3168/API8168, while owner 3137 and the original preview/pilot remain unchanged.
+
+Remote CI runs after publication. Its exact head, run URL and actual results
+belong to the post-push receipt and owner report, rather than a speculative green
+claim here. The existing `ci.yml` workflow uses disabled provider credentials;
+the paid/nightly evaluation workflow is not dispatched. No PR, merge, deployment,
+provider contact or recurrence activation is part of this shipping step.
+
+The broader browser-history draft limitation remains open. Owner usefulness,
+scientific quality and longitudinal daily use remain unmeasured. The two new
+product modes are planned, not implemented; P9 and further paid validation remain
+outside this completed controller batch.

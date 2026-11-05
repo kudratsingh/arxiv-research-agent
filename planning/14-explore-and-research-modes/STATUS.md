@@ -8,8 +8,8 @@ checkpoint. **No product-mode implementation or owner data migration yet.**
 | Owner direction | Adopted in conversation | Two modes, shared records, question-free learning, project-driven research |
 | Planning docs | Written locally in this kit | Linked direction, experience, data/ranking, ordered work and separate evaluations |
 | Controller kit-start provenance | Controller `dff860e` / G6 app `fda9d` | P0–P6 were complete and G7/G8 pending when this direction kit began; its CSS exception was historical, not final acceptance |
-| Controller current local verification | G7 PASS at application `6b2eccf069537d90423359fc74c033f27e665cd6`; G8 publication/remote CI pending root integration | [Controller gate record](../12-workspace-controller-revamp/STATUS.md): 4,079 frontend tests; CSS 23,940/25,600 B; unchanged JS ceilings; independent final browser/static release |
-| Frontend continuation | P7 local implementation/acceptance complete; publication is separate | No mode UI or product-mode implementation is included in the controller polish |
+| Controller current local verification | G7/G8 local verification complete at application `6b2eccf069537d90423359fc74c033f27e665cd6`; root shipping record accompanies the requested branch push, with remote CI separately attributed | [Controller gate record](../12-workspace-controller-revamp/STATUS.md): 4,079 frontend tests; CSS 23,940/25,600 B; unchanged JS ceilings; independent final browser/static release |
+| Frontend continuation | Controller implementation and local acceptance complete; owner experience review remains pending | No mode UI or product-mode implementation is included in the controller polish |
 | Diagnostic benchmark | Stopped diagnostic; scoped approval closed | q01 development; q02/q03/q04 failed; q05–q10 unrun; unchanged targets and original aggregate |
 | Mode switch / project context | Planned D1/D2 | No fake persistence or silent organizing-question import |
 | Split discovery policies | Planned D3 | Existing ranker topic-gates profile-question terms; new Research must not |
