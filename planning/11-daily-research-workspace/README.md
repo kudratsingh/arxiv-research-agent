@@ -45,7 +45,7 @@ The source catalogue and taxonomy are deliberately broader than the first
 release's live ingestion. Every selectable interest must show what coverage
 is actually connected.
 
-Current implementation checkpoint: [daily workflow and qualification readiness](20-readiness-and-qualification-walkthrough.md), [STATUS](STATUS.md), and the [unexecuted measurement proposal](15-grounded-generation-approval-packet.md).
+Historical implementation and qualification preparation: [readiness walkthrough](20-readiness-and-qualification-walkthrough.md), [STATUS](STATUS.md), and the [original unexecuted proposal](15-grounded-generation-approval-packet.md). Later trial accounting and the new mode direction are separate checkpoints; the original packet is not current spending authority.
 
 ## Relationship to the existing project
 
