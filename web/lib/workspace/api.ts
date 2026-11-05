@@ -156,38 +156,22 @@ export function normalizeReaderReturnTo(value: string | null): string {
     const separator = target.indexOf("?");
     const pathname = separator < 0 ? target : target.slice(0, separator);
     const search = new URLSearchParams(separator < 0 ? "" : target.slice(separator + 1));
-    if (!["/workspace/today", "/workspace/library", "/workspace/radar", "/workspace/review", "/workspace/projects"].includes(pathname) && !/^\/workspace\/threads\/thread-[a-f0-9]{32}$/.test(pathname))
-      return "/workspace/today";
+    const route = /^\/workspace\/(today|library|radar|review|projects|threads\/thread-[a-f0-9]{32})$/.exec(pathname)?.[1];
+    if (!route) return "/workspace/today";
     const params = new URLSearchParams();
-    const mode = search.get("mode");
-    if (mode === "learn" || mode === "research") params.set("mode", mode);
-    const project = search.get("project");
-    if (project && /^project-[a-f0-9]{32}$/.test(project)) params.set("project", project);
-    const thread = search.get("thread");
-    if (thread && /^thread-[a-f0-9]{32}$/.test(thread)) params.set("thread", thread);
-    if (pathname === "/workspace/today") {
-      const focus = search.get("focus");
-      if (focus && focus.length <= 500 && !/[\\\u0000-\u001f\u007f]/.test(focus)) params.set("focus", focus);
-    } else if (pathname === "/workspace/review") {
-      const packet = search.get("packet");
-      if (packet && /^review-[a-f0-9]{32}$/.test(packet)) params.set("packet", packet);
-    } else if (pathname === "/workspace/library") {
-      const view = search.get("view");
-      if (view && ["saved", "notes", "read", "archived", "all"].includes(view)) params.set("view", view);
-      const focus = search.get("focus");
-      if (focus && focus.length <= 500 && !/[\\\u0000-\u001f\u007f]/.test(focus)) params.set("focus", focus);
-    } else if (pathname === "/workspace/radar") {
-      for (const key of ["q", "source_id", "access_state", "status", "days", "cursor", "as_of", "focus"]) {
-        const item = search.get(key);
-        const limit = key === "cursor" ? 2048 : key === "as_of" ? 80 : 500;
-        if (item && item.length <= limit && !/[\\\u0000-\u001f\u007f]/.test(item)) params.set(key, item);
-      }
-    }
-    if (pathname === "/workspace/projects" || pathname.startsWith("/workspace/threads/")) {
-      for (const key of ["focus", "version", "entry"]) {
-        const item = search.get(key);
-        if (item && item.length <= 500 && !/[\\\u0000-\u001f\u007f]/.test(item)) params.set(key, item);
-      }
+    const fields: Record<string, string[]> = {
+      today: ["focus"], library: ["view", "focus"], review: ["packet"],
+      radar: ["q", "source_id", "access_state", "status", "days", "cursor", "as_of", "focus"],
+    };
+    const patterns: Record<string, RegExp> = {
+      mode: /^(learn|research)$/, project: /^project-[a-f0-9]{32}$/,
+      thread: /^thread-[a-f0-9]{32}$/, packet: /^review-[a-f0-9]{32}$/,
+      view: /^(saved|notes|read|archived|all)$/,
+    };
+    for (const key of ["mode", "project", "thread", ...(fields[route] ?? ["focus", "version", "entry"])]) {
+      const item = search.get(key);
+      const limit = key === "cursor" ? 2048 : key === "as_of" ? 80 : 500;
+      if (item && item.length <= limit && !/[\\\u0000-\u001f\u007f]/.test(item) && (!patterns[key] || patterns[key].test(item))) params.set(key, item);
     }
     const anchor = fragment && fragment.length <= 500 && !/[\\\u0000-\u001f\u007f]/.test(fragment) ? `#${fragment}` : "";
     return `${pathname}${params.size ? `?${params}` : ""}${anchor}`;
