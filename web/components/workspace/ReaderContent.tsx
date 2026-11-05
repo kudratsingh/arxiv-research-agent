@@ -10,7 +10,7 @@ import { DRAFT_NAVIGATION_NOTICE, loadDraft, storeDraft, type ReaderDraft } from
 import { libraryQueue, neighbours, readerTarget, todayQueue } from "@/lib/workspace/queue";
 import { ControlBar, SidebarSection, StageHeaderSlot } from "./Slots";
 import ReaderControls from "./ReaderControls";
-import { RetainedSourceReader } from "./RetainedSource";
+import { parseMaterialAnchor, RetainedSourceReader } from "./RetainedSource";
 import { Message, ServiceNotice } from "./Common";
 import GenerationBoundary from "./GenerationBoundary";
 
@@ -203,6 +203,37 @@ export default function ReaderContent({
     versions.find((version) => version.version_id === versionId) ??
     versions[0]!;
   const sourceScope = scopeOf(material);
+  useEffect(() => {
+    let observedFragment: string | undefined;
+    const synchronizeFragment = (event?: Event) => {
+      let fragment: string;
+      try {
+        if (decodeURIComponent(location.pathname.split("/workspace/items/")[1] ?? "") !== item.work_id) return;
+        fragment = decodeURIComponent(location.hash.slice(1));
+      } catch { return; }
+      if (fragment === observedFragment && !event) return;
+      const requested = new URLSearchParams(location.search).get("version");
+      if (requested && requested !== versionId) return;
+      const entryPriority = !event && observedFragment === undefined && initial.entryId && fragment === initial.fragment;
+      observedFragment = fragment;
+      if (entryPriority) return;
+      if (["source", "notes", "understand"].includes(fragment)) {
+        setActive(fragment);
+        if (fragment === "understand") setWorkbenchOpened(true);
+      } else if (/^(abstract|excerpt|full_text):\d+(?::\d+)?$/.test(fragment) || parseMaterialAnchor(fragment)) {
+        setSourceAnchor(fragment);
+        setActive("source");
+      }
+    };
+    const initialFrame = requestAnimationFrame(() => synchronizeFragment());
+    window.addEventListener("hashchange", synchronizeFragment);
+    window.addEventListener("popstate", synchronizeFragment);
+    return () => {
+      cancelAnimationFrame(initialFrame);
+      window.removeEventListener("hashchange", synchronizeFragment);
+      window.removeEventListener("popstate", synchronizeFragment);
+    };
+  }, [initial.entryId, initial.fragment, item.work_id, versionId]);
   const knownPDF = material.retained_materials?.find((value) => value.format === "pdf");
   const entries = item.entries.filter(
     (entry) => entry.version_id === material.version_id,

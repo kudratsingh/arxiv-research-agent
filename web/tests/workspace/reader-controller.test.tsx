@@ -6,6 +6,7 @@ import { LiveReader } from "@/components/workspace/Reader";
 import { DRAFT_KEY, loadDraft } from "@/lib/workspace/drafts";
 import type { WorkspaceState } from "@/lib/workspace/api";
 import { work, workspace } from "./fixtures";
+import { MAT, retained, text as retainedText } from "./materialFixtures";
 
 vi.mock("next/navigation", () => ({
   usePathname: () => window.location.pathname,
@@ -74,6 +75,122 @@ beforeEach(() => {
 afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 
 describe("Reader controller", () => {
+  it.each(["source", "understand", "abstract:10:15"])("keeps the initial saved entry above conflicting #%s while allowing later explicit hashes", async fragment => {
+    const frames: FrameRequestCallback[] = [];
+    vi.stubGlobal("requestAnimationFrame", vi.fn(callback => { frames.push(callback); return frames.length; }));
+    vi.stubGlobal("cancelAnimationFrame", vi.fn());
+    const item = current.works[1]!;
+    item.entries = [{ id: "saved-entry", revision: 1, work_id: item.work_id, version_id: item.version_id,
+      kind: "question", body: "Keep this exact saved-entry context", anchor: "abstract:2:5", updated_at: "2026-11-02T15:00:00Z", activity_sequence: 2 }];
+    history.replaceState(null, "", `${location.pathname}${location.search}&entry=saved-entry#${fragment}`);
+    await mount(); await waitFor(() => expect(frames.length).toBeGreaterThan(0));
+    act(() => { for (const callback of frames.splice(0)) callback(0); });
+    expect(document.getElementById("notes")).toHaveAttribute("data-active", "true");
+    expect(document.getElementById("source")).toHaveAttribute("data-source-request", "abstract:2:5");
+    expect(screen.getByText("Keep this exact saved-entry context")).toBeInTheDocument();
+    act(() => { history.replaceState(null, "", `${location.pathname}${location.search}#source`); window.dispatchEvent(new HashChangeEvent("hashchange")); });
+    expect(document.getElementById("source")).toHaveAttribute("data-active", "true");
+    expect(calls.filter(call => call.path !== "state")).toHaveLength(0);
+  });
+
+  it("synchronizes typed same-document material anchors and retains exact work/version refusal without writes", async () => {
+    const original = vi.mocked(fetch).getMockImplementation()!;
+    const document = { ...retained(), work_id: ids[1]!, version_id: `${ids[1]}:v2` };
+    vi.stubGlobal("fetch", vi.fn(async (url: string, init?: RequestInit) => {
+      if (String(url).includes("/materials/")) {
+        calls.push({ path: "materials", body: {} });
+        return Response.json(String(url).endsWith(MAT) ? document : { ...document, material_id: "wrong", version_id: `${ids[1]}:v1` });
+      }
+      return original(url, init);
+    }));
+    await mount();
+    act(() => { history.replaceState(null, "", `${location.pathname}${location.search}#material:${MAT}:page:7:10:20`); window.dispatchEvent(new HashChangeEvent("hashchange")); });
+    expect(await screen.findByText(retainedText)).toBeInTheDocument();
+    expect(window.document.getElementById("source")).toHaveAttribute("data-source-request", `material:${MAT}:page:7:10:20`);
+    act(() => { history.replaceState(null, "", `${location.pathname}${location.search}#material:wrong:page:7:10:20`); window.dispatchEvent(new HashChangeEvent("hashchange")); });
+    expect(await screen.findByText(/Retained material could not be opened/)).toBeInTheDocument();
+    expect(screen.queryByText(retainedText)).not.toBeInTheDocument();
+    expect(calls.filter(call => !["state", "materials"].includes(call.path))).toHaveLength(0);
+  });
+
+  it("synchronizes same-document Unicode ranges without remounting or changing a pending note's anchor", async () => {
+    const text = "α🙂 exact retained passage. ".repeat(180);
+    current.works[1]!.versions[1]!.abstract = text;
+    const original = vi.mocked(fetch).getMockImplementation()!;
+    let finish: ((response: Response) => void) | undefined;
+    vi.stubGlobal("fetch", vi.fn(async (url: string, init?: RequestInit) => {
+      if (String(url).endsWith("/entries")) {
+        calls.push({ path: "entries", body: JSON.parse(String(init?.body)) });
+        return new Promise<Response>(resolve => { finish = resolve; });
+      }
+      return original(url, init);
+    }));
+    const user = userEvent.setup(); await mount();
+    await user.click(screen.getByRole("link", { name: "Your notes" }));
+    const textarea = screen.getByRole("textbox", { name: "Your question" });
+    await user.type(textarea, "Preserve my question and its original anchor.");
+    const before = loadDraft(current.principal_key_id, ids[1]!, `${ids[1]}:v2`)!;
+    await user.click(screen.getByRole("button", { name: "Save question" }));
+    expect(textarea).toHaveAttribute("readonly");
+    const entryRequest = calls.find(call => call.path === "entries")!;
+    const version = new URLSearchParams(location.search).get("version");
+    for (const [start, end, event] of [[2500, 2520, "hashchange"], [50, 70, "popstate"], [2500, 2520, "popstate"]] as const) {
+      act(() => {
+        history.replaceState({ workspaceScroll: 123 }, "", `${location.pathname}${location.search}#abstract:${start}:${end}`);
+        window.dispatchEvent(event === "hashchange" ? new HashChangeEvent(event) : new PopStateEvent(event, { state: history.state }));
+      });
+      await waitFor(() => expect(document.getElementById("source-anchor")?.textContent).toBe(Array.from(text).slice(start, end).join("")));
+      expect(screen.getByRole("textbox", { name: "Your question" })).toBe(textarea);
+      expect(textarea).toHaveValue(before.body); expect(textarea).toHaveAttribute("readonly");
+      expect(loadDraft(current.principal_key_id, ids[1]!, `${ids[1]}:v2`)).toEqual(before);
+      expect(new URLSearchParams(location.search).get("version")).toBe(version);
+    }
+    act(() => { history.replaceState({ workspaceScroll: 123 }, "", `${location.pathname}${location.search}#abstract:0`); window.dispatchEvent(new PopStateEvent("popstate", { state: history.state })); });
+    expect(document.getElementById("source-anchor")).toBeNull();
+    expect(textarea).toHaveValue(before.body); expect(textarea).toHaveAttribute("readonly");
+    expect(loadDraft(current.principal_key_id, ids[1]!, `${ids[1]}:v2`)).toEqual(before);
+    expect((entryRequest.body.data as Record<string, unknown>).anchor).toBe(before.anchor);
+    expect((entryRequest.body.data as Record<string, unknown>).version_id).toBe(`${ids[1]}:v2`);
+    expect(calls.filter(call => call.path === "entries")).toHaveLength(1);
+    const data = entryRequest.body.data as Record<string, unknown>;
+    await act(async () => finish!(Response.json({ id: entryRequest.body.id, revision: 1, ...data,
+      updated_at: "2026-11-02T17:00:00Z", activity_sequence: 99 })));
+    await waitFor(() => expect(textarea).not.toHaveAttribute("readonly"));
+    expect(screen.getByRole("status")).toHaveTextContent("saved on the server");
+  });
+
+  it("catches a fragment changed during mount before the first synchronization frame", async () => {
+    const frames: FrameRequestCallback[] = [];
+    vi.stubGlobal("requestAnimationFrame", vi.fn(callback => { frames.push(callback); return frames.length; }));
+    vi.stubGlobal("cancelAnimationFrame", vi.fn());
+    render(<LiveReader id={ids[1]!} />);
+    await screen.findByRole("heading", { level: 1 });
+    await waitFor(() => expect(frames.length).toBeGreaterThan(0));
+    history.replaceState(null, "", `${location.pathname}${location.search}#abstract:10:15`);
+    act(() => { for (const callback of frames.splice(0)) callback(0); });
+    expect(document.getElementById("source-anchor")).toHaveAttribute("data-source-anchor", "abstract:10:15");
+    expect(calls.filter(call => call.path !== "state")).toHaveLength(0);
+  });
+
+  it("refuses invented hash ranges and ignores malformed/cross-work/cross-version events", async () => {
+    await mount();
+    function hash(fragment: string, path = location.pathname, version = `${ids[1]}:v2`) {
+      act(() => { history.replaceState(null, "", `${path}?version=${encodeURIComponent(version)}#${fragment}`); window.dispatchEvent(new HashChangeEvent("hashchange")); });
+    }
+    hash("abstract:999999:9999999");
+    expect(document.getElementById("source-anchor")).toBeNull();
+    expect(screen.getByText(/This passage is unavailable/)).toBeInTheDocument();
+    hash("excerpt:3:9"); expect(document.getElementById("source-anchor")).toBeNull();
+    hash("abstract:3:9"); expect(document.getElementById("source-anchor")).toHaveAttribute("data-source-anchor", "abstract:3:9");
+    const mark = document.getElementById("source-anchor");
+    hash("%"); expect(document.getElementById("source-anchor")).toBe(mark);
+    hash("abstract:5:10", `/workspace/items/${encodeURIComponent(ids[0]!)}`); expect(document.getElementById("source-anchor")).toBe(mark);
+    hash("abstract:5:10", `/workspace/items/${encodeURIComponent(ids[1]!)}`, `${ids[1]}:missing`); expect(document.getElementById("source-anchor")).toBe(mark);
+    hash("notes"); expect(document.getElementById("notes")).toHaveAttribute("data-active", "true");
+    hash("understand"); expect(document.getElementById("understand")).toHaveAttribute("data-active", "true");
+    expect(calls.filter(call => call.path !== "state")).toHaveLength(0);
+  });
+
   it("keeps Source, Understand and Your notes links in main and preserves native note form order and unique controls", async () => {
     const user = userEvent.setup(); await mount();
     const main = screen.getByRole("main");

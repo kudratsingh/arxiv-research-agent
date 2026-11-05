@@ -104,7 +104,13 @@ export function mountWorkspaceNavigation(initialPaper?: string) {
       const main = stage();
       const heading = main?.querySelector<HTMLElement>("h1");
       const listRoute = location.pathname.match(/^\/workspace\/(today|radar|library)$/)?.[1];
-      if (!main || !heading || main.querySelector('[aria-busy="true"]') || listRoute && !main.querySelector(`.ws-${listRoute}`)) return;
+      if (!main || !heading || main.querySelector('[aria-busy="true"]')) return;
+      const unavailable = main.querySelector("[data-reader-unavailable], [data-workspace-unavailable]");
+      if (listRoute && !main.querySelector(`.ws-${listRoute}`) && !unavailable) return;
+      if (unavailable && state.intent.kind !== "history") {
+        settleWorkspaceContent(heading, undefined, true);
+        return;
+      }
       if (state.intent.kind === "paper") {
         const paper = main.querySelector<HTMLElement>(".ws-focus");
         if (paper) settleWorkspaceContent(paper.querySelector<HTMLElement>(".ws-focus-heading") ?? paper, paper);
@@ -131,9 +137,16 @@ export function mountWorkspaceNavigation(initialPaper?: string) {
         let fragment = "";
         try { fragment = decodeURIComponent(location.hash.slice(1)); } catch { /* Invalid fragments never invent a target. */ }
         const entry = query.get("entry");
+        if (!entry && /^(abstract|excerpt|full_text):\d+(?::\d+)?$/.test(fragment)) {
+          const panel = main.querySelector<HTMLElement>("#source");
+          if (panel?.dataset.sourceRequest !== fragment) return;
+          const mark = main.querySelector<HTMLElement>("#source-anchor");
+          if (panel.dataset.sourceValid === "true" && mark?.dataset.sourceAnchor !== fragment) return;
+        }
         const target = entry ? document.getElementById(`workspace-entry-${entry}`)
           : /^(abstract|excerpt|full_text):/.test(fragment) ? (main.querySelector<HTMLElement>("#source-anchor") ?? main.querySelector<HTMLElement>("#source"))
           : ["source", "notes", "understand"].includes(fragment) ? document.getElementById(fragment) : null;
+        if (target?.closest('[hidden], [data-active="false"]') || target && getComputedStyle(target).display === "none") return;
         if (target) settleWorkspaceContent(target);
         else clearIntent();
         return;
@@ -145,7 +158,7 @@ export function mountWorkspaceNavigation(initialPaper?: string) {
     const observer = new MutationObserver(ready);
     // Next templates can replace main while a cached route is opening. Observe
     // the stable document host, not a detached previous route's main element.
-    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["data-paper-key", "data-workspace-path", "aria-busy"] });
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["data-paper-key", "data-workspace-path", "aria-busy", "data-source-request", "data-source-valid", "data-source-anchor", "data-active", "hidden"] });
     const savePosition = () => {
       if (state.intent) return;
       const url = location.href, top = scrollTop();

@@ -44,7 +44,8 @@ beforeEach(() => {
 });
 afterEach(async () => {
   // Complete any intent before removing the host, matching a committed route.
-  settleWorkspaceContent(document.body); await flush(); await flush();
+  if (navigationState.engine) settleWorkspaceContent(document.body);
+  await flush(); await flush();
   cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); vi.useRealTimers();
 });
 
@@ -450,11 +451,56 @@ describe("shared workspace navigation", () => {
     current.unmount(); expect(navigationState.engine).toBeNull();
   });
 
+  it.each(["today", "radar", "library"])("settles a terminal %s failure without its success wrapper and resumes checkpoints", async route => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    const path = `/workspace/${route}`; history.replaceState({}, "", path);
+    const view = render(<Harness path={path} ready={false} />); const container = wireScroll(); await flush();
+    act(() => requestWorkspaceNavigation(path));
+    view.rerender(<Harness path={path} paper={false} />);
+    act(() => { const wrapper = container.querySelector<HTMLElement>(`.ws-${route}`)!; wrapper.className = `ws-${route}-state`; wrapper.dataset.workspaceUnavailable = ""; });
+    await flush(); await flush();
+    expect(container.scrollTo).toHaveBeenCalledWith({ top: 964, behavior: "instant" });
+    expect(container.querySelector("h1")).toHaveFocus();
+    container.scrollTop = 432; fireEvent.scroll(container);
+    await act(async () => { vi.advanceTimersByTime(150); });
+    expect(history.state.workspaceScroll).toBe(432);
+    act(() => window.dispatchEvent(new PopStateEvent("popstate", { state: { workspaceScroll: 222 } })));
+    await flush(); await flush();
+    expect(container.scrollTo).toHaveBeenLastCalledWith({ top: 222, behavior: "instant" });
+  });
+
+  it.each(["data-reader-unavailable", "data-workspace-unavailable"])("settles a terminal %s view at its own heading while retaining history priority", async marker => {
+    history.replaceState({}, "", "/workspace/items/missing?version=unavailable#abstract:2500:2520");
+    const view = render(<Harness path="/workspace/items/missing" paper={false} ready={false} />);
+    const container = wireScroll(); await flush();
+    view.rerender(<Harness path="/workspace/items/missing" paper={false} />);
+    act(() => { const heading = container.querySelector("h1")!; heading.parentElement!.setAttribute(marker, ""); heading.textContent = "Requested retained source is unavailable"; });
+    await flush(); await flush();
+    expect(container.scrollTo).toHaveBeenLastCalledWith({ top: 964, behavior: "instant" });
+    expect(container.querySelector("h1")).toHaveFocus();
+    history.replaceState({ workspaceScroll: 222 }, "", location.href);
+    act(() => { window.dispatchEvent(new PopStateEvent("popstate", { state: history.state })); window.dispatchEvent(new HashChangeEvent("hashchange")); });
+    await flush(); await flush();
+    expect(container.scrollTo).toHaveBeenLastCalledWith({ top: 222, behavior: "instant" });
+  });
+
+  it("waits for the requested exact mark and visible panel before settling a new fragment", async () => {
+    history.replaceState({}, "", "/workspace/items/paper#abstract:2500:2520");
+    render(<Harness path="/workspace/items/paper" paper={false} />); const container = wireScroll(); await flush();
+    const panel = document.createElement("section"); panel.id = "source"; panel.dataset.sourceRequest = "abstract:10:20"; panel.dataset.sourceValid = "true";
+    const mark = document.createElement("mark"); mark.id = "source-anchor"; mark.dataset.sourceAnchor = "abstract:10:20"; mark.dataset.top = "300"; panel.append(mark);
+    act(() => container.append(panel)); await flush(); expect(container.scrollTo).not.toHaveBeenCalled();
+    act(() => { panel.dataset.sourceRequest = "abstract:2500:2520"; }); await flush(); expect(container.scrollTo).not.toHaveBeenCalled();
+    act(() => { panel.hidden = true; mark.dataset.sourceAnchor = "abstract:2500:2520"; }); await flush(); expect(container.scrollTo).not.toHaveBeenCalled();
+    act(() => { panel.hidden = false; }); await flush(); await flush();
+    expect(container.scrollTo).toHaveBeenCalledWith({ top: 1144, behavior: "instant" });
+  });
+
   it("lets a new Reader fragment without a checkpoint take priority after Forward, retaining real Back snapshots", async () => {
     history.replaceState({}, "", "/workspace/items/paper#abstract:0");
     render(<Harness path="/workspace/items/paper" paper={false} />); const container = wireScroll(); await flush();
-    const mark = document.createElement("mark"); mark.id = "source-anchor"; mark.dataset.top = "1298"; mark.textContent = "Exact retained range";
-    const source = document.createElement("section"); source.id = "source"; source.dataset.top = "100";
+    const mark = document.createElement("mark"); mark.id = "source-anchor"; mark.dataset.sourceAnchor = "abstract:2500:2520"; mark.dataset.top = "1298"; mark.textContent = "Exact retained range";
+    const source = document.createElement("section"); source.id = "source"; source.dataset.sourceRequest = "abstract:2500:2520"; source.dataset.sourceValid = "true"; source.dataset.top = "100";
     source.append(mark); container.append(source);
     history.replaceState({ workspaceScroll: 359 }, "", location.href);
     act(() => window.dispatchEvent(new PopStateEvent("popstate", { state: history.state }))); await flush();
