@@ -61,7 +61,7 @@ export function LiveLibrary() {
   const resume = focused?.reading.context;
   const readerContext = resume ? { mode: resume.mode, project: resume.project_id, thread: resume.thread_id, explicit: true, invalid: false } : context;
   const returnTo = contextHref(`/workspace/library?view=${filter}${focused ? `&focus=${encodeURIComponent(focused.work_id)}` : ""}`, context);
-  const href = focused && target ? contextHref(readerHref(focused, target.version, target.anchor, undefined, resume?.return_to ?? returnTo), readerContext) : "";
+  const href = focused && target ? contextHref(readerHref(focused, target.version, target.anchor, undefined, returnTo), readerContext) : "";
   const available = focused && target && (focused.versions.length
     ? focused.versions.some((version) => version.version_id === target.version) : focused.version_id === target.version);
   const notebook = filter === "notes"
@@ -131,7 +131,7 @@ export function LiveLibrary() {
         {notebook.flatMap((item) => item.entries.map((entry) => <article key={entry.id} className="daily-notebook-entry">
           <span className="daily-eyebrow">Your {entry.kind.replaceAll("-", " ")}</span><p>{entry.body}</p>
           <p className="workspace-note-context">{item.title} · Source {entry.version_id} · {entry.anchor}</p>
-          <Link href={contextHref(readerHref(item, entry.version_id, entry.anchor, entry.id, entry.context?.return_to ?? returnTo), entry.context ? { mode: entry.context.mode, project: entry.context.project_id, thread: entry.context.thread_id, explicit: true, invalid: false } : context)} prefetch={false} className="daily-link">Resume this question →</Link>
+          <Link href={contextHref(readerHref(item, entry.version_id, entry.anchor, entry.id, returnTo), entry.context ? { mode: entry.context.mode, project: entry.context.project_id, thread: entry.context.thread_id, explicit: true, invalid: false } : context)} prefetch={false} className="daily-link">Resume this question →</Link>
         </article>))}
       </section>}
     </> : <section className="daily-empty ws-empty"><Mascot mood="sleepy" size={72} /><div><h2>{filter === "saved" ? "Save something worth returning to." : "No items in this view."}</h2><p>Your notes and reading state will appear here after a successful server save.</p><Link href={contextHref("/workspace/today", context)} className="daily-link" prefetch={false}>Back to Today →</Link></div></section>}

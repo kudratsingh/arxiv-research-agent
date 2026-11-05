@@ -347,9 +347,13 @@ test("editing an earlier question becomes latest activity, pins its exact versio
     const libraryEntry = page
       .getByRole("article")
       .filter({ has: page.getByText(first, { exact: true }) });
-    await libraryEntry
-      .getByRole("link", { name: "Resume this question →" })
-      .click();
+    const resumeLink = libraryEntry.getByRole("link", { name: "Resume this question →" });
+    const resumeTarget = new URL((await resumeLink.getAttribute("href"))!, page.url());
+    const libraryReturn = new URL(resumeTarget.searchParams.get("return_to")!, page.url());
+    expect(libraryReturn.pathname).toBe("/workspace/library");
+    expect(libraryReturn.searchParams.get("view")).toBe("notes");
+    expect(libraryReturn.searchParams.get("focus")).toBeTruthy();
+    await resumeLink.click();
     const resumed = page.locator(`[id="workspace-entry-${entryId}"]`);
     await expect(resumed).toBeFocused();
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(
@@ -368,8 +372,9 @@ test("editing an earlier question becomes latest activity, pins its exact versio
     await expect(page.getByRole("status")).toContainText(
       "is saved on the server",
     );
+    await expect(page.getByRole("link", { name: "← Library", exact: true })).toHaveAttribute("href", libraryReturn.pathname + libraryReturn.search);
     await page.getByRole("link", { name: "← Library", exact: true }).click();
-    await expect(page).toHaveURL(/\/workspace\/library\?view=notes$/);
+    await expect(page).toHaveURL(libraryReturn.href);
     await openControls(page);
     await expect(
       page.getByRole("combobox", { name: "Library view" }),

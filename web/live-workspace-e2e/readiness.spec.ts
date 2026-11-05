@@ -13,8 +13,8 @@ test("Today puts the saved thread and first reading item within reach", async ({
   const saved = await page.request.post("/api/workspace/entries", { data: { id, revision: 0, request_id: id, data: {work_id: item.work_id, version_id: item.version_id, kind: "question", body: "Verification question: which evidence and baseline should stay fixed in a small reproducible retrieval experiment?", anchor} } });
   expect(saved.ok()).toBe(true);
   await page.goto("/workspace/today");
-  // The compact controller keeps one exact-source continuation link; its
-  // redundant heading is folded on mobile to leave room for actual reading.
+  // The compact controller keeps one exact-source continuation link beside
+  // its activity preview; verify the actual resume identity and reading clearance.
   const thread = page.locator(".workspace-continuation .workspace-activity-link");
   await expect(thread).toBeVisible();
   const resume = new URL((await thread.getAttribute("href"))!, page.url());

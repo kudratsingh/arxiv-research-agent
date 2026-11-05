@@ -98,6 +98,21 @@ describe("Library controller", () => {
     view.unmount(); history.replaceState(null, "", "/workspace/library?view=notes"); await mount();
     focused("Gamma"); expect(location.search).toBe("?view=notes");
   });
+  it.each(["paper", "question"] as const)("keeps the current Library return view while restoring a %s's saved Research identity", async kind => {
+    const project = `project-${"c".repeat(32)}`;
+    const origin = { mode: "research" as const, project_id: project, thread_id: null, return_to: `/workspace/projects?mode=research&project=${project}` };
+    const item = current.works[1]!; item.reading.context = origin; item.entries[0]!.context = origin;
+    history.replaceState(null, "", `/workspace/library?mode=learn&view=notes&focus=${encodeURIComponent(item.work_id)}`);
+    await mount();
+    const link = kind === "paper" ? screen.getByRole("link", { name: "Open in reader" }) : within(screen.getByText("Beta saved question").closest("article")!).getByRole("link", { name: "Resume this question →" });
+    const target = new URL(link.getAttribute("href")!, location.origin), back = new URL(target.searchParams.get("return_to")!, location.origin);
+    expect(target.searchParams.get("mode")).toBe("research"); expect(target.searchParams.get("project")).toBe(project);
+    expect(target.searchParams.get("version")).toBe(item.version_id); expect(decodeURIComponent(target.hash)).toBe("#abstract:2:7");
+    if (kind === "question") expect(target.searchParams.get("entry")).toBe(item.entries[0]!.id);
+    expect(back.pathname).toBe("/workspace/library"); expect(back.searchParams.get("view")).toBe("notes");
+    expect(back.searchParams.get("focus")).toBe(item.work_id); expect(back.searchParams.get("mode")).toBe("learn");
+    expect(back.searchParams.has("project")).toBe(false);
+  });
   it("supports keyboard next and previous within the current view", async () => {
     await mount(); focused("Beta");
     fireEvent.keyDown(document.body, { key: "j" }); focused("Gamma");
