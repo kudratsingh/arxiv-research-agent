@@ -524,6 +524,8 @@ describe("the committed OpenAPI snapshot", () => {
       "/workspace/materials",
       "/workspace/materials/{material_id}",
       "/workspace/profile",
+      "/workspace/qualification/results",
+      "/workspace/qualification/results/{job_id}",
       "/workspace/reading",
       "/workspace/refresh",
       "/workspace/review",

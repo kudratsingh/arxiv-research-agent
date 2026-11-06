@@ -46,6 +46,8 @@
 export const LITERAL_SEGMENTS: ReadonlySet<string> = new Set([
   "artifacts",
   "assistance",
+  "qualification",
+  "results",
   "catalog",
   "context",
   "conversations",
@@ -99,6 +101,7 @@ const PARAMETER_PREFIXES: readonly (readonly string[])[] = [
   ["learn", "sessions"],
   ["workspace", "generation", "jobs"],
   ["workspace", "assistance", "jobs"],
+  ["workspace", "qualification", "results"],
   ["workspace", "materials"],
   ["workspace", "context", "projects"],
   ["workspace", "context", "threads"],

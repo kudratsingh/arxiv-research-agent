@@ -24,4 +24,12 @@ describe("saved assistance links", () => {
     expect(passageAnchor(value as Parameters<typeof passageAnchor>[0])).toBe("material:mat-one:page:17:4:23");
     expect(passageAnchor({ ...value, page: null, scope: "abstract" } as Parameters<typeof passageAnchor>[0])).toBe("abstract:4:23");
   });
+  it("resumes a quarantined production-pipeline job without granting execution", () => {
+    const href = assistanceResumeHref(`qualification-gen-${"e".repeat(40)}`, source, origin)!;
+    const url = new URL(href, "https://workspace.invalid");
+    expect(url.searchParams.get("qualification")).toBe(`gen-${"e".repeat(40)}`);
+    expect(url.searchParams.has("assistance")).toBe(false);
+    expect(url.searchParams.get("version")).toBe(source.version_id);
+    expect(url.searchParams.get("project")).toBe(origin.project_id);
+  });
 });

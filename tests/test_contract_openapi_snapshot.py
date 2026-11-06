@@ -91,6 +91,8 @@ def test_snapshot_covers_every_route_the_frontend_calls() -> None:
         "/workspace/assistance/catalog", "/workspace/assistance/preview",
         "/workspace/assistance/jobs", "/workspace/assistance/jobs/{job_id}",
         "/workspace/assistance/jobs/{job_id}/{action}",
+        # D5 qualification results are owned, read-only quarantine routes.
+        "/workspace/qualification/results", "/workspace/qualification/results/{job_id}",
         "/workspace/review", "/workspace/review/prepare", "/workspace/review/feedback",
         "/workspace/materials", "/workspace/materials/{material_id}",
         "/workspace/generation/preview", "/workspace/generation/jobs",

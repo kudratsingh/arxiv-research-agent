@@ -252,7 +252,39 @@ class QualificationAdapter:
     """Single fenced experiment job over the existing durable reservation ledger."""
 
     admission_type: type[GenerationAdmission] = QualificationAdmission
+
     allowed_endpoints = frozenset({"messages", "messages/count_tokens"})
+
+    revision = REVISION
+
+    abstention_is_final = True
+
+    def _checks(self, output: dict[str, Any]) -> Any:
+        """Versioned contract extension; the historical default stays closed."""
+        return Checks.model_validate(output)
+
+    def _checked_draft(self, snapshot: dict[str, Any]) -> StudyDraft:
+        return self._draft(snapshot["steps"][-1]["output"])
+
+    def _check_complete(self, grounding: Any, snapshot: dict[str, Any]) -> bool:
+        return bool(grounding.total_factual == grounding.supported or len(snapshot["steps"]) == 3)
+
+    def _response_authorization(self, job_id: str) -> None:
+        """Optional post-response fence; accounting must precede this check."""
+
+    def _contact_scope(self, conn: Any, job_id: str, endpoint: str) -> None:
+        """Stricter versioned limits, inside the existing journal transaction."""
+
+    def _dispatch_scope(self, conn: Any, job_id: str) -> None:
+        """Recheck external scope at the point of dispatch."""
+
+    def _complete_http_body(self, job_id: str, ordinal: int, status: int, body: bytes) -> None:
+        """Optional receipt for a complete body before envelope decoding."""
+
+    def _usage_within_stage(self, ins: int, outs: int, wire: dict[str, Any]) -> bool:
+        return ins <= int(self.inputs.settings["input_tokens"]) and outs <= int(
+            self.inputs.settings["output_tokens"]
+        )
 
     def __init__(
         self,
@@ -348,7 +380,7 @@ class QualificationAdapter:
             self.control._lock(conn, self.owner)
             _, _, data = self.control._job(conn, self.owner, job["id"])
             data["adapter"] = {
-                "revision": REVISION,
+                "revision": self.revision,
                 "mode": self.mode,
                 "contacts": [],
                 "steps": [],
@@ -514,6 +546,7 @@ class QualificationAdapter:
             adapter = data.get("adapter", {})
             contacts = adapter.get("contacts", [])
             guard_trial(conn, self.owner, policy, current_job=job_id)
+            self._dispatch_scope(conn, job_id)
             if (
                 state != "running"
                 or digest != _digest(self.inputs.snapshot())
@@ -553,12 +586,13 @@ class QualificationAdapter:
                 async with client.stream(
                     "POST", "https://api.anthropic.com/v1/" + path, json=body
                 ) as response:
-                    response.raise_for_status()
                     chunks = bytearray()
                     async for chunk in response.aiter_bytes():
                         chunks.extend(chunk)
                         if len(chunks) > int(self.inputs.settings["response_bytes"]):
                             raise AdmissionError("response_size_exceeded")
+                    self._complete_http_body(job_id, ordinal, response.status_code, bytes(chunks))
+                    response.raise_for_status()
         value = json.loads(chunks)
         if not isinstance(value, dict):
             raise AdmissionError("invalid_provider_response")
@@ -578,6 +612,7 @@ class QualificationAdapter:
             adapter = data.get("adapter", {})
             contacts = adapter.get("contacts", [])
             guard_trial(conn, self.owner, policy, current_job=job_id, next_endpoint=endpoint)
+            self._contact_scope(conn, job_id, endpoint)
             if (
                 state != "running"
                 or digest != _digest(self.inputs.snapshot())
@@ -665,9 +700,7 @@ class QualificationAdapter:
                 workflow_usd=totals["workflow"],
                 judge_usd=totals["checker"],
             )
-            if ins > int(self.inputs.settings["input_tokens"]) or outs > int(
-                self.inputs.settings["output_tokens"]
-            ):
+            if not self._usage_within_stage(ins, outs, wire):
                 raise AdmissionError("usage_cap_exceeded")
             with self.store.pool.connection() as conn:
                 self.control._lock(conn, self.owner)
@@ -681,13 +714,16 @@ class QualificationAdapter:
                 return self.snapshot(job_id)
             if cancelled():
                 return self.control.cancel(self.owner, job_id)
+            self._response_authorization(job_id)
             output = response_output(response, self.inputs.model_id)
             final = False
             if wire["stage"] == "check":
-                checks = Checks.model_validate(output)
+                checks = self._checks(output)
                 sources, materials = self._context()
-                draft = self._draft(snapshot["steps"][-1]["output"])
-                if {c.claim_id for c in checks.checks} != {c.claim_id for c in draft.claims if c.kind == ClaimKind.FACTUAL}:
+                draft = self._checked_draft(snapshot)
+                if {c.claim_id for c in checks.checks} != {
+                    c.claim_id for c in draft.claims if c.kind == ClaimKind.FACTUAL
+                }:
                     raise AdmissionError("incomplete_check_batch")
                 grounding = validate_claims(
                     draft.claims,
@@ -698,22 +734,20 @@ class QualificationAdapter:
                             c.input_digest,
                             c.decision,
                             self.inputs.model_id,
-                            REVISION + ":check",
+                            self.revision + ":check",
                             c.reason,
                         )
                         for c in checks.checks
                     ),
                 )
-                final = (
-                    grounding.total_factual == grounding.supported or len(snapshot["steps"]) == 3
-                )
+                final = self._check_complete(grounding, snapshot)
                 output = {**checks.model_dump(mode="json"), "grounding": asdict(grounding)}
             else:
                 draft = self._draft(output)
                 if not any(c.kind == ClaimKind.FACTUAL for c in draft.claims):
                     _, materials = self._context()
                     grounding = validate_claims(draft.claims, materials)
-                    final = True  # Explicit abstention has no factual checker denominator.
+                    final = self.abstention_is_final
             with self.store.pool.connection() as conn:
                 self.control._lock(conn, self.owner)
                 state, _, data = self.control._job(conn, self.owner, job_id)
@@ -747,7 +781,9 @@ class QualificationAdapter:
                         "experiment_only": True,
                         "checker_qualified": False,
                         "draft": draft.model_dump(mode="json"),
-                        "content_status": "abstained" if not grounding.total_factual else "completed",
+                        "content_status": "abstained"
+                        if not grounding.total_factual
+                        else "completed",
                         "grounding": asdict(grounding),
                         "everyday_generation": False,
                     },
@@ -757,8 +793,13 @@ class QualificationAdapter:
             # A full, metered HTTP response may have invalid content. Close only
             # its known financial state; lost/unpriced contacts remain uncertain.
             try:
-                settle_failed_response(self.store, self.owner, job_id,
-                    receipt_id="completed-failure", reason="content_or_contract_rejected")
+                settle_failed_response(
+                    self.store,
+                    self.owner,
+                    job_id,
+                    receipt_id="completed-failure",
+                    reason="content_or_contract_rejected",
+                )
             except (AdmissionError, KeyError, TypeError, ValueError):
                 self.control.recover(self.owner, job_id)
             raise

@@ -71,8 +71,29 @@ def coherent_units(
             )
             page = material.pages[page_index]
             start, end = span.start, span.end
+            known_boundary = False
+            if material.page_count is not None and span.start == 0:
+                # Retain the original page verbatim. Only choose a later exact
+                # offset when a known PDF header/front-matter boundary exists.
+                heading = (
+                    re.search(r"(?m)^[ \t]*ABSTRACT[ \t]*$", page[start:end])
+                    if span.page == 1
+                    else None
+                )
+                if heading:
+                    start += heading.end()
+                    while start < end and page[start].isspace():
+                        start += 1
+                    known_boundary = True
+                else:
+                    header = re.match(
+                        r"(?:Published as[^\n]*|Preprint\.?)[ \t]*\n+", page[start:end]
+                    )
+                    if header:
+                        start += header.end()
+                        known_boundary = True
             # Do not turn a chopped leading/trailing sentence into full evidence.
-            if start and not re.search(r"[.!?]\s*$|\n\s*\n$", page[:start]):
+            if start and not known_boundary and not re.search(r"[.!?]\s*$|\n\s*\n$", page[:start]):
                 boundary = re.search(r"[.!?](?:[\"'”’)]*)\s+|\n\s*\n", page[start:end])
                 if boundary is None:
                     continue

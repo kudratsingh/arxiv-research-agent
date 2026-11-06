@@ -32,6 +32,17 @@ function expand(summary: string) {
 }
 
 describe("learning thread presentation", () => {
+  it.each(["assistance-fake-", "qualification-gen-"])("resumes %s outputs with honest experimental wording and exact origin", async prefix => {
+    thread.data.entry = { entry_id: prefix + "e".repeat(40), entry_revision: 1 };
+    render(<LiveLearningThread id={threadId} />);
+    const link = await screen.findByRole("link", { name: "Resume saved assistance →" });
+    const url = new URL(link.getAttribute("href")!, location.origin);
+    expect(url.searchParams.get("version")).toBe(source.version_id);
+    expect(url.searchParams.get("project")).toBe(projectId);
+    expect(screen.queryByText(/No explanation was generated/)).not.toBeInTheDocument();
+    expect(screen.getByText(/Human support, usefulness and mastery remain unmeasured/)).toBeVisible();
+    expect(screen.getByText(prefix.startsWith("qualification") ? /Quarantined experimental result; quality unmeasured/ : /Local simulation; quality unmeasured/)).toBeVisible();
+  });
   it("leads with the declared goal and prerequisite while exact source bindings remain inspectable", async () => {
     render(<LiveLearningThread id={threadId} />);
     await screen.findByRole("heading", { name: "Understand the baseline" });

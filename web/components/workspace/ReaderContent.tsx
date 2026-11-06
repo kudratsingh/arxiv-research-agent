@@ -23,6 +23,7 @@ import { assistanceResumeHref } from "@/lib/workspace/assistanceLinks";
 const ReaderContextActions = lazy(() => loadContextEditors().then(module => ({ default: module.ReaderContextActions })));
 const SyntheticWorkbench = lazy(() => import("./SyntheticWorkbench").then(workbench => ({ default: workbench.SyntheticWorkbench })));
 const AssistancePanel = lazy(() => import("./AssistancePanel"));
+const QualificationResult = lazy(() => import("./QualificationResult"));
 
 const emptyDraft = (scope = "abstract"): ReaderDraft => ({
   id: requestId(),
@@ -125,6 +126,7 @@ export default function ReaderContent({
   );
   const [workbenchOpened, setWorkbenchOpened] = useState(initial.fragment === "understand");
   const [assistanceOpened, setAssistanceOpened] = useState(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).has("assistance"));
+  const [qualificationOpened, setQualificationOpened] = useState(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).has("qualification"));
   const [draft, setDraft] = useState<ReaderDraft>(initial.draft);
   const [notice, setNotice] = useState(initial.notice);
   const [busy, setBusy] = useState(false);
@@ -805,6 +807,14 @@ export default function ReaderContent({
               void reading(item.reading.status, anchor);
             }}
           /></Suspense> : <button type="button" className="daily-button" onClick={() => setAssistanceOpened(true)}>Open assisted reading · local simulation</button>}
+          {qualificationOpened ? <Suspense fallback={<p aria-busy="true">Opening quarantined results…</p>}><QualificationResult
+            workId={item.work_id} versionId={material.version_id} returnTo={returnTo}
+            onSource={anchor => {
+              jumpToSource.current = true; setSourceAnchor(anchor); setActive("source");
+              window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}#${encodeURIComponent(anchor)}`);
+              void reading(item.reading.status, anchor);
+            }}
+          /></Suspense> : <button type="button" className="daily-secondary" onClick={() => setQualificationOpened(true)}>View quarantined qualification results</button>}
           <p>
             Your current question:{" "}
             {state.profile.data.research_question ||

@@ -935,3 +935,12 @@
 .workspace-app .ws-assistance blockquote { margin: 16px 0; padding-inline-start: 16px; border-inline-start: 2px solid var(--color-signature); overflow-wrap: anywhere; }
 .workspace-app .ws-assistance pre { max-height: 24rem; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
 .workspace-app .ws-assistance .workspace-toolbar { flex-wrap: wrap; }
+/* D5 retained claims keep a reading measure; controls remain usable on touch. */
+.workspace-app .ws-assistance { max-width: 72ch; padding: 20px; border: 1px solid var(--color-border-subtle); border-radius: var(--ws-radius-md); }
+.workspace-app .ws-assistance :is(p, blockquote, li) { line-height: 1.7; }
+.workspace-app .ws-assistance :is(h3, h4) { margin-block: 20px 8px; font-weight: 650; line-height: 1.35; }
+.workspace-app .ws-assistance article { padding-block: 16px; border-top: 1px solid var(--color-border-subtle); }
+.workspace-app .ws-assistance button { min-height: 44px; padding: 8px 12px; border: 1px solid var(--color-border-subtle); border-radius: var(--ws-radius-sm); text-align: start; }
+.workspace-app .ws-assistance button[aria-pressed="true"] { border-color: var(--color-signature); }
+.workspace-app .ws-assistance button:disabled { opacity: .55; cursor: not-allowed; }
+.workspace-app .ws-assistance > ul { display: grid; gap: 8px; padding: 0; list-style: none; }

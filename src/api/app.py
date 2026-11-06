@@ -1346,4 +1346,7 @@ def create_app(
     from src.workspace.assistance_routes import router as workspace_assistance_router
 
     app.include_router(workspace_assistance_router)
+    from src.workspace.d5_routes import router as workspace_qualification_router
+
+    app.include_router(workspace_qualification_router)
     return app

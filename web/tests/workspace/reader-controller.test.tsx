@@ -78,6 +78,24 @@ beforeEach(() => {
 afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 
 describe("Reader controller", () => {
+  it("opens quarantined results only on request and returns to their exact source passage without dispatch", async () => {
+    const original = vi.mocked(fetch).getMockImplementation()!;
+    const jid = `gen-${"d".repeat(40)}`;
+    const item = current.works[1]!, version = `${item.work_id}:v2`;
+    const record = { id: jid, case_id: "isolated-reader-qualification", state: "ready", simulated: true, source_binding_intact: true, packet_digest: "sealed", workflow_usd: "0", checker_usd: "0", unknown_usd: "0", steps: [], contacts: [],
+      request: { assistance: { mode: "learn", work_id: item.work_id, version_id: version, project_id: null, origin: null, follow_up: "Inspect the source" }, project_context: null, units: { u1: { work_id: item.work_id, version_id: version, material_id: "mat-one", span_id: "span-one", source_hash: "hash", parser_revision: "text", scope: "abstract", page: null, start: 3, end: 9, quote: "retained" } } },
+      assistance_output: { claims: [{ claim_id: "c1", text: "Inspect retained source", handles: ["u1"] }], background: "Unverified", comparison: "", comparison_basis: [], assumptions: [], gaps: ["Abstract only"], questions: [], proposal: "Proposed test", abstention: null }, result: { grounding: { assessments: [] } } };
+    vi.mocked(fetch).mockImplementation(async (url, init) => String(url).includes("/qualification/results?") ? Response.json([record]) : original(url, init));
+    const user = userEvent.setup(); await mount();
+    expect(vi.mocked(fetch).mock.calls.some(([url]) => String(url).includes("qualification"))).toBe(false);
+    await user.click(screen.getByRole("link", { name: "Understand" }));
+    await user.click(screen.getByRole("button", { name: "View quarantined qualification results" }));
+    await user.click(await screen.findByRole("button", { name: /isolated-reader-qualification/ }));
+    await user.click(screen.getByRole("button", { name: "Open qualification passage" }));
+    await waitFor(() => expect(document.getElementById("source-anchor")).toHaveAttribute("data-source-anchor", "abstract:3:9"));
+    expect(decodeURIComponent(location.hash)).toBe("#abstract:3:9"); expect(location.search).toContain(jid);
+    expect(calls.some(call => /generation|advance|approval/.test(call.path))).toBe(false);
+  });
   it("vetoes ordinary and slash search during a real pending entry save with working recovery, then permits search after acknowledgement", async () => {
     const original = vi.mocked(fetch).getMockImplementation()!; let finish!: (response: Response) => void;
     vi.mocked(fetch).mockImplementation(async (url, init) => {

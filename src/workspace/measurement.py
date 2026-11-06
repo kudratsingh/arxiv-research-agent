@@ -58,7 +58,7 @@ class MeasurementAdmission(GenerationAdmission):
 
 
 class MeasurementAdapter(QualificationAdapter):
-    admission_type = MeasurementAdmission
+    admission_type: type[GenerationAdmission] = MeasurementAdmission
     allowed_endpoints = frozenset({"messages/count_tokens"})
 
     def start(

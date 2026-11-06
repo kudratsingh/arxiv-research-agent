@@ -48,7 +48,13 @@ from src.workspace.executor import (
     _json,
     _size,
 )
-from src.workspace.grounding import EvidenceRef, SupportDecision
+from src.workspace.grounding import (
+    ClaimKind,
+    EvidenceRef,
+    ResearchClaim,
+    SupportDecision,
+    validate_claims,
+)
 from src.workspace.material import SourceMaterial
 from src.workspace.store import ConflictError, WorkspaceStore
 
@@ -695,10 +701,20 @@ class AssistanceService:
             try:
                 material_ids = job.request["selection"]["material_ids"]
                 materials = self.executor._sources(conn, owner, material_ids)
-                catalog = coherent_units(materials, set(job.request["selection"]["span_ids"]))
-                if any(
-                    key not in catalog or asdict(catalog[key]) != value
-                    for key, value in job.request["units"].items()
+                refs = {key: EvidenceRef(**value) for key, value in job.request["units"].items()}
+                claims = [
+                    ResearchClaim(key, "Retained citation identity", ClaimKind.FACTUAL, (ref,))
+                    for key, ref in refs.items()
+                ]
+                report = validate_claims(claims, materials)
+                if (
+                    _hash(job.request) != job.request_digest
+                    or any(not item.identity_resolved for item in report.assessments)
+                    or any(
+                        key != "u" + digest(asdict(ref))[7:27]
+                        or ref.span_id not in job.request["selection"]["span_ids"]
+                        for key, ref in refs.items()
+                    )
                 ):
                     intact = False
                 for version_id, expected in job.request["version_hashes"].items():
