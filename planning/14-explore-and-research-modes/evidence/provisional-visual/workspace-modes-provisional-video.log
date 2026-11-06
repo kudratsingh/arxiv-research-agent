@@ -1,0 +1,80 @@
+{
+  "sourceCommit": null,
+  "buildId": "DvLBxnx2yfYFJ7MXXpx3W",
+  "scope": "Full actual WebM decode and actual native-frame visual aids; provisional diagnostic only",
+  "videos": [
+    {
+      "video": "desktop-dark.webm",
+      "sha256": "b9bbec60721cc868b96dc5b2fd600d80c137fdd9c9f1f4044d01ce7ca04b990f",
+      "bytes": 1337430,
+      "durationSeconds": 7.6,
+      "nativeFrames": 190,
+      "fullDecodeExitCode": 0,
+      "contactSheet": "desktop-dark-contact-sheet.png",
+      "matches": [
+        {
+          "targetPNG": "desktop-dark-today.png",
+          "nativeFrameIndexZeroBased": 28,
+          "approxSecondsAt25fps": 1.12,
+          "matchingThumbnailMAE": 1.563362962962963,
+          "actualNativeFrame": "desktop-dark-today-actual-frame.png"
+        },
+        {
+          "targetPNG": "desktop-dark-queue.png",
+          "nativeFrameIndexZeroBased": 124,
+          "approxSecondsAt25fps": 4.96,
+          "matchingThumbnailMAE": 2.2018666666666666,
+          "actualNativeFrame": "desktop-dark-queue-actual-frame.png"
+        },
+        {
+          "targetPNG": "desktop-dark-return.png",
+          "nativeFrameIndexZeroBased": 127,
+          "approxSecondsAt25fps": 5.08,
+          "matchingThumbnailMAE": 1.9540148148148149,
+          "actualNativeFrame": "desktop-dark-return-actual-frame.png"
+        }
+      ],
+      "visualAssessment": "pending explicit visual review; decoder does not assert app pass"
+    },
+    {
+      "video": "mobile-light.webm",
+      "sha256": "67ea353c0128d5c2d460e846bb46eb2206f46315b946bb16a1e15f826d3d2521",
+      "bytes": 632147,
+      "durationSeconds": 7.4,
+      "nativeFrames": 185,
+      "fullDecodeExitCode": 0,
+      "contactSheet": "mobile-light-contact-sheet.png",
+      "matches": [
+        {
+          "targetPNG": "mobile-light-today.png",
+          "nativeFrameIndexZeroBased": 35,
+          "approxSecondsAt25fps": 1.4,
+          "matchingThumbnailMAE": 2.479211775878442,
+          "actualNativeFrame": "mobile-light-today-actual-frame.png"
+        },
+        {
+          "targetPNG": "mobile-light-queue.png",
+          "nativeFrameIndexZeroBased": 118,
+          "approxSecondsAt25fps": 4.72,
+          "matchingThumbnailMAE": 7.454045584045584,
+          "actualNativeFrame": "mobile-light-queue-actual-frame.png"
+        },
+        {
+          "targetPNG": "mobile-light-return.png",
+          "nativeFrameIndexZeroBased": 125,
+          "approxSecondsAt25fps": 5.0,
+          "matchingThumbnailMAE": 2.875759734093067,
+          "actualNativeFrame": "mobile-light-return-actual-frame.png"
+        },
+        {
+          "targetPNG": "mobile-light-research-empty.png",
+          "nativeFrameIndexZeroBased": 171,
+          "approxSecondsAt25fps": 6.84,
+          "matchingThumbnailMAE": 2.2229724596391263,
+          "actualNativeFrame": "mobile-light-research-empty-actual-frame.png"
+        }
+      ],
+      "visualAssessment": "pending explicit visual review; decoder does not assert app pass"
+    }
+  ]
+}

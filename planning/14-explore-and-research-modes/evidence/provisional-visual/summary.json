@@ -1,0 +1,344 @@
+{
+  "status": "provisional_confirmed_visual_findings_not_final_acceptance",
+  "sourceCommit": null,
+  "buildId": "DvLBxnx2yfYFJ7MXXpx3W",
+  "backendCommit": "12637c07393fb39f6487af5b9d81a4c79b159196",
+  "findings": [
+    {
+      "id": "PV1",
+      "severity": "required_clearance_failure",
+      "contexts": [
+        "mobile-light",
+        "mobile-dark"
+      ],
+      "phase": "initial Learn Today",
+      "secondLineBottom": 723.484375,
+      "playerTop": 712,
+      "occludedPixels": 11.484375,
+      "completeTitleVisible": true,
+      "baselineD0SecondLineBottom": 673.484375,
+      "modeRowVerticalDelta": 50,
+      "evidence": [
+        "mobile-light-today.png",
+        "mobile-dark-today.png",
+        "video-inspection/mobile-light-today-actual-frame.png"
+      ]
+    },
+    {
+      "id": "PV2",
+      "severity": "required_control_visibility_failure",
+      "contexts": [
+        "mobile-light",
+        "mobile-dark"
+      ],
+      "phase": "Research no-project empty state",
+      "bar": {
+        "top": 810,
+        "bottom": 832,
+        "height": 22
+      },
+      "searchControl": {
+        "top": 821,
+        "bottom": 865,
+        "height": 44
+      },
+      "viewportBottom": 844,
+      "belowViewportPixels": 21,
+      "evidence": [
+        "research-empty-bar.json",
+        "mobile-dark-research-empty-bar.json",
+        "mobile-light-research-empty.png",
+        "video-inspection/mobile-light-research-empty-actual-frame.png"
+      ]
+    }
+  ],
+  "passedObservations": {
+    "completeTitles": 12,
+    "twoLineClearancePhases": 10,
+    "totalClearancePhases": 12,
+    "queueAndReturnClearance": 8,
+    "exactReaderVersionAndAbstract": 4,
+    "contextStatePreservation": 4,
+    "axeScans": 16,
+    "axeViolations": 0,
+    "horizontalOverflowCases": 0,
+    "consoleHydrationErrors": 0,
+    "cspViolations": 0,
+    "mutationRequests": 0,
+    "externalProviderSourceRequests": 0,
+    "immutableCompiledAssetsVerified": 251,
+    "immutableAssetsUnchangedAfter": true
+  },
+  "networkObservations": {
+    "initialContextGETCancellations": 4,
+    "cause": "Lifecycle cause unconfirmed; all routes subsequently settle without console/hydration errors. Raw events retained."
+  },
+  "observerHistory": {
+    "encodedAssetFilenameFalseErrors": 4,
+    "resolution": "Observed responseSHA exactly equals receipt after decoding%5Bid%5D to[id]; original assertion report/harness/log retained. No hash assertion relaxed."
+  },
+  "recordings": [
+    {
+      "video": "desktop-dark.webm",
+      "sha256": "b9bbec60721cc868b96dc5b2fd600d80c137fdd9c9f1f4044d01ce7ca04b990f",
+      "bytes": 1337430,
+      "durationSeconds": 7.6,
+      "nativeFrames": 190,
+      "fullDecodeExitCode": 0,
+      "contactSheet": "desktop-dark-contact-sheet.png",
+      "matches": [
+        {
+          "targetPNG": "desktop-dark-today.png",
+          "nativeFrameIndexZeroBased": 28,
+          "approxSecondsAt25fps": 1.12,
+          "matchingThumbnailMAE": 1.563362962962963,
+          "actualNativeFrame": "desktop-dark-today-actual-frame.png"
+        },
+        {
+          "targetPNG": "desktop-dark-queue.png",
+          "nativeFrameIndexZeroBased": 124,
+          "approxSecondsAt25fps": 4.96,
+          "matchingThumbnailMAE": 2.2018666666666666,
+          "actualNativeFrame": "desktop-dark-queue-actual-frame.png"
+        },
+        {
+          "targetPNG": "desktop-dark-return.png",
+          "nativeFrameIndexZeroBased": 127,
+          "approxSecondsAt25fps": 5.08,
+          "matchingThumbnailMAE": 1.9540148148148149,
+          "actualNativeFrame": "desktop-dark-return-actual-frame.png"
+        }
+      ],
+      "visualAssessment": "Contact sheet plus actual matched native initial frame visually reviewed. Desktop initial/queue/Reader/return text readable and full initial two lines above player; Research setup visible. Provisional scope only."
+    },
+    {
+      "video": "mobile-light.webm",
+      "sha256": "67ea353c0128d5c2d460e846bb46eb2206f46315b946bb16a1e15f826d3d2521",
+      "bytes": 632147,
+      "durationSeconds": 7.4,
+      "nativeFrames": 185,
+      "fullDecodeExitCode": 0,
+      "contactSheet": "mobile-light-contact-sheet.png",
+      "matches": [
+        {
+          "targetPNG": "mobile-light-today.png",
+          "nativeFrameIndexZeroBased": 35,
+          "approxSecondsAt25fps": 1.4,
+          "matchingThumbnailMAE": 2.479211775878442,
+          "actualNativeFrame": "mobile-light-today-actual-frame.png"
+        },
+        {
+          "targetPNG": "mobile-light-queue.png",
+          "nativeFrameIndexZeroBased": 118,
+          "approxSecondsAt25fps": 4.72,
+          "matchingThumbnailMAE": 7.454045584045584,
+          "actualNativeFrame": "mobile-light-queue-actual-frame.png"
+        },
+        {
+          "targetPNG": "mobile-light-return.png",
+          "nativeFrameIndexZeroBased": 125,
+          "approxSecondsAt25fps": 5.0,
+          "matchingThumbnailMAE": 2.875759734093067,
+          "actualNativeFrame": "mobile-light-return-actual-frame.png"
+        },
+        {
+          "targetPNG": "mobile-light-research-empty.png",
+          "nativeFrameIndexZeroBased": 171,
+          "approxSecondsAt25fps": 6.84,
+          "matchingThumbnailMAE": 2.2229724596391263,
+          "actualNativeFrame": "mobile-light-research-empty-actual-frame.png"
+        }
+      ],
+      "visualAssessment": "Contact sheet plus actual matched native initial/Research-empty frames visually reviewed. Both mobile defects visibly present; queue/Reader/return content readable. Provisional findings, not app acceptance."
+    }
+  ],
+  "researchBarFollowups": [
+    {
+      "file": "research-empty-bar.json",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "bar": [
+        {
+          "tag": "DIV",
+          "class": "ws-bar",
+          "text": "SearchSearch",
+          "top": 810,
+          "bottom": 832,
+          "left": 12,
+          "right": 378,
+          "height": 22,
+          "display": "block",
+          "position": "fixed",
+          "hit": true
+        }
+      ],
+      "searchButtons": [
+        {
+          "tag": "BUTTON",
+          "class": "ws-composer-toggle",
+          "text": "Search",
+          "top": 821,
+          "bottom": 865,
+          "left": 23,
+          "right": 83,
+          "height": 44,
+          "display": "flex",
+          "position": "static",
+          "hit": true
+        }
+      ],
+      "composer": [
+        {
+          "tag": "FORM",
+          "class": "ws-composer ws-composer-shell",
+          "text": "SearchSearch",
+          "top": 821,
+          "bottom": 865,
+          "left": 23,
+          "right": 83,
+          "height": 44,
+          "display": "flex",
+          "position": "absolute",
+          "hit": true
+        }
+      ]
+    },
+    {
+      "file": "mobile-dark-research-empty-bar.json",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "bar": [
+        {
+          "tag": "DIV",
+          "class": "ws-bar",
+          "text": "SearchSearch",
+          "top": 810,
+          "bottom": 832,
+          "left": 12,
+          "right": 378,
+          "height": 22,
+          "display": "block",
+          "position": "fixed",
+          "hit": true
+        }
+      ],
+      "searchButtons": [
+        {
+          "tag": "BUTTON",
+          "class": "ws-composer-toggle",
+          "text": "Search",
+          "top": 821,
+          "bottom": 865,
+          "left": 23,
+          "right": 83,
+          "height": 44,
+          "display": "flex",
+          "position": "static",
+          "hit": true
+        }
+      ],
+      "composer": [
+        {
+          "tag": "FORM",
+          "class": "ws-composer ws-composer-shell",
+          "text": "SearchSearch",
+          "top": 821,
+          "bottom": 865,
+          "left": 23,
+          "right": 83,
+          "height": 44,
+          "display": "flex",
+          "position": "absolute",
+          "hit": true
+        }
+      ]
+    },
+    {
+      "file": "desktop-light-research-empty-bar.json",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "bar": [
+        {
+          "tag": "DIV",
+          "class": "ws-bar",
+          "text": "CloseSearch",
+          "top": 880,
+          "bottom": 976,
+          "left": 484,
+          "right": 1304,
+          "height": 96,
+          "display": "block",
+          "position": "fixed",
+          "hit": true
+        }
+      ],
+      "searchButtons": [],
+      "composer": [
+        {
+          "tag": "FORM",
+          "class": "ws-composer ws-composer-shell",
+          "text": "CloseSearch",
+          "top": 893,
+          "bottom": 963,
+          "left": 497,
+          "right": 1291,
+          "height": 70,
+          "display": "flex",
+          "position": "static",
+          "hit": true
+        }
+      ]
+    },
+    {
+      "file": "desktop-dark-research-empty-bar.json",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "bar": [
+        {
+          "tag": "DIV",
+          "class": "ws-bar",
+          "text": "CloseSearch",
+          "top": 880,
+          "bottom": 976,
+          "left": 484,
+          "right": 1304,
+          "height": 96,
+          "display": "block",
+          "position": "fixed",
+          "hit": true
+        }
+      ],
+      "searchButtons": [],
+      "composer": [
+        {
+          "tag": "FORM",
+          "class": "ws-composer ws-composer-shell",
+          "text": "CloseSearch",
+          "top": 893,
+          "bottom": 963,
+          "left": 497,
+          "right": 1291,
+          "height": 70,
+          "display": "flex",
+          "position": "static",
+          "hit": true
+        }
+      ]
+    }
+  ],
+  "listenersAtFinish": {
+    "3178": "p14901\ncnode\nf12\nn127.0.0.1:3178\n",
+    "8178": "p3967\ncPython\nf12\nn127.0.0.1:8178\n"
+  },
+  "final24GroupGateUnchanged": true,
+  "finalRuntimeReady": false,
+  "notes": "No app/source/config/service/key changes or direct DB access. No authored state writes; allowed contextual GETs may freeze derived cache rows per contract. No final D1\u2013D4 acceptance or owner usefulness claim; owner3137 and other stacks not contacted."
+}

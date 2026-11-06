@@ -1,0 +1,40 @@
+{
+  "verified_head": "6bef6fc98d3c0028eeed31979569ee319b3f602f",
+  "production_change_commit": "ba3d74a3a447614c276c4d644c911f1cd93ce443",
+  "test_only_after_production": true,
+  "build_id": "fZA6CDNcdGj0kKwCuuoMy",
+  "tests": 4200,
+  "suites": 213,
+  "coverage": {
+    "statements": 98.16,
+    "branches": 94.12,
+    "functions": 93.8,
+    "lines": 99.46
+  },
+  "floors_unchanged": true,
+  "budgets_passed": 22,
+  "new_runtime_dependencies": 0,
+  "remote_ci": "not_run",
+  "browser_acceptance": "in_progress",
+  "logs": {
+    "full-frontend-coverage.log": "840e402fdf80ae18a9938bca4781672117ff72de92e222f22d9817327824eeee",
+    "route-and-retained-material-tests.log": "e14b491c53adb2b10c9f7016bfc4792953e23781174b891bdb26c5e687e20d12",
+    "budget-report.md": "37d2bc43c7717f7bbe6e4cd268b87d865dd1fc2a45536e9b5bb97d30f0c95398",
+    "lint.log": "477edbab4d628690874271246cf83cc8273de7151a0bf06e8d242216380c3fef",
+    "route-budgets.log": "69d4b31c972505e9ab260ab446d439a0b471241127ec544e5118f4684a3b50ef",
+    "typecheck.log": "384572031aba9897e82b5c532c0ed616773f40b35c2cd6b063760667e7428438",
+    "production-build.log": "afb48e6f3915e60833a75d77b7817f669a60bea8a53d8f4caadb422dba5b3f67",
+    "no-owned-snapshot-test.log": "5966230e4cf4329d5111d50b5fab347ec9dfc7a712f45af9da3c85ace471b5be"
+  },
+  "logs_original_hashes": {
+    "full-frontend-coverage.log": "930b971fbf7aa841e4323f3880b307d504d5b63af0698a6b7b3d7ae34bb3a399",
+    "route-and-retained-material-tests.log": "e14b491c53adb2b10c9f7016bfc4792953e23781174b891bdb26c5e687e20d12",
+    "budget-report.md": "37d2bc43c7717f7bbe6e4cd268b87d865dd1fc2a45536e9b5bb97d30f0c95398",
+    "lint.log": "3abf1d9178e65389b228b48abcf35554976381024c89ace777f11f80205faf37",
+    "route-budgets.log": "69d4b31c972505e9ab260ab446d439a0b471241127ec544e5118f4684a3b50ef",
+    "typecheck.log": "a7d3e417b6cd1706638232a0866a3d00e29d67d337e100e7c609cec19e0c149d",
+    "production-build.log": "63e1756f341f6df91460b04127b2a6346366a0b1c2e4bb1cb6a523c904cfb9cc",
+    "no-owned-snapshot-test.log": "5966230e4cf4329d5111d50b5fab347ec9dfc7a712f45af9da3c85ace471b5be"
+  },
+  "log_display_policy": "Whitespace-normalized display; originals in paired .raw.gz, indexed by evidence/log-originals.json"
+}

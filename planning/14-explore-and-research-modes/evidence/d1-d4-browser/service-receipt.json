@@ -1,0 +1,49 @@
+{
+  "runtimeReady": true,
+  "applicationCommit": "62c761a9c7b690e0b681857fe48edc75d3785ef6",
+  "webTree": "cae68589fe84b545d6049659388bbf7b91215128",
+  "buildId": "T8_ju09AUeIr5jhzAjpoG",
+  "frontendBase": "http://127.0.0.1:3179",
+  "apiPort": 8179,
+  "frontendPid": 51536,
+  "apiPid": 49909,
+  "database": "workspace_modes_browser",
+  "principal": "modes-browser-r15",
+  "ownerIsolationReceipt": "outputs/modes-d0/browser-setup.json + outputs/modes-d0/browser-fixtures.json",
+  "providerConfiguration": "local-preview-disabled",
+  "recurrenceEnabled": false,
+  "initialQuestionEmpty": true,
+  "allowLegacyProfileWrites": false,
+  "expectedWorks": 42,
+  "expectedVersions": 44,
+  "locatorContractReviewedAtSourceCommit": "62c761a9c7b690e0b681857fe48edc75d3785ef6",
+  "corpusManifestSha256": "d9c1e54b28379845f8f408f32cb2b563895fec065d851b1958689b9ee5381499",
+  "unicodeReference": {
+    "work_id": "verification:unicode-boundaries",
+    "version_id": "verification:unicode-boundaries:v1",
+    "anchor": "abstract:0:9",
+    "quote": "\u03b1\ud83e\uddea cafe\u0301.",
+    "kind": "labelled-synthetic",
+    "requiresNonAscii": true
+  },
+  "olderVersionReference": {
+    "work_id": "verification:unicode-boundaries",
+    "version_id": "verification:unicode-boundaries:v1",
+    "anchor": "abstract:20:29",
+    "quote": "Repeated.",
+    "kind": "labelled-synthetic"
+  },
+  "outsideInterestResearchCase": {
+    "work_id": "arxiv:2610.40740",
+    "version_id": "arxiv:2610.40740:v1:metadata-b471d2e5f0142ad7",
+    "title": "Certified Behavioral Retention for Continual Adaptation with Held-Out Anchors",
+    "reference": "../ranking/actual-context-outside-interest.json",
+    "expectedProfileKeywordScore": 0,
+    "expectedQuestionScore": "positive for the explicitly verification-authored project question; do not reuse owner-question rank11 as a prediction"
+  },
+  "notes": "Immutable production runtime with both static and server bundles byte-matched to the build. Later test/documentation-only commits are distinguished from application changes. Root owns browser execution after designated agent usage limit. No provider/source routes permitted.",
+  "unownedProjectId": "project-88888888888888888888888888888888",
+  "runtimeDirectory": "/private/tmp/arxiv-agent-eng-workspace-mode-build/outputs/modes-runtime/T8_ju09AUeIr5jhzAjpoG",
+  "corpusManifestPath": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/corpus-manifest.json",
+  "restartCheckpointReceipt": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/runs/2026-11-06T00-48-43-041Z-9c42c3d7/root-restart-receipt.json"
+}

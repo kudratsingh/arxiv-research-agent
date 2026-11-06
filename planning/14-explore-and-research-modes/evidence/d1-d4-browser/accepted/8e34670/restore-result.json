@@ -1,0 +1,517 @@
+{
+  "source_database": "workspace_modes_browser",
+  "restored_disposable_database": "workspace_modes_restore_bcd333c1cfde",
+  "archive_sha256": "2edeb6914b0daf5ae0dfba04292d035c8666e1b17577ea459d6d9e1f784fb86b",
+  "archive_bytes": 920189,
+  "table_count": 38,
+  "before": {
+    "tables": {
+      "workspace_activity": {
+        "count": 235,
+        "rows_md5": "426c4d776b649760f490d3942c0cc3f7"
+      },
+      "workspace_budget_policies": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_context_preferences": {
+        "count": 5,
+        "rows_md5": "3de815e6b5fc2ef193612219fd6566eb"
+      },
+      "workspace_delivery_intents": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_editions": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_entries": {
+        "count": 31,
+        "rows_md5": "5da5f80a1c676a2aa2f9d835a224a845"
+      },
+      "workspace_evaluation_members": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_evaluation_programs": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_fake_generation_jobs": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_fake_generation_reservations": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_generation_jobs": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_history": {
+        "count": 485,
+        "rows_md5": "6eb0dc1ee0a156347f33c20241cb6b62"
+      },
+      "workspace_ingest_runs": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_learning_threads": {
+        "count": 22,
+        "rows_md5": "f8af92efd70c6c20d030be1fa1c48596"
+      },
+      "workspace_material": {
+        "count": 46,
+        "rows_md5": "7dd7f467adf5fca1500496d6e8d3ddb7"
+      },
+      "workspace_material_provenance": {
+        "count": 2,
+        "rows_md5": "2aa0847b75c13cc8ac4244927ee4d278"
+      },
+      "workspace_mode_editions": {
+        "count": 144,
+        "rows_md5": "73cc52ea923cb8ec7abb83155f0d1f56"
+      },
+      "workspace_mutations": {
+        "count": 568,
+        "rows_md5": "27b961b58e33e888cf545099ea70c996"
+      },
+      "workspace_observations": {
+        "count": 44,
+        "rows_md5": "1347528d8097fc40a21a0bf7e497ddff"
+      },
+      "workspace_pages": {
+        "count": 22,
+        "rows_md5": "4488b54b7ddbcfd958a4eda5ba96d06e"
+      },
+      "workspace_profiles": {
+        "count": 12,
+        "rows_md5": "d8561b02dc9241e2abc4e1d87438c867"
+      },
+      "workspace_project_artifacts": {
+        "count": 53,
+        "rows_md5": "6b00c004d048d284f0a80a46a8b2fcb7"
+      },
+      "workspace_project_entries": {
+        "count": 26,
+        "rows_md5": "fd2afbcb8cc60f160f8e2f5588fbf35a"
+      },
+      "workspace_project_sources": {
+        "count": 72,
+        "rows_md5": "bae6c7081d285edba4635f4941333a8e"
+      },
+      "workspace_projects": {
+        "count": 43,
+        "rows_md5": "19d0a17acfcc2ce0cfc98248f2657180"
+      },
+      "workspace_qualification_trials": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_reading": {
+        "count": 17,
+        "rows_md5": "e9c14861eacfbe253a7dc611da6fef24"
+      },
+      "workspace_resume_context": {
+        "count": 235,
+        "rows_md5": "73de448f41489ed006ca51f36ce62b1d"
+      },
+      "workspace_review_packets": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_schedules": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_schema": {
+        "count": 10,
+        "rows_md5": "7e82925cead035b443479e15f2dbd9ca"
+      },
+      "workspace_source_rate": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_sources": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_spend_reservations": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_tasks": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_usefulness_feedback": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_versions": {
+        "count": 44,
+        "rows_md5": "00d415026469877ea176f7e314c7a7b6"
+      },
+      "workspace_works": {
+        "count": 42,
+        "rows_md5": "39ce87ac0593906ad6514591f14bb4c8"
+      }
+    },
+    "sequences": [
+      [
+        "workspace_activity_sequence_seq",
+        235,
+        1
+      ],
+      [
+        "workspace_context_activity",
+        376,
+        1
+      ]
+    ]
+  },
+  "restored": {
+    "tables": {
+      "workspace_activity": {
+        "count": 235,
+        "rows_md5": "426c4d776b649760f490d3942c0cc3f7"
+      },
+      "workspace_budget_policies": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_context_preferences": {
+        "count": 5,
+        "rows_md5": "3de815e6b5fc2ef193612219fd6566eb"
+      },
+      "workspace_delivery_intents": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_editions": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_entries": {
+        "count": 31,
+        "rows_md5": "5da5f80a1c676a2aa2f9d835a224a845"
+      },
+      "workspace_evaluation_members": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_evaluation_programs": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_fake_generation_jobs": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_fake_generation_reservations": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_generation_jobs": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_history": {
+        "count": 485,
+        "rows_md5": "6eb0dc1ee0a156347f33c20241cb6b62"
+      },
+      "workspace_ingest_runs": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_learning_threads": {
+        "count": 22,
+        "rows_md5": "f8af92efd70c6c20d030be1fa1c48596"
+      },
+      "workspace_material": {
+        "count": 46,
+        "rows_md5": "7dd7f467adf5fca1500496d6e8d3ddb7"
+      },
+      "workspace_material_provenance": {
+        "count": 2,
+        "rows_md5": "2aa0847b75c13cc8ac4244927ee4d278"
+      },
+      "workspace_mode_editions": {
+        "count": 144,
+        "rows_md5": "73cc52ea923cb8ec7abb83155f0d1f56"
+      },
+      "workspace_mutations": {
+        "count": 568,
+        "rows_md5": "27b961b58e33e888cf545099ea70c996"
+      },
+      "workspace_observations": {
+        "count": 44,
+        "rows_md5": "1347528d8097fc40a21a0bf7e497ddff"
+      },
+      "workspace_pages": {
+        "count": 22,
+        "rows_md5": "4488b54b7ddbcfd958a4eda5ba96d06e"
+      },
+      "workspace_profiles": {
+        "count": 12,
+        "rows_md5": "d8561b02dc9241e2abc4e1d87438c867"
+      },
+      "workspace_project_artifacts": {
+        "count": 53,
+        "rows_md5": "6b00c004d048d284f0a80a46a8b2fcb7"
+      },
+      "workspace_project_entries": {
+        "count": 26,
+        "rows_md5": "fd2afbcb8cc60f160f8e2f5588fbf35a"
+      },
+      "workspace_project_sources": {
+        "count": 72,
+        "rows_md5": "bae6c7081d285edba4635f4941333a8e"
+      },
+      "workspace_projects": {
+        "count": 43,
+        "rows_md5": "19d0a17acfcc2ce0cfc98248f2657180"
+      },
+      "workspace_qualification_trials": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_reading": {
+        "count": 17,
+        "rows_md5": "e9c14861eacfbe253a7dc611da6fef24"
+      },
+      "workspace_resume_context": {
+        "count": 235,
+        "rows_md5": "73de448f41489ed006ca51f36ce62b1d"
+      },
+      "workspace_review_packets": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_schedules": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_schema": {
+        "count": 10,
+        "rows_md5": "7e82925cead035b443479e15f2dbd9ca"
+      },
+      "workspace_source_rate": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_sources": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_spend_reservations": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_tasks": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_usefulness_feedback": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_versions": {
+        "count": 44,
+        "rows_md5": "00d415026469877ea176f7e314c7a7b6"
+      },
+      "workspace_works": {
+        "count": 42,
+        "rows_md5": "39ce87ac0593906ad6514591f14bb4c8"
+      }
+    },
+    "sequences": [
+      [
+        "workspace_activity_sequence_seq",
+        235,
+        1
+      ],
+      [
+        "workspace_context_activity",
+        376,
+        1
+      ]
+    ]
+  },
+  "source_after": {
+    "tables": {
+      "workspace_activity": {
+        "count": 235,
+        "rows_md5": "426c4d776b649760f490d3942c0cc3f7"
+      },
+      "workspace_budget_policies": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_context_preferences": {
+        "count": 5,
+        "rows_md5": "3de815e6b5fc2ef193612219fd6566eb"
+      },
+      "workspace_delivery_intents": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_editions": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_entries": {
+        "count": 31,
+        "rows_md5": "5da5f80a1c676a2aa2f9d835a224a845"
+      },
+      "workspace_evaluation_members": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_evaluation_programs": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_fake_generation_jobs": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_fake_generation_reservations": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_generation_jobs": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_history": {
+        "count": 485,
+        "rows_md5": "6eb0dc1ee0a156347f33c20241cb6b62"
+      },
+      "workspace_ingest_runs": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_learning_threads": {
+        "count": 22,
+        "rows_md5": "f8af92efd70c6c20d030be1fa1c48596"
+      },
+      "workspace_material": {
+        "count": 46,
+        "rows_md5": "7dd7f467adf5fca1500496d6e8d3ddb7"
+      },
+      "workspace_material_provenance": {
+        "count": 2,
+        "rows_md5": "2aa0847b75c13cc8ac4244927ee4d278"
+      },
+      "workspace_mode_editions": {
+        "count": 144,
+        "rows_md5": "73cc52ea923cb8ec7abb83155f0d1f56"
+      },
+      "workspace_mutations": {
+        "count": 568,
+        "rows_md5": "27b961b58e33e888cf545099ea70c996"
+      },
+      "workspace_observations": {
+        "count": 44,
+        "rows_md5": "1347528d8097fc40a21a0bf7e497ddff"
+      },
+      "workspace_pages": {
+        "count": 22,
+        "rows_md5": "4488b54b7ddbcfd958a4eda5ba96d06e"
+      },
+      "workspace_profiles": {
+        "count": 12,
+        "rows_md5": "d8561b02dc9241e2abc4e1d87438c867"
+      },
+      "workspace_project_artifacts": {
+        "count": 53,
+        "rows_md5": "6b00c004d048d284f0a80a46a8b2fcb7"
+      },
+      "workspace_project_entries": {
+        "count": 26,
+        "rows_md5": "fd2afbcb8cc60f160f8e2f5588fbf35a"
+      },
+      "workspace_project_sources": {
+        "count": 72,
+        "rows_md5": "bae6c7081d285edba4635f4941333a8e"
+      },
+      "workspace_projects": {
+        "count": 43,
+        "rows_md5": "19d0a17acfcc2ce0cfc98248f2657180"
+      },
+      "workspace_qualification_trials": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_reading": {
+        "count": 17,
+        "rows_md5": "e9c14861eacfbe253a7dc611da6fef24"
+      },
+      "workspace_resume_context": {
+        "count": 235,
+        "rows_md5": "73de448f41489ed006ca51f36ce62b1d"
+      },
+      "workspace_review_packets": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_schedules": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_schema": {
+        "count": 10,
+        "rows_md5": "7e82925cead035b443479e15f2dbd9ca"
+      },
+      "workspace_source_rate": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_sources": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_spend_reservations": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_tasks": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_usefulness_feedback": {
+        "count": 0,
+        "rows_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "workspace_versions": {
+        "count": 44,
+        "rows_md5": "00d415026469877ea176f7e314c7a7b6"
+      },
+      "workspace_works": {
+        "count": 42,
+        "rows_md5": "39ce87ac0593906ad6514591f14bb4c8"
+      }
+    },
+    "sequences": [
+      [
+        "workspace_activity_sequence_seq",
+        235,
+        1
+      ],
+      [
+        "workspace_context_activity",
+        376,
+        1
+      ]
+    ]
+  },
+  "source_unchanged": true,
+  "restore_matches": true,
+  "provider_contacts": 0,
+  "source_requests": 0,
+  "owner3137": "untouched",
+  "recorded_at": "2026-11-06T00:03:14.510330+00:00"
+}

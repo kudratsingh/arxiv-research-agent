@@ -1,0 +1,1113 @@
+{
+  "status": "pass",
+  "sourceCommit": "cea881e0f0335f1f51fff29f83c5ce35305aebd5",
+  "startedAtUtc": "2026-11-06T00:57:52.075Z",
+  "scope": "Fresh-browser persistence after ROOT-controlled isolated service restart",
+  "rootRestartReceipt": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/runs/2026-11-06T00-48-43-041Z-9c42c3d7/root-restart-receipt.json",
+  "checkpointSha256": "1befa05c73beeb4790ccb1bea32b0983381798d0dfca6da3625418f166128fb5",
+  "blocked": [],
+  "errors": [],
+  "restartPersistence": {
+    "status": "pass",
+    "projectAndThreadBytesPreserved": true,
+    "entryBytesPreserved": true,
+    "newBrowserNoPriorRAM": true,
+    "resumeHref": "/workspace/items/arxiv%3A2610.40927?version=arxiv%3A2610.40927%3Av1%3Ametadata-b09108e19893972e&entry=636a3ec3-d69e-4e91-a0dc-686c89af9d43&return_to=%2Fworkspace%2Flibrary%3Fmode%3Dlearn%26view%3Dnotes%26focus%3Darxiv%253A2610.40927&mode=research&project=project-16a2a7c2013547a9880bd608cea84d5b#abstract%3A0",
+    "threadReturnHref": "/workspace/items/arxiv%3A2610.40927?version=arxiv%3A2610.40927%3Av1%3Ametadata-b09108e19893972e&return_to=%2Fworkspace%2Fprojects%3Fmode%3Dresearch%26project%3Dproject-16a2a7c2013547a9880bd608cea84d5b&mode=research&project=project-16a2a7c2013547a9880bd608cea84d5b#abstract%3A0%3A60"
+  },
+  "nonDestructiveArchive": {
+    "removedLinkId": "link-2ce83f81b689dc1280b97642bacd1964",
+    "archivedProjectId": "project-16a2a7c2013547a9880bd608cea84d5b",
+    "sharedWorksVersionsNotesReadingUnchanged": true,
+    "noFallbackEdition": true
+  },
+  "requests": [
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/api/workspace/context/state",
+      "query": "?mode=learn",
+      "forwarded": true,
+      "kind": "guarded own-principal API read"
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/api/workspace/context/projects/project-16a2a7c2013547a9880bd608cea84d5b",
+      "query": "",
+      "forwarded": true,
+      "kind": "guarded own-principal API read"
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/api/workspace/context/threads/thread-cc37cf9eb8f54e15851d6aafa705bb63",
+      "query": "",
+      "forwarded": true,
+      "kind": "guarded own-principal API read"
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/workspace/items/arxiv%3A2610.40927",
+      "query": "?version=arxiv%3A2610.40927%3Av1%3Ametadata-b09108e19893972e&entry=636a3ec3-d69e-4e91-a0dc-686c89af9d43&return_to=%2Fworkspace%2Flibrary%3Fmode%3Dlearn%26view%3Dnotes%26focus%3Darxiv%253A2610.40927&mode=research&project=project-16a2a7c2013547a9880bd608cea84d5b",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/media/8b355a0d3365113c.p.woff2",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/css/f4b04de22fdebcb9.css",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/css/7cd7f3878632625c.css",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/css/8609413464d16cbc.css",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/css/9e826ae3e0aeffdc.css",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/css/fadd03207f4f952a.css",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/css/5d816b8c0dad564e.css",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/webpack-317dabc987082ff7.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/4bd1b696-8cd12253b448cc13.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/3794-645b4e36f579c297.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/main-app-fb8b42f9a8a78965.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/app/(live)/layout-9a8f0aea48954ea0.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/8500-63a4afbeacab3b52.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/4626-cf362315d29c4232.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/9144-eafb1e989c5e2aa8.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/5296-bbf3a8acb7e96e31.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/app/(live)/template-cd87073a974d8731.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/app/global-error-92372a2e8d0a8485.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/app/(live)/workspace/items/%5Bid%5D/page-32567015a8a0ed35.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/2300-fef9c607c7d0d03d.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/7214-97ac8441d28158e2.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/app/(workspace)/layout-35c24da9e70b3ac9.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/app/not-found-f4f9aa14b0d55755.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/media/c9067fc2f3d1f4e5.woff2",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/media/4a7f5dc07e8cb505.woff2",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/1540.ffc9bbc96cb89b09.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/6481.ed14df7c6f5ce8c9.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/2565.799f0dba503f8e7e.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/api/workspace/context/state",
+      "query": "?mode=research&project=project-16a2a7c2013547a9880bd608cea84d5b",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/api/workspace/context",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/477.ce06116afa95d9ae.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/media/b75e973a7f03466f.woff2",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/workspace/threads/thread-cc37cf9eb8f54e15851d6aafa705bb63",
+      "query": "?mode=learn&thread=thread-cc37cf9eb8f54e15851d6aafa705bb63",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/media/8b355a0d3365113c.p.woff2",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/css/f4b04de22fdebcb9.css",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/css/7cd7f3878632625c.css",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/css/8609413464d16cbc.css",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/css/9e826ae3e0aeffdc.css",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/css/fadd03207f4f952a.css",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/css/5d816b8c0dad564e.css",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/webpack-317dabc987082ff7.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/4bd1b696-8cd12253b448cc13.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/3794-645b4e36f579c297.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/main-app-fb8b42f9a8a78965.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/app/(live)/layout-9a8f0aea48954ea0.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/8500-63a4afbeacab3b52.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/4626-cf362315d29c4232.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/9144-eafb1e989c5e2aa8.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/5296-bbf3a8acb7e96e31.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/app/(live)/template-cd87073a974d8731.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/app/global-error-92372a2e8d0a8485.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/app/(live)/workspace/threads/%5Bid%5D/page-287d1bfc03c23c17.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/2300-fef9c607c7d0d03d.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/7214-97ac8441d28158e2.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/app/(workspace)/layout-35c24da9e70b3ac9.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/app/not-found-f4f9aa14b0d55755.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/media/c9067fc2f3d1f4e5.woff2",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/media/4a7f5dc07e8cb505.woff2",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/1540.ffc9bbc96cb89b09.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/2565.799f0dba503f8e7e.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/api/workspace/context",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/api/workspace/context/threads/thread-cc37cf9eb8f54e15851d6aafa705bb63",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/media/b75e973a7f03466f.woff2",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/workspace/items/arxiv%3A2610.40927",
+      "query": "?version=arxiv%3A2610.40927%3Av1%3Ametadata-b09108e19893972e&return_to=%2Fworkspace%2Fprojects%3Fmode%3Dresearch%26project%3Dproject-16a2a7c2013547a9880bd608cea84d5b&mode=research&project=project-16a2a7c2013547a9880bd608cea84d5b&_rsc=i1pJWyPSMTjo0X10",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/app/(live)/workspace/items/%5Bid%5D/page-32567015a8a0ed35.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/6481.ed14df7c6f5ce8c9.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/api/workspace/context",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/api/workspace/context/state",
+      "query": "?mode=research&project=project-16a2a7c2013547a9880bd608cea84d5b",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/477.ce06116afa95d9ae.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "post-restart:non-destructive-unlink-archive",
+      "method": "GET",
+      "path": "/api/workspace/state",
+      "query": "",
+      "forwarded": true,
+      "kind": "guarded own-principal API read"
+    },
+    {
+      "phase": "post-restart:non-destructive-unlink-archive",
+      "method": "GET",
+      "path": "/workspace/projects",
+      "query": "?mode=research&project=project-16a2a7c2013547a9880bd608cea84d5b",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "post-restart:non-destructive-unlink-archive",
+      "method": "GET",
+      "path": "/_next/static/media/8b355a0d3365113c.p.woff2",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "post-restart:non-destructive-unlink-archive",
+      "method": "GET",
+      "path": "/_next/static/css/f4b04de22fdebcb9.css",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "post-restart:non-destructive-unlink-archive",
+      "method": "GET",
+      "path": "/_next/static/css/7cd7f3878632625c.css",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "post-restart:non-destructive-unlink-archive",
+      "method": "GET",
+      "path": "/_next/static/css/8609413464d16cbc.css",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "post-restart:non-destructive-unlink-archive",
+      "method": "GET",
+      "path": "/_next/static/css/9e826ae3e0aeffdc.css",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "post-restart:non-destructive-unlink-archive",
+      "method": "GET",
+      "path": "/_next/static/css/fadd03207f4f952a.css",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "post-restart:non-destructive-unlink-archive",
+      "method": "GET",
+      "path": "/_next/static/css/5d816b8c0dad564e.css",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "post-restart:non-destructive-unlink-archive",
+      "method": "GET",
+      "path": "/_next/static/chunks/webpack-317dabc987082ff7.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "post-restart:non-destructive-unlink-archive",
+      "method": "GET",
+      "path": "/_next/static/chunks/4bd1b696-8cd12253b448cc13.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "post-restart:non-destructive-unlink-archive",
+      "method": "GET",
+      "path": "/_next/static/chunks/3794-645b4e36f579c297.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "post-restart:non-destructive-unlink-archive",
+      "method": "GET",
+      "path": "/_next/static/chunks/main-app-fb8b42f9a8a78965.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "post-restart:non-destructive-unlink-archive",
+      "method": "GET",
+      "path": "/_next/static/chunks/app/(live)/layout-9a8f0aea48954ea0.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "post-restart:non-destructive-unlink-archive",
+      "method": "GET",
+      "path": "/_next/static/chunks/8500-63a4afbeacab3b52.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "post-restart:non-destructive-unlink-archive",
+      "method": "GET",
+      "path": "/_next/static/chunks/4626-cf362315d29c4232.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "post-restart:non-destructive-unlink-archive",
+      "method": "GET",
+      "path": "/_next/static/chunks/9144-eafb1e989c5e2aa8.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "post-restart:non-destructive-unlink-archive",
+      "method": "GET",
+      "path": "/_next/static/chunks/5296-bbf3a8acb7e96e31.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "post-restart:non-destructive-unlink-archive",
+      "method": "GET",
+      "path": "/_next/static/chunks/app/(live)/template-cd87073a974d8731.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "post-restart:non-destructive-unlink-archive",
+      "method": "GET",
+      "path": "/_next/static/chunks/9069-62cc94e2fe4f271e.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "post-restart:non-destructive-unlink-archive",
+      "method": "GET",
+      "path": "/_next/static/chunks/app/(live)/workspace/projects/page-c9ee1f26ed6fd671.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "post-restart:non-destructive-unlink-archive",
+      "method": "GET",
+      "path": "/_next/static/chunks/app/global-error-92372a2e8d0a8485.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "post-restart:non-destructive-unlink-archive",
+      "method": "GET",
+      "path": "/_next/static/chunks/2300-fef9c607c7d0d03d.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "post-restart:non-destructive-unlink-archive",
+      "method": "GET",
+      "path": "/_next/static/chunks/7214-97ac8441d28158e2.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "post-restart:non-destructive-unlink-archive",
+      "method": "GET",
+      "path": "/_next/static/chunks/app/(workspace)/layout-35c24da9e70b3ac9.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "post-restart:non-destructive-unlink-archive",
+      "method": "GET",
+      "path": "/_next/static/chunks/app/not-found-f4f9aa14b0d55755.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "post-restart:non-destructive-unlink-archive",
+      "method": "GET",
+      "path": "/_next/static/media/c9067fc2f3d1f4e5.woff2",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "post-restart:non-destructive-unlink-archive",
+      "method": "GET",
+      "path": "/_next/static/media/4a7f5dc07e8cb505.woff2",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "post-restart:non-destructive-unlink-archive",
+      "method": "GET",
+      "path": "/_next/static/chunks/1540.ffc9bbc96cb89b09.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "post-restart:non-destructive-unlink-archive",
+      "method": "GET",
+      "path": "/_next/static/chunks/6481.ed14df7c6f5ce8c9.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "post-restart:non-destructive-unlink-archive",
+      "method": "GET",
+      "path": "/api/workspace/context",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "post-restart:non-destructive-unlink-archive",
+      "method": "GET",
+      "path": "/_next/static/chunks/2565.799f0dba503f8e7e.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "post-restart:non-destructive-unlink-archive",
+      "method": "GET",
+      "path": "/api/workspace/context",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "post-restart:non-destructive-unlink-archive",
+      "method": "GET",
+      "path": "/api/workspace/context/projects/project-16a2a7c2013547a9880bd608cea84d5b",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "post-restart:non-destructive-unlink-archive",
+      "method": "GET",
+      "path": "/_next/static/media/b75e973a7f03466f.woff2",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "post-restart:non-destructive-unlink-archive",
+      "method": "GET",
+      "path": "/api/workspace/context",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "post-restart:non-destructive-unlink-archive",
+      "method": "GET",
+      "path": "/api/workspace/context/projects/project-16a2a7c2013547a9880bd608cea84d5b",
+      "query": "",
+      "forwarded": true,
+      "kind": "guarded own-principal API read"
+    },
+    {
+      "phase": "post-restart:non-destructive-unlink-archive",
+      "method": "POST",
+      "path": "/api/workspace/context/projects/project-16a2a7c2013547a9880bd608cea84d5b/unlink",
+      "query": "",
+      "kind": "browser",
+      "write": true,
+      "requestId": "5878f694-2044-4a2f-941e-eac95c8b61e8",
+      "body": {
+        "revision": 14,
+        "request_id": "5878f694-2044-4a2f-941e-eac95c8b61e8",
+        "link_id": "link-2ce83f81b689dc1280b97642bacd1964"
+      },
+      "forwarded": true
+    },
+    {
+      "phase": "post-restart:non-destructive-unlink-archive",
+      "method": "GET",
+      "path": "/api/workspace/state",
+      "query": "",
+      "forwarded": true,
+      "kind": "guarded own-principal API read"
+    },
+    {
+      "phase": "post-restart:non-destructive-unlink-archive",
+      "method": "GET",
+      "path": "/_next/static/chunks/5143.124a8c87a1cafc2b.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "post-restart:non-destructive-unlink-archive",
+      "method": "POST",
+      "path": "/api/workspace/context/projects",
+      "query": "",
+      "kind": "browser",
+      "write": true,
+      "requestId": "78c9e5ce-9b95-4531-b85b-6704dc39b3ab",
+      "body": {
+        "id": "project-16a2a7c2013547a9880bd608cea84d5b",
+        "revision": 15,
+        "data": {
+          "title": "Verification behavioral retention 2026-11-06T00-48-43-041Z-9c42c3d7 mobile-dark",
+          "question": "MECHANICAL VERIFICATION 2026-11-06T00-48-43-041Z-9c42c3d7 mobile-dark: How can held-out anchors certify behavioral retention during continual adaptation? Latest pending project question. What independent conditions bound this retention claim?",
+          "scope": "MECHANICAL VERIFICATION latest scope; preserve through a real concurrent revision conflict.",
+          "constraints": "MECHANICAL VERIFICATION: retained public evidence only; no model/source calls or owner judgments. MECHANICAL parallel artifact control.",
+          "next_actions": [
+            "Inspect the exact retained passage",
+            "Keep proposed checks manual and unverified"
+          ],
+          "status": "archived"
+        },
+        "request_id": "78c9e5ce-9b95-4531-b85b-6704dc39b3ab"
+      },
+      "forwarded": true
+    },
+    {
+      "phase": "post-restart:non-destructive-unlink-archive",
+      "method": "GET",
+      "path": "/api/workspace/context",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "post-restart:non-destructive-unlink-archive",
+      "method": "GET",
+      "path": "/api/workspace/context",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "post-restart:non-destructive-unlink-archive",
+      "method": "GET",
+      "path": "/api/workspace/context",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "post-restart:non-destructive-unlink-archive",
+      "method": "GET",
+      "path": "/api/workspace/state",
+      "query": "",
+      "forwarded": true,
+      "kind": "guarded own-principal API read"
+    },
+    {
+      "phase": "post-restart:non-destructive-unlink-archive",
+      "method": "GET",
+      "path": "/api/workspace/context/state",
+      "query": "?mode=research&project=project-16a2a7c2013547a9880bd608cea84d5b",
+      "forwarded": true,
+      "kind": "guarded own-principal API read"
+    }
+  ],
+  "endedAtUtc": "2026-11-06T00:58:00.275Z"
+}

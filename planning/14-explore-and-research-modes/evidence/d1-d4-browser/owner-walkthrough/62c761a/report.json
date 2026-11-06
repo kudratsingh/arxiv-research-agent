@@ -1,0 +1,2552 @@
+{
+  "applicationCommit": "62c761a9c7b690e0b681857fe48edc75d3785ef6",
+  "buildId": "T8_ju09AUeIr5jhzAjpoG",
+  "scope": "Readable agent-authored examples on isolated preview; not owner work or usefulness labels. Opens previously saved question, evidence and thread; only this example source reading-position writes are permitted. No authored writes. New-save proof is separately in96-case matrix.",
+  "contexts": [
+    {
+      "name": "desktop-light",
+      "checkpoints": [
+        {
+          "step": "explore",
+          "url": "http://127.0.0.1:3178/workspace/today?mode=learn"
+        },
+        {
+          "step": "reader-entry",
+          "url": "http://127.0.0.1:3178/workspace/items/arxiv%3A2610.40740?version=arxiv%3A2610.40740%3Av1%3Ametadata-b471d2e5f0142ad7&return_to=%2Fworkspace%2Fprojects%3Fmode%3Dresearch%26project%3Dproject-6b4e2b6271f085ab59192d63be304b62&mode=research&project=project-6b4e2b6271f085ab59192d63be304b62#notes"
+        },
+        {
+          "step": "saved-example-question",
+          "url": "http://127.0.0.1:3178/workspace/items/arxiv%3A2610.40740?version=arxiv%3A2610.40740%3Av1%3Ametadata-b471d2e5f0142ad7&return_to=%2Fworkspace%2Fprojects%3Fmode%3Dresearch%26project%3Dproject-6b4e2b6271f085ab59192d63be304b62&mode=research&project=project-6b4e2b6271f085ab59192d63be304b62#notes"
+        },
+        {
+          "step": "project-question",
+          "url": "http://127.0.0.1:3178/workspace/projects?mode=research&project=project-6b4e2b6271f085ab59192d63be304b62"
+        },
+        {
+          "step": "project-evidence",
+          "url": "http://127.0.0.1:3178/workspace/projects?mode=research&project=project-6b4e2b6271f085ab59192d63be304b62"
+        },
+        {
+          "step": "source-details",
+          "url": "http://127.0.0.1:3178/workspace/projects?mode=research&project=project-6b4e2b6271f085ab59192d63be304b62"
+        },
+        {
+          "step": "learning-thread",
+          "url": "http://127.0.0.1:3178/workspace/threads/thread-6b4e2b6271f085ab59192d63be304b62?mode=learn&thread=thread-6b4e2b6271f085ab59192d63be304b62"
+        },
+        {
+          "step": "exact-project-return",
+          "url": "http://127.0.0.1:3178/workspace/items/arxiv%3A2610.40740?version=arxiv%3A2610.40740%3Av1%3Ametadata-b471d2e5f0142ad7&return_to=%2Fworkspace%2Fprojects%3Fmode%3Dresearch%26project%3Dproject-6b4e2b6271f085ab59192d63be304b62&mode=research&project=project-6b4e2b6271f085ab59192d63be304b62#abstract%3A0%3A180"
+        },
+        {
+          "step": "library",
+          "url": "http://127.0.0.1:3178/workspace/library?view=notes&mode=research&project=project-6b4e2b6271f085ab59192d63be304b62"
+        },
+        {
+          "step": "library-resume-question",
+          "url": "http://127.0.0.1:3178/workspace/items/arxiv%3A2610.40740?version=arxiv%3A2610.40740%3Av1%3Ametadata-b471d2e5f0142ad7&entry=example-question-6b4e2b6271f085ab59192d63be304b62&return_to=%2Fworkspace%2Flibrary%3Fmode%3Dresearch%26project%3Dproject-6b4e2b6271f085ab59192d63be304b62%26view%3Dnotes%26focus%3Darxiv%253A2610.40740&mode=research&project=project-6b4e2b6271f085ab59192d63be304b62#abstract%3A0%3A180"
+        },
+        {
+          "step": "library-resume",
+          "url": "http://127.0.0.1:3178/workspace/items/arxiv%3A2610.40740?version=arxiv%3A2610.40740%3Av1%3Ametadata-b471d2e5f0142ad7&return_to=%2Fworkspace%2Flibrary%3Fmode%3Dresearch%26project%3Dproject-6b4e2b6271f085ab59192d63be304b62%26view%3Dnotes%26focus%3Darxiv%253A2610.40740#abstract%3A0%3A180"
+        }
+      ],
+      "exactHref": "/workspace/items/arxiv%3A2610.40740?version=arxiv%3A2610.40740%3Av1%3Ametadata-b471d2e5f0142ad7&return_to=%2Fworkspace%2Fprojects%3Fmode%3Dresearch%26project%3Dproject-6b4e2b6271f085ab59192d63be304b62&mode=research&project=project-6b4e2b6271f085ab59192d63be304b62#abstract%3A0%3A180",
+      "resumeHref": "/workspace/items/arxiv%3A2610.40740?version=arxiv%3A2610.40740%3Av1%3Ametadata-b471d2e5f0142ad7&entry=example-question-6b4e2b6271f085ab59192d63be304b62&return_to=%2Fworkspace%2Flibrary%3Fmode%3Dresearch%26project%3Dproject-6b4e2b6271f085ab59192d63be304b62%26view%3Dnotes%26focus%3Darxiv%253A2610.40740&mode=research&project=project-6b4e2b6271f085ab59192d63be304b62#abstract%3A0%3A180",
+      "geometry": {
+        "actualStart": 0,
+        "actualEnd": 180,
+        "declaredAnchor": "abstract:0:180",
+        "top": 24.3125,
+        "bottom": 82.8125,
+        "inset": 16.3125,
+        "barTop": 788,
+        "hit": true
+      },
+      "status": "pass",
+      "video": "desktop-light/connected-example.webm",
+      "sha256": "aceacf18e721a4bf8bc0904fe522540c72bc1f8f5b8acd66aeaea12f66fb16a6",
+      "axeViolations": []
+    },
+    {
+      "name": "desktop-dark",
+      "checkpoints": [
+        {
+          "step": "explore",
+          "url": "http://127.0.0.1:3178/workspace/today?mode=learn"
+        },
+        {
+          "step": "reader-entry",
+          "url": "http://127.0.0.1:3178/workspace/items/arxiv%3A2610.40740?version=arxiv%3A2610.40740%3Av1%3Ametadata-b471d2e5f0142ad7&return_to=%2Fworkspace%2Fprojects%3Fmode%3Dresearch%26project%3Dproject-6b4e2b6271f085ab59192d63be304b62&mode=research&project=project-6b4e2b6271f085ab59192d63be304b62#notes"
+        },
+        {
+          "step": "saved-example-question",
+          "url": "http://127.0.0.1:3178/workspace/items/arxiv%3A2610.40740?version=arxiv%3A2610.40740%3Av1%3Ametadata-b471d2e5f0142ad7&return_to=%2Fworkspace%2Fprojects%3Fmode%3Dresearch%26project%3Dproject-6b4e2b6271f085ab59192d63be304b62&mode=research&project=project-6b4e2b6271f085ab59192d63be304b62#notes"
+        },
+        {
+          "step": "project-question",
+          "url": "http://127.0.0.1:3178/workspace/projects?mode=research&project=project-6b4e2b6271f085ab59192d63be304b62"
+        },
+        {
+          "step": "project-evidence",
+          "url": "http://127.0.0.1:3178/workspace/projects?mode=research&project=project-6b4e2b6271f085ab59192d63be304b62"
+        },
+        {
+          "step": "source-details",
+          "url": "http://127.0.0.1:3178/workspace/projects?mode=research&project=project-6b4e2b6271f085ab59192d63be304b62"
+        },
+        {
+          "step": "learning-thread",
+          "url": "http://127.0.0.1:3178/workspace/threads/thread-6b4e2b6271f085ab59192d63be304b62?mode=learn&thread=thread-6b4e2b6271f085ab59192d63be304b62"
+        },
+        {
+          "step": "exact-project-return",
+          "url": "http://127.0.0.1:3178/workspace/items/arxiv%3A2610.40740?version=arxiv%3A2610.40740%3Av1%3Ametadata-b471d2e5f0142ad7&return_to=%2Fworkspace%2Fprojects%3Fmode%3Dresearch%26project%3Dproject-6b4e2b6271f085ab59192d63be304b62&mode=research&project=project-6b4e2b6271f085ab59192d63be304b62#abstract%3A0%3A180"
+        },
+        {
+          "step": "library",
+          "url": "http://127.0.0.1:3178/workspace/library?view=notes&mode=research&project=project-6b4e2b6271f085ab59192d63be304b62"
+        },
+        {
+          "step": "library-resume-question",
+          "url": "http://127.0.0.1:3178/workspace/items/arxiv%3A2610.40740?version=arxiv%3A2610.40740%3Av1%3Ametadata-b471d2e5f0142ad7&entry=example-question-6b4e2b6271f085ab59192d63be304b62&return_to=%2Fworkspace%2Flibrary%3Fmode%3Dresearch%26project%3Dproject-6b4e2b6271f085ab59192d63be304b62%26view%3Dnotes%26focus%3Darxiv%253A2610.40740&mode=research&project=project-6b4e2b6271f085ab59192d63be304b62#abstract%3A0%3A180"
+        },
+        {
+          "step": "library-resume",
+          "url": "http://127.0.0.1:3178/workspace/items/arxiv%3A2610.40740?version=arxiv%3A2610.40740%3Av1%3Ametadata-b471d2e5f0142ad7&return_to=%2Fworkspace%2Flibrary%3Fmode%3Dresearch%26project%3Dproject-6b4e2b6271f085ab59192d63be304b62%26view%3Dnotes%26focus%3Darxiv%253A2610.40740#abstract%3A0%3A180"
+        }
+      ],
+      "exactHref": "/workspace/items/arxiv%3A2610.40740?version=arxiv%3A2610.40740%3Av1%3Ametadata-b471d2e5f0142ad7&return_to=%2Fworkspace%2Fprojects%3Fmode%3Dresearch%26project%3Dproject-6b4e2b6271f085ab59192d63be304b62&mode=research&project=project-6b4e2b6271f085ab59192d63be304b62#abstract%3A0%3A180",
+      "resumeHref": "/workspace/items/arxiv%3A2610.40740?version=arxiv%3A2610.40740%3Av1%3Ametadata-b471d2e5f0142ad7&entry=example-question-6b4e2b6271f085ab59192d63be304b62&return_to=%2Fworkspace%2Flibrary%3Fmode%3Dresearch%26project%3Dproject-6b4e2b6271f085ab59192d63be304b62%26view%3Dnotes%26focus%3Darxiv%253A2610.40740&mode=research&project=project-6b4e2b6271f085ab59192d63be304b62#abstract%3A0%3A180",
+      "geometry": {
+        "actualStart": 0,
+        "actualEnd": 180,
+        "declaredAnchor": "abstract:0:180",
+        "top": 24.3125,
+        "bottom": 82.8125,
+        "inset": 16.3125,
+        "barTop": 788,
+        "hit": true
+      },
+      "status": "pass",
+      "video": "desktop-dark/connected-example.webm",
+      "sha256": "7b9b34b572e7d00fe7adcfb2a3bce960b282971c21fb366f64b6700ac8498b3c",
+      "axeViolations": []
+    },
+    {
+      "name": "mobile-light",
+      "checkpoints": [
+        {
+          "step": "explore",
+          "url": "http://127.0.0.1:3178/workspace/today?mode=learn"
+        },
+        {
+          "step": "reader-entry",
+          "url": "http://127.0.0.1:3178/workspace/items/arxiv%3A2610.40740?version=arxiv%3A2610.40740%3Av1%3Ametadata-b471d2e5f0142ad7&return_to=%2Fworkspace%2Fprojects%3Fmode%3Dresearch%26project%3Dproject-6b4e2b6271f085ab59192d63be304b62&mode=research&project=project-6b4e2b6271f085ab59192d63be304b62#notes"
+        },
+        {
+          "step": "saved-example-question",
+          "url": "http://127.0.0.1:3178/workspace/items/arxiv%3A2610.40740?version=arxiv%3A2610.40740%3Av1%3Ametadata-b471d2e5f0142ad7&return_to=%2Fworkspace%2Fprojects%3Fmode%3Dresearch%26project%3Dproject-6b4e2b6271f085ab59192d63be304b62&mode=research&project=project-6b4e2b6271f085ab59192d63be304b62#notes"
+        },
+        {
+          "step": "project-question",
+          "url": "http://127.0.0.1:3178/workspace/projects?mode=research&project=project-6b4e2b6271f085ab59192d63be304b62"
+        },
+        {
+          "step": "project-evidence",
+          "url": "http://127.0.0.1:3178/workspace/projects?mode=research&project=project-6b4e2b6271f085ab59192d63be304b62"
+        },
+        {
+          "step": "source-details",
+          "url": "http://127.0.0.1:3178/workspace/projects?mode=research&project=project-6b4e2b6271f085ab59192d63be304b62"
+        },
+        {
+          "step": "learning-thread",
+          "url": "http://127.0.0.1:3178/workspace/threads/thread-6b4e2b6271f085ab59192d63be304b62?mode=learn&thread=thread-6b4e2b6271f085ab59192d63be304b62"
+        },
+        {
+          "step": "exact-project-return",
+          "url": "http://127.0.0.1:3178/workspace/items/arxiv%3A2610.40740?version=arxiv%3A2610.40740%3Av1%3Ametadata-b471d2e5f0142ad7&return_to=%2Fworkspace%2Fprojects%3Fmode%3Dresearch%26project%3Dproject-6b4e2b6271f085ab59192d63be304b62&mode=research&project=project-6b4e2b6271f085ab59192d63be304b62#abstract%3A0%3A180"
+        },
+        {
+          "step": "library",
+          "url": "http://127.0.0.1:3178/workspace/library?view=notes&mode=research&project=project-6b4e2b6271f085ab59192d63be304b62"
+        },
+        {
+          "step": "library-resume-question",
+          "url": "http://127.0.0.1:3178/workspace/items/arxiv%3A2610.40740?version=arxiv%3A2610.40740%3Av1%3Ametadata-b471d2e5f0142ad7&entry=example-question-6b4e2b6271f085ab59192d63be304b62&return_to=%2Fworkspace%2Flibrary%3Fmode%3Dresearch%26project%3Dproject-6b4e2b6271f085ab59192d63be304b62%26view%3Dnotes%26focus%3Darxiv%253A2610.40740&mode=research&project=project-6b4e2b6271f085ab59192d63be304b62#abstract%3A0%3A180"
+        },
+        {
+          "step": "library-resume",
+          "url": "http://127.0.0.1:3178/workspace/items/arxiv%3A2610.40740?version=arxiv%3A2610.40740%3Av1%3Ametadata-b471d2e5f0142ad7&return_to=%2Fworkspace%2Flibrary%3Fmode%3Dresearch%26project%3Dproject-6b4e2b6271f085ab59192d63be304b62%26view%3Dnotes%26focus%3Darxiv%253A2610.40740#abstract%3A0%3A180"
+        }
+      ],
+      "exactHref": "/workspace/items/arxiv%3A2610.40740?version=arxiv%3A2610.40740%3Av1%3Ametadata-b471d2e5f0142ad7&return_to=%2Fworkspace%2Fprojects%3Fmode%3Dresearch%26project%3Dproject-6b4e2b6271f085ab59192d63be304b62&mode=research&project=project-6b4e2b6271f085ab59192d63be304b62#abstract%3A0%3A180",
+      "resumeHref": "/workspace/items/arxiv%3A2610.40740?version=arxiv%3A2610.40740%3Av1%3Ametadata-b471d2e5f0142ad7&entry=example-question-6b4e2b6271f085ab59192d63be304b62&return_to=%2Fworkspace%2Flibrary%3Fmode%3Dresearch%26project%3Dproject-6b4e2b6271f085ab59192d63be304b62%26view%3Dnotes%26focus%3Darxiv%253A2610.40740&mode=research&project=project-6b4e2b6271f085ab59192d63be304b62#abstract%3A0%3A180",
+      "geometry": {
+        "actualStart": 0,
+        "actualEnd": 180,
+        "declaredAnchor": "abstract:0:180",
+        "top": 16.453125,
+        "bottom": 152.453125,
+        "inset": 16.453125,
+        "barTop": 666,
+        "hit": true
+      },
+      "status": "pass",
+      "video": "mobile-light/connected-example.webm",
+      "sha256": "038865b64bb98692d2ae2b8ff6b132e165803534177eae7af308866c892b8645",
+      "axeViolations": []
+    },
+    {
+      "name": "mobile-dark",
+      "checkpoints": [
+        {
+          "step": "explore",
+          "url": "http://127.0.0.1:3178/workspace/today?mode=learn"
+        },
+        {
+          "step": "reader-entry",
+          "url": "http://127.0.0.1:3178/workspace/items/arxiv%3A2610.40740?version=arxiv%3A2610.40740%3Av1%3Ametadata-b471d2e5f0142ad7&return_to=%2Fworkspace%2Fprojects%3Fmode%3Dresearch%26project%3Dproject-6b4e2b6271f085ab59192d63be304b62&mode=research&project=project-6b4e2b6271f085ab59192d63be304b62#notes"
+        },
+        {
+          "step": "saved-example-question",
+          "url": "http://127.0.0.1:3178/workspace/items/arxiv%3A2610.40740?version=arxiv%3A2610.40740%3Av1%3Ametadata-b471d2e5f0142ad7&return_to=%2Fworkspace%2Fprojects%3Fmode%3Dresearch%26project%3Dproject-6b4e2b6271f085ab59192d63be304b62&mode=research&project=project-6b4e2b6271f085ab59192d63be304b62#notes"
+        },
+        {
+          "step": "project-question",
+          "url": "http://127.0.0.1:3178/workspace/projects?mode=research&project=project-6b4e2b6271f085ab59192d63be304b62"
+        },
+        {
+          "step": "project-evidence",
+          "url": "http://127.0.0.1:3178/workspace/projects?mode=research&project=project-6b4e2b6271f085ab59192d63be304b62"
+        },
+        {
+          "step": "source-details",
+          "url": "http://127.0.0.1:3178/workspace/projects?mode=research&project=project-6b4e2b6271f085ab59192d63be304b62"
+        },
+        {
+          "step": "learning-thread",
+          "url": "http://127.0.0.1:3178/workspace/threads/thread-6b4e2b6271f085ab59192d63be304b62?mode=learn&thread=thread-6b4e2b6271f085ab59192d63be304b62"
+        },
+        {
+          "step": "exact-project-return",
+          "url": "http://127.0.0.1:3178/workspace/items/arxiv%3A2610.40740?version=arxiv%3A2610.40740%3Av1%3Ametadata-b471d2e5f0142ad7&return_to=%2Fworkspace%2Fprojects%3Fmode%3Dresearch%26project%3Dproject-6b4e2b6271f085ab59192d63be304b62&mode=research&project=project-6b4e2b6271f085ab59192d63be304b62#abstract%3A0%3A180"
+        },
+        {
+          "step": "library",
+          "url": "http://127.0.0.1:3178/workspace/library?view=notes&mode=research&project=project-6b4e2b6271f085ab59192d63be304b62"
+        },
+        {
+          "step": "library-resume-question",
+          "url": "http://127.0.0.1:3178/workspace/items/arxiv%3A2610.40740?version=arxiv%3A2610.40740%3Av1%3Ametadata-b471d2e5f0142ad7&entry=example-question-6b4e2b6271f085ab59192d63be304b62&return_to=%2Fworkspace%2Flibrary%3Fmode%3Dresearch%26project%3Dproject-6b4e2b6271f085ab59192d63be304b62%26view%3Dnotes%26focus%3Darxiv%253A2610.40740&mode=research&project=project-6b4e2b6271f085ab59192d63be304b62#abstract%3A0%3A180"
+        },
+        {
+          "step": "library-resume",
+          "url": "http://127.0.0.1:3178/workspace/items/arxiv%3A2610.40740?version=arxiv%3A2610.40740%3Av1%3Ametadata-b471d2e5f0142ad7&return_to=%2Fworkspace%2Flibrary%3Fmode%3Dresearch%26project%3Dproject-6b4e2b6271f085ab59192d63be304b62%26view%3Dnotes%26focus%3Darxiv%253A2610.40740#abstract%3A0%3A180"
+        }
+      ],
+      "exactHref": "/workspace/items/arxiv%3A2610.40740?version=arxiv%3A2610.40740%3Av1%3Ametadata-b471d2e5f0142ad7&return_to=%2Fworkspace%2Fprojects%3Fmode%3Dresearch%26project%3Dproject-6b4e2b6271f085ab59192d63be304b62&mode=research&project=project-6b4e2b6271f085ab59192d63be304b62#abstract%3A0%3A180",
+      "resumeHref": "/workspace/items/arxiv%3A2610.40740?version=arxiv%3A2610.40740%3Av1%3Ametadata-b471d2e5f0142ad7&entry=example-question-6b4e2b6271f085ab59192d63be304b62&return_to=%2Fworkspace%2Flibrary%3Fmode%3Dresearch%26project%3Dproject-6b4e2b6271f085ab59192d63be304b62%26view%3Dnotes%26focus%3Darxiv%253A2610.40740&mode=research&project=project-6b4e2b6271f085ab59192d63be304b62#abstract%3A0%3A180",
+      "geometry": {
+        "actualStart": 0,
+        "actualEnd": 180,
+        "declaredAnchor": "abstract:0:180",
+        "top": 16.453125,
+        "bottom": 152.453125,
+        "inset": 16.453125,
+        "barTop": 666,
+        "hit": true
+      },
+      "status": "pass",
+      "video": "mobile-dark/connected-example.webm",
+      "sha256": "5073e2f1ebecda94fb72bad2c6b3fde853a3c86b13eef151a1bfd868b64cbc2b",
+      "axeViolations": []
+    }
+  ],
+  "errors": [],
+  "blocked": [],
+  "requests": [
+    {
+      "context": "desktop-light",
+      "path": "/workspace/today",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/media/8b355a0d3365113c.p.woff2",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/css/f4b04de22fdebcb9.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/css/7cd7f3878632625c.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/css/8609413464d16cbc.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/css/252e5cfb1f7865bf.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/css/fadd03207f4f952a.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/css/5d816b8c0dad564e.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/webpack-317dabc987082ff7.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/4bd1b696-8cd12253b448cc13.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/3794-645b4e36f579c297.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/main-app-fb8b42f9a8a78965.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/app/(live)/layout-9a8f0aea48954ea0.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/8500-63a4afbeacab3b52.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/4626-cf362315d29c4232.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/9144-eafb1e989c5e2aa8.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/5296-bbf3a8acb7e96e31.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/app/(live)/template-cd87073a974d8731.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/7027-dd230d6a81ade9d3.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/app/(live)/workspace/today/page-8a7722914b4f817f.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/app/global-error-92372a2e8d0a8485.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/2300-fef9c607c7d0d03d.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/7214-97ac8441d28158e2.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/app/(workspace)/layout-35c24da9e70b3ac9.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/app/not-found-f4f9aa14b0d55755.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/media/c9067fc2f3d1f4e5.woff2",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/media/4a7f5dc07e8cb505.woff2",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/1935-0eaf16140caba45f.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/6708-0e965688a143e126.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/6430-b4cfeac34c90c86f.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/3146.447eb1860fbe825b.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/2982.64aaff10ed198e57.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/7817-0dafa8de8996ba33.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/2316-28e5fb89c0d84257.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/1423.12f1e0d2a8f077f4.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/1540.ffc9bbc96cb89b09.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/2565.799f0dba503f8e7e.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/api/workspace/context/state",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/media/b75e973a7f03466f.woff2",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/workspace/items/arxiv%3A2610.40740",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/app/(live)/workspace/items/%5Bid%5D/page-32567015a8a0ed35.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/6481.ed14df7c6f5ce8c9.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/api/workspace/context",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/api/workspace/context/state",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/477.ce06116afa95d9ae.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/api/workspace/context/reading",
+      "method": "POST",
+      "readingPositionOnly": true
+    },
+    {
+      "context": "desktop-light",
+      "path": "/workspace/projects",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/9069-62cc94e2fe4f271e.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/app/(live)/workspace/projects/page-c9ee1f26ed6fd671.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/api/workspace/context",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/api/workspace/context/projects/project-6b4e2b6271f085ab59192d63be304b62",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/workspace/threads/thread-6b4e2b6271f085ab59192d63be304b62",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/app/(live)/workspace/threads/%5Bid%5D/page-287d1bfc03c23c17.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/api/workspace/context",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/api/workspace/context/threads/thread-6b4e2b6271f085ab59192d63be304b62",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/workspace/items/arxiv%3A2610.40740",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/api/workspace/context",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/api/workspace/context/state",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/workspace/library",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/app/(live)/workspace/library/page-fb469d90a4daefa2.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/api/workspace/context/state",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/media/6f76abcab61531c7.woff2",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/workspace/items/arxiv%3A2610.40740",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/api/workspace/context/state",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/workspace/items/arxiv%3A2610.40740",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/media/8b355a0d3365113c.p.woff2",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/css/f4b04de22fdebcb9.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/css/7cd7f3878632625c.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/css/8609413464d16cbc.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/css/252e5cfb1f7865bf.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/css/fadd03207f4f952a.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/css/5d816b8c0dad564e.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/webpack-317dabc987082ff7.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/4bd1b696-8cd12253b448cc13.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/3794-645b4e36f579c297.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/main-app-fb8b42f9a8a78965.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/app/(live)/layout-9a8f0aea48954ea0.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/8500-63a4afbeacab3b52.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/4626-cf362315d29c4232.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/9144-eafb1e989c5e2aa8.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/5296-bbf3a8acb7e96e31.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/app/(live)/template-cd87073a974d8731.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/app/global-error-92372a2e8d0a8485.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/app/(live)/workspace/items/%5Bid%5D/page-32567015a8a0ed35.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/2300-fef9c607c7d0d03d.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/7214-97ac8441d28158e2.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/app/(workspace)/layout-35c24da9e70b3ac9.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/app/not-found-f4f9aa14b0d55755.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/media/c9067fc2f3d1f4e5.woff2",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/media/4a7f5dc07e8cb505.woff2",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/1540.ffc9bbc96cb89b09.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/2565.799f0dba503f8e7e.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/1935-0eaf16140caba45f.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/6708-0e965688a143e126.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/6430-b4cfeac34c90c86f.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/3146.447eb1860fbe825b.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/2982.64aaff10ed198e57.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/7817-0dafa8de8996ba33.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/2316-28e5fb89c0d84257.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/1423.12f1e0d2a8f077f4.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/api/workspace/context/state",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/chunks/477.ce06116afa95d9ae.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-light",
+      "path": "/_next/static/media/b75e973a7f03466f.woff2",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/workspace/today",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/media/8b355a0d3365113c.p.woff2",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/css/f4b04de22fdebcb9.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/css/7cd7f3878632625c.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/css/8609413464d16cbc.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/css/252e5cfb1f7865bf.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/css/fadd03207f4f952a.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/css/5d816b8c0dad564e.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/webpack-317dabc987082ff7.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/4bd1b696-8cd12253b448cc13.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/3794-645b4e36f579c297.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/main-app-fb8b42f9a8a78965.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/app/(live)/layout-9a8f0aea48954ea0.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/8500-63a4afbeacab3b52.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/4626-cf362315d29c4232.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/9144-eafb1e989c5e2aa8.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/5296-bbf3a8acb7e96e31.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/app/(live)/template-cd87073a974d8731.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/7027-dd230d6a81ade9d3.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/app/(live)/workspace/today/page-8a7722914b4f817f.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/app/global-error-92372a2e8d0a8485.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/2300-fef9c607c7d0d03d.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/7214-97ac8441d28158e2.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/app/(workspace)/layout-35c24da9e70b3ac9.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/app/not-found-f4f9aa14b0d55755.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/media/c9067fc2f3d1f4e5.woff2",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/media/4a7f5dc07e8cb505.woff2",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/1540.ffc9bbc96cb89b09.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/2565.799f0dba503f8e7e.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/api/workspace/context/state",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/1935-0eaf16140caba45f.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/6708-0e965688a143e126.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/6430-b4cfeac34c90c86f.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/3146.447eb1860fbe825b.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/2982.64aaff10ed198e57.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/7817-0dafa8de8996ba33.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/2316-28e5fb89c0d84257.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/1423.12f1e0d2a8f077f4.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/media/b75e973a7f03466f.woff2",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/workspace/items/arxiv%3A2610.40740",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/app/(live)/workspace/items/%5Bid%5D/page-32567015a8a0ed35.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/6481.ed14df7c6f5ce8c9.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/api/workspace/context",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/api/workspace/context/state",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/477.ce06116afa95d9ae.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/api/workspace/context/reading",
+      "method": "POST",
+      "readingPositionOnly": true
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/workspace/projects",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/9069-62cc94e2fe4f271e.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/app/(live)/workspace/projects/page-c9ee1f26ed6fd671.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/api/workspace/context",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/api/workspace/context/projects/project-6b4e2b6271f085ab59192d63be304b62",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/workspace/threads/thread-6b4e2b6271f085ab59192d63be304b62",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/app/(live)/workspace/threads/%5Bid%5D/page-287d1bfc03c23c17.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/api/workspace/context",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/api/workspace/context/threads/thread-6b4e2b6271f085ab59192d63be304b62",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/workspace/items/arxiv%3A2610.40740",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/api/workspace/context",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/api/workspace/context/state",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/workspace/library",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/app/(live)/workspace/library/page-fb469d90a4daefa2.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/api/workspace/context/state",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/media/6f76abcab61531c7.woff2",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/workspace/items/arxiv%3A2610.40740",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/api/workspace/context/state",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/workspace/items/arxiv%3A2610.40740",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/media/8b355a0d3365113c.p.woff2",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/css/f4b04de22fdebcb9.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/css/7cd7f3878632625c.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/css/8609413464d16cbc.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/css/252e5cfb1f7865bf.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/css/fadd03207f4f952a.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/css/5d816b8c0dad564e.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/webpack-317dabc987082ff7.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/4bd1b696-8cd12253b448cc13.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/3794-645b4e36f579c297.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/main-app-fb8b42f9a8a78965.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/app/(live)/layout-9a8f0aea48954ea0.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/8500-63a4afbeacab3b52.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/4626-cf362315d29c4232.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/9144-eafb1e989c5e2aa8.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/5296-bbf3a8acb7e96e31.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/app/(live)/template-cd87073a974d8731.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/app/global-error-92372a2e8d0a8485.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/app/(live)/workspace/items/%5Bid%5D/page-32567015a8a0ed35.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/2300-fef9c607c7d0d03d.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/7214-97ac8441d28158e2.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/app/(workspace)/layout-35c24da9e70b3ac9.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/app/not-found-f4f9aa14b0d55755.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/media/c9067fc2f3d1f4e5.woff2",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/media/4a7f5dc07e8cb505.woff2",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/1935-0eaf16140caba45f.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/6708-0e965688a143e126.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/6430-b4cfeac34c90c86f.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/3146.447eb1860fbe825b.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/2982.64aaff10ed198e57.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/7817-0dafa8de8996ba33.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/2316-28e5fb89c0d84257.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/1423.12f1e0d2a8f077f4.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/1540.ffc9bbc96cb89b09.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/2565.799f0dba503f8e7e.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/api/workspace/context/state",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/chunks/477.ce06116afa95d9ae.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "desktop-dark",
+      "path": "/_next/static/media/b75e973a7f03466f.woff2",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/workspace/today",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/media/8b355a0d3365113c.p.woff2",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/css/f4b04de22fdebcb9.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/css/7cd7f3878632625c.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/css/8609413464d16cbc.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/css/252e5cfb1f7865bf.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/css/fadd03207f4f952a.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/css/5d816b8c0dad564e.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/chunks/webpack-317dabc987082ff7.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/chunks/4bd1b696-8cd12253b448cc13.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/chunks/3794-645b4e36f579c297.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/chunks/main-app-fb8b42f9a8a78965.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/chunks/app/(live)/layout-9a8f0aea48954ea0.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/chunks/8500-63a4afbeacab3b52.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/chunks/4626-cf362315d29c4232.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/chunks/9144-eafb1e989c5e2aa8.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/chunks/5296-bbf3a8acb7e96e31.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/chunks/app/(live)/template-cd87073a974d8731.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/chunks/7027-dd230d6a81ade9d3.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/chunks/app/(live)/workspace/today/page-8a7722914b4f817f.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/chunks/app/global-error-92372a2e8d0a8485.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/chunks/2300-fef9c607c7d0d03d.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/chunks/7214-97ac8441d28158e2.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/chunks/app/(workspace)/layout-35c24da9e70b3ac9.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/chunks/app/not-found-f4f9aa14b0d55755.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/media/c9067fc2f3d1f4e5.woff2",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/media/4a7f5dc07e8cb505.woff2",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/chunks/1540.ffc9bbc96cb89b09.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/chunks/2565.799f0dba503f8e7e.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/api/workspace/context/state",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/media/b75e973a7f03466f.woff2",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/workspace/items/arxiv%3A2610.40740",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/chunks/app/(live)/workspace/items/%5Bid%5D/page-32567015a8a0ed35.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/chunks/6481.ed14df7c6f5ce8c9.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/api/workspace/context",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/api/workspace/context/state",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/chunks/477.ce06116afa95d9ae.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/api/workspace/context/reading",
+      "method": "POST",
+      "readingPositionOnly": true
+    },
+    {
+      "context": "mobile-light",
+      "path": "/workspace/projects",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/chunks/9069-62cc94e2fe4f271e.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/chunks/app/(live)/workspace/projects/page-c9ee1f26ed6fd671.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/api/workspace/context",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/api/workspace/context/projects/project-6b4e2b6271f085ab59192d63be304b62",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/workspace/threads/thread-6b4e2b6271f085ab59192d63be304b62",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/chunks/app/(live)/workspace/threads/%5Bid%5D/page-287d1bfc03c23c17.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/api/workspace/context",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/api/workspace/context/threads/thread-6b4e2b6271f085ab59192d63be304b62",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/workspace/items/arxiv%3A2610.40740",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/api/workspace/context",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/api/workspace/context/state",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/workspace/library",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/chunks/app/(live)/workspace/library/page-fb469d90a4daefa2.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/api/workspace/context/state",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/media/6f76abcab61531c7.woff2",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/workspace/items/arxiv%3A2610.40740",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/api/workspace/context/state",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/workspace/items/arxiv%3A2610.40740",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/media/8b355a0d3365113c.p.woff2",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/css/f4b04de22fdebcb9.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/css/7cd7f3878632625c.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/css/8609413464d16cbc.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/css/252e5cfb1f7865bf.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/css/fadd03207f4f952a.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/css/5d816b8c0dad564e.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/chunks/webpack-317dabc987082ff7.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/chunks/4bd1b696-8cd12253b448cc13.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/chunks/3794-645b4e36f579c297.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/chunks/main-app-fb8b42f9a8a78965.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/chunks/app/(live)/layout-9a8f0aea48954ea0.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/chunks/8500-63a4afbeacab3b52.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/chunks/4626-cf362315d29c4232.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/chunks/9144-eafb1e989c5e2aa8.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/chunks/5296-bbf3a8acb7e96e31.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/chunks/app/(live)/template-cd87073a974d8731.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/chunks/app/global-error-92372a2e8d0a8485.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/chunks/app/(live)/workspace/items/%5Bid%5D/page-32567015a8a0ed35.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/chunks/2300-fef9c607c7d0d03d.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/chunks/7214-97ac8441d28158e2.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/chunks/app/(workspace)/layout-35c24da9e70b3ac9.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/chunks/app/not-found-f4f9aa14b0d55755.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/media/c9067fc2f3d1f4e5.woff2",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/media/4a7f5dc07e8cb505.woff2",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/chunks/1540.ffc9bbc96cb89b09.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/chunks/2565.799f0dba503f8e7e.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/api/workspace/context/state",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/chunks/477.ce06116afa95d9ae.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-light",
+      "path": "/_next/static/media/b75e973a7f03466f.woff2",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/workspace/today",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/media/8b355a0d3365113c.p.woff2",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/css/f4b04de22fdebcb9.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/css/7cd7f3878632625c.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/css/8609413464d16cbc.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/css/252e5cfb1f7865bf.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/css/fadd03207f4f952a.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/css/5d816b8c0dad564e.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/chunks/webpack-317dabc987082ff7.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/chunks/4bd1b696-8cd12253b448cc13.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/chunks/3794-645b4e36f579c297.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/chunks/main-app-fb8b42f9a8a78965.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/chunks/app/(live)/layout-9a8f0aea48954ea0.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/chunks/8500-63a4afbeacab3b52.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/chunks/4626-cf362315d29c4232.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/chunks/9144-eafb1e989c5e2aa8.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/chunks/5296-bbf3a8acb7e96e31.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/chunks/app/(live)/template-cd87073a974d8731.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/chunks/7027-dd230d6a81ade9d3.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/chunks/app/(live)/workspace/today/page-8a7722914b4f817f.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/chunks/app/global-error-92372a2e8d0a8485.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/chunks/2300-fef9c607c7d0d03d.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/chunks/7214-97ac8441d28158e2.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/chunks/app/(workspace)/layout-35c24da9e70b3ac9.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/chunks/app/not-found-f4f9aa14b0d55755.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/media/c9067fc2f3d1f4e5.woff2",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/media/4a7f5dc07e8cb505.woff2",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/chunks/1540.ffc9bbc96cb89b09.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/chunks/2565.799f0dba503f8e7e.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/api/workspace/context/state",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/media/b75e973a7f03466f.woff2",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/workspace/items/arxiv%3A2610.40740",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/chunks/app/(live)/workspace/items/%5Bid%5D/page-32567015a8a0ed35.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/chunks/6481.ed14df7c6f5ce8c9.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/api/workspace/context",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/api/workspace/context/state",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/chunks/477.ce06116afa95d9ae.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/api/workspace/context/reading",
+      "method": "POST",
+      "readingPositionOnly": true
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/workspace/projects",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/chunks/9069-62cc94e2fe4f271e.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/chunks/app/(live)/workspace/projects/page-c9ee1f26ed6fd671.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/api/workspace/context",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/api/workspace/context/projects/project-6b4e2b6271f085ab59192d63be304b62",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/workspace/threads/thread-6b4e2b6271f085ab59192d63be304b62",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/chunks/app/(live)/workspace/threads/%5Bid%5D/page-287d1bfc03c23c17.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/api/workspace/context",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/api/workspace/context/threads/thread-6b4e2b6271f085ab59192d63be304b62",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/workspace/items/arxiv%3A2610.40740",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/api/workspace/context",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/api/workspace/context/state",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/workspace/library",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/chunks/app/(live)/workspace/library/page-fb469d90a4daefa2.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/api/workspace/context/state",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/media/6f76abcab61531c7.woff2",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/workspace/items/arxiv%3A2610.40740",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/api/workspace/context/state",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/workspace/items/arxiv%3A2610.40740",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/media/8b355a0d3365113c.p.woff2",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/css/f4b04de22fdebcb9.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/css/7cd7f3878632625c.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/css/8609413464d16cbc.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/css/252e5cfb1f7865bf.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/css/fadd03207f4f952a.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/css/5d816b8c0dad564e.css",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/chunks/webpack-317dabc987082ff7.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/chunks/4bd1b696-8cd12253b448cc13.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/chunks/3794-645b4e36f579c297.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/chunks/main-app-fb8b42f9a8a78965.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/chunks/app/(live)/layout-9a8f0aea48954ea0.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/chunks/8500-63a4afbeacab3b52.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/chunks/4626-cf362315d29c4232.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/chunks/9144-eafb1e989c5e2aa8.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/chunks/5296-bbf3a8acb7e96e31.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/chunks/app/(live)/template-cd87073a974d8731.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/chunks/app/global-error-92372a2e8d0a8485.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/chunks/app/(live)/workspace/items/%5Bid%5D/page-32567015a8a0ed35.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/chunks/2300-fef9c607c7d0d03d.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/chunks/7214-97ac8441d28158e2.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/chunks/app/(workspace)/layout-35c24da9e70b3ac9.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/chunks/app/not-found-f4f9aa14b0d55755.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/media/c9067fc2f3d1f4e5.woff2",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/media/4a7f5dc07e8cb505.woff2",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/chunks/1540.ffc9bbc96cb89b09.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/chunks/2565.799f0dba503f8e7e.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/api/workspace/context/state",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/chunks/477.ce06116afa95d9ae.js",
+      "method": "GET",
+      "readingPositionOnly": false
+    },
+    {
+      "context": "mobile-dark",
+      "path": "/_next/static/media/b75e973a7f03466f.woff2",
+      "method": "GET",
+      "readingPositionOnly": false
+    }
+  ],
+  "status": "pass"
+}

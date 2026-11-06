@@ -1,0 +1,9 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+__ test_new_text_extraction_does_not_invalidate_an_older_exact_material_link ___
+tests/test_workspace_context.py:529: in test_new_text_extraction_does_not_invalidate_an_older_exact_material_link
+    assert preserved["available"] and preserved["material_id"] == bound["material_id"]
+E   assert (False)
+=========================== short test summary info ============================
+FAILED tests/test_workspace_context.py::test_new_text_extraction_does_not_invalidate_an_older_exact_material_link
+1 failed, 41 deselected in 0.85s

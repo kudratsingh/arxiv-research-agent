@@ -1,0 +1,38 @@
+
+> arxiv-research-agent-web@0.1.0 test
+> vitest run --run tests/workspace/radar-context-binding.test.tsx
+
+
+ RUN  v4.1.11 /private/tmp/arxiv-agent-eng-workspace-mode-build/web
+
+ ❯ |unit| tests/workspace/radar-context-binding.test.tsx (2 tests | 2 failed) 157ms
+     × never sends an old project's cursor under learn and ignores its delayed response 120ms
+     × never sends an old project's cursor under other-project and ignores its delayed response 36ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |unit| tests/workspace/radar-context-binding.test.tsx > Radar applied-page context binding > never sends an old project's cursor under learn and ignores its delayed response
+ FAIL  |unit| tests/workspace/radar-context-binding.test.tsx > Radar applied-page context binding > never sends an old project's cursor under other-project and ignores its delayed response
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/workspace/radar-context-binding.test.tsx:38:46
+     36|     expect(newRequests.length).toBeGreaterThan(0);
+     37|     for (const url of newRequests) {
+     38|       expect(url.searchParams.has("cursor")).toBe(false);
+       |                                              ^
+     39|       expect(url.searchParams.has("as_of")).toBe(false);
+     40|       expect(url.searchParams.get("q") ?? "").toBe("");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  14:54:43
+   Duration  957ms (transform 90ms, setup 149ms, import 73ms, tests 157ms, environment 467ms)

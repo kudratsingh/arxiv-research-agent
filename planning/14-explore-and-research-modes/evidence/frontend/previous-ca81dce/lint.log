@@ -1,0 +1,3 @@
+
+> arxiv-research-agent-web@0.1.0 lint
+> eslint app components lib middleware.ts --max-warnings 0

@@ -1,0 +1,1481 @@
+{
+  "scope": "40 copied public works plus 2 explicitly labelled synthetic software fixtures; no private state, notes or labels",
+  "version_keys": [
+    "version_id",
+    "content_hash",
+    "access_state",
+    "source_scope",
+    "reading_access_state",
+    "available_scopes",
+    "retained_materials",
+    "title",
+    "url"
+  ],
+  "works": [
+    {
+      "work_id": "arxiv:2210.03629",
+      "source_id": "scientific-sample",
+      "current_version_id": "arxiv:2210.03629:v3",
+      "versions": [
+        {
+          "version_id": "arxiv:2210.03629:v3",
+          "content_hash": "d816508359f2e74c2e4d1cf5b724d241a9e9f4f229e383627edd0d39fd03f88f",
+          "access_state": "metadata",
+          "source_scope": "metadata",
+          "reading_access_state": "excerpt",
+          "available_scopes": [
+            "excerpt"
+          ],
+          "retained_materials": [
+            {
+              "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+              "version_id": "arxiv:2210.03629:v3",
+              "scope": "excerpt",
+              "format": "pdf",
+              "quality": "partial",
+              "complete": false,
+              "page_count": 33,
+              "retained_pages": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                8,
+                12,
+                18,
+                24,
+                30,
+                33
+              ],
+              "first_anchor": "material:mat-2b7a38f3cfa1449f7728f044688ca2c2:page:1:0:2000",
+              "warnings": [
+                "PDF reading order, equations and tables require source review; no OCR was performed.",
+                "Selected original PDF pages only; unretained pages and sections were not read.",
+                "Page/character limit reached; retained material is an excerpt.",
+                "Mathematical or replacement glyphs detected; check equations against the original PDF.",
+                "Observed corrupted figure labels on originalpage2; extracted figure text is unreliable.",
+                "Observed table/chart reading-order interleaving on originalpage5; table-cell structure is unqualified."
+              ]
+            }
+          ],
+          "title": "ReAct: Synergizing Reasoning and Acting in Language Models",
+          "url": "https://arxiv.org/abs/2210.03629v3"
+        }
+      ]
+    },
+    {
+      "work_id": "arxiv:2310.11511",
+      "source_id": "scientific-sample",
+      "current_version_id": "arxiv:2310.11511:v1",
+      "versions": [
+        {
+          "version_id": "arxiv:2310.11511:v1",
+          "content_hash": "2abdf85aaa8a79285bb62cb626c09065da880b8da7efc449be8a9022e5de8b9d",
+          "access_state": "metadata",
+          "source_scope": "metadata",
+          "reading_access_state": "excerpt",
+          "available_scopes": [
+            "excerpt"
+          ],
+          "retained_materials": [
+            {
+              "material_id": "mat-f98fbd73f423776117f60cac36edc90a",
+              "version_id": "arxiv:2310.11511:v1",
+              "scope": "excerpt",
+              "format": "pdf",
+              "quality": "partial",
+              "complete": false,
+              "page_count": 30,
+              "retained_pages": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                14,
+                18,
+                24,
+                30
+              ],
+              "first_anchor": "material:mat-f98fbd73f423776117f60cac36edc90a:page:1:0:2000",
+              "warnings": [
+                "PDF reading order, equations and tables require source review; no OCR was performed.",
+                "Selected original PDF pages only; unretained pages and sections were not read.",
+                "Page/character limit reached; retained material is an excerpt.",
+                "Mathematical or replacement glyphs detected; check equations against the original PDF.",
+                "Observed flattened sums, fractions and superscripts on originalpage6; equation semantics are unreliable.",
+                "Multi-level table headers and numeric row/column associations remain unqualified on originalpages4,8,18,30."
+              ]
+            }
+          ],
+          "title": "Self-RAG: Learning to Retrieve, Generate, and Critique through Self-Reflection",
+          "url": "https://arxiv.org/abs/2310.11511v1"
+        }
+      ]
+    },
+    {
+      "work_id": "arxiv:2610.40700",
+      "source_id": "arxiv-cs-lg",
+      "current_version_id": "arxiv:2610.40700:v1:metadata-c05b44ce3bd6d5f0",
+      "versions": [
+        {
+          "version_id": "arxiv:2610.40700:v1:metadata-c05b44ce3bd6d5f0",
+          "content_hash": "74ad2c6018c6778fefa8c9fdfc2d8be7a5fe1cc0d117d3cc8f1032d6d01a2f14",
+          "access_state": "abstract",
+          "source_scope": "abstract",
+          "reading_access_state": "abstract",
+          "available_scopes": [
+            "abstract"
+          ],
+          "retained_materials": [
+            {
+              "material_id": "mat-712c4b3179b5eae15fbed75fbbf4711f",
+              "version_id": "arxiv:2610.40700:v1:metadata-c05b44ce3bd6d5f0",
+              "scope": "abstract",
+              "format": "text",
+              "quality": "text_extracted",
+              "complete": true,
+              "page_count": null,
+              "retained_pages": [],
+              "first_anchor": null,
+              "warnings": []
+            }
+          ],
+          "title": "Automatic Construction of Strong Simple Baselines",
+          "url": "https://arxiv.org/abs/2610.40700v1"
+        }
+      ]
+    },
+    {
+      "work_id": "arxiv:2610.40728",
+      "source_id": "arxiv-cs-lg",
+      "current_version_id": "arxiv:2610.40728:v1:metadata-cb0c65fffb216247",
+      "versions": [
+        {
+          "version_id": "arxiv:2610.40728:v1:metadata-cb0c65fffb216247",
+          "content_hash": "b66f8d009243e1a3b64bbaf93a7a02bccd980e7aa1a5e484506cdf885cb922a8",
+          "access_state": "abstract",
+          "source_scope": "abstract",
+          "reading_access_state": "abstract",
+          "available_scopes": [
+            "abstract"
+          ],
+          "retained_materials": [
+            {
+              "material_id": "mat-00d3719cbe1aae2229e62487d6c51796",
+              "version_id": "arxiv:2610.40728:v1:metadata-cb0c65fffb216247",
+              "scope": "abstract",
+              "format": "text",
+              "quality": "text_extracted",
+              "complete": true,
+              "page_count": null,
+              "retained_pages": [],
+              "first_anchor": null,
+              "warnings": []
+            }
+          ],
+          "title": "Bayesian Distribution System State Estimation with Flow Matching",
+          "url": "https://arxiv.org/abs/2610.40728v1"
+        }
+      ]
+    },
+    {
+      "work_id": "arxiv:2610.40740",
+      "source_id": "arxiv-cs-lg",
+      "current_version_id": "arxiv:2610.40740:v1:metadata-b471d2e5f0142ad7",
+      "versions": [
+        {
+          "version_id": "arxiv:2610.40740:v1:metadata-b471d2e5f0142ad7",
+          "content_hash": "ccd8f3f9e0bacd1d857b45286c31209ffc3be3ad200fab54f37d7c6732afb785",
+          "access_state": "abstract",
+          "source_scope": "abstract",
+          "reading_access_state": "abstract",
+          "available_scopes": [
+            "abstract"
+          ],
+          "retained_materials": [
+            {
+              "material_id": "mat-a52bb46a2e35171cca8d67fc89c848eb",
+              "version_id": "arxiv:2610.40740:v1:metadata-b471d2e5f0142ad7",
+              "scope": "abstract",
+              "format": "text",
+              "quality": "text_extracted",
+              "complete": true,
+              "page_count": null,
+              "retained_pages": [],
+              "first_anchor": null,
+              "warnings": []
+            }
+          ],
+          "title": "Certified Behavioral Retention for Continual Adaptation with Held-Out Anchors",
+          "url": "https://arxiv.org/abs/2610.40740v1"
+        }
+      ]
+    },
+    {
+      "work_id": "arxiv:2610.40747",
+      "source_id": "arxiv-cs-cl",
+      "current_version_id": "arxiv:2610.40747:v1:metadata-be0a1828c70df62e",
+      "versions": [
+        {
+          "version_id": "arxiv:2610.40747:v1:metadata-be0a1828c70df62e",
+          "content_hash": "da45642b352c55bea1debf3416c3726bf9effb4e64512f8b85daad7497e31b54",
+          "access_state": "abstract",
+          "source_scope": "abstract",
+          "reading_access_state": "abstract",
+          "available_scopes": [
+            "abstract"
+          ],
+          "retained_materials": [
+            {
+              "material_id": "mat-f7224b0bed4dd378b869653332648a9a",
+              "version_id": "arxiv:2610.40747:v1:metadata-be0a1828c70df62e",
+              "scope": "abstract",
+              "format": "text",
+              "quality": "text_extracted",
+              "complete": true,
+              "page_count": null,
+              "retained_pages": [],
+              "first_anchor": null,
+              "warnings": []
+            }
+          ],
+          "title": "Mage-VL-Cowork: A Full Training Recipe to Learn Hybrid Computer Use From Evolved Harnesses",
+          "url": "https://arxiv.org/abs/2610.40747v1"
+        }
+      ]
+    },
+    {
+      "work_id": "arxiv:2610.40758",
+      "source_id": "arxiv-cs-ai",
+      "current_version_id": "arxiv:2610.40758:v1:metadata-96148d2d4e4a4093",
+      "versions": [
+        {
+          "version_id": "arxiv:2610.40758:v1:metadata-96148d2d4e4a4093",
+          "content_hash": "45e9dc9cb6c05d0dceff45ef5cacc1edf52ae88a049659103197f268ab580d53",
+          "access_state": "abstract",
+          "source_scope": "abstract",
+          "reading_access_state": "abstract",
+          "available_scopes": [
+            "abstract"
+          ],
+          "retained_materials": [
+            {
+              "material_id": "mat-f215cad7235629deacb40965a6cc68c5",
+              "version_id": "arxiv:2610.40758:v1:metadata-96148d2d4e4a4093",
+              "scope": "abstract",
+              "format": "text",
+              "quality": "text_extracted",
+              "complete": true,
+              "page_count": null,
+              "retained_pages": [],
+              "first_anchor": null,
+              "warnings": []
+            }
+          ],
+          "title": "More Rules, Longer Lists? Benchmarking Self-Evolving Agents on a Hidden-Rule Curriculum",
+          "url": "https://arxiv.org/abs/2610.40758v1"
+        }
+      ]
+    },
+    {
+      "work_id": "arxiv:2610.40798",
+      "source_id": "arxiv-cs-ai",
+      "current_version_id": "arxiv:2610.40798:v1:metadata-c1a34fa53cba3d51",
+      "versions": [
+        {
+          "version_id": "arxiv:2610.40798:v1:metadata-c1a34fa53cba3d51",
+          "content_hash": "b77eda4278705b9a4d62a312176df3e7d751fd0dc1f1a4c3c345b0c60167e443",
+          "access_state": "abstract",
+          "source_scope": "abstract",
+          "reading_access_state": "abstract",
+          "available_scopes": [
+            "abstract"
+          ],
+          "retained_materials": [
+            {
+              "material_id": "mat-4c16f701f33831a7541e340a65c12a24",
+              "version_id": "arxiv:2610.40798:v1:metadata-c1a34fa53cba3d51",
+              "scope": "abstract",
+              "format": "text",
+              "quality": "text_extracted",
+              "complete": true,
+              "page_count": null,
+              "retained_pages": [],
+              "first_anchor": null,
+              "warnings": []
+            }
+          ],
+          "title": "Beyond Plausible Prediction: Safety Sufficiency in Web World Models",
+          "url": "https://arxiv.org/abs/2610.40798v1"
+        }
+      ]
+    },
+    {
+      "work_id": "arxiv:2610.40857",
+      "source_id": "arxiv-cs-lg",
+      "current_version_id": "arxiv:2610.40857:v1:metadata-ad6a5ab2673194a3",
+      "versions": [
+        {
+          "version_id": "arxiv:2610.40857:v1:metadata-ad6a5ab2673194a3",
+          "content_hash": "65b27dcc47202809e5da87702d3c632b8e6ec4888e7463b62ef8b3deb2c08c00",
+          "access_state": "abstract",
+          "source_scope": "abstract",
+          "reading_access_state": "abstract",
+          "available_scopes": [
+            "abstract"
+          ],
+          "retained_materials": [
+            {
+              "material_id": "mat-e7f90fe838b3eac369a3474cec3b83df",
+              "version_id": "arxiv:2610.40857:v1:metadata-ad6a5ab2673194a3",
+              "scope": "abstract",
+              "format": "text",
+              "quality": "text_extracted",
+              "complete": true,
+              "page_count": null,
+              "retained_pages": [],
+              "first_anchor": null,
+              "warnings": []
+            }
+          ],
+          "title": "Frozen in Time: How a Physics Foundation Model Forgets Under Sim-to-Real Adaptation",
+          "url": "https://arxiv.org/abs/2610.40857v1"
+        }
+      ]
+    },
+    {
+      "work_id": "arxiv:2610.40871",
+      "source_id": "arxiv-cs-lg",
+      "current_version_id": "arxiv:2610.40871:v1:metadata-0be4ee69b6741057",
+      "versions": [
+        {
+          "version_id": "arxiv:2610.40871:v1:metadata-0be4ee69b6741057",
+          "content_hash": "05b0672397c600249e80fd1e3ac74eb90231148c59eaf31fbff291753263a09d",
+          "access_state": "abstract",
+          "source_scope": "abstract",
+          "reading_access_state": "abstract",
+          "available_scopes": [
+            "abstract"
+          ],
+          "retained_materials": [
+            {
+              "material_id": "mat-48780ffb91b68f22cf607c5650336baf",
+              "version_id": "arxiv:2610.40871:v1:metadata-0be4ee69b6741057",
+              "scope": "abstract",
+              "format": "text",
+              "quality": "text_extracted",
+              "complete": true,
+              "page_count": null,
+              "retained_pages": [],
+              "first_anchor": null,
+              "warnings": []
+            }
+          ],
+          "title": "TensorSSM: Memorizing Spatial Position in Dynamic State Space for Tensor Core Generation",
+          "url": "https://arxiv.org/abs/2610.40871v1"
+        }
+      ]
+    },
+    {
+      "work_id": "arxiv:2610.40893",
+      "source_id": "arxiv-cs-cl",
+      "current_version_id": "arxiv:2610.40893:v1:metadata-018e69b4ec3841a0",
+      "versions": [
+        {
+          "version_id": "arxiv:2610.40893:v1:metadata-018e69b4ec3841a0",
+          "content_hash": "7c1c64fc293a4df0c302d5e9d0f3684d2a137d54712f36dc0f29f58247ea2c68",
+          "access_state": "abstract",
+          "source_scope": "abstract",
+          "reading_access_state": "abstract",
+          "available_scopes": [
+            "abstract"
+          ],
+          "retained_materials": [
+            {
+              "material_id": "mat-c35118081c1369f460cb4c41adbc185a",
+              "version_id": "arxiv:2610.40893:v1:metadata-018e69b4ec3841a0",
+              "scope": "abstract",
+              "format": "text",
+              "quality": "text_extracted",
+              "complete": true,
+              "page_count": null,
+              "retained_pages": [],
+              "first_anchor": null,
+              "warnings": []
+            }
+          ],
+          "title": "Qistas: A Pre-Registered, Portable Protocol for Fairness Evaluation of Large Language Models",
+          "url": "https://arxiv.org/abs/2610.40893v1"
+        }
+      ]
+    },
+    {
+      "work_id": "arxiv:2610.40901",
+      "source_id": "arxiv-cs-lg",
+      "current_version_id": "arxiv:2610.40901:v1:metadata-b94f57a0b8a51165",
+      "versions": [
+        {
+          "version_id": "arxiv:2610.40901:v1:metadata-b94f57a0b8a51165",
+          "content_hash": "c381aab30512c2c9bfad39a55bd8eb22ec86b0ea568aedf6182930e5087f7859",
+          "access_state": "abstract",
+          "source_scope": "abstract",
+          "reading_access_state": "abstract",
+          "available_scopes": [
+            "abstract"
+          ],
+          "retained_materials": [
+            {
+              "material_id": "mat-5dc8d3418e3b64ce85c20e74ad537be5",
+              "version_id": "arxiv:2610.40901:v1:metadata-b94f57a0b8a51165",
+              "scope": "abstract",
+              "format": "text",
+              "quality": "text_extracted",
+              "complete": true,
+              "page_count": null,
+              "retained_pages": [],
+              "first_anchor": null,
+              "warnings": []
+            }
+          ],
+          "title": "TSFLab: A Self-Improving Agent-Agnostic Workbench for Time Series Forecasting Research",
+          "url": "https://arxiv.org/abs/2610.40901v1"
+        }
+      ]
+    },
+    {
+      "work_id": "arxiv:2610.40906",
+      "source_id": "arxiv-cs-ai",
+      "current_version_id": "arxiv:2610.40906:v1:metadata-289de52681520e8e",
+      "versions": [
+        {
+          "version_id": "arxiv:2610.40906:v1:metadata-289de52681520e8e",
+          "content_hash": "91aa7eeb1fae75f9a326a711ae5179ecf51dd90a2cdc27641b1650751e46c490",
+          "access_state": "abstract",
+          "source_scope": "abstract",
+          "reading_access_state": "abstract",
+          "available_scopes": [
+            "abstract"
+          ],
+          "retained_materials": [
+            {
+              "material_id": "mat-e8b14bbae1cd807570d968470e5493ac",
+              "version_id": "arxiv:2610.40906:v1:metadata-289de52681520e8e",
+              "scope": "abstract",
+              "format": "text",
+              "quality": "text_extracted",
+              "complete": true,
+              "page_count": null,
+              "retained_pages": [],
+              "first_anchor": null,
+              "warnings": []
+            }
+          ],
+          "title": "Does Recursive Knowledge Construction Help Agents Verify Consensus Claims in Science?",
+          "url": "https://arxiv.org/abs/2610.40906v1"
+        }
+      ]
+    },
+    {
+      "work_id": "arxiv:2610.40917",
+      "source_id": "arxiv-cs-ai",
+      "current_version_id": "arxiv:2610.40917:v1:metadata-ed88c851cf4b1810",
+      "versions": [
+        {
+          "version_id": "arxiv:2610.40917:v1:metadata-ed88c851cf4b1810",
+          "content_hash": "f6aaa562a0f71544a1a71105d1e9e50712f61414f4bfb4f11ebe820071912b8c",
+          "access_state": "abstract",
+          "source_scope": "abstract",
+          "reading_access_state": "abstract",
+          "available_scopes": [
+            "abstract"
+          ],
+          "retained_materials": [
+            {
+              "material_id": "mat-6fd91ac7a4d590f9500cc5b123d0d91a",
+              "version_id": "arxiv:2610.40917:v1:metadata-ed88c851cf4b1810",
+              "scope": "abstract",
+              "format": "text",
+              "quality": "text_extracted",
+              "complete": true,
+              "page_count": null,
+              "retained_pages": [],
+              "first_anchor": null,
+              "warnings": []
+            }
+          ],
+          "title": "Towards Portable Specification of the Agent Harness",
+          "url": "https://arxiv.org/abs/2610.40917v1"
+        }
+      ]
+    },
+    {
+      "work_id": "arxiv:2610.40927",
+      "source_id": "arxiv-cs-ai",
+      "current_version_id": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+      "versions": [
+        {
+          "version_id": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+          "content_hash": "b1e003848d7d156da1ba4dc05a910ce19a741f9d997d91ce66c2ab86f28d1beb",
+          "access_state": "abstract",
+          "source_scope": "abstract",
+          "reading_access_state": "abstract",
+          "available_scopes": [
+            "abstract"
+          ],
+          "retained_materials": [
+            {
+              "material_id": "mat-e4adcf0135fbaa3982584da87b0040b2",
+              "version_id": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+              "scope": "abstract",
+              "format": "text",
+              "quality": "text_extracted",
+              "complete": true,
+              "page_count": null,
+              "retained_pages": [],
+              "first_anchor": null,
+              "warnings": []
+            }
+          ],
+          "title": "Agentic World Modeling for Agent Test-time Scaling without Environment Replica",
+          "url": "https://arxiv.org/abs/2610.40927v1"
+        }
+      ]
+    },
+    {
+      "work_id": "arxiv:2610.40930",
+      "source_id": "arxiv-cs-cl",
+      "current_version_id": "arxiv:2610.40930:v1:metadata-b45059ef8928ae02",
+      "versions": [
+        {
+          "version_id": "arxiv:2610.40930:v1:metadata-b45059ef8928ae02",
+          "content_hash": "aaa3ad214b95bd50a65eaea0e446f544255af638f60ff66e5b740f06652e957d",
+          "access_state": "abstract",
+          "source_scope": "abstract",
+          "reading_access_state": "abstract",
+          "available_scopes": [
+            "abstract"
+          ],
+          "retained_materials": [
+            {
+              "material_id": "mat-e0471e7f635e5d75e96b25bdee5fe807",
+              "version_id": "arxiv:2610.40930:v1:metadata-b45059ef8928ae02",
+              "scope": "abstract",
+              "format": "text",
+              "quality": "text_extracted",
+              "complete": true,
+              "page_count": null,
+              "retained_pages": [],
+              "first_anchor": null,
+              "warnings": []
+            }
+          ],
+          "title": "Adaptive Personalization Under Preference Epistemic Uncertainty",
+          "url": "https://arxiv.org/abs/2610.40930v1"
+        }
+      ]
+    },
+    {
+      "work_id": "arxiv:2610.40939",
+      "source_id": "arxiv-cs-ai",
+      "current_version_id": "arxiv:2610.40939:v1:metadata-a24c81ca3638415c",
+      "versions": [
+        {
+          "version_id": "arxiv:2610.40939:v1:metadata-a24c81ca3638415c",
+          "content_hash": "ff35679ad3cb7fce98400f2565d17f6dc5d151c98b821efbbd4e33f4c7a2afd9",
+          "access_state": "abstract",
+          "source_scope": "abstract",
+          "reading_access_state": "abstract",
+          "available_scopes": [
+            "abstract"
+          ],
+          "retained_materials": [
+            {
+              "material_id": "mat-f9f2cdeb172eb1a2c397816be75b5cef",
+              "version_id": "arxiv:2610.40939:v1:metadata-a24c81ca3638415c",
+              "scope": "abstract",
+              "format": "text",
+              "quality": "text_extracted",
+              "complete": true,
+              "page_count": null,
+              "retained_pages": [],
+              "first_anchor": null,
+              "warnings": []
+            }
+          ],
+          "title": "The First Few Tokens Matter: Understanding Chain-of-Thought Controllability",
+          "url": "https://arxiv.org/abs/2610.40939v1"
+        }
+      ]
+    },
+    {
+      "work_id": "arxiv:2610.40940",
+      "source_id": "arxiv-cs-ai",
+      "current_version_id": "arxiv:2610.40940:v1:metadata-21d8200059afcd01",
+      "versions": [
+        {
+          "version_id": "arxiv:2610.40940:v1:metadata-21d8200059afcd01",
+          "content_hash": "0042d5a7f98d8b306efccbb4d8d87541db6f0a1bdad84cb9485cabfb88f02843",
+          "access_state": "abstract",
+          "source_scope": "abstract",
+          "reading_access_state": "abstract",
+          "available_scopes": [
+            "abstract"
+          ],
+          "retained_materials": [
+            {
+              "material_id": "mat-3d7daff77ffce12e7f3ebd3ca37934de",
+              "version_id": "arxiv:2610.40940:v1:metadata-21d8200059afcd01",
+              "scope": "abstract",
+              "format": "text",
+              "quality": "text_extracted",
+              "complete": true,
+              "page_count": null,
+              "retained_pages": [],
+              "first_anchor": null,
+              "warnings": []
+            }
+          ],
+          "title": "Benchmarking Forecasting Agents on Yesterday's Tomorrows",
+          "url": "https://arxiv.org/abs/2610.40940v1"
+        }
+      ]
+    },
+    {
+      "work_id": "arxiv:2610.40943",
+      "source_id": "arxiv-cs-lg",
+      "current_version_id": "arxiv:2610.40943:v1:metadata-9449877c1e5f5e99",
+      "versions": [
+        {
+          "version_id": "arxiv:2610.40943:v1:metadata-9449877c1e5f5e99",
+          "content_hash": "5852ee209b2cb9fc1023a3892923aa743893e5ab054f530441b169714a6d2291",
+          "access_state": "abstract",
+          "source_scope": "abstract",
+          "reading_access_state": "abstract",
+          "available_scopes": [
+            "abstract"
+          ],
+          "retained_materials": [
+            {
+              "material_id": "mat-8fc2eeb9ba2a758fe6c479850fa1675b",
+              "version_id": "arxiv:2610.40943:v1:metadata-9449877c1e5f5e99",
+              "scope": "abstract",
+              "format": "text",
+              "quality": "text_extracted",
+              "complete": true,
+              "page_count": null,
+              "retained_pages": [],
+              "first_anchor": null,
+              "warnings": []
+            }
+          ],
+          "title": "Kernel-based Interpolatory Methods for Context Compression of Attention Mechanisms",
+          "url": "https://arxiv.org/abs/2610.40943v1"
+        }
+      ]
+    },
+    {
+      "work_id": "arxiv:2610.40946",
+      "source_id": "arxiv-cs-ai",
+      "current_version_id": "arxiv:2610.40946:v1:metadata-fe7eb688ec7eee7b",
+      "versions": [
+        {
+          "version_id": "arxiv:2610.40946:v1:metadata-fe7eb688ec7eee7b",
+          "content_hash": "65bf8adf05d8fe41fe0e7b5c95b2238b2b6ee4c6f15b2abd21923e5bb7923e59",
+          "access_state": "abstract",
+          "source_scope": "abstract",
+          "reading_access_state": "abstract",
+          "available_scopes": [
+            "abstract"
+          ],
+          "retained_materials": [
+            {
+              "material_id": "mat-f2b2b537a75d4a21c6be6369ea6c77c3",
+              "version_id": "arxiv:2610.40946:v1:metadata-fe7eb688ec7eee7b",
+              "scope": "abstract",
+              "format": "text",
+              "quality": "text_extracted",
+              "complete": true,
+              "page_count": null,
+              "retained_pages": [],
+              "first_anchor": null,
+              "warnings": []
+            }
+          ],
+          "title": "Opening the Box Changes the Cat: LLMs Detect Chain-of-Thought Monitoring - What now?",
+          "url": "https://arxiv.org/abs/2610.40946v1"
+        }
+      ]
+    },
+    {
+      "work_id": "arxiv:2610.40959",
+      "source_id": "arxiv-cs-ai",
+      "current_version_id": "arxiv:2610.40959:v1:metadata-a78f18ab927d7ec9",
+      "versions": [
+        {
+          "version_id": "arxiv:2610.40959:v1:metadata-a78f18ab927d7ec9",
+          "content_hash": "823782226aae1f3a8ceaf18f2752011de3c2eafd6c5eb76530bdbb5708f771e9",
+          "access_state": "abstract",
+          "source_scope": "abstract",
+          "reading_access_state": "abstract",
+          "available_scopes": [
+            "abstract"
+          ],
+          "retained_materials": [
+            {
+              "material_id": "mat-7c5d45b31f4da5928986ff0ad3193693",
+              "version_id": "arxiv:2610.40959:v1:metadata-a78f18ab927d7ec9",
+              "scope": "abstract",
+              "format": "text",
+              "quality": "text_extracted",
+              "complete": true,
+              "page_count": null,
+              "retained_pages": [],
+              "first_anchor": null,
+              "warnings": []
+            }
+          ],
+          "title": "P-ContextBench: From Personal Fact Recall to Personalized Agent Behavior",
+          "url": "https://arxiv.org/abs/2610.40959v1"
+        }
+      ]
+    },
+    {
+      "work_id": "arxiv:2610.40966",
+      "source_id": "arxiv-cs-cl",
+      "current_version_id": "arxiv:2610.40966:v1:metadata-55c0a56c8750035c",
+      "versions": [
+        {
+          "version_id": "arxiv:2610.40966:v1:metadata-55c0a56c8750035c",
+          "content_hash": "4e506c536aa07891f80b304de68f55105805de7d1dfb4ecc89431dd1fa7d09ab",
+          "access_state": "abstract",
+          "source_scope": "abstract",
+          "reading_access_state": "abstract",
+          "available_scopes": [
+            "abstract"
+          ],
+          "retained_materials": [
+            {
+              "material_id": "mat-a722330404855072b6b7fb9b13004998",
+              "version_id": "arxiv:2610.40966:v1:metadata-55c0a56c8750035c",
+              "scope": "abstract",
+              "format": "text",
+              "quality": "text_extracted",
+              "complete": true,
+              "page_count": null,
+              "retained_pages": [],
+              "first_anchor": null,
+              "warnings": []
+            }
+          ],
+          "title": "Better Retrievers, Worse Labels: How Incomplete Relevance Judgments Distort Abstention Evaluation in Conversational RAG",
+          "url": "https://arxiv.org/abs/2610.40966v1"
+        }
+      ]
+    },
+    {
+      "work_id": "arxiv:2610.40984",
+      "source_id": "arxiv-cs-lg",
+      "current_version_id": "arxiv:2610.40984:v1:metadata-0667d01675a6b6ec",
+      "versions": [
+        {
+          "version_id": "arxiv:2610.40984:v1:metadata-0667d01675a6b6ec",
+          "content_hash": "46af355cae9bf9dd14bf48e9eaae46e6f097e1e8361de5c6534ef6083074e456",
+          "access_state": "abstract",
+          "source_scope": "abstract",
+          "reading_access_state": "abstract",
+          "available_scopes": [
+            "abstract"
+          ],
+          "retained_materials": [
+            {
+              "material_id": "mat-ff1c328e53bc5041ecb7d057ced9ed6c",
+              "version_id": "arxiv:2610.40984:v1:metadata-0667d01675a6b6ec",
+              "scope": "abstract",
+              "format": "text",
+              "quality": "text_extracted",
+              "complete": true,
+              "page_count": null,
+              "retained_pages": [],
+              "first_anchor": null,
+              "warnings": []
+            }
+          ],
+          "title": "RC Prediction: A Python Package for Parameter-Aware Reservoir Computing",
+          "url": "https://arxiv.org/abs/2610.40984v1"
+        }
+      ]
+    },
+    {
+      "work_id": "arxiv:2610.40992",
+      "source_id": "arxiv-cs-ai",
+      "current_version_id": "arxiv:2610.40992:v1:metadata-ab88b833815a1f0e",
+      "versions": [
+        {
+          "version_id": "arxiv:2610.40992:v1:metadata-ab88b833815a1f0e",
+          "content_hash": "bfbc6f5d5a89c36d6020ea54bee87f8ab62c678561c51aa0aa2e7a0cc6df87b1",
+          "access_state": "abstract",
+          "source_scope": "abstract",
+          "reading_access_state": "abstract",
+          "available_scopes": [
+            "abstract"
+          ],
+          "retained_materials": [
+            {
+              "material_id": "mat-48052d8130a7ebf26e8b8fe49b376852",
+              "version_id": "arxiv:2610.40992:v1:metadata-ab88b833815a1f0e",
+              "scope": "abstract",
+              "format": "text",
+              "quality": "text_extracted",
+              "complete": true,
+              "page_count": null,
+              "retained_pages": [],
+              "first_anchor": null,
+              "warnings": []
+            }
+          ],
+          "title": "Can Personal Requirements Become Supervision for Planning?",
+          "url": "https://arxiv.org/abs/2610.40992v1"
+        }
+      ]
+    },
+    {
+      "work_id": "arxiv:2610.41012",
+      "source_id": "arxiv-cs-cl",
+      "current_version_id": "arxiv:2610.41012:v1:metadata-f20dbad8ce03c4ef",
+      "versions": [
+        {
+          "version_id": "arxiv:2610.41012:v1:metadata-f20dbad8ce03c4ef",
+          "content_hash": "5cc7c83004150acced228d795f5ee57c61326e06291ad6cb29eba90279e67b71",
+          "access_state": "abstract",
+          "source_scope": "abstract",
+          "reading_access_state": "abstract",
+          "available_scopes": [
+            "abstract"
+          ],
+          "retained_materials": [
+            {
+              "material_id": "mat-87a598790424ed922764c982f309a43e",
+              "version_id": "arxiv:2610.41012:v1:metadata-f20dbad8ce03c4ef",
+              "scope": "abstract",
+              "format": "text",
+              "quality": "text_extracted",
+              "complete": true,
+              "page_count": null,
+              "retained_pages": [],
+              "first_anchor": null,
+              "warnings": []
+            }
+          ],
+          "title": "Language Models Show Conformity Bias in RAG: When the Majority Endorses a Poisoned Claim",
+          "url": "https://arxiv.org/abs/2610.41012v1"
+        }
+      ]
+    },
+    {
+      "work_id": "arxiv:2610.41014",
+      "source_id": "arxiv-cs-lg",
+      "current_version_id": "arxiv:2610.41014:v1:metadata-db1a32505c4d09a1",
+      "versions": [
+        {
+          "version_id": "arxiv:2610.41014:v1:metadata-db1a32505c4d09a1",
+          "content_hash": "d77fb84e85ea97e39d3a8ee7bdbeb915ac8c1461455429d9f918d14aaa8f87ce",
+          "access_state": "abstract",
+          "source_scope": "abstract",
+          "reading_access_state": "abstract",
+          "available_scopes": [
+            "abstract"
+          ],
+          "retained_materials": [
+            {
+              "material_id": "mat-738e3d3ea9b3939aeb44e32197810a46",
+              "version_id": "arxiv:2610.41014:v1:metadata-db1a32505c4d09a1",
+              "scope": "abstract",
+              "format": "text",
+              "quality": "text_extracted",
+              "complete": true,
+              "page_count": null,
+              "retained_pages": [],
+              "first_anchor": null,
+              "warnings": []
+            }
+          ],
+          "title": "Towards Understanding Score-Seeking in LLMs",
+          "url": "https://arxiv.org/abs/2610.41014v1"
+        }
+      ]
+    },
+    {
+      "work_id": "arxiv:2610.41015",
+      "source_id": "arxiv-cs-lg",
+      "current_version_id": "arxiv:2610.41015:v1:metadata-9d3401c4c7c1014c",
+      "versions": [
+        {
+          "version_id": "arxiv:2610.41015:v1:metadata-9d3401c4c7c1014c",
+          "content_hash": "49ae4d9192c2837f995ffa8d10f6ae3dfd02cc9da461f6320c2efd11d381eb93",
+          "access_state": "abstract",
+          "source_scope": "abstract",
+          "reading_access_state": "abstract",
+          "available_scopes": [
+            "abstract"
+          ],
+          "retained_materials": [
+            {
+              "material_id": "mat-1c5ecdf06434f317157b2e5fce1b3b0e",
+              "version_id": "arxiv:2610.41015:v1:metadata-9d3401c4c7c1014c",
+              "scope": "abstract",
+              "format": "text",
+              "quality": "text_extracted",
+              "complete": true,
+              "page_count": null,
+              "retained_pages": [],
+              "first_anchor": null,
+              "warnings": []
+            }
+          ],
+          "title": "Do Language Models Know What Compelling Scientific Evidence Looks Like?",
+          "url": "https://arxiv.org/abs/2610.41015v1"
+        }
+      ]
+    },
+    {
+      "work_id": "arxiv:2610.41022",
+      "source_id": "arxiv-cs-lg",
+      "current_version_id": "arxiv:2610.41022:v1:metadata-1d7490e908ceb729",
+      "versions": [
+        {
+          "version_id": "arxiv:2610.41022:v1:metadata-1d7490e908ceb729",
+          "content_hash": "4e54f4d95a63a5762dfc88e8bd41734495118ffa8b15a046f64ad4b6dded0092",
+          "access_state": "abstract",
+          "source_scope": "abstract",
+          "reading_access_state": "abstract",
+          "available_scopes": [
+            "abstract"
+          ],
+          "retained_materials": [
+            {
+              "material_id": "mat-57a15743d7b145d492ea35b8ba375944",
+              "version_id": "arxiv:2610.41022:v1:metadata-1d7490e908ceb729",
+              "scope": "abstract",
+              "format": "text",
+              "quality": "text_extracted",
+              "complete": true,
+              "page_count": null,
+              "retained_pages": [],
+              "first_anchor": null,
+              "warnings": []
+            }
+          ],
+          "title": "Density-Guided Bootstrap Boundaries for Latent World-Model Reinforcement Learning",
+          "url": "https://arxiv.org/abs/2610.41022v1"
+        }
+      ]
+    },
+    {
+      "work_id": "arxiv:2610.41025",
+      "source_id": "arxiv-cs-ai",
+      "current_version_id": "arxiv:2610.41025:v1:metadata-1aa9801b0aa16243",
+      "versions": [
+        {
+          "version_id": "arxiv:2610.41025:v1:metadata-1aa9801b0aa16243",
+          "content_hash": "4b4657e6568db71d53797ee98c928fb9c6e62b2d842a7b3d5abd5891a42e1c03",
+          "access_state": "abstract",
+          "source_scope": "abstract",
+          "reading_access_state": "abstract",
+          "available_scopes": [
+            "abstract"
+          ],
+          "retained_materials": [
+            {
+              "material_id": "mat-f21ad4e80c44211991e82a95f45998cd",
+              "version_id": "arxiv:2610.41025:v1:metadata-1aa9801b0aa16243",
+              "scope": "abstract",
+              "format": "text",
+              "quality": "text_extracted",
+              "complete": true,
+              "page_count": null,
+              "retained_pages": [],
+              "first_anchor": null,
+              "warnings": []
+            }
+          ],
+          "title": "ReplayRCA: Measuring Post-hoc Diagnosis and Live Oversight of Agent Failures by Counterfactual Replay",
+          "url": "https://arxiv.org/abs/2610.41025v1"
+        }
+      ]
+    },
+    {
+      "work_id": "arxiv:2610.41040",
+      "source_id": "arxiv-cs-ai",
+      "current_version_id": "arxiv:2610.41040:v1:metadata-74eebd3cc589eed0",
+      "versions": [
+        {
+          "version_id": "arxiv:2610.41040:v1:metadata-74eebd3cc589eed0",
+          "content_hash": "5b25126e7e2f77607fe9a102a97b1970c6e73b9e8f1cdaafa9c3f7b7dfeb5de4",
+          "access_state": "abstract",
+          "source_scope": "abstract",
+          "reading_access_state": "abstract",
+          "available_scopes": [
+            "abstract"
+          ],
+          "retained_materials": [
+            {
+              "material_id": "mat-534e5963c0c87ab86dab2f200078b357",
+              "version_id": "arxiv:2610.41040:v1:metadata-74eebd3cc589eed0",
+              "scope": "abstract",
+              "format": "text",
+              "quality": "text_extracted",
+              "complete": true,
+              "page_count": null,
+              "retained_pages": [],
+              "first_anchor": null,
+              "warnings": []
+            }
+          ],
+          "title": "Capability-Grounded Agentic Planning",
+          "url": "https://arxiv.org/abs/2610.41040v1"
+        }
+      ]
+    },
+    {
+      "work_id": "arxiv:2610.41076",
+      "source_id": "arxiv-cs-ai",
+      "current_version_id": "arxiv:2610.41076:v1:metadata-b07e88facba4e8cb",
+      "versions": [
+        {
+          "version_id": "arxiv:2610.41076:v1:metadata-b07e88facba4e8cb",
+          "content_hash": "a520cad63b997818baad77dcbcb7007e1a87fd85417e1eccf1c658a4dcbb7c3c",
+          "access_state": "abstract",
+          "source_scope": "abstract",
+          "reading_access_state": "abstract",
+          "available_scopes": [
+            "abstract"
+          ],
+          "retained_materials": [
+            {
+              "material_id": "mat-f5351a2046735c0be1f7f8b44df28887",
+              "version_id": "arxiv:2610.41076:v1:metadata-b07e88facba4e8cb",
+              "scope": "abstract",
+              "format": "text",
+              "quality": "text_extracted",
+              "complete": true,
+              "page_count": null,
+              "retained_pages": [],
+              "first_anchor": null,
+              "warnings": []
+            }
+          ],
+          "title": "BABA-Bench: Evaluating Long-Horizon Patient-Advocacy Agents",
+          "url": "https://arxiv.org/abs/2610.41076v1"
+        }
+      ]
+    },
+    {
+      "work_id": "arxiv:2610.41089",
+      "source_id": "arxiv-cs-ai",
+      "current_version_id": "arxiv:2610.41089:v1:metadata-6ed2313462efea73",
+      "versions": [
+        {
+          "version_id": "arxiv:2610.41089:v1:metadata-6ed2313462efea73",
+          "content_hash": "74c194322c2cbfe4dffbd2aa63a8320c34a4f93cf789c9e3c228d0358ef05c03",
+          "access_state": "abstract",
+          "source_scope": "abstract",
+          "reading_access_state": "abstract",
+          "available_scopes": [
+            "abstract"
+          ],
+          "retained_materials": [
+            {
+              "material_id": "mat-a2309abdb563aea1c68774f8e1896d9b",
+              "version_id": "arxiv:2610.41089:v1:metadata-6ed2313462efea73",
+              "scope": "abstract",
+              "format": "text",
+              "quality": "text_extracted",
+              "complete": true,
+              "page_count": null,
+              "retained_pages": [],
+              "first_anchor": null,
+              "warnings": []
+            }
+          ],
+          "title": "CIRCE Divines LLM Task Complexity from Constraint Structure",
+          "url": "https://arxiv.org/abs/2610.41089v1"
+        }
+      ]
+    },
+    {
+      "work_id": "arxiv:2610.41177",
+      "source_id": "arxiv-cs-cl",
+      "current_version_id": "arxiv:2610.41177:v1:metadata-f12968377b0c70f8",
+      "versions": [
+        {
+          "version_id": "arxiv:2610.41177:v1:metadata-f12968377b0c70f8",
+          "content_hash": "e5e9088d47d879786eb967e10342e5bb16e0099198a8cc476b23703d890cfae9",
+          "access_state": "abstract",
+          "source_scope": "abstract",
+          "reading_access_state": "abstract",
+          "available_scopes": [
+            "abstract"
+          ],
+          "retained_materials": [
+            {
+              "material_id": "mat-535d2467efb88bad3095b89af38490b5",
+              "version_id": "arxiv:2610.41177:v1:metadata-f12968377b0c70f8",
+              "scope": "abstract",
+              "format": "text",
+              "quality": "text_extracted",
+              "complete": true,
+              "page_count": null,
+              "retained_pages": [],
+              "first_anchor": null,
+              "warnings": []
+            }
+          ],
+          "title": "TraceSpec: Understanding and Improving Speculative Decoding for LLM Agents",
+          "url": "https://arxiv.org/abs/2610.41177v1"
+        }
+      ]
+    },
+    {
+      "work_id": "arxiv:2610.41291",
+      "source_id": "arxiv-cs-cl",
+      "current_version_id": "arxiv:2610.41291:v1:metadata-540221e5b83d286b",
+      "versions": [
+        {
+          "version_id": "arxiv:2610.41291:v1:metadata-540221e5b83d286b",
+          "content_hash": "375815dd18fb3af2ffacf647b716a50884399fb7231c4130a60cdceb9d7da1f0",
+          "access_state": "abstract",
+          "source_scope": "abstract",
+          "reading_access_state": "abstract",
+          "available_scopes": [
+            "abstract"
+          ],
+          "retained_materials": [
+            {
+              "material_id": "mat-d170ecbac88f4fcbf1b667a9491d6d69",
+              "version_id": "arxiv:2610.41291:v1:metadata-540221e5b83d286b",
+              "scope": "abstract",
+              "format": "text",
+              "quality": "text_extracted",
+              "complete": true,
+              "page_count": null,
+              "retained_pages": [],
+              "first_anchor": null,
+              "warnings": []
+            }
+          ],
+          "title": "In-Model Context Compression with Agentic Soft Tokens for Long-Horizon LLM Agents",
+          "url": "https://arxiv.org/abs/2610.41291v1"
+        }
+      ]
+    },
+    {
+      "work_id": "arxiv:2610.41391",
+      "source_id": "arxiv-cs-cl",
+      "current_version_id": "arxiv:2610.41391:v1:metadata-be875cebfaa26052",
+      "versions": [
+        {
+          "version_id": "arxiv:2610.41391:v1:metadata-be875cebfaa26052",
+          "content_hash": "a33a38a2a44a0d858302c3bd32031302fad117ef6a7c6913ef8e0fff8b7629c5",
+          "access_state": "abstract",
+          "source_scope": "abstract",
+          "reading_access_state": "abstract",
+          "available_scopes": [
+            "abstract"
+          ],
+          "retained_materials": [
+            {
+              "material_id": "mat-6ec4fc3f2c94191426fe6b622f33faaa",
+              "version_id": "arxiv:2610.41391:v1:metadata-be875cebfaa26052",
+              "scope": "abstract",
+              "format": "text",
+              "quality": "text_extracted",
+              "complete": true,
+              "page_count": null,
+              "retained_pages": [],
+              "first_anchor": null,
+              "warnings": []
+            }
+          ],
+          "title": "Comparative Evaluation of LLM-Based Review Paradigms for Academic Paper Quality Assessment",
+          "url": "https://arxiv.org/abs/2610.41391v1"
+        }
+      ]
+    },
+    {
+      "work_id": "arxiv:2610.41435",
+      "source_id": "arxiv-cs-cl",
+      "current_version_id": "arxiv:2610.41435:v1:metadata-beb2da6bb778a0f0",
+      "versions": [
+        {
+          "version_id": "arxiv:2610.41435:v1:metadata-beb2da6bb778a0f0",
+          "content_hash": "253118d333e2bf61c5cea38f560297e6d6b62a192b50101efb1832617284d155",
+          "access_state": "abstract",
+          "source_scope": "abstract",
+          "reading_access_state": "abstract",
+          "available_scopes": [
+            "abstract"
+          ],
+          "retained_materials": [
+            {
+              "material_id": "mat-2cbdf333dd2d6fa0a2036cc7cc2edc66",
+              "version_id": "arxiv:2610.41435:v1:metadata-beb2da6bb778a0f0",
+              "scope": "abstract",
+              "format": "text",
+              "quality": "text_extracted",
+              "complete": true,
+              "page_count": null,
+              "retained_pages": [],
+              "first_anchor": null,
+              "warnings": []
+            }
+          ],
+          "title": "BlindToChange: AI Agents Can Find Changes When Asked But Do They Look When Needed?",
+          "url": "https://arxiv.org/abs/2610.41435v1"
+        }
+      ]
+    },
+    {
+      "work_id": "arxiv:2610.41482",
+      "source_id": "arxiv-cs-cl",
+      "current_version_id": "arxiv:2610.41482:v1:metadata-e5c832a06d88973f",
+      "versions": [
+        {
+          "version_id": "arxiv:2610.41482:v1:metadata-e5c832a06d88973f",
+          "content_hash": "bb49d5025b5fb9fa73de33326d928985b353d44178a8476ebada305f3edd242f",
+          "access_state": "abstract",
+          "source_scope": "abstract",
+          "reading_access_state": "abstract",
+          "available_scopes": [
+            "abstract"
+          ],
+          "retained_materials": [
+            {
+              "material_id": "mat-54f2f6e0645f499458d5030d06e35a59",
+              "version_id": "arxiv:2610.41482:v1:metadata-e5c832a06d88973f",
+              "scope": "abstract",
+              "format": "text",
+              "quality": "text_extracted",
+              "complete": true,
+              "page_count": null,
+              "retained_pages": [],
+              "first_anchor": null,
+              "warnings": []
+            }
+          ],
+          "title": "KEEPER: Learning Control-Sufficient Textual Memory for Long-Horizon LLM Agents",
+          "url": "https://arxiv.org/abs/2610.41482v1"
+        }
+      ]
+    },
+    {
+      "work_id": "arxiv:2610.41552",
+      "source_id": "arxiv-cs-cl",
+      "current_version_id": "arxiv:2610.41552:v1:metadata-1c364e8ae805a931",
+      "versions": [
+        {
+          "version_id": "arxiv:2610.41552:v1:metadata-1c364e8ae805a931",
+          "content_hash": "4a84195f230117468fde9ce304a07c0bfed8928617343ff452191d66a9657dc7",
+          "access_state": "abstract",
+          "source_scope": "abstract",
+          "reading_access_state": "abstract",
+          "available_scopes": [
+            "abstract"
+          ],
+          "retained_materials": [
+            {
+              "material_id": "mat-37637e07527abf0d35a62bf375e4ad57",
+              "version_id": "arxiv:2610.41552:v1:metadata-1c364e8ae805a931",
+              "scope": "abstract",
+              "format": "text",
+              "quality": "text_extracted",
+              "complete": true,
+              "page_count": null,
+              "retained_pages": [],
+              "first_anchor": null,
+              "warnings": []
+            }
+          ],
+          "title": "Enhancing Knowledge Entity Relation Extraction in Abstracts and Full-text Content of Academic Articles Using Large Language Models",
+          "url": "https://arxiv.org/abs/2610.41552v1"
+        }
+      ]
+    },
+    {
+      "work_id": "url:1d6c5c59e46e52b936cbc7b983785a69",
+      "source_id": "hugging-face-blog",
+      "current_version_id": "url:1d6c5c59e46e52b936cbc7b983785a69:observed-90d0651966e90e2e",
+      "versions": [
+        {
+          "version_id": "url:1d6c5c59e46e52b936cbc7b983785a69:observed-90d0651966e90e2e",
+          "content_hash": "90d0651966e90e2ebeae8c8c3f2799dc5de93e0028ec1a4e40f56e4197452d9f",
+          "access_state": "metadata",
+          "source_scope": "metadata",
+          "reading_access_state": "metadata",
+          "available_scopes": [
+            "metadata"
+          ],
+          "retained_materials": [],
+          "title": "Can we trust LLMs to judge whether a research idea is novel?",
+          "url": "https://huggingface.co/blog/allenai/novelty-bench"
+        }
+      ]
+    },
+    {
+      "work_id": "url:b49ec3bd8394c6fb4c19e7973ae4b411",
+      "source_id": "google-research",
+      "current_version_id": "url:b49ec3bd8394c6fb4c19e7973ae4b411:observed-42d6cea8785311a4",
+      "versions": [
+        {
+          "version_id": "url:b49ec3bd8394c6fb4c19e7973ae4b411:observed-42d6cea8785311a4",
+          "content_hash": "42d6cea8785311a437355f061490cca834d3ad74917953f393e289ef2be5f534",
+          "access_state": "excerpt",
+          "source_scope": "excerpt",
+          "reading_access_state": "excerpt",
+          "available_scopes": [
+            "excerpt"
+          ],
+          "retained_materials": [
+            {
+              "material_id": "mat-c0f4d4d0fc482dc92002c7cdbef738da",
+              "version_id": "url:b49ec3bd8394c6fb4c19e7973ae4b411:observed-42d6cea8785311a4",
+              "scope": "excerpt",
+              "format": "text",
+              "quality": "text_extracted",
+              "complete": true,
+              "page_count": null,
+              "retained_pages": [],
+              "first_anchor": null,
+              "warnings": []
+            }
+          ],
+          "title": "The sleep framework: A new way for LLMs to retain knowledge in continual learning",
+          "url": "https://research.google/blog/the-sleep-framework-a-new-way-for-llms-to-retain-knowledge-in-continual-learning/"
+        }
+      ]
+    },
+    {
+      "work_id": "verification:unicode",
+      "source_id": "verification-fixture",
+      "current_version_id": "verification:unicode:v2",
+      "versions": [
+        {
+          "version_id": "verification:unicode:v1",
+          "content_hash": "synthetic-v1",
+          "access_state": "abstract",
+          "source_scope": "abstract",
+          "reading_access_state": "abstract",
+          "available_scopes": [
+            "abstract"
+          ],
+          "retained_materials": [
+            {
+              "material_id": "mat-28cf96c4e223d5f4eaeef8bd411fbe15",
+              "version_id": "verification:unicode:v1",
+              "scope": "abstract",
+              "format": "text",
+              "quality": "text_extracted",
+              "complete": true,
+              "page_count": null,
+              "retained_pages": [],
+              "first_anchor": null,
+              "warnings": []
+            }
+          ],
+          "title": "Synthetic verification only: Unicode passage and version retention",
+          "url": "https://example.invalid/verification"
+        },
+        {
+          "version_id": "verification:unicode:v2",
+          "content_hash": "synthetic-v2",
+          "access_state": "abstract",
+          "source_scope": "abstract",
+          "reading_access_state": "abstract",
+          "available_scopes": [
+            "abstract"
+          ],
+          "retained_materials": [
+            {
+              "material_id": "mat-243f05145cea202a6223f7ee16ec93dc",
+              "version_id": "verification:unicode:v2",
+              "scope": "abstract",
+              "format": "text",
+              "quality": "text_extracted",
+              "complete": true,
+              "page_count": null,
+              "retained_pages": [],
+              "first_anchor": null,
+              "warnings": []
+            }
+          ],
+          "title": "Synthetic verification only: Unicode passage and version retention",
+          "url": "https://example.invalid/verification"
+        }
+      ]
+    },
+    {
+      "work_id": "verification:unicode-boundaries",
+      "source_id": "verification-fixture",
+      "current_version_id": "verification:unicode-boundaries:v2",
+      "versions": [
+        {
+          "version_id": "verification:unicode-boundaries:v1",
+          "content_hash": "synthetic-boundaries-v1",
+          "access_state": "abstract",
+          "source_scope": "abstract",
+          "reading_access_state": "abstract",
+          "available_scopes": [
+            "abstract"
+          ],
+          "retained_materials": [
+            {
+              "material_id": "mat-5c9192129528fb8ca32f82561540ff25",
+              "version_id": "verification:unicode-boundaries:v1",
+              "scope": "abstract",
+              "format": "text",
+              "quality": "text_extracted",
+              "complete": true,
+              "page_count": null,
+              "retained_pages": [],
+              "first_anchor": null,
+              "warnings": []
+            }
+          ],
+          "title": "Synthetic verification only: astral and combining-text boundaries",
+          "url": "https://example.invalid/verification-unicode-boundaries"
+        },
+        {
+          "version_id": "verification:unicode-boundaries:v2",
+          "content_hash": "synthetic-boundaries-v2",
+          "access_state": "abstract",
+          "source_scope": "abstract",
+          "reading_access_state": "abstract",
+          "available_scopes": [
+            "abstract"
+          ],
+          "retained_materials": [
+            {
+              "material_id": "mat-2cbc2d977b7517faab916437abaf0730",
+              "version_id": "verification:unicode-boundaries:v2",
+              "scope": "abstract",
+              "format": "text",
+              "quality": "text_extracted",
+              "complete": true,
+              "page_count": null,
+              "retained_pages": [],
+              "first_anchor": null,
+              "warnings": []
+            }
+          ],
+          "title": "Synthetic verification only: astral and combining-text boundaries",
+          "url": "https://example.invalid/verification-unicode-boundaries"
+        }
+      ]
+    }
+  ]
+}

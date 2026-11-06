@@ -1,0 +1,12 @@
+
+> arxiv-research-agent-web@0.1.0 test
+> vitest run --run tests/workspace/context-route-boundaries.test.tsx tests/workspace/reader-context-continuity.test.tsx
+
+
+ RUN  v4.1.11 /private/tmp/arxiv-agent-eng-workspace-mode-build/web
+
+
+ Test Files  2 passed (2)
+      Tests  13 passed (13)
+   Start at  14:37:50
+   Duration  1.69s (transform 262ms, setup 398ms, import 127ms, tests 860ms, environment 1.03s)

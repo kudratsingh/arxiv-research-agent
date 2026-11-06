@@ -1,0 +1,49 @@
+{
+  "scope": "Actual WebM full decode + nominal one-fps contact sheets; explicit visual review still required",
+  "videos": [
+    {
+      "video": "desktop-dark/navigation.webm",
+      "sha256": "e00175e6798c37634a37fe16a584d94ba3c9ccba59a3ce06a15d6508e9868a12",
+      "bytes": 1404164,
+      "width": 1440,
+      "height": 1000,
+      "durationSeconds": 9.48,
+      "fullDecodeExitCode": 0,
+      "contactSheet": "desktop-dark-contact-sheet.png",
+      "visualAssessment": "pending explicit review; never infer a pass from decode"
+    },
+    {
+      "video": "desktop-light/navigation.webm",
+      "sha256": "51a587e96c58a1e358e64329d3e2f4add867ca86a0af0892cd7c6f20117793f4",
+      "bytes": 1405179,
+      "width": 1440,
+      "height": 1000,
+      "durationSeconds": 9.56,
+      "fullDecodeExitCode": 0,
+      "contactSheet": "desktop-light-contact-sheet.png",
+      "visualAssessment": "pending explicit review; never infer a pass from decode"
+    },
+    {
+      "video": "mobile-dark/navigation.webm",
+      "sha256": "770619e43a5a4c07aa079b018dc4724b72b6b56d9912f65f79f1f128b4719f32",
+      "bytes": 743249,
+      "width": 390,
+      "height": 844,
+      "durationSeconds": 8.24,
+      "fullDecodeExitCode": 0,
+      "contactSheet": "mobile-dark-contact-sheet.png",
+      "visualAssessment": "pending explicit review; never infer a pass from decode"
+    },
+    {
+      "video": "mobile-light/navigation.webm",
+      "sha256": "77310255a4787c16c313f0a2c4d2844d9ab74cd47e2db16a8d9037c9cbe8db64",
+      "bytes": 737211,
+      "width": 390,
+      "height": 844,
+      "durationSeconds": 8.2,
+      "fullDecodeExitCode": 0,
+      "contactSheet": "mobile-light-contact-sheet.png",
+      "visualAssessment": "pending explicit review; never infer a pass from decode"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+[
+  {
+    "name": "mobile-light",
+    "encodedURLKey": ".next/static/chunks/app/(live)/workspace/items/%5Bid%5D/page-89c41e519a9cd8ac.js",
+    "canonicalFilesystemKey": ".next/static/chunks/app/(live)/workspace/items/[id]/page-89c41e519a9cd8ac.js",
+    "observedResponseSha256": "6360f3b2937573c30bce7ae511c194ff92adbfa557839e965c6d9632296c1a18",
+    "expectedReceiptSha256": "6360f3b2937573c30bce7ae511c194ff92adbfa557839e965c6d9632296c1a18",
+    "scope": "Observer URL-percent-decoding correction; byte hash comparison remains exact."
+  },
+  {
+    "name": "desktop-dark",
+    "encodedURLKey": ".next/static/chunks/app/(live)/workspace/items/%5Bid%5D/page-89c41e519a9cd8ac.js",
+    "canonicalFilesystemKey": ".next/static/chunks/app/(live)/workspace/items/[id]/page-89c41e519a9cd8ac.js",
+    "observedResponseSha256": "6360f3b2937573c30bce7ae511c194ff92adbfa557839e965c6d9632296c1a18",
+    "expectedReceiptSha256": "6360f3b2937573c30bce7ae511c194ff92adbfa557839e965c6d9632296c1a18",
+    "scope": "Observer URL-percent-decoding correction; byte hash comparison remains exact."
+  },
+  {
+    "name": "mobile-dark",
+    "encodedURLKey": ".next/static/chunks/app/(live)/workspace/items/%5Bid%5D/page-89c41e519a9cd8ac.js",
+    "canonicalFilesystemKey": ".next/static/chunks/app/(live)/workspace/items/[id]/page-89c41e519a9cd8ac.js",
+    "observedResponseSha256": "6360f3b2937573c30bce7ae511c194ff92adbfa557839e965c6d9632296c1a18",
+    "expectedReceiptSha256": "6360f3b2937573c30bce7ae511c194ff92adbfa557839e965c6d9632296c1a18",
+    "scope": "Observer URL-percent-decoding correction; byte hash comparison remains exact."
+  },
+  {
+    "name": "desktop-light",
+    "encodedURLKey": ".next/static/chunks/app/(live)/workspace/items/%5Bid%5D/page-89c41e519a9cd8ac.js",
+    "canonicalFilesystemKey": ".next/static/chunks/app/(live)/workspace/items/[id]/page-89c41e519a9cd8ac.js",
+    "observedResponseSha256": "6360f3b2937573c30bce7ae511c194ff92adbfa557839e965c6d9632296c1a18",
+    "expectedReceiptSha256": "6360f3b2937573c30bce7ae511c194ff92adbfa557839e965c6d9632296c1a18",
+    "scope": "Observer URL-percent-decoding correction; byte hash comparison remains exact."
+  }
+]

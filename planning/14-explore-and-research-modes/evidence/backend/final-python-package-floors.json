@@ -1,0 +1,18 @@
+{
+  "api": {
+    "floor": 88,
+    "actual": "88"
+  },
+  "agents": {
+    "floor": 96,
+    "actual": "96"
+  },
+  "security": {
+    "floor": 100,
+    "actual": "100"
+  },
+  "eval": {
+    "floor": 95,
+    "actual": "95"
+  }
+}

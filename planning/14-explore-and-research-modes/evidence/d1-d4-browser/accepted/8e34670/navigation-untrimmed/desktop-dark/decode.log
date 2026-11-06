@@ -1,0 +1,35 @@
+[libvpx @ 0x7c63020380] v1.14.1
+Input #0, matroska,webm, from 'planning/14-explore-and-research-modes/evidence/d1-d4-browser/accepted/8e34670/navigation-untrimmed/desktop-dark/navigation.webm':
+  Metadata:
+    ENCODER         : Lavf61.1.100
+  Duration: 00:00:09.52, start: 0.000000, bitrate: 1193 kb/s
+  Stream #0:0(eng): Video: vp8 (libvpx), yuv420p(tv, progressive), 1440x1000, SAR 1:1 DAR 36:25, 25 fps, 25 tbr, 1k tbn (default)
+      Metadata:
+        ENCODER         : Lavc61.3.100 libvpx
+        DURATION        : 00:00:09.520000000
+[libvpx @ 0x7c63020e00] v1.14.1
+Stream mapping:
+  Stream #0:0 -> #0:0 (vp8 (libvpx) -> png (native))
+[swscaler @ 0x7c636d4000] [swscaler @ 0x7c636e4000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[swscaler @ 0x7c636d4000] [swscaler @ 0x7c636f4000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[swscaler @ 0x7c636d4000] [swscaler @ 0x7c63704000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[swscaler @ 0x7c636d4000] [swscaler @ 0x7c63714000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[swscaler @ 0x7c636d4000] [swscaler @ 0x7c63724000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[swscaler @ 0x7c636d4000] [swscaler @ 0x7c63734000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[swscaler @ 0x7c636d4000] [swscaler @ 0x7c63744000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[swscaler @ 0x7c636d4000] [swscaler @ 0x7c63754000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[swscaler @ 0x7c636d4000] [swscaler @ 0x7c63764000] No accelerated colorspace conversion found from yuv420p to rgb24.
+Output #0, image2, to '/private/tmp/modes-motion-review-u0m0i7lj/%05d.png':
+  Metadata:
+    encoder         : Lavf61.1.100
+  Stream #0:0(eng): Video: png, rgb24(pc, gbr/unknown/unknown, progressive), 1440x1000 [SAR 1:1 DAR 36:25], q=2-31, 200 kb/s, 25 fps, 25 tbn (default)
+      Metadata:
+        DURATION        : 00:00:09.520000000
+        encoder         : Lavc61.3.100 png
+frame=   55 fps=0.0 q=-0.0 size=N/A time=00:00:02.20 bitrate=N/A speed=4.36x
+frame=   91 fps= 90 q=-0.0 size=N/A time=00:00:03.64 bitrate=N/A speed=3.61x
+frame=  138 fps= 91 q=-0.0 size=N/A time=00:00:05.52 bitrate=N/A speed=3.65x
+frame=  183 fps= 91 q=-0.0 size=N/A time=00:00:07.32 bitrate=N/A speed=3.63x
+frame=  227 fps= 90 q=-0.0 size=N/A time=00:00:09.08 bitrate=N/A speed= 3.6x
+[out#0/image2 @ 0x7c63024180] video:128376KiB audio:0KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: unknown
+frame=  238 fps= 90 q=-0.0 Lsize=N/A time=00:00:09.52 bitrate=N/A speed=3.61x

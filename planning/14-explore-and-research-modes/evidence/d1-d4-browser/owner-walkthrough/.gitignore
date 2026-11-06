@@ -1,0 +1,4 @@
+diagnostics/
+**/*.webm
+**/explore.png
+**/video-inspection/*.png

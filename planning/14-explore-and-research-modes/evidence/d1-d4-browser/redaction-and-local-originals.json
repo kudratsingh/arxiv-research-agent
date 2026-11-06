@@ -1,0 +1,126 @@
+[
+  {
+    "original_local_path": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/runs/2026-11-06T00-48-43-041Z-9c42c3d7/report.json",
+    "original_sha256": "c59f5a711bfbf878b3411ce56b2c40afa119066b67b4e9338c233a1b974a6067",
+    "committed_copy": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/accepted/cea881e/report.json",
+    "copy_sha256": "846cc02c097d18b81e2ebd76af90bd179774932ea9d04de57b708954b9121f01",
+    "policy": "Preference values and unneeded bulk abstracts omitted; exact selected quotes/IDs/bindings and case outcomes preserved"
+  },
+  {
+    "original_local_path": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/runs/2026-11-06T00-48-43-041Z-9c42c3d7/source-and-build-binding.json",
+    "original_sha256": "8816334290cf8afc600e9790237278cdeeb47f3d83c3e2d892cc718d0b670d00",
+    "committed_copy": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/accepted/cea881e/source-and-build-binding.json",
+    "copy_sha256": "8816334290cf8afc600e9790237278cdeeb47f3d83c3e2d892cc718d0b670d00",
+    "policy": "Preference values and unneeded bulk abstracts omitted; exact selected quotes/IDs/bindings and case outcomes preserved"
+  },
+  {
+    "original_local_path": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/runs/2026-11-06T00-48-43-041Z-9c42c3d7/baseline-identity.json",
+    "original_sha256": "7ab0cae67e9df53b4df3a355b50926881a257dfcbca8d2071d96f21425585fda",
+    "committed_copy": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/accepted/cea881e/baseline-identity.json",
+    "copy_sha256": "7ab0cae67e9df53b4df3a355b50926881a257dfcbca8d2071d96f21425585fda",
+    "policy": "Preference values and unneeded bulk abstracts omitted; exact selected quotes/IDs/bindings and case outcomes preserved"
+  },
+  {
+    "original_local_path": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/runs/2026-11-06T00-48-43-041Z-9c42c3d7/restart-checkpoint.json",
+    "original_sha256": "1befa05c73beeb4790ccb1bea32b0983381798d0dfca6da3625418f166128fb5",
+    "committed_copy": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/accepted/cea881e/restart-checkpoint.json",
+    "copy_sha256": "fd9ff3938402d817e9b6a1c559487b049d28813d32d9b77e7639ab991a413208",
+    "policy": "Preference values and unneeded bulk abstracts omitted; exact selected quotes/IDs/bindings and case outcomes preserved"
+  },
+  {
+    "original_local_path": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/runs/2026-11-06T00-48-43-041Z-9c42c3d7/root-restart-receipt.json",
+    "original_sha256": "c67a6fbca70513bccd7214ac2e39a813a6793e1d6c7fc61797a2b4d93e2541bd",
+    "committed_copy": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/accepted/cea881e/root-restart-receipt.json",
+    "copy_sha256": "c67a6fbca70513bccd7214ac2e39a813a6793e1d6c7fc61797a2b4d93e2541bd",
+    "policy": "Preference values and unneeded bulk abstracts omitted; exact selected quotes/IDs/bindings and case outcomes preserved"
+  },
+  {
+    "original_local_path": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/runs/2026-11-06T00-48-43-041Z-9c42c3d7/post-restart/source-and-build-binding.json",
+    "original_sha256": "a98d1c5d13bf7079a20381e9b55405887836b99b1f491b991be83652f7728c64",
+    "committed_copy": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/accepted/cea881e/post-restart/source-and-build-binding.json",
+    "copy_sha256": "a98d1c5d13bf7079a20381e9b55405887836b99b1f491b991be83652f7728c64",
+    "policy": "Preference values and unneeded bulk abstracts omitted; exact selected quotes/IDs/bindings and case outcomes preserved"
+  },
+  {
+    "original_local_path": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/runs/2026-11-06T00-48-43-041Z-9c42c3d7/post-restart/report.json",
+    "original_sha256": "33983ffbbb6ac2e5bf79eb7053a286ac88148d23f888a6ef25d8251019f5fdec",
+    "committed_copy": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/accepted/cea881e/post-restart/report.json",
+    "copy_sha256": "33983ffbbb6ac2e5bf79eb7053a286ac88148d23f888a6ef25d8251019f5fdec",
+    "policy": "Preference values and unneeded bulk abstracts omitted; exact selected quotes/IDs/bindings and case outcomes preserved"
+  },
+  {
+    "original_local_path": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/service-receipt.json",
+    "original_sha256": "1eff9d31e49bf88115c90934a5ef0b01323ff95ccf8de4cba9254df420212c0a",
+    "committed_copy": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/accepted/cea881e/service-receipt.json",
+    "copy_sha256": "1eff9d31e49bf88115c90934a5ef0b01323ff95ccf8de4cba9254df420212c0a",
+    "policy": "Preference values and unneeded bulk abstracts omitted; exact selected quotes/IDs/bindings and case outcomes preserved"
+  },
+  {
+    "original_local_path": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/corpus-manifest.json",
+    "original_sha256": "d9c1e54b28379845f8f408f32cb2b563895fec065d851b1958689b9ee5381499",
+    "committed_copy": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/accepted/cea881e/corpus-manifest.json",
+    "copy_sha256": "d9c1e54b28379845f8f408f32cb2b563895fec065d851b1958689b9ee5381499",
+    "policy": "Preference values and unneeded bulk abstracts omitted; exact selected quotes/IDs/bindings and case outcomes preserved"
+  },
+  {
+    "original_local_path": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/runs/2026-11-05T23-53-49-246Z-18433d73/report.json",
+    "original_sha256": "8a1675aae03eb2d47f06998820cc222229c398db1cb5a4e4125a298d74fa9b56",
+    "committed_copy": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/accepted/8e34670/report.json",
+    "copy_sha256": "59b2c1e8ec028c07bc7e1240cda9a4a2c6741564a5b230ea3aff50e988ba71a0",
+    "policy": "Preference values and unneeded bulk abstracts omitted; exact selected quotes/IDs/bindings and case outcomes preserved"
+  },
+  {
+    "original_local_path": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/runs/2026-11-05T23-53-49-246Z-18433d73/restart-checkpoint.json",
+    "original_sha256": "5953e1cb7f43f92c2c5666ce9f59ba35e812d23dd555716878a951a1d0790392",
+    "committed_copy": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/accepted/8e34670/restart-checkpoint.json",
+    "copy_sha256": "bd4b3732bbb72268a2ea7c3187aa6ef5109e14e1b14202b1a3cf0105b4be2b2a",
+    "policy": "Preference values and unneeded bulk abstracts omitted; exact selected quotes/IDs/bindings and case outcomes preserved"
+  },
+  {
+    "original_local_path": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/runs/2026-11-05T23-53-49-246Z-18433d73/post-restart/report.json",
+    "original_sha256": "219fb076c60f1c71714f8b9458545fbef1d226a875ee1277831e9dbe2aa0406c",
+    "committed_copy": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/accepted/8e34670/post-restart/report.json",
+    "copy_sha256": "219fb076c60f1c71714f8b9458545fbef1d226a875ee1277831e9dbe2aa0406c",
+    "policy": "Preference values and unneeded bulk abstracts omitted; exact selected quotes/IDs/bindings and case outcomes preserved"
+  },
+  {
+    "original_local_path": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/diagnostics/personal-profile-views/accepted/8e34670/desktop-light/interests.png",
+    "original_sha256": "5b519faa94f9bc676768f3b504a39a3d3706af53e6e0657242af838ce25f652e",
+    "scope": "Personal-interest screenshot preserved locally, omitted from remote evidence"
+  },
+  {
+    "original_local_path": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/diagnostics/personal-profile-views/accepted/8e34670/mobile-light/interests.png",
+    "original_sha256": "df6b7ce27a31fa886322a163f22cd603e035dc3289894fda91661aaf5a3cda53",
+    "scope": "Personal-interest screenshot preserved locally, omitted from remote evidence"
+  },
+  {
+    "original_local_path": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/diagnostics/personal-profile-views/accepted/8e34670/mobile-dark/interests.png",
+    "original_sha256": "f95081d32c50d9e8f937ec2e12dda39ef46757e1fba6586ff51e3892c7f23793",
+    "scope": "Personal-interest screenshot preserved locally, omitted from remote evidence"
+  },
+  {
+    "original_local_path": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/diagnostics/personal-profile-views/accepted/8e34670/desktop-dark/interests.png",
+    "original_sha256": "fe6417a709fe4d7c213ce7e0b8f0ec3ac670df051db4b34dc44a8d7d6dc3af13",
+    "scope": "Personal-interest screenshot preserved locally, omitted from remote evidence"
+  },
+  {
+    "original_local_path": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/diagnostics/personal-profile-views/final-layout/62c761a/desktop-dark-no-preference-interests.png",
+    "original_sha256": "fe6417a709fe4d7c213ce7e0b8f0ec3ac670df051db4b34dc44a8d7d6dc3af13",
+    "scope": "Personal-interest screenshot preserved locally, omitted from remote evidence"
+  },
+  {
+    "original_local_path": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/diagnostics/personal-profile-views/final-layout/62c761a/desktop-light-no-preference-interests.png",
+    "original_sha256": "5b519faa94f9bc676768f3b504a39a3d3706af53e6e0657242af838ce25f652e",
+    "scope": "Personal-interest screenshot preserved locally, omitted from remote evidence"
+  },
+  {
+    "original_local_path": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/diagnostics/personal-profile-views/final-layout/62c761a/mobile-light-no-preference-interests.png",
+    "original_sha256": "df6b7ce27a31fa886322a163f22cd603e035dc3289894fda91661aaf5a3cda53",
+    "scope": "Personal-interest screenshot preserved locally, omitted from remote evidence"
+  },
+  {
+    "original_local_path": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/diagnostics/personal-profile-views/final-layout/62c761a/mobile-dark-no-preference-interests.png",
+    "original_sha256": "f95081d32c50d9e8f937ec2e12dda39ef46757e1fba6586ff51e3892c7f23793",
+    "scope": "Personal-interest screenshot preserved locally, omitted from remote evidence"
+  }
+]

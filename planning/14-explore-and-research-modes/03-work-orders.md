@@ -1,8 +1,9 @@
 # Implementation sequence and work orders
 
-Status: planned, not started. No phase here replaces current controller G7/G8
-or alters an evaluation freeze. Finish those tracked gates, reconcile code bases,
-then deliver this feature incrementally. Routine reversible details use this
+Status: D0 is verified and D1–D4 are implemented with final runtime acceptance in progress as the owner-authorized
+connected batch. The controller checkpoint is complete. The owned context API
+and deterministic ranking are committed; frontend/runtime acceptance is pending.
+No phase here alters the historical evaluation freeze. Routine reversible details use this
 kit's defaults; no optional aesthetic preference blocks independent work.
 
 ## D0 — reconcile and freeze the new implementation baseline

@@ -1,0 +1,218 @@
+{
+  "status": "prepared_not_run",
+  "contract": "06-context-api-contract.md",
+  "rankingPolicy": "workspace-modes-lexical-v1 /07-ranking-policy-v1.md",
+  "scope": "Browser mechanics only; all owner usefulness/relevance/quality labels remain blank. No source/provider/count/generation endpoints. No3178writes or owner3137contacts.",
+  "contexts": {
+    "fullJourney": [
+      {
+        "width": 1440,
+        "height": 1000,
+        "theme": "light",
+        "reducedMotion": "no-preference"
+      },
+      {
+        "width": 1440,
+        "height": 1000,
+        "theme": "dark",
+        "reducedMotion": "no-preference"
+      },
+      {
+        "width": 390,
+        "height": 844,
+        "theme": "light",
+        "reducedMotion": "no-preference"
+      },
+      {
+        "width": 390,
+        "height": 844,
+        "theme": "dark",
+        "reducedMotion": "no-preference"
+      }
+    ],
+    "reducedReadonly": [
+      {
+        "width": 1440,
+        "height": 1000,
+        "theme": "light",
+        "reducedMotion": "reduce"
+      },
+      {
+        "width": 1440,
+        "height": 1000,
+        "theme": "dark",
+        "reducedMotion": "reduce"
+      },
+      {
+        "width": 390,
+        "height": 844,
+        "theme": "light",
+        "reducedMotion": "reduce"
+      },
+      {
+        "width": 390,
+        "height": 844,
+        "theme": "dark",
+        "reducedMotion": "reduce"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "D1-01",
+      "name": "Question-free Explore",
+      "status": "not_run",
+      "acceptance": "Actual legacy research_question empty; Explore active edition/first paper renders; no preference/profile/project write from navigation."
+    },
+    {
+      "id": "D1-02",
+      "name": "Visible mode switch/mobile controls",
+      "status": "not_run",
+      "acceptance": "Both mode choices visible without drawer; switch and return preserve typed identity/filters/focus as appropriate; drawer ordinary/IME/modifier behavior retained."
+    },
+    {
+      "id": "D1-03",
+      "name": "Research explicit setup",
+      "status": "not_run",
+      "acceptance": "Research without project shows create/select state, never silently imports legacy question or browser-only durable records."
+    },
+    {
+      "id": "D1-04",
+      "name": "Mode URL/reload/history",
+      "status": "not_run",
+      "acceptance": "Saved context survives reload/new browser; valid mode/project/thread/filter/focus/version/entry/hash preserved; mode/project changes invalidate cursor; Back/Forward returns exact context."
+    },
+    {
+      "id": "D1-05",
+      "name": "Invalid and unowned context",
+      "status": "not_run",
+      "acceptance": "Unknown mode visible fallback; unknown/unowned/archived project unavailable without substitute, record creation, redirects or preference writes."
+    },
+    {
+      "id": "D1-06",
+      "name": "Explicit start preference",
+      "status": "not_run",
+      "acceptance": "Default learning until explicit preference save; independent preference revision, profile unchanged; URL-only choice never saves default."
+    },
+    {
+      "id": "D2-01",
+      "name": "Explicit project from saved question",
+      "status": "not_run",
+      "acceptance": "UI previews exact source/entry revision; title/question/scope/constraints/next actions durable after real success; origin entry remains one shared record."
+    },
+    {
+      "id": "D2-02",
+      "name": "Retry identity/deduplication",
+      "status": "not_run",
+      "acceptance": "Held/transient failed create retry keeps actual stable project id/request_id; real server acknowledges once, no duplicate source/entry/thread association."
+    },
+    {
+      "id": "D2-03",
+      "name": "Actual concurrent409",
+      "status": "not_run",
+      "acceptance": "Parallel own-principal project update advances revision; stale UI save receives real409, latest local fields preserved; explicit reload/discard/reapply recovery verified."
+    },
+    {
+      "id": "D2-04",
+      "name": "Pinned source/evidence/entry associations",
+      "status": "not_run",
+      "acceptance": "Exact work/version/hash/Unicode passage quoted server-side; whole-source metadata reference distinct from substantive retained evidence; entry revision later edits visibly disclosed."
+    },
+    {
+      "id": "D2-05",
+      "name": "Unlink and archive non-destructive",
+      "status": "not_run",
+      "acceptance": "Unlink source and archive project preserve shared Library/source/material/entry history; archived context unavailable, no replacement source/project."
+    },
+    {
+      "id": "D2-06",
+      "name": "Restart persistence",
+      "status": "not_run",
+      "acceptance": "Checkpoint exact records/URLs then ROOT restarts only isolated stack; resume in new context from checkpoint proves durable project/thread/passages/Library resume without RAM."
+    },
+    {
+      "id": "D3-01",
+      "name": "Outside-interest real public match",
+      "status": "not_run",
+      "acceptance": "Verification-authored behavioral-retention/held-out-anchor project retrieves arxiv2610.40740 despite profile score0; visible deterministic lexical reason/scope, no usefulness or factual-support credit."
+    },
+    {
+      "id": "D3-02",
+      "name": "Authoritative context edition/cursor",
+      "status": "not_run",
+      "acceptance": "Today pins active_edition versions for current project revision; question edit invalidates old edition/cursor; filters/cutoff/policy captured, legacy editions[0] never substituted."
+    },
+    {
+      "id": "D4-01",
+      "name": "Connected daily journey",
+      "status": "not_run",
+      "acceptance": "Explore Today(no question)\u2192exact Reader\u2192save question\u2192Investigate\u2192durable project\u2192Learn prerequisite\u2192thread\u2192same project passage\u2192Library resume after reload."
+    },
+    {
+      "id": "D4-02",
+      "name": "Exact Unicode/source version",
+      "status": "not_run",
+      "acceptance": "Array.from/Unicode code-point bounds, quote/version/material identity exact in Reader highlight/project/thread; same-document hash latest wins without editor remount or note re-anchor."
+    },
+    {
+      "id": "D4-03",
+      "name": "Older and unavailable pinned version",
+      "status": "not_run",
+      "acceptance": "Clearly labelled synthetic two-version fixture separate from real corpus; old source note remains old; unavailable pin never silently picks newer version. Captured-response unavailability separately labelled software-only."
+    },
+    {
+      "id": "D4-04",
+      "name": "Pending write navigation veto",
+      "status": "not_run",
+      "acceptance": "Actual held Reader/project/thread POST; mode switch/project selector/ordinary+slash search/palette links refuse before URL/full history/session intent changes; current fields and anchor/version retained."
+    },
+    {
+      "id": "D4-05",
+      "name": "Failed save and recovery",
+      "status": "not_run",
+      "acceptance": "Deliberate503/409 intercepts are software-only; retry real API save, retain latest body/revision/request identity; not labelled server-saved before acknowledgement."
+    },
+    {
+      "id": "D4-06",
+      "name": "Back/Forward unsaved draft recovery",
+      "status": "not_run",
+      "acceptance": "Dirty Reader/project/thread back/forward and same-document hash; working storage recovers exact latest fields/version/context; unavailable/corrupt storage warned honestly, no durable-save claim."
+    },
+    {
+      "id": "D4-07",
+      "name": "Rapid queue and keyboard safety",
+      "status": "not_run",
+      "acceptance": "Native J/J/K final selection wins; typed j/s/1 in editable fields never invokes page shortcuts; exact context and title+2lines clear player after transitions."
+    },
+    {
+      "id": "D4-08",
+      "name": "Mobile field and keyboard clearance",
+      "status": "not_run",
+      "acceptance": "Actual keyboard focus/Tab typing, bounded native wheel exposes complete editor/error/help above player; reduced viewport keyboard proxy labelled as emulation, not real OS keyboard."
+    },
+    {
+      "id": "D4-09",
+      "name": "Typed authored records",
+      "status": "not_run",
+      "acceptance": "Manual observation/assumption/hypothesis/comparison/proposed-experiment remain explicit unverified records with selected exact evidence links; no experiment or generation execution."
+    },
+    {
+      "id": "D4-10",
+      "name": "Theme/reduced-motion/accessibility",
+      "status": "not_run",
+      "acceptance": "1440\u00d71000/390\u00d7844 both themes full journey; four additional reduced-motion readonly contexts; actual html theme, axe/CSP/errors/overflows, zero reduced article/mascot/equalizer motion; actual WebM/decoded frame inspection."
+    }
+  ],
+  "executionPrerequisites": [
+    "ROOT runtimeReady signal and source/build/PID/principal/database receipt",
+    "Frontend final locator contract confirmation at same application commit",
+    "Actual public corpus manifest and optional labelled synthetic Unicode/two-version fixture receipts",
+    "ROOT restart checkpoint coordination; harness never restarts services"
+  ],
+  "honestLimitations": [
+    "Browser emulation is not physical mobile OS keyboard/IME validation.",
+    "Synthetic/captured-response failures cannot prove public-source reliability.",
+    "No real second version available until ROOT seeds labelled verification fixture.",
+    "No inference, owner usefulness or longitudinal daily-use claim."
+  ]
+}

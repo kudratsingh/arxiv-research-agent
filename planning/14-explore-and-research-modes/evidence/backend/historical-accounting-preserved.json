@@ -1,0 +1,19 @@
+{
+  "historical_receipt_sha256": "92c3c54c962171e3473344856276d6a5f81593ae5e3a129d45a0e28ad8c304ee",
+  "program_id": "research-evaluation-20261105-v1",
+  "estimated_cumulative_usd": "0.109967",
+  "workflow_usd": "0.094655",
+  "checker_usd": "0.015312",
+  "unresolved_hold_usd": "0",
+  "pending_usd": "0",
+  "new_jobs": 6,
+  "total_messages": 9,
+  "total_count_requests": 15,
+  "invoice_confirmed": false,
+  "price_basis": "Provider-metered tokens at each sealed historical standard/global rate; cost estimates, not invoice-confirmed charges.",
+  "new_contacts_in_mode_batch": 0,
+  "everyday_generation": false,
+  "checker_qualified": false,
+  "recurrence_enabled": false,
+  "human_labels": "unchanged and unfilled"
+}

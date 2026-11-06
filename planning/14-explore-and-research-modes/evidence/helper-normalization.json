@@ -1,0 +1,14 @@
+[
+  {
+    "source": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/inspect-recordings.py",
+    "original": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/inspect-recordings.py.original.txt",
+    "originalSha256": "db115f381759a6a088ce089be1796c2456e5561f808d25cf421615301ccff446",
+    "reason": "Normalize standalone evidence helper formatting/imports under existing global Ruff; original evidence bytes retained, no exclusions or production edits"
+  },
+  {
+    "source": "planning/14-explore-and-research-modes/evidence/provisional-visual/inspect-videos.py",
+    "original": "planning/14-explore-and-research-modes/evidence/provisional-visual/inspect-videos.py.original.txt",
+    "originalSha256": "763b439b3e3e6a536a860476696c885e9677a24d767f60d042a628e728a98d4b",
+    "reason": "Normalize standalone evidence helper formatting/imports under existing global Ruff; original evidence bytes retained, no exclusions or production edits"
+  }
+]

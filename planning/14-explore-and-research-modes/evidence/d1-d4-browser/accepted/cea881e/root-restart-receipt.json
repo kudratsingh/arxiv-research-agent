@@ -1,0 +1,21 @@
+{
+  "started_at": "2026-11-06T00:57:45.061011+00:00",
+  "completed_at": "2026-11-06T00:57:51.478263+00:00",
+  "source_commit": "cea881e0f0335f1f51fff29f83c5ce35305aebd5",
+  "build_id": "YEs1EnypIwGcU-n2LZwvx",
+  "database": "workspace_modes_browser",
+  "principal": "modes-browser-r15",
+  "before": {
+    "api_pid": 46342,
+    "web_pid": 43279
+  },
+  "after": {
+    "api_pid": 49909,
+    "web_pid": 49945
+  },
+  "provider_sentinel": true,
+  "recurrence": false,
+  "owner3137": "untouched",
+  "database_replaced": false,
+  "scope": "Real API and Node process restart on same durable database and immutable frontend; no inferred power-loss test"
+}

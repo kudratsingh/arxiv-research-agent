@@ -1,0 +1,10 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+__ test_new_text_extraction_does_not_invalidate_an_older_exact_material_link ___
+tests/test_workspace_context.py:561: in test_new_text_extraction_does_not_invalidate_an_older_exact_material_link
+    assert len(second["sources"]) == 2
+E   AssertionError: assert 1 == 2
+E    +  where 1 = len([{'id': 'link-8ad331d2f2d13061212ff3c06f6f06c5', 'role': 'evidence', 'label': '', 'status': 'active', ...}])
+=========================== short test summary info ============================
+FAILED tests/test_workspace_context.py::test_new_text_extraction_does_not_invalidate_an_older_exact_material_link
+1 failed, 41 deselected in 0.86s

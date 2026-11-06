@@ -1,0 +1,494 @@
+OMP_NUM_THREADS=1 TOKENIZERS_PARALLELISM=false PYTHONHASHSEED=0 ANTHROPIC_API_KEY=local-preview-disabled COVERAGE_CORE=ctrace \
+	/Users/kudratsingh/Machine-Learning-Projects/arxiv-venv-lock/bin/python -m pytest -m "not e2e" tests/ \
+		--cov=src --cov-context=test --cov-report=term-missing:skip-covered
+============================= test session starts ==============================
+platform darwin -- Python 3.13.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: /private/tmp/arxiv-agent-eng-workspace-mode-build
+configfile: pyproject.toml
+plugins: cov-7.1.0, anyio-4.14.1, postgresql-8.1.0, timeout-2.4.0, asyncio-1.4.0, langsmith-0.9.7, hypothesis-6.167.1
+timeout: 60.0s
+timeout method: signal
+timeout func_only: False
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 6409 items / 53 deselected / 6356 selected
+
+tests/fault/test_agent_degradation_faults.py ................            [  0%]
+tests/fault/test_call_chain_budget_faults.py ......                      [  0%]
+tests/fault/test_cancellation_faults.py .....                            [  0%]
+tests/fault/test_cost_cap_faults.py ....                                 [  0%]
+tests/fault/test_model_provider_faults.py .......                        [  0%]
+tests/fault/test_postgres_faults.py ...s                                 [  0%]
+tests/fault/test_redis_faults.py .....                                   [  0%]
+tests/fault/test_resilience_faults.py s.                                 [  0%]
+tests/fault/test_runtime_bridge_faults.py ...................            [  1%]
+tests/fault/test_sse_delivery_faults.py .....                            [  1%]
+tests/fault/test_supervisor_routing_faults.py ......                     [  1%]
+tests/fault/test_triple_contract.py .......                              [  1%]
+tests/fault/test_verify_repair_faults.py ...                             [  1%]
+tests/fault/test_worker_death_faults.py .......                          [  1%]
+tests/property/test_property_chunker.py .....                            [  1%]
+tests/property/test_property_citations.py ......                         [  1%]
+tests/property/test_property_config.py ................................. [  2%]
+........................................................................ [  3%]
+...........................................................              [  4%]
+tests/property/test_property_llm_models.py ....                          [  4%]
+tests/property/test_property_redaction.py .............................. [  4%]
+..                                                                       [  4%]
+tests/property/test_property_schemas.py ......                           [  4%]
+tests/property/test_property_secret_config.py ....................       [  5%]
+tests/property/test_property_sse.py .....                                [  5%]
+tests/test_admin_migrate.py ............................................ [  6%]
+.......                                                                  [  6%]
+tests/test_agent_cache_flag.py ...............                           [  6%]
+tests/test_agent_model_routing.py ...............                        [  6%]
+tests/test_agent_schemas.py ................                             [  6%]
+tests/test_api_auth.py ................................                  [  7%]
+tests/test_api_conversations.py ...........................sssssssssssss [  7%]
+...s...............                                                      [  8%]
+tests/test_api_error_envelope.py ..............                          [  8%]
+tests/test_api_export_route.py ..............                            [  8%]
+tests/test_api_exporters.py ......................                       [  9%]
+tests/test_api_guardrails.py ..............                              [  9%]
+tests/test_api_hitl.py ......................                            [  9%]
+tests/test_api_jobs.py ..............                                    [  9%]
+tests/test_api_lazy_imports.py ......                                    [  9%]
+tests/test_api_learn_routes.py ..................                        [ 10%]
+tests/test_api_middleware.py ........................................... [ 10%]
+........                                                                 [ 11%]
+tests/test_api_redis_store.py .......................................... [ 11%]
+............                                                             [ 11%]
+tests/test_api_retriever.py ..........                                   [ 12%]
+tests/test_api_routes.py ................                                [ 12%]
+tests/test_api_session_lifecycle.py ..........................           [ 12%]
+tests/test_api_smoke_e2e.py .                                            [ 12%]
+tests/test_api_streaming.py .............                                [ 12%]
+tests/test_app_periodic_redrive.py ...........                           [ 13%]
+tests/test_arxiv_search.py .............                                 [ 13%]
+tests/test_assessment_judge.py ...............                           [ 13%]
+tests/test_assurance_docs.py .............................               [ 13%]
+tests/test_benchmark_adapters.py ....................................... [ 14%]
+...........................                                              [ 15%]
+tests/test_benchmark_queries.py .....................                    [ 15%]
+tests/test_bounded_executor_cancel.py ...........................        [ 15%]
+tests/test_cache_degradation.py ...                                      [ 15%]
+tests/test_calibration_blinding.py ............................          [ 16%]
+tests/test_calibration_emitted_pool.py .........                         [ 16%]
+tests/test_calibration_estimate.py .................................     [ 16%]
+tests/test_calibration_estimate_measured.py ..........................   [ 17%]
+tests/test_calibration_fixtures.py ..................................... [ 17%]
+..................                                                       [ 18%]
+tests/test_calibration_labels.py ....................................... [ 18%]
+.............................                                            [ 19%]
+tests/test_calibration_metrics.py ...................................... [ 19%]
+...................                                                      [ 20%]
+tests/test_calibration_packets.py ...................................... [ 20%]
+..............                                                           [ 20%]
+tests/test_calibration_pool.py ....                                      [ 21%]
+tests/test_calibration_protocol_doc.py .............................     [ 21%]
+tests/test_calibration_sampling.py ..................................... [ 22%]
+...                                                                      [ 22%]
+tests/test_calibration_suite.py ........................................ [ 22%]
+...............                                                          [ 23%]
+tests/test_calibration_verdict_ingest.py .............                   [ 23%]
+tests/test_campaign_execution.py ....................................... [ 23%]
+..................                                                       [ 24%]
+tests/test_campaign_funded_path.py ..................................... [ 24%]
+.................................                                        [ 25%]
+tests/test_campaign_gateway_settings.py ......                           [ 25%]
+tests/test_campaign_lock.py ............................................ [ 25%]
+........................................................................ [ 27%]
+.......................                                                  [ 27%]
+tests/test_campaign_plan_artifact.py .............................       [ 27%]
+tests/test_campaign_rehearsal.py ....................................... [ 28%]
+..                                                                       [ 28%]
+tests/test_campaign_report_variance.py ..                                [ 28%]
+tests/test_campaign_smoke.py ..................................          [ 29%]
+tests/test_chunk_ranker.py ...............                               [ 29%]
+tests/test_chunker.py .............                                      [ 29%]
+tests/test_cli_run_recovery.py ............                              [ 29%]
+tests/test_compute_controller.py ....................................... [ 30%]
+...                                                                      [ 30%]
+tests/test_compute_controller_runtime.py ...................             [ 30%]
+tests/test_compute_policy.py .......................................     [ 31%]
+tests/test_config.py ................................................... [ 32%]
+.......................................................................  [ 33%]
+tests/test_container_contract.py ..........                              [ 33%]
+tests/test_content_linkcheck.py ..............                           [ 33%]
+tests/test_content_manifest.py ......................................... [ 34%]
+..........................                                               [ 34%]
+tests/test_content_review_queue.py ................                      [ 34%]
+tests/test_contract_artifact_store.py .................................. [ 35%]
+.............                                                            [ 35%]
+tests/test_contract_kernel.py ..........................                 [ 36%]
+tests/test_contract_learn_fixtures.py ........                           [ 36%]
+tests/test_contract_openapi_snapshot.py ..F..                            [ 36%]
+tests/test_contract_research_binding.py ................................ [ 36%]
+.......................                                                  [ 37%]
+tests/test_contract_runtime_bridge.py .................................. [ 37%]
+.....................................................                    [ 38%]
+tests/test_contract_session_fixtures.py .                                [ 38%]
+tests/test_contract_shadow_bridge.py ................................... [ 39%]
+........                                                                 [ 39%]
+tests/test_contract_shadow_runtime.py ..............                     [ 39%]
+tests/test_contract_sse_events.py .............                          [ 39%]
+tests/test_degradation_ladder.py ..................                      [ 39%]
+tests/test_degradation_trajectory.py .....................               [ 40%]
+tests/test_deployment_contract.py ...........                            [ 40%]
+tests/test_documented_claims.py ........................................ [ 41%]
+............                                                             [ 41%]
+tests/test_embedding_cache.py .....ssssss....                            [ 41%]
+tests/test_embedding_device.py ..............                            [ 41%]
+tests/test_engagement.py ................                                [ 41%]
+tests/test_errors.py ...................................                 [ 42%]
+tests/test_eval_provenance.py .......................................... [ 43%]
+...............................                                          [ 43%]
+tests/test_eval_registry.py ....................                         [ 43%]
+tests/test_eval_rubric_versions.py .................................     [ 44%]
+tests/test_eval_runner.py .............................................. [ 45%]
+........................................................................ [ 46%]
+......                                                                   [ 46%]
+tests/test_eval_stats.py ............................................... [ 47%]
+.......................                                                  [ 47%]
+tests/test_genai_conventions.py ........................................ [ 48%]
+.......................                                                  [ 48%]
+tests/test_graph_shape_golden.py ..                                      [ 48%]
+tests/test_groundedness.py ............................................. [ 49%]
+............................................................             [ 50%]
+tests/test_guided_session_graph.py .......                               [ 50%]
+tests/test_harness_guards.py .....................................       [ 50%]
+tests/test_health_logging.py ................                            [ 51%]
+tests/test_hitl_cross_worker_resume.py ...                               [ 51%]
+tests/test_http_session.py ...................                           [ 51%]
+tests/test_job_redriver.py ........................................      [ 52%]
+tests/test_keystore_reloader.py ........                                 [ 52%]
+tests/test_learn_profile_routes.py ..............................        [ 52%]
+tests/test_learner_profile_serializer.py ...................             [ 53%]
+tests/test_learner_profile_store.py .................................... [ 53%]
+.............sssssssssss                                                 [ 53%]
+tests/test_learning_benchmark.py ....................................... [ 54%]
+..                                                                       [ 54%]
+tests/test_learning_fixtures.py ....................................     [ 55%]
+tests/test_learning_memory.py ........                                   [ 55%]
+tests/test_learning_metrics.py .............................             [ 55%]
+tests/test_listwise_selection.py ....................................    [ 56%]
+tests/test_llm.py ...................................                    [ 56%]
+tests/test_llm_models.py .............................                   [ 57%]
+tests/test_llm_request_golden.py ......                                  [ 57%]
+tests/test_llm_request_profiles.py ............................          [ 57%]
+tests/test_log_contract.py ............................................. [ 58%]
+                                                                         [ 58%]
+tests/test_log_redaction.py ............................................ [ 59%]
+.....................                                                    [ 59%]
+tests/test_metrics_citation_accuracy.py .................                [ 59%]
+tests/test_metrics_citation_resolution.py ...............                [ 60%]
+tests/test_metrics_completeness.py .....................                 [ 60%]
+tests/test_metrics_faithfulness.py ..................................... [ 61%]
+.........................                                                [ 61%]
+tests/test_metrics_retrieval_recall.py ...................               [ 61%]
+tests/test_mock_judge.py .........                                       [ 61%]
+tests/test_mock_mode.py ....................................             [ 62%]
+tests/test_observability.py ............................................ [ 63%]
+.......................                                                  [ 63%]
+tests/test_operability_docs.py ......................................... [ 64%]
+..............................                                           [ 64%]
+tests/test_orchestration_controller.py ................................. [ 65%]
+...................                                                      [ 65%]
+tests/test_orchestration_lineage.py ................                     [ 65%]
+tests/test_orchestration_policy.py ...............................       [ 66%]
+tests/test_otel_metrics.py ...............................               [ 66%]
+tests/test_paper_cache.py .....ssssss.....s                              [ 66%]
+tests/test_parse_defense.py ........................                     [ 67%]
+tests/test_pdf_parser.py ............................                    [ 67%]
+tests/test_per_principal_scoping.py ..................                   [ 68%]
+tests/test_planner_prior_context.py ........                             [ 68%]
+tests/test_progress_events.py .......................................... [ 68%]
+....................ssssssssssssss                                       [ 69%]
+tests/test_prompt_isolation.py ........................                  [ 69%]
+tests/test_query_refiner.py ..................                           [ 70%]
+tests/test_reader.py ......................                              [ 70%]
+tests/test_reader_abstract_only_record.py ..............                 [ 70%]
+tests/test_reader_fallback_logging.py ..........                         [ 70%]
+tests/test_reader_isolation.py ...........                               [ 70%]
+tests/test_reader_recovery.py ..................                         [ 71%]
+tests/test_readme_update.py ............................                 [ 71%]
+tests/test_record_learning_fixtures.py ...............                   [ 71%]
+tests/test_redis_rate_limiter.py .............                           [ 72%]
+tests/test_regression_diff.py .......................................... [ 72%]
+........................................................................ [ 73%]
+........................................................................ [ 75%]
+............................                                             [ 75%]
+tests/test_repo_hygiene.py ..............                                [ 75%]
+tests/test_research_policy.py ...................................        [ 76%]
+tests/test_resilience.py ......................................          [ 76%]
+tests/test_resilience_transport.py .............                         [ 77%]
+tests/test_run_manifest.py ..................................            [ 77%]
+tests/test_runner_cost_cap.py ............                               [ 77%]
+tests/test_runner_lease_logging.py .........                             [ 77%]
+tests/test_safety_suite.py ............................................. [ 78%]
+........................................................................ [ 79%]
+.......................                                                  [ 80%]
+tests/test_scripted_tier_check.py ...................................... [ 80%]
+..........                                                               [ 80%]
+tests/test_search_enrichment.py ..........                               [ 80%]
+tests/test_search_honesty.py ...................                         [ 81%]
+tests/test_semantic_scholar.py ...............................           [ 81%]
+tests/test_session_cost_cap.py ......                                    [ 81%]
+tests/test_simulate_learner.py ......................................... [ 82%]
+....................                                                     [ 82%]
+tests/test_simulate_research.py ........................................ [ 83%]
+..................................................                       [ 84%]
+tests/test_simulate_research_campaign.py ..............                  [ 84%]
+tests/test_smoke.py .......                                              [ 84%]
+tests/test_sse_cross_worker.py ........                                  [ 84%]
+tests/test_sse_plan_replay.py .......                                    [ 84%]
+tests/test_sse_stream.py ................................                [ 85%]
+tests/test_stage0_qualification.py ...........................           [ 85%]
+tests/test_static_publication.py ..................                      [ 86%]
+tests/test_supervisor.py ............................................... [ 86%]
+..................                                                       [ 87%]
+tests/test_synthesizer.py ................                               [ 87%]
+tests/test_task_spec.py ......................................           [ 87%]
+tests/test_tracing.py ............                                       [ 88%]
+tests/test_trajectory.py .................                               [ 88%]
+tests/test_verifier.py .................................                 [ 88%]
+tests/test_workflow_backend_selector.py ............                     [ 89%]
+tests/test_workflow_startup_once.py .....                                [ 89%]
+tests/test_workspace_activity.py ...                                     [ 89%]
+tests/test_workspace_admission.py ..............................         [ 89%]
+tests/test_workspace_api.py ........                                     [ 89%]
+tests/test_workspace_availability.py ...                                 [ 89%]
+tests/test_workspace_browser_seed.py ............                        [ 90%]
+tests/test_workspace_catalogue_types.py ..                               [ 90%]
+tests/test_workspace_checker_context.py .......                          [ 90%]
+tests/test_workspace_commands.py ................                        [ 90%]
+tests/test_workspace_context.py ...................................      [ 90%]
+tests/test_workspace_context_api.py ...........                          [ 91%]
+tests/test_workspace_evaluation_program.py ...........                   [ 91%]
+tests/test_workspace_evidence_contract.py .............................. [ 91%]
+..........................                                               [ 92%]
+tests/test_workspace_executor.py ....................................... [ 92%]
+.............                                                            [ 93%]
+tests/test_workspace_fulltext.py ......................                  [ 93%]
+tests/test_workspace_generation_api.py .......                           [ 93%]
+tests/test_workspace_grounding.py ............................           [ 93%]
+tests/test_workspace_intake.py ......................................... [ 94%]
+....................                                                     [ 94%]
+tests/test_workspace_interests_allocation.py .....................       [ 95%]
+tests/test_workspace_material.py ....................................... [ 95%]
+.                                                                        [ 95%]
+tests/test_workspace_material_api.py ....                                [ 95%]
+tests/test_workspace_materials_repository.py ..........                  [ 96%]
+tests/test_workspace_measurement.py .....................                [ 96%]
+tests/test_workspace_mode_ranking.py ................................... [ 96%]
+...                                                                      [ 96%]
+tests/test_workspace_operator.py ...........                             [ 97%]
+tests/test_workspace_provider_adapter.py ............................... [ 97%]
+...                                                                      [ 97%]
+tests/test_workspace_qualification.py .......                            [ 97%]
+tests/test_workspace_qualification_accounting.py ............            [ 97%]
+tests/test_workspace_qualification_repair.py ..........                  [ 98%]
+tests/test_workspace_ranking.py .............                            [ 98%]
+tests/test_workspace_review_api.py ....                                  [ 98%]
+tests/test_workspace_reviews.py ...                                      [ 98%]
+tests/test_workspace_shared_rate.py ...................                  [ 98%]
+tests/test_workspace_sonnet55.py .....                                   [ 98%]
+tests/test_workspace_source_samples.py ................................. [ 99%]
+................                                                         [ 99%]
+tests/test_workspace_store.py ............                               [ 99%]
+tests/test_workspace_worker.py .............                             [100%]
+
+=================================== FAILURES ===================================
+_____________ test_snapshot_covers_every_route_the_frontend_calls ______________
+
+    def test_snapshot_covers_every_route_the_frontend_calls() -> None:
+        """The paths 04-ARCHITECTURE.md §3.1 lists as the frozen HTTP surface.
+
+        A route dropped from the document would still pass the equality check
+        above — both sides would simply lose it — so the surface itself is pinned
+        separately.
+
+        `/learn/paths*` joined the set in WO-W15: the read-only learning-content
+        surface (`src/api/learn.py`), gated by `enable_learn_content`. The routes
+        exist in the document whatever the flag says, because the document
+        describes the server's shape, not one deployment's configuration.
+        """
+        document = _snapshot()
+        paths = document["paths"]
+
+>       assert set(paths) == {
+            "/workspace/state", "/workspace/profile", "/workspace/reading",
+            "/workspace/entries", "/workspace/refresh", "/workspace/edition",
+            "/workspace/items", "/workspace/manual", "/workspace/import/preview",
+            "/workspace/import/apply", "/workspace/schedule", "/workspace/export",
+            "/workspace/generate",
+            "/workspace/review", "/workspace/review/prepare", "/workspace/review/feedback",
+            "/workspace/materials", "/workspace/materials/{material_id}",
+            "/workspace/generation/preview", "/workspace/generation/jobs",
+            "/workspace/generation/jobs/{job_id}", "/workspace/generation/jobs/{job_id}/advance",
+            "/workspace/generation/jobs/{job_id}/cancel", "/workspace/generation/jobs/{job_id}/recover",
+            # D0–D4: manual owned context adds routes; legacy methods stay pinned.
+            "/workspace/context", "/workspace/context/preferences",
+            "/workspace/context/projects", "/workspace/context/projects/{project_id}",
+            "/workspace/context/projects/{project_id}/sources",
+            "/workspace/context/projects/{project_id}/unlink",
+            "/workspace/context/projects/{project_id}/entries",
+            "/workspace/context/projects/{project_id}/artifacts",
+            "/workspace/context/threads", "/workspace/context/threads/{thread_id}",
+            "/workspace/context/entries", "/workspace/context/reading",
+            "/workspace/context/state", "/workspace/context/items",
+            # WO-W07: the learner progress ledger. Present in the document
+            # whatever `enable_learner_profile` says — the flag is runtime
+            # behaviour (404 when off), not schema shape, so the contract
+            # describes one surface rather than two.
+            "/learn/progress",
+            "/research",
+            "/research/{job_id}",
+            "/research/{job_id}/review",
+            "/research/{job_id}/export",
+            "/research/{job_id}/stream",
+            "/conversations",
+            "/conversations/{conversation_id}",
+            "/learn/profile",
+            "/healthz",
+            "/learn/paths",
+            "/learn/paths/{path_id}",
+            "/learn/sessions",
+            "/learn/sessions/{session_id}",
+            "/learn/sessions/{session_id}/turn",
+        }
+E       AssertionError: assert {'/conversati...profile', ...} == {'/conversati...profile', ...}
+E
+E         Extra items in the left set:
+E         '/workspace/context/threads/{thread_id}'
+E         '/workspace/context/projects/{project_id}/artifacts'
+E         '/workspace/context/items'
+E         '/workspace/context/threads'
+E         '/workspace/context/state'...
+E
+E         ...Full output truncated (10 lines hidden), use '-vv' to show
+
+tests/test_contract_openapi_snapshot.py:84: AssertionError
+================================ tests coverage ================================
+_______________ coverage: platform darwin, python 3.13.7-final-0 _______________
+
+Name                                        Stmts   Miss Branch BrPart  Cover   Missing
+---------------------------------------------------------------------------------------
+src/agents/assessment.py                      115     12     40     12    85%   89, 92, 118, 124, 132, 145, 150, 155, 157, 183, 186, 220
+src/agents/mock_mode.py                        90      0     32      1    99%   475->477
+src/agents/reader.py                          284      5     98      5    97%   477->482, 721-722, 848, 853->851, 984, 1075
+src/agents/supervisor.py                      138      6     50      2    94%   283-286, 625-629
+src/agents/synthesizer.py                     161      4     58      2    96%   365, 519-524
+src/agents/tutor.py                           198     13     54     10    91%   108, 112, 115->110, 126, 156, 160, 164->158, 170, 215-217, 268, 308-310, 314->316
+src/agents/verifier.py                        156      2     52      4    97%   216->214, 538, 543, 640->644
+src/api/admin_migrate.py                      351     48    112      9    86%   312->314, 316-321, 414->392, 711, 738-771, 804, 859-885, 1003, 1200-1225, 1283-1284, 1287, 1328->1350, 1360-1367
+src/api/app.py                                351     14     82      3    96%   727-729, 827-833, 908, 1079-1088, 1221-1222
+src/api/auth.py                               213     11     64      6    94%   427, 445, 454, 505, 574-576, 591-596, 610, 671
+src/api/conversations.py                      174     27     22      5    84%   368-390, 418-419, 487-514, 557-579, 596-597, 630, 639
+src/api/exporters/docx.py                     259     63    136     27    70%   77->86, 86->88, 88->90, 90->92, 93->96, 155-176, 179-186, 189-193, 200, 212->250, 215-217, 223, 230->247, 232, 235->246, 237->246, 243-244, 249, 289, 294, 323, 338->328, 340-352, 362, 367, 372-373, 380
+src/api/exporters/markdown.py                  27      0      8      4    89%   42->44, 44->46, 46->48, 49->51
+src/api/exporters/pdf.py                      234     57    104     24    69%   184->193, 193->195, 195->197, 197->199, 200->203, 289-301, 305-323, 327-332, 336-338, 343->345, 351, 365->402, 368-370, 376, 384->396, 386, 389->395, 391->395, 400, 425->431, 434, 439, 474, 492-514
+src/api/jobs.py                               108      2      8      2    97%   365, 367
+src/api/redis_store.py                        303      6     80     12    95%   150, 183, 423->425, 599, 616, 620->622, 714->716, 802, 803->834, 807->809, 1036, 1050->1017, 1114->1116
+src/api/redriver.py                           175      7     38      3    95%   365, 485-488, 635-636, 749->760, 752-756
+src/api/retriever.py                          102     21     42      4    74%   71, 76, 84->78, 97-117
+src/api/routes.py                             295      7     74      3    97%   528, 571, 764, 778, 1146, 1152, 1415
+src/api/runner.py                             642     36    152     21    93%   577->589, 695, 788-794, 1018->1021, 1028-1036, 1055-1057, 1069->exit, 1098, 1155, 1189->1196, 1645->1660, 1652-1654, 2041-2047, 2087, 2090, 2093, 2100, 2103, 2107, 2110, 2114, 2443, 2446->exit
+src/api/sessions.py                           235     37     66     18    78%   105, 177, 190, 210-212, 215, 225, 227, 244->237, 252-255, 268-276, 303, 306, 332, 334, 349, 352-358, 424, 427, 544, 558-561
+src/api/streaming.py                           92      6     20      0    95%   385-386, 473-477, 490-494
+src/calibration/metrics.py                    289      0     82      1    99%   689->688
+src/calibration/packets.py                    510     14    160     18    95%   334, 520, 526, 531, 535, 537, 542, 649, 800-801, 825, 865, 1034, 1039, 1123->1128, 1125->1128, 1136->1138, 1141->1143, 1146->1145
+src/calibration/pool.py                       134      4     66      5    96%   27, 71->70, 96, 99, 190
+src/calibration/suite.py                      356      1     64      1    99%   451
+src/campaign/__main__.py                        3      3      0      0     0%   3-7
+src/campaign/approval.py                       80      2     12      2    96%   328, 331
+src/campaign/arms.py                           87      3     26      3    95%   212, 326, 385
+src/campaign/baseline.py                      138      2     12      0    99%   449-450
+src/campaign/episode.py                       155      6     14      1    96%   249-250, 308, 326, 475-476
+src/campaign/execute.py                       750     16    168      8    97%   513-519, 845, 854, 929, 941, 1004, 1692, 1845, 1977->1979, 2402-2403, 2419-2420, 2839, 2907-2908
+src/campaign/manifest.py                      223      8     66      7    95%   173->177, 275, 278, 280, 282, 287, 307, 479-480
+src/campaign/matrix.py                         86      1     24      1    98%   304
+src/campaign/planner.py                       279      5     38      2    98%   342-343, 789->793, 877-878, 881
+src/campaign/rehearse.py                      201      3     26      2    98%   307, 553, 610
+src/campaign/report.py                        508      3    172      8    98%   616, 691, 701, 823->821, 1110->1117, 1314->1316, 1429->1432, 1491->1495
+src/campaign/scoring.py                       130      5     34      3    95%   153->155, 305-315, 383, 528
+src/campaign/smoke.py                         244      3     18      1    98%   267, 278, 638
+src/campaign/summary.py                        79      0     12      1    99%   203->exit
+src/content/linkcheck.py                      105      1     24      1    98%   123
+src/content/loader.py                          99     15     38      8    80%   94-97, 120, 127, 142, 148, 155, 179, 249, 291-294
+src/content/review_queue.py                   179      4     34      5    96%   129, 131, 288, 293->308, 329
+src/content/schema.py                         340      4     72      5    98%   507->514, 820-821, 861, 885->896, 891->896, 1003
+src/content/static_publication.py             162     16     68      8    86%   134-140, 192->204, 336-338, 393, 400, 402, 404, 406, 408
+src/contracts/artifact_store.py               245      7     60      3    97%   296, 481->474, 489, 513, 576-578, 617
+src/contracts/benchmark_adapters.py           757     22    170     19    96%   599, 605, 608-609, 628, 1377, 1584->1586, 1853, 1962, 1970, 1978, 2045, 2223, 2225, 2253-2254, 2279, 2438, 2465-2473, 2477, 2505, 2593
+src/contracts/kernel.py                       136      6     34      5    94%   89, 138, 143, 148, 153, 239
+src/contracts/registry.py                     560     36    160     35    90%   160, 162, 219, 221, 263, 265, 267, 270, 286, 331, 333, 347, 376, 415, 433, 435, 453, 687, 689, 708, 741, 764, 803, 806, 831-850, 857->exit, 928, 930, 936, 945, 962, 965->956, 969, 975, 981->976
+src/contracts/research_binding.py             486      1     90      2    99%   747, 1714->1720
+src/contracts/run_manifest.py                1023     22    322     21    97%   369, 371, 385, 387, 389, 391, 403, 405, 428, 430, 437, 439, 460, 806, 808, 877, 882, 886, 1677-1679, 1682, 1685->1684, 1877, 1931->1927
+src/contracts/runtime_bridge.py               821     45    162     23    93%   243, 342, 544-546, 574-579, 620, 641-643, 733-734, 798, 1344, 1505, 1751, 1806, 1810, 1814, 1824, 1848, 1873, 1901, 2307-2308, 2415, 2869, 2913, 2925-2938, 2944, 3069, 3093, 3291-3292, 3295->exit, 3322, 3477-3481, 3559, 3611->3610, 3634->3636, 3638->exit
+src/contracts/shadow_bridge.py                393      1     66      4    99%   188->exit, 541, 1045->1048, 1474->exit
+src/contracts/task_spec.py                    579      2    170      3    99%   278->282, 507, 674
+src/contracts/trajectory.py                   777     47    308     49    91%   130, 138, 481, 483, 485, 492, 688, 693, 709, 713, 718, 854, 951, 977, 983, 1010, 1012, 1014, 1016, 1023, 1027, 1029, 1033, 1035, 1037, 1047, 1049, 1051, 1059, 1074, 1078, 1084, 1090, 1102, 1107, 1111, 1116, 1118, 1123, 1127, 1131, 1136, 1140, 1149->1153, 1218, 1220, 1227, 1229, 1340->1342
+src/eval/groundedness.py                      373      0    130      4    99%   531->527, 667->664, 900->891, 916->915
+src/eval/learning_benchmark.py                206     28    120     28    83%   1250, 1253, 1257, 1260, 1272, 1274, 1278, 1280, 1289, 1300, 1318, 1322, 1324, 1346, 1368, 1371, 1374, 1379, 1386, 1392, 1397, 1402, 1407, 1412, 1420, 1423, 1428, 1435
+src/eval/learning_fixtures.py                 323     33    176     36    86%   262, 276, 283, 290, 436, 509, 515, 517, 544, 559, 568, 571, 573, 579->599, 581->591, 585, 594, 604, 608, 616, 621, 637, 654, 658->666, 668, 671, 675, 677, 688, 700, 708->736, 713, 719, 769-770, 772, 794
+src/eval/learning_metrics.py                  248     22     82     22    87%   211, 232, 270, 280, 302, 314, 325, 378, 381, 459, 462, 465, 478, 481, 486, 494, 502, 504, 515, 519, 523, 536
+src/eval/metrics.py                           399      1    116      4    99%   220->212, 672->671, 1210->1206, 1450
+src/eval/mock_judge.py                        173      7     26      7    93%   122, 174, 216, 278, 333, 381, 396
+src/eval/record_learning_fixtures.py          133     13     36      8    86%   137-147, 184->186, 189, 238, 260, 322->321, 324, 439-442
+src/eval/regression_diff.py                   639      1    208      5    99%   1687->1689, 1727, 2120->2137, 2647->2649, 2690->2699
+src/eval/runner.py                            455     10    128      8    97%   191-193, 232->242, 262, 270->exit, 679->681, 706-707, 1328-1329, 1358->1360, 1361, 1363, 1498->1514
+src/eval/scripted_tier_check.py               106      2     40      2    97%   201, 207
+src/eval/simulate_learner.py                  504     43    170     28    89%   368, 458-460, 547-551, 553-557, 595->593, 598->597, 644, 647, 659, 695, 701, 710, 722, 727, 749, 752, 793, 898, 973-975, 992-1001, 1039-1044, 1063, 1291->1294, 1473, 1481, 1483, 1553, 1555, 1574->1580, 1581->1604
+src/eval/simulate_research.py                 400      0     94      3    99%   1257->1259, 1645->1650, 1651->1669
+src/graph/session_workflow.py                  94      4     16      2    95%   204->209, 223-225, 240
+src/graph/workflow.py                         268     15     68      4    93%   169, 171, 194, 202-206, 627-636, 888-890
+src/learning/engagement.py                    142      6     24      4    94%   94-95, 106, 173, 318, 334
+src/learning/memory.py                        134      9     44     10    89%   136->143, 181, 201, 204, 210->199, 242, 252, 258, 302, 305, 308
+src/learning/profile_serializer.py             94      4     38      3    95%   290, 310, 324-326
+src/learning/profile_store.py                 291     75     88     14    75%   289, 301, 305, 349, 369-370, 393, 408, 444, 448, 450, 452, 456, 466, 471, 482-484, 515, 531, 763-773, 776-834, 841-882, 885-901, 919
+src/learning/progress_store.py                267     39     72      8    86%   224, 297, 302, 342, 365, 609->584, 611->584, 785-831, 840-861, 872-891, 895-898, 923
+src/main.py                                    77     19     10      0    74%   48, 97-102, 204-223
+src/observability/context.py                   65      2      8      0    97%   65-66
+src/observability/logging.py                  247      6     72      5    97%   1196, 1351, 1358, 1368, 1386->exit, 1694-1697
+src/observability/metrics.py                  227      2     58      1    99%   1287->1289, 1527-1528
+src/observability/tracing.py                  252      1     56      4    98%   248, 411->413, 739->746, 748->756
+src/policies/orchestration.py                 270      7     82      9    95%   221, 256, 568->576, 712-713, 741, 850->853, 859, 870->862, 908
+src/policies/repair.py                         64      6     22      2    91%   101, 215-219
+src/policies/selection.py                      88      1     18      2    97%   222->220, 363
+src/tools/arxiv_search.py                      67      2     22      3    94%   144, 179, 189->188
+src/tools/chunk_ranker.py                      54     13     18      1    78%   70, 162-183
+src/tools/chunker.py                           57      0     28      2    98%   91->110, 103->106
+src/tools/embedding_cache.py                   54     21     10      0    58%   117-137, 144-173
+src/tools/embeddings.py                        74     11     16      4    83%   173, 237, 260, 265-276
+src/tools/paper_cache.py                       49     13      8      0    74%   104-115, 118-135
+src/tools/pdf_parser.py                       141     18     44      6    87%   137-142, 163->165, 216-220, 233-237, 254-255, 260, 274-278, 287-288, 347, 351-356
+src/tools/postgres_pool.py                     50     30     12      0    32%   335-356, 368-379, 386-390, 401-403, 408
+src/tools/semantic_scholar.py                 123     16     62      5    88%   104->115, 131->133, 176-205, 268, 278->270, 299->301
+src/workspace/admission.py                    242      1     80      1    99%   146
+src/workspace/context_routes.py               161     39     44     13    71%   72-73, 85->87, 92, 96, 99, 100->101, 102-103, 107-108, 112-113, 117-118, 122-123, 127-128, 132-133, 137-138, 142-143, 147-148, 152-153, 157-158, 162-163, 167-168, 179->181, 186->198, 190->194, 195, 200->204, 207->208, 207->226, 214, 218->225, 221-222, 229-230
+src/workspace/context_store.py                299     38     94     41    76%   66, 71, 77, 86->88, 90->105, 95->97, 101, 108, 114->116, 121->123, 123->124, 123->138, 125, 127->128, 127->129, 129->130, 129->131, 132, 134, 136, 138->139, 138->140, 140->141, 140->142, 142->144, 143, 150, 153, 155, 163->166, 167-168, 172, 179, 185, 191, 201, 208->210, 212, 217, 219->220, 221, 225, 232, 237, 244->245, 244->246, 249->251, 251->253, 254, 262, 270->272, 273, 281, 288->290, 290->291, 290->294, 292->290, 295->297, 298, 306->307, 306->310, 311->313, 315, 317, 327->329, 333, 343->345, 349, 356-358
+src/workspace/evidence_contract.py            103      3     36      3    96%   127, 130, 167
+src/workspace/executor.py                     514      3    138      4    99%   610, 782, 883, 1028->1031
+src/workspace/intake.py                       403      1    138      3    99%   351, 399->401, 458->451
+src/workspace/interests.py                     78      2     32      1    97%   65->67, 86-87
+src/workspace/measurement.py                   58      1     18      1    97%   112
+src/workspace/provider_adapter.py             349      8    108      8    96%   88, 139, 169, 403, 405, 569, 691, 721
+src/workspace/qualification.py                 54      1      8      0    98%   87
+src/workspace/qualification_accounting.py      79      8     38      8    86%   47, 53, 61, 80, 85, 92, 98, 101
+src/workspace/qualification_budget.py         128     17     74     20    82%   26, 53, 57->62, 71, 78, 82, 88, 105, 107, 110, 111->exit, 131, 134, 139, 144, 145->153, 147, 174, 179, 182
+src/workspace/qualification_run.py             79      3     28      2    95%   50, 93, 95
+src/workspace/rate_limit.py                    56      1     16      1    97%   90
+src/workspace/reviews.py                       67      2     18      2    95%   79, 97
+src/workspace/routes.py                       250      3     56      3    98%   75, 309, 327
+src/workspace/source_samples.py               202      6     76      4    96%   67, 76-77, 158, 194, 467
+src/workspace/store.py                        321      2     90      5    98%   113, 151, 382->378, 385->378, 392->387
+src/workspace/worker.py                       138      1     36      1    99%   256
+---------------------------------------------------------------------------------------
+TOTAL                                       32253   1312   8776    797    94%
+
+63 files skipped due to complete coverage.
+Required test coverage of 89.0% reached. Total coverage: 94.44%
+=========================== short test summary info ============================
+FAILED tests/test_contract_openapi_snapshot.py::test_snapshot_covers_every_route_the_frontend_calls
+==== 1 failed, 6301 passed, 54 skipped, 53 deselected in 484.04s (0:08:04) =====
+make: *** [test-cov] Error 1

@@ -1,0 +1,251 @@
+[
+  {
+    "localPath": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/runs/2026-11-05T22-32-11-463Z-7ff9c8a0/report.json",
+    "sha256": "839a89a25d79e1b4d131cf1984a8f2dd7fff823074535e63c3ae6ce52e271b86",
+    "recordedStatus": "fail",
+    "sourceCommit": "79e7be7c0480809aac7248a5310a0ee7fde99a6e",
+    "failures": [
+      {
+        "context": "desktop-light",
+        "id": "D4-01",
+        "error": "Error: expect(locator).toBeVisible() failed\n\nLocator: getByText('Research uses an explicit project question. Your organizing profile question has not been imported.', { exact: true })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"to.be.visible\" with timeout 5000ms\n  - waiting for getByText('Research uses an explicit project question. Your organizing profile question has not been imported.', { exact: true })\n\n    at captureRawStack (/private/tmp/arxiv-agent-eng-workspace-mode-build/web/node_modules/playwright-core/lib/coreBundle.js:9681:17)\n    at callMatcherAsStep (/private/tmp/arxiv-agent-eng-workspace-mode-build/web/node_modules/playwright/lib/matchers/expect.js:13310:57)\n    at Object.toBeVisible (/private/tmp/arxiv-agent-eng-workspace-mode-build/web/node_modules/playwright/lib/matchers/expect.js:13300:23)\n    at coreJourney (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/journey.cjs:13:1060)\n    at async runCase (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:8:445)\n    at async execute (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:15:17)"
+      },
+      {
+        "context": "desktop-dark",
+        "id": "D4-01",
+        "error": "Error: expect(locator).toBeVisible() failed\n\nLocator: getByText('Research uses an explicit project question. Your organizing profile question has not been imported.', { exact: true })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"to.be.visible\" with timeout 5000ms\n  - waiting for getByText('Research uses an explicit project question. Your organizing profile question has not been imported.', { exact: true })\n\n    at captureRawStack (/private/tmp/arxiv-agent-eng-workspace-mode-build/web/node_modules/playwright-core/lib/coreBundle.js:9681:17)\n    at callMatcherAsStep (/private/tmp/arxiv-agent-eng-workspace-mode-build/web/node_modules/playwright/lib/matchers/expect.js:13310:57)\n    at Object.toBeVisible (/private/tmp/arxiv-agent-eng-workspace-mode-build/web/node_modules/playwright/lib/matchers/expect.js:13300:23)\n    at coreJourney (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/journey.cjs:13:1060)\n    at async runCase (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:8:445)\n    at async execute (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:15:17)"
+      },
+      {
+        "context": "mobile-light",
+        "id": "D4-01",
+        "error": "Error: expect(locator).toBeVisible() failed\n\nLocator: getByText('Research uses an explicit project question. Your organizing profile question has not been imported.', { exact: true })\nExpected: visible\nError: element(s) not found\n\nCall log:\n  - Expect \"to.be.visible\" with timeout 5000ms\n  - waiting for getByText('Research uses an explicit project question. Your organizing profile question has not been imported.', { exact: true })\n  - Target page, context or browser has been closed\n\n    at captureRawStack (/private/tmp/arxiv-agent-eng-workspace-mode-build/web/node_modules/playwright-core/lib/coreBundle.js:9681:17)\n    at callMatcherAsStep (/private/tmp/arxiv-agent-eng-workspace-mode-build/web/node_modules/playwright/lib/matchers/expect.js:13310:57)\n    at Object.toBeVisible (/private/tmp/arxiv-agent-eng-workspace-mode-build/web/node_modules/playwright/lib/matchers/expect.js:13300:23)\n    at coreJourney (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/journey.cjs:13:1060)\n    at async runCase (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:8:445)\n    at async execute (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:15:17)"
+      }
+    ],
+    "scope": "Original record preserved locally; a running status in an interrupted diagnostic is not a pass"
+  },
+  {
+    "localPath": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/runs/2026-11-05T22-32-49-072Z-7de0c47b/report.json",
+    "sha256": "64cd676857674ebfe789056100dca311ff95909b6bf79aeb3c18623a0bfcc280",
+    "recordedStatus": "fail",
+    "sourceCommit": "79e7be7c0480809aac7248a5310a0ee7fde99a6e",
+    "failures": [
+      {
+        "context": "desktop-light",
+        "id": "D4-01",
+        "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'learn'\n- 'research'\n\n    at current (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/journey.cjs:10:89)\n    at coreJourney (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/journey.cjs:16:962)\n    at async runCase (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:8:445)\n    at async execute (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:15:17)"
+      },
+      {
+        "context": "desktop-dark",
+        "id": "D4-01",
+        "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'learn'\n- 'research'\n\n    at current (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/journey.cjs:10:89)\n    at coreJourney (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/journey.cjs:16:962)\n    at async runCase (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:8:445)\n    at async execute (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:15:17)"
+      },
+      {
+        "context": "mobile-light",
+        "id": "D4-01",
+        "error": "AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert(g.firstTwoLines.every(l=>l.top>=0&&l.bottom<g.playerTop))\n\n    at focusedClearance (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/support.cjs:28:735)\n    at async coreJourney (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/journey.cjs:13:533)\n    at async runCase (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:8:445)\n    at async execute (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:15:17)"
+      },
+      {
+        "context": "mobile-dark",
+        "id": "D4-01",
+        "error": "AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert(g.firstTwoLines.every(l=>l.top>=0&&l.bottom<g.playerTop))\n\n    at focusedClearance (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/support.cjs:28:735)\n    at async coreJourney (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/journey.cjs:13:533)\n    at async runCase (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:8:445)\n    at async execute (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:15:17)"
+      }
+    ],
+    "scope": "Original record preserved locally; a running status in an interrupted diagnostic is not a pass"
+  },
+  {
+    "localPath": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/runs/2026-11-05T22-37-18-717Z-20b8d1cc/report.json",
+    "sha256": "2c9ae5d340a668c1176e86fe863ab1e2f928c8857f458ee7a027f124ed722c6c",
+    "recordedStatus": "running",
+    "sourceCommit": "ba3d74a3a447614c276c4d644c911f1cd93ce443",
+    "failures": [
+      {
+        "context": "desktop-light",
+        "id": "D4-01",
+        "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ '#abstract%3A0'\n- '#abstract:0'\n            ^\n\n    at coreJourney (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/journey.cjs:19:1696)\n    at async runCase (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:8:445)\n    at async execute (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:15:17)"
+      },
+      {
+        "context": "desktop-dark",
+        "id": "D4-01",
+        "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ '#abstract%3A0'\n- '#abstract:0'\n            ^\n\n    at coreJourney (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/journey.cjs:19:1696)\n    at async runCase (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:8:445)\n    at async execute (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:15:17)"
+      }
+    ],
+    "scope": "Original record preserved locally; a running status in an interrupted diagnostic is not a pass"
+  },
+  {
+    "localPath": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/runs/2026-11-05T22-39-35-934Z-947a8574/report.json",
+    "sha256": "05369739a8be28c53a6d0ae4471a4ad583d8fdccba00c95f0b3e171d2dd04476",
+    "recordedStatus": "fail",
+    "sourceCommit": "de5f3f1ffc578c4e0ef49b7c0add85f74bbc71f7",
+    "failures": [
+      {
+        "context": "desktop-light",
+        "id": "D4-01",
+        "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'learn'\n- 'research'\n\n    at current (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/journey.cjs:10:89)\n    at coreJourney (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/journey.cjs:20:1506)\n    at async runCase (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:8:445)\n    at async execute (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:15:17)"
+      },
+      {
+        "context": "desktop-dark",
+        "id": "D4-01",
+        "error": "locator.waitFor: Error: strict mode violation: locator('main [aria-busy=\"true\"]') resolved to 2 elements:\n    1) <p aria-busy=\"true\">Loading owned projects\u2026</p> aka getByText('Loading owned projects\u2026')\n    2) <p aria-busy=\"true\">Loading this owned project\u2026</p> aka getByText('Loading this owned project\u2026')\n\nCall log:\n\u001b[2m  - waiting for locator('main [aria-busy=\"true\"]') to be hidden\u001b[22m\n\n    at settled (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/support.cjs:24:116)\n    at async clickLink (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/journey.cjs:8:467)\n    at async coreJourney (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/journey.cjs:16:977)\n    at async runCase (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:8:445)\n    at async execute (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:15:17)"
+      },
+      {
+        "context": "mobile-light",
+        "id": "D4-01",
+        "error": "page.waitForResponse: Target page, context or browser has been closed\n    at acknowledge (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/journey.cjs:7:89)\n    at coreJourney (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/journey.cjs:16:434)\n    at async runCase (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:8:445)\n    at async execute (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:15:17)"
+      }
+    ],
+    "scope": "Original record preserved locally; a running status in an interrupted diagnostic is not a pass"
+  },
+  {
+    "localPath": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/runs/2026-11-05T22-41-05-330Z-a80f6c8c/report.json",
+    "sha256": "82216568725af522bdc2574127de0ad873d1f8ddb9150e6cc4ba01865d71e586",
+    "recordedStatus": "diagnostic_core_only",
+    "sourceCommit": "6bef6fc98d3c0028eeed31979569ee319b3f602f",
+    "failures": [],
+    "scope": "Original record preserved locally; a running status in an interrupted diagnostic is not a pass"
+  },
+  {
+    "localPath": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/runs/2026-11-05T22-42-00-309Z-125d5af4/report.json",
+    "sha256": "2083dcaa43a2ffd425b2e4fe144f69318417d0ca89ad7da3d76a8f0503143823",
+    "recordedStatus": "fail",
+    "sourceCommit": "6bef6fc98d3c0028eeed31979569ee319b3f602f",
+    "failures": [
+      {
+        "context": "desktop-light",
+        "id": "D1-04",
+        "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'research'\n- 'learn'\n\n    at Object.urlHistoryAndInvalid (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/adversarial.cjs:15:705)\n    at async runCase (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:8:445)\n    at async execute (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:15:209)"
+      },
+      {
+        "context": "desktop-dark",
+        "id": "D4-01",
+        "error": "Error: expect(locator).toHaveCount(expected) failed\n\nLocator:  locator('article').filter({ hasText: 'MECHANICAL VERIFICATION 2026-11-05T22-42-00-309Z-125d5af4: How can held-out anchors certify behavioral retention during continual adaptation?' })\nExpected: 1\nReceived: 2\nTimeout:  5000ms\n\nCall log:\n  - Expect \"to.have.count\" with timeout 5000ms\n  - waiting for locator('article').filter({ hasText: 'MECHANICAL VERIFICATION 2026-11-05T22-42-00-309Z-125d5af4: How can held-out anchors certify behavioral retention during continual adaptation?' })\n    14 \u00d7 locator resolved to 2 elements\n       - unexpected value \"2\"\n\n    at captureRawStack (/private/tmp/arxiv-agent-eng-workspace-mode-build/web/node_modules/playwright-core/lib/coreBundle.js:9681:17)\n    at callMatcherAsStep (/private/tmp/arxiv-agent-eng-workspace-mode-build/web/node_modules/playwright/lib/matchers/expect.js:13310:57)\n    at Object.toHaveCount (/private/tmp/arxiv-agent-eng-workspace-mode-build/web/node_modules/playwright/lib/matchers/expect.js:13300:23)\n    at coreJourney (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/journey.cjs:20:912)\n    at async runCase (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:8:445)\n    at async execute (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:15:17)"
+      },
+      {
+        "context": "mobile-light",
+        "id": "D4-01",
+        "error": "page.waitForResponse: Target page, context or browser has been closed\n    at acknowledge (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/journey.cjs:7:89)\n    at coreJourney (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/journey.cjs:16:434)\n    at async runCase (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:8:445)\n    at async execute (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:15:17)"
+      }
+    ],
+    "scope": "Original record preserved locally; a running status in an interrupted diagnostic is not a pass"
+  },
+  {
+    "localPath": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/runs/2026-11-05T22-43-13-757Z-7af337f1/report.json",
+    "sha256": "53b95f0af88e0871ab3ba0faec5f1c758531114b44920091fec9f9a3330cffb2",
+    "recordedStatus": "fail",
+    "sourceCommit": "6bef6fc98d3c0028eeed31979569ee319b3f602f",
+    "failures": [
+      {
+        "context": "desktop-light",
+        "id": "D1-04",
+        "error": "Error: expect(locator).toBeVisible() failed\n\nLocator: getByText('Unknown mode or context. Invalid context is not selected; no saved record was changed.', { exact: true })\nExpected: visible\nError: strict mode violation: getByText('Unknown mode or context. Invalid context is not selected; no saved record was changed.', { exact: true }) resolved to 2 elements:\n    1) <p class=\"daily-muted\">Unknown mode or context. Invalid context is not s\u2026</p> aka getByLabel('Workspace controls').getByText('Unknown mode or context.')\n    2) <p class=\"daily-muted\">Unknown mode or context. Invalid context is not s\u2026</p> aka locator('#main').getByText('Unknown mode or context.')\n\nCall log:\n  - Expect \"to.be.visible\" with timeout 5000ms\n  - waiting for getByText('Unknown mode or context. Invalid context is not selected; no saved record was changed.', { exact: true })\n\n    at captureRawStack (/private/tmp/arxiv-agent-eng-workspace-mode-build/web/node_modules/playwright-core/lib/coreBundle.js:9681:17)\n    at callMatcherAsStep (/private/tmp/arxiv-agent-eng-workspace-mode-build/web/node_modules/playwright/lib/matchers/expect.js:13310:57)\n    at Object.toBeVisible (/private/tmp/arxiv-agent-eng-workspace-mode-build/web/node_modules/playwright/lib/matchers/expect.js:13300:23)\n    at Object.urlHistoryAndInvalid (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/adversarial.cjs:15:1625)\n    at async runCase (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:8:445)\n    at async execute (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:15:209)"
+      }
+    ],
+    "scope": "Original record preserved locally; a running status in an interrupted diagnostic is not a pass"
+  },
+  {
+    "localPath": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/runs/2026-11-05T22-59-11-674Z-d371e15a/report.json",
+    "sha256": "cfc90f2f339c6bf4908424371c9fea7e78995e6ea88dd2aaebc83412dc934e53",
+    "recordedStatus": "fail",
+    "sourceCommit": "ca81dce08abdd44de05834e1688b9872bf0d38db",
+    "failures": [
+      {
+        "context": "desktop-light",
+        "id": "D4-09",
+        "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'observation'\n- 'assumption'\n\n    at Object.typedManualArtifact (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/adversarial.cjs:17:1093)\n    at async runCase (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:8:445)\n    at async execute (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:15:2518)"
+      },
+      {
+        "context": "desktop-dark",
+        "id": "D4-09",
+        "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'hypothesis'\n- 'observation'\n\n    at Object.typedManualArtifact (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/adversarial.cjs:17:1093)\n    at async runCase (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:8:445)\n    at async execute (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:15:2518)"
+      },
+      {
+        "context": "mobile-light",
+        "id": "D4-01",
+        "error": "page.waitForResponse: Timeout 15000ms exceeded while waiting for event \"response\"\n    at acknowledge (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/journey.cjs:7:89)\n    at coreJourney (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/journey.cjs:16:434)\n    at async runCase (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:8:445)\n    at async execute (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:15:17)"
+      },
+      {
+        "context": "mobile-dark",
+        "id": "D4-01",
+        "error": "page.waitForResponse: Timeout 15000ms exceeded while waiting for event \"response\"\n    at acknowledge (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/journey.cjs:7:89)\n    at coreJourney (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/journey.cjs:16:434)\n    at async runCase (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:8:445)\n    at async execute (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:15:17)"
+      }
+    ],
+    "scope": "Original record preserved locally; a running status in an interrupted diagnostic is not a pass"
+  },
+  {
+    "localPath": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/runs/2026-11-05T23-10-22-316Z-e078c43a/report.json",
+    "sha256": "fe922d77f5dede34928d58765866ba03559a313252958ad72f50590fb684b5a7",
+    "recordedStatus": "fail",
+    "sourceCommit": "2a3b0ede371c4c21b794ad8b293bafb3f8641cfb",
+    "failures": [
+      {
+        "context": "mobile-light",
+        "id": "D4-01",
+        "error": "Error: Matching rendered exact range must actually land16px in usable viewport\n\nMatching rendered exact range must actually land16px in usable viewport\n\nexpect(received).toBe(expected) // Object.is equality\n\nExpected: true\nReceived: false\n\nCall Log:\n- Timeout 10000ms exceeded while waiting on the predicate\n    at captureRawStack (/private/tmp/arxiv-agent-eng-workspace-mode-build/web/node_modules/playwright-core/lib/coreBundle.js:9681:17)\n    at callMatcherAsStep (/private/tmp/arxiv-agent-eng-workspace-mode-build/web/node_modules/playwright/lib/matchers/expect.js:13310:57)\n    at Object.toBe (/private/tmp/arxiv-agent-eng-workspace-mode-build/web/node_modules/playwright/lib/matchers/expect.js:13300:23)\n    at exactMark (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/support.cjs:27:1258)\n    at async coreJourney (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/journey.cjs:19:800)\n    at async runCase (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:8:445)\n    at async execute (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:15:17)"
+      }
+    ],
+    "scope": "Original record preserved locally; a running status in an interrupted diagnostic is not a pass"
+  },
+  {
+    "localPath": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/runs/2026-11-05T23-12-35-667Z-031b3d69/report.json",
+    "sha256": "b0052d387a08174297b38d9e9faf1e416b154746ca98134649c5b041fb6805e0",
+    "recordedStatus": "diagnostic_core_only",
+    "sourceCommit": "9b2aaf552509e307b6e4bedf03e91f4f33360fbc",
+    "failures": [],
+    "scope": "Original record preserved locally; a running status in an interrupted diagnostic is not a pass"
+  },
+  {
+    "localPath": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/runs/2026-11-05T23-23-27-130Z-6da0453e/report.json",
+    "sha256": "5fcb66e2e3d440e609045ea94844b384d6662e61fe817d62712538f105c6bff4",
+    "recordedStatus": "fail",
+    "sourceCommit": "031524fd120749af8ea25f7bf6ac5911f14342de",
+    "failures": [
+      {
+        "context": "mobile-light",
+        "id": "D4-03",
+        "error": "Error: expect(locator).toHaveValue(expected) failed\n\nLocator: getByRole('textbox', { name: 'Your question', exact: true })\nExpected: \"MECHANICAL VERIFICATION old-version draft \u0394\ud83d\ude80 2026-11-05T23-23-27-130Z-6da0453e\"\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"to.have.value\" with timeout 5000ms\n  - waiting for getByRole('textbox', { name: 'Your question', exact: true })\n\n    at captureRawStack (/private/tmp/arxiv-agent-eng-workspace-mode-build/web/node_modules/playwright-core/lib/coreBundle.js:9681:17)\n    at callMatcherAsStep (/private/tmp/arxiv-agent-eng-workspace-mode-build/web/node_modules/playwright/lib/matchers/expect.js:13310:57)\n    at Object.toHaveValue (/private/tmp/arxiv-agent-eng-workspace-mode-build/web/node_modules/playwright/lib/matchers/expect.js:13300:23)\n    at Object.oldVersionAndHash (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/secondary.cjs:7:1209)\n    at async runCase (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:8:445)\n    at async execute (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:15:2121)"
+      },
+      {
+        "context": "mobile-dark",
+        "id": "D4-03",
+        "error": "Error: expect(locator).toHaveValue(expected) failed\n\nLocator: getByRole('textbox', { name: 'Your question', exact: true })\nExpected: \"MECHANICAL VERIFICATION old-version draft \u0394\ud83d\ude80 2026-11-05T23-23-27-130Z-6da0453e\"\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"to.have.value\" with timeout 5000ms\n  - waiting for getByRole('textbox', { name: 'Your question', exact: true })\n\n    at captureRawStack (/private/tmp/arxiv-agent-eng-workspace-mode-build/web/node_modules/playwright-core/lib/coreBundle.js:9681:17)\n    at callMatcherAsStep (/private/tmp/arxiv-agent-eng-workspace-mode-build/web/node_modules/playwright/lib/matchers/expect.js:13310:57)\n    at Object.toHaveValue (/private/tmp/arxiv-agent-eng-workspace-mode-build/web/node_modules/playwright/lib/matchers/expect.js:13300:23)\n    at Object.oldVersionAndHash (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/secondary.cjs:7:1209)\n    at async runCase (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:8:445)\n    at async execute (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:15:2121)"
+      }
+    ],
+    "scope": "Original record preserved locally; a running status in an interrupted diagnostic is not a pass"
+  },
+  {
+    "localPath": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/runs/2026-11-05T23-42-29-853Z-05a0c461/report.json",
+    "sha256": "38880e0d56d32eb53b874271cb83b7d0e1a06a48c0758c5d219892f42b5a973a",
+    "recordedStatus": "fail",
+    "sourceCommit": "8e346704e9f18bd6aea016c09bd4416f1ea58f61",
+    "failures": [
+      {
+        "context": "desktop-light",
+        "id": "D4-03",
+        "error": "locator.elementHandle: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByLabel('Your question', { exact: true })\u001b[22m\n\n    at Object.oldVersionAndHash (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/secondary.cjs:7:916)\n    at async runCase (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:8:445)\n    at async execute (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:15:2121)"
+      },
+      {
+        "context": "desktop-dark",
+        "id": "D4-03",
+        "error": "locator.elementHandle: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByLabel('Your question', { exact: true })\u001b[22m\n\n    at Object.oldVersionAndHash (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/secondary.cjs:7:916)\n    at async runCase (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:8:445)\n    at async execute (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:15:2121)"
+      },
+      {
+        "context": "mobile-light",
+        "id": "D4-03",
+        "error": "locator.elementHandle: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByLabel('Your question', { exact: true })\u001b[22m\n\n    at Object.oldVersionAndHash (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/secondary.cjs:7:916)\n    at async runCase (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:8:445)\n    at async execute (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:15:2121)"
+      },
+      {
+        "context": "mobile-dark",
+        "id": "D4-03",
+        "error": "locator.elementHandle: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByLabel('Your question', { exact: true })\u001b[22m\n\n    at Object.oldVersionAndHash (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/secondary.cjs:7:916)\n    at async runCase (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:8:445)\n    at async execute (/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/suite.cjs:15:2121)"
+      }
+    ],
+    "scope": "Original record preserved locally; a running status in an interrupted diagnostic is not a pass"
+  },
+  {
+    "localPath": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/runs/2026-11-05T23-53-49-246Z-18433d73/report.json",
+    "sha256": "8a1675aae03eb2d47f06998820cc222229c398db1cb5a4e4125a298d74fa9b56",
+    "recordedStatus": "awaiting_root_restart_checkpoint",
+    "sourceCommit": "8e346704e9f18bd6aea016c09bd4416f1ea58f61",
+    "failures": [],
+    "scope": "Original record preserved locally; a running status in an interrupted diagnostic is not a pass"
+  }
+]

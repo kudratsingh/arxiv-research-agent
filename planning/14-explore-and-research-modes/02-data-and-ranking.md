@@ -1,5 +1,7 @@
 # Data, ranking and compatibility
 
+Implementation note, 2026-11-05: the baseline gaps below describe the original planning checkpoint. D0–D4 now implement the versioned [context contract](06-context-api-contract.md) and [ranking policy](07-ranking-policy-v1.md). [STATUS](STATUS.md) separates code, runtime verification and later gated assistance.
+
 ## Verified starting point
 
 Inspected controller **dff860e16e89c22382bce88d98f64645dfdcbfc8** (G6 app
@@ -43,10 +45,10 @@ saved profile when navigating. Add nullable/compatible fields in versioned
 migrations; never reset owner data. Ownership checks cover every link and lookup.
 Project deletion/archive must not cascade-delete shared work/notes/materials.
 
-Proposed endpoints are not existing routes: project list/detail/create/update,
+The initial endpoint sketch covered project list/detail/create/update,
 link/unlink source and entry, learning-thread create/update, and explicit
-mode/project-aware discovery parameters. Design typed requests and conflict
-responses before UI writes. Updates use current revision + request_id. Mutation
+mode/project-aware discovery parameters. The implemented paths and typed requests
+are now in contract06; the original sketch does not override them. Updates use current revision + request_id. Mutation
 retries reuse identity; conflicts preserve both local draft and server revision.
 
 ## Discovery policies

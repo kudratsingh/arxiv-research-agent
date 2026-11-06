@@ -1,0 +1,528 @@
+{
+  "principal": "modes-browser-r15",
+  "profileRevision": 1,
+  "profileDataSha256": "e27aa50864b981fd47913bcfdf25a01c82ff80f92c435a28e955ce41a618d3b9",
+  "contextPreferencesRevision": 0,
+  "questionEmpty": true,
+  "policy": "workspace-modes-lexical-v1",
+  "contextEditionCandidateDigest": "b13f3cbe8cd88dbc521325df290cc23bf6f9d84fa749eb140c2b2c35648f4976",
+  "asOf": "2026-11-06T00:48:43.962016+00:00",
+  "inventory": [
+    {
+      "workId": "verification:unicode-boundaries",
+      "currentVersionId": "verification:unicode-boundaries:v2",
+      "sourceId": "verification-fixture",
+      "versions": [
+        {
+          "versionId": "verification:unicode-boundaries:v2",
+          "contentHash": "synthetic-boundaries-v2",
+          "scope": "abstract"
+        },
+        {
+          "versionId": "verification:unicode-boundaries:v1",
+          "contentHash": "synthetic-boundaries-v1",
+          "scope": "abstract"
+        }
+      ]
+    },
+    {
+      "workId": "verification:unicode",
+      "currentVersionId": "verification:unicode:v2",
+      "sourceId": "verification-fixture",
+      "versions": [
+        {
+          "versionId": "verification:unicode:v2",
+          "contentHash": "synthetic-v2",
+          "scope": "abstract"
+        },
+        {
+          "versionId": "verification:unicode:v1",
+          "contentHash": "synthetic-v1",
+          "scope": "abstract"
+        }
+      ]
+    },
+    {
+      "workId": "url:b49ec3bd8394c6fb4c19e7973ae4b411",
+      "currentVersionId": "url:b49ec3bd8394c6fb4c19e7973ae4b411:observed-42d6cea8785311a4",
+      "sourceId": "google-research",
+      "versions": [
+        {
+          "versionId": "url:b49ec3bd8394c6fb4c19e7973ae4b411:observed-42d6cea8785311a4",
+          "contentHash": "42d6cea8785311a437355f061490cca834d3ad74917953f393e289ef2be5f534",
+          "scope": "excerpt"
+        }
+      ]
+    },
+    {
+      "workId": "url:1d6c5c59e46e52b936cbc7b983785a69",
+      "currentVersionId": "url:1d6c5c59e46e52b936cbc7b983785a69:observed-90d0651966e90e2e",
+      "sourceId": "hugging-face-blog",
+      "versions": [
+        {
+          "versionId": "url:1d6c5c59e46e52b936cbc7b983785a69:observed-90d0651966e90e2e",
+          "contentHash": "90d0651966e90e2ebeae8c8c3f2799dc5de93e0028ec1a4e40f56e4197452d9f",
+          "scope": "metadata"
+        }
+      ]
+    },
+    {
+      "workId": "arxiv:2610.41552",
+      "currentVersionId": "arxiv:2610.41552:v1:metadata-1c364e8ae805a931",
+      "sourceId": "arxiv-cs-cl",
+      "versions": [
+        {
+          "versionId": "arxiv:2610.41552:v1:metadata-1c364e8ae805a931",
+          "contentHash": "4a84195f230117468fde9ce304a07c0bfed8928617343ff452191d66a9657dc7",
+          "scope": "abstract"
+        }
+      ]
+    },
+    {
+      "workId": "arxiv:2610.41482",
+      "currentVersionId": "arxiv:2610.41482:v1:metadata-e5c832a06d88973f",
+      "sourceId": "arxiv-cs-cl",
+      "versions": [
+        {
+          "versionId": "arxiv:2610.41482:v1:metadata-e5c832a06d88973f",
+          "contentHash": "bb49d5025b5fb9fa73de33326d928985b353d44178a8476ebada305f3edd242f",
+          "scope": "abstract"
+        }
+      ]
+    },
+    {
+      "workId": "arxiv:2610.41435",
+      "currentVersionId": "arxiv:2610.41435:v1:metadata-beb2da6bb778a0f0",
+      "sourceId": "arxiv-cs-cl",
+      "versions": [
+        {
+          "versionId": "arxiv:2610.41435:v1:metadata-beb2da6bb778a0f0",
+          "contentHash": "253118d333e2bf61c5cea38f560297e6d6b62a192b50101efb1832617284d155",
+          "scope": "abstract"
+        }
+      ]
+    },
+    {
+      "workId": "arxiv:2610.41391",
+      "currentVersionId": "arxiv:2610.41391:v1:metadata-be875cebfaa26052",
+      "sourceId": "arxiv-cs-cl",
+      "versions": [
+        {
+          "versionId": "arxiv:2610.41391:v1:metadata-be875cebfaa26052",
+          "contentHash": "a33a38a2a44a0d858302c3bd32031302fad117ef6a7c6913ef8e0fff8b7629c5",
+          "scope": "abstract"
+        }
+      ]
+    },
+    {
+      "workId": "arxiv:2610.41291",
+      "currentVersionId": "arxiv:2610.41291:v1:metadata-540221e5b83d286b",
+      "sourceId": "arxiv-cs-cl",
+      "versions": [
+        {
+          "versionId": "arxiv:2610.41291:v1:metadata-540221e5b83d286b",
+          "contentHash": "375815dd18fb3af2ffacf647b716a50884399fb7231c4130a60cdceb9d7da1f0",
+          "scope": "abstract"
+        }
+      ]
+    },
+    {
+      "workId": "arxiv:2610.41177",
+      "currentVersionId": "arxiv:2610.41177:v1:metadata-f12968377b0c70f8",
+      "sourceId": "arxiv-cs-cl",
+      "versions": [
+        {
+          "versionId": "arxiv:2610.41177:v1:metadata-f12968377b0c70f8",
+          "contentHash": "e5e9088d47d879786eb967e10342e5bb16e0099198a8cc476b23703d890cfae9",
+          "scope": "abstract"
+        }
+      ]
+    },
+    {
+      "workId": "arxiv:2610.41089",
+      "currentVersionId": "arxiv:2610.41089:v1:metadata-6ed2313462efea73",
+      "sourceId": "arxiv-cs-ai",
+      "versions": [
+        {
+          "versionId": "arxiv:2610.41089:v1:metadata-6ed2313462efea73",
+          "contentHash": "74c194322c2cbfe4dffbd2aa63a8320c34a4f93cf789c9e3c228d0358ef05c03",
+          "scope": "abstract"
+        }
+      ]
+    },
+    {
+      "workId": "arxiv:2610.41076",
+      "currentVersionId": "arxiv:2610.41076:v1:metadata-b07e88facba4e8cb",
+      "sourceId": "arxiv-cs-ai",
+      "versions": [
+        {
+          "versionId": "arxiv:2610.41076:v1:metadata-b07e88facba4e8cb",
+          "contentHash": "a520cad63b997818baad77dcbcb7007e1a87fd85417e1eccf1c658a4dcbb7c3c",
+          "scope": "abstract"
+        }
+      ]
+    },
+    {
+      "workId": "arxiv:2610.41040",
+      "currentVersionId": "arxiv:2610.41040:v1:metadata-74eebd3cc589eed0",
+      "sourceId": "arxiv-cs-ai",
+      "versions": [
+        {
+          "versionId": "arxiv:2610.41040:v1:metadata-74eebd3cc589eed0",
+          "contentHash": "5b25126e7e2f77607fe9a102a97b1970c6e73b9e8f1cdaafa9c3f7b7dfeb5de4",
+          "scope": "abstract"
+        }
+      ]
+    },
+    {
+      "workId": "arxiv:2610.41025",
+      "currentVersionId": "arxiv:2610.41025:v1:metadata-1aa9801b0aa16243",
+      "sourceId": "arxiv-cs-ai",
+      "versions": [
+        {
+          "versionId": "arxiv:2610.41025:v1:metadata-1aa9801b0aa16243",
+          "contentHash": "4b4657e6568db71d53797ee98c928fb9c6e62b2d842a7b3d5abd5891a42e1c03",
+          "scope": "abstract"
+        }
+      ]
+    },
+    {
+      "workId": "arxiv:2610.41022",
+      "currentVersionId": "arxiv:2610.41022:v1:metadata-1d7490e908ceb729",
+      "sourceId": "arxiv-cs-lg",
+      "versions": [
+        {
+          "versionId": "arxiv:2610.41022:v1:metadata-1d7490e908ceb729",
+          "contentHash": "4e54f4d95a63a5762dfc88e8bd41734495118ffa8b15a046f64ad4b6dded0092",
+          "scope": "abstract"
+        }
+      ]
+    },
+    {
+      "workId": "arxiv:2610.41015",
+      "currentVersionId": "arxiv:2610.41015:v1:metadata-9d3401c4c7c1014c",
+      "sourceId": "arxiv-cs-lg",
+      "versions": [
+        {
+          "versionId": "arxiv:2610.41015:v1:metadata-9d3401c4c7c1014c",
+          "contentHash": "49ae4d9192c2837f995ffa8d10f6ae3dfd02cc9da461f6320c2efd11d381eb93",
+          "scope": "abstract"
+        }
+      ]
+    },
+    {
+      "workId": "arxiv:2610.41014",
+      "currentVersionId": "arxiv:2610.41014:v1:metadata-db1a32505c4d09a1",
+      "sourceId": "arxiv-cs-lg",
+      "versions": [
+        {
+          "versionId": "arxiv:2610.41014:v1:metadata-db1a32505c4d09a1",
+          "contentHash": "d77fb84e85ea97e39d3a8ee7bdbeb915ac8c1461455429d9f918d14aaa8f87ce",
+          "scope": "abstract"
+        }
+      ]
+    },
+    {
+      "workId": "arxiv:2610.41012",
+      "currentVersionId": "arxiv:2610.41012:v1:metadata-f20dbad8ce03c4ef",
+      "sourceId": "arxiv-cs-cl",
+      "versions": [
+        {
+          "versionId": "arxiv:2610.41012:v1:metadata-f20dbad8ce03c4ef",
+          "contentHash": "5cc7c83004150acced228d795f5ee57c61326e06291ad6cb29eba90279e67b71",
+          "scope": "abstract"
+        }
+      ]
+    },
+    {
+      "workId": "arxiv:2610.40992",
+      "currentVersionId": "arxiv:2610.40992:v1:metadata-ab88b833815a1f0e",
+      "sourceId": "arxiv-cs-ai",
+      "versions": [
+        {
+          "versionId": "arxiv:2610.40992:v1:metadata-ab88b833815a1f0e",
+          "contentHash": "bfbc6f5d5a89c36d6020ea54bee87f8ab62c678561c51aa0aa2e7a0cc6df87b1",
+          "scope": "abstract"
+        }
+      ]
+    },
+    {
+      "workId": "arxiv:2610.40984",
+      "currentVersionId": "arxiv:2610.40984:v1:metadata-0667d01675a6b6ec",
+      "sourceId": "arxiv-cs-lg",
+      "versions": [
+        {
+          "versionId": "arxiv:2610.40984:v1:metadata-0667d01675a6b6ec",
+          "contentHash": "46af355cae9bf9dd14bf48e9eaae46e6f097e1e8361de5c6534ef6083074e456",
+          "scope": "abstract"
+        }
+      ]
+    },
+    {
+      "workId": "arxiv:2610.40966",
+      "currentVersionId": "arxiv:2610.40966:v1:metadata-55c0a56c8750035c",
+      "sourceId": "arxiv-cs-cl",
+      "versions": [
+        {
+          "versionId": "arxiv:2610.40966:v1:metadata-55c0a56c8750035c",
+          "contentHash": "4e506c536aa07891f80b304de68f55105805de7d1dfb4ecc89431dd1fa7d09ab",
+          "scope": "abstract"
+        }
+      ]
+    },
+    {
+      "workId": "arxiv:2610.40959",
+      "currentVersionId": "arxiv:2610.40959:v1:metadata-a78f18ab927d7ec9",
+      "sourceId": "arxiv-cs-ai",
+      "versions": [
+        {
+          "versionId": "arxiv:2610.40959:v1:metadata-a78f18ab927d7ec9",
+          "contentHash": "823782226aae1f3a8ceaf18f2752011de3c2eafd6c5eb76530bdbb5708f771e9",
+          "scope": "abstract"
+        }
+      ]
+    },
+    {
+      "workId": "arxiv:2610.40946",
+      "currentVersionId": "arxiv:2610.40946:v1:metadata-fe7eb688ec7eee7b",
+      "sourceId": "arxiv-cs-ai",
+      "versions": [
+        {
+          "versionId": "arxiv:2610.40946:v1:metadata-fe7eb688ec7eee7b",
+          "contentHash": "65bf8adf05d8fe41fe0e7b5c95b2238b2b6ee4c6f15b2abd21923e5bb7923e59",
+          "scope": "abstract"
+        }
+      ]
+    },
+    {
+      "workId": "arxiv:2610.40943",
+      "currentVersionId": "arxiv:2610.40943:v1:metadata-9449877c1e5f5e99",
+      "sourceId": "arxiv-cs-lg",
+      "versions": [
+        {
+          "versionId": "arxiv:2610.40943:v1:metadata-9449877c1e5f5e99",
+          "contentHash": "5852ee209b2cb9fc1023a3892923aa743893e5ab054f530441b169714a6d2291",
+          "scope": "abstract"
+        }
+      ]
+    },
+    {
+      "workId": "arxiv:2610.40940",
+      "currentVersionId": "arxiv:2610.40940:v1:metadata-21d8200059afcd01",
+      "sourceId": "arxiv-cs-ai",
+      "versions": [
+        {
+          "versionId": "arxiv:2610.40940:v1:metadata-21d8200059afcd01",
+          "contentHash": "0042d5a7f98d8b306efccbb4d8d87541db6f0a1bdad84cb9485cabfb88f02843",
+          "scope": "abstract"
+        }
+      ]
+    },
+    {
+      "workId": "arxiv:2610.40939",
+      "currentVersionId": "arxiv:2610.40939:v1:metadata-a24c81ca3638415c",
+      "sourceId": "arxiv-cs-ai",
+      "versions": [
+        {
+          "versionId": "arxiv:2610.40939:v1:metadata-a24c81ca3638415c",
+          "contentHash": "ff35679ad3cb7fce98400f2565d17f6dc5d151c98b821efbbd4e33f4c7a2afd9",
+          "scope": "abstract"
+        }
+      ]
+    },
+    {
+      "workId": "arxiv:2610.40930",
+      "currentVersionId": "arxiv:2610.40930:v1:metadata-b45059ef8928ae02",
+      "sourceId": "arxiv-cs-cl",
+      "versions": [
+        {
+          "versionId": "arxiv:2610.40930:v1:metadata-b45059ef8928ae02",
+          "contentHash": "aaa3ad214b95bd50a65eaea0e446f544255af638f60ff66e5b740f06652e957d",
+          "scope": "abstract"
+        }
+      ]
+    },
+    {
+      "workId": "arxiv:2610.40927",
+      "currentVersionId": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+      "sourceId": "arxiv-cs-ai",
+      "versions": [
+        {
+          "versionId": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+          "contentHash": "b1e003848d7d156da1ba4dc05a910ce19a741f9d997d91ce66c2ab86f28d1beb",
+          "scope": "abstract"
+        }
+      ]
+    },
+    {
+      "workId": "arxiv:2610.40917",
+      "currentVersionId": "arxiv:2610.40917:v1:metadata-ed88c851cf4b1810",
+      "sourceId": "arxiv-cs-ai",
+      "versions": [
+        {
+          "versionId": "arxiv:2610.40917:v1:metadata-ed88c851cf4b1810",
+          "contentHash": "f6aaa562a0f71544a1a71105d1e9e50712f61414f4bfb4f11ebe820071912b8c",
+          "scope": "abstract"
+        }
+      ]
+    },
+    {
+      "workId": "arxiv:2610.40906",
+      "currentVersionId": "arxiv:2610.40906:v1:metadata-289de52681520e8e",
+      "sourceId": "arxiv-cs-ai",
+      "versions": [
+        {
+          "versionId": "arxiv:2610.40906:v1:metadata-289de52681520e8e",
+          "contentHash": "91aa7eeb1fae75f9a326a711ae5179ecf51dd90a2cdc27641b1650751e46c490",
+          "scope": "abstract"
+        }
+      ]
+    },
+    {
+      "workId": "arxiv:2610.40901",
+      "currentVersionId": "arxiv:2610.40901:v1:metadata-b94f57a0b8a51165",
+      "sourceId": "arxiv-cs-lg",
+      "versions": [
+        {
+          "versionId": "arxiv:2610.40901:v1:metadata-b94f57a0b8a51165",
+          "contentHash": "c381aab30512c2c9bfad39a55bd8eb22ec86b0ea568aedf6182930e5087f7859",
+          "scope": "abstract"
+        }
+      ]
+    },
+    {
+      "workId": "arxiv:2610.40893",
+      "currentVersionId": "arxiv:2610.40893:v1:metadata-018e69b4ec3841a0",
+      "sourceId": "arxiv-cs-cl",
+      "versions": [
+        {
+          "versionId": "arxiv:2610.40893:v1:metadata-018e69b4ec3841a0",
+          "contentHash": "7c1c64fc293a4df0c302d5e9d0f3684d2a137d54712f36dc0f29f58247ea2c68",
+          "scope": "abstract"
+        }
+      ]
+    },
+    {
+      "workId": "arxiv:2610.40871",
+      "currentVersionId": "arxiv:2610.40871:v1:metadata-0be4ee69b6741057",
+      "sourceId": "arxiv-cs-lg",
+      "versions": [
+        {
+          "versionId": "arxiv:2610.40871:v1:metadata-0be4ee69b6741057",
+          "contentHash": "05b0672397c600249e80fd1e3ac74eb90231148c59eaf31fbff291753263a09d",
+          "scope": "abstract"
+        }
+      ]
+    },
+    {
+      "workId": "arxiv:2610.40857",
+      "currentVersionId": "arxiv:2610.40857:v1:metadata-ad6a5ab2673194a3",
+      "sourceId": "arxiv-cs-lg",
+      "versions": [
+        {
+          "versionId": "arxiv:2610.40857:v1:metadata-ad6a5ab2673194a3",
+          "contentHash": "65b27dcc47202809e5da87702d3c632b8e6ec4888e7463b62ef8b3deb2c08c00",
+          "scope": "abstract"
+        }
+      ]
+    },
+    {
+      "workId": "arxiv:2610.40798",
+      "currentVersionId": "arxiv:2610.40798:v1:metadata-c1a34fa53cba3d51",
+      "sourceId": "arxiv-cs-ai",
+      "versions": [
+        {
+          "versionId": "arxiv:2610.40798:v1:metadata-c1a34fa53cba3d51",
+          "contentHash": "b77eda4278705b9a4d62a312176df3e7d751fd0dc1f1a4c3c345b0c60167e443",
+          "scope": "abstract"
+        }
+      ]
+    },
+    {
+      "workId": "arxiv:2610.40758",
+      "currentVersionId": "arxiv:2610.40758:v1:metadata-96148d2d4e4a4093",
+      "sourceId": "arxiv-cs-ai",
+      "versions": [
+        {
+          "versionId": "arxiv:2610.40758:v1:metadata-96148d2d4e4a4093",
+          "contentHash": "45e9dc9cb6c05d0dceff45ef5cacc1edf52ae88a049659103197f268ab580d53",
+          "scope": "abstract"
+        }
+      ]
+    },
+    {
+      "workId": "arxiv:2610.40747",
+      "currentVersionId": "arxiv:2610.40747:v1:metadata-be0a1828c70df62e",
+      "sourceId": "arxiv-cs-cl",
+      "versions": [
+        {
+          "versionId": "arxiv:2610.40747:v1:metadata-be0a1828c70df62e",
+          "contentHash": "da45642b352c55bea1debf3416c3726bf9effb4e64512f8b85daad7497e31b54",
+          "scope": "abstract"
+        }
+      ]
+    },
+    {
+      "workId": "arxiv:2610.40740",
+      "currentVersionId": "arxiv:2610.40740:v1:metadata-b471d2e5f0142ad7",
+      "sourceId": "arxiv-cs-lg",
+      "versions": [
+        {
+          "versionId": "arxiv:2610.40740:v1:metadata-b471d2e5f0142ad7",
+          "contentHash": "ccd8f3f9e0bacd1d857b45286c31209ffc3be3ad200fab54f37d7c6732afb785",
+          "scope": "abstract"
+        }
+      ]
+    },
+    {
+      "workId": "arxiv:2610.40728",
+      "currentVersionId": "arxiv:2610.40728:v1:metadata-cb0c65fffb216247",
+      "sourceId": "arxiv-cs-lg",
+      "versions": [
+        {
+          "versionId": "arxiv:2610.40728:v1:metadata-cb0c65fffb216247",
+          "contentHash": "b66f8d009243e1a3b64bbaf93a7a02bccd980e7aa1a5e484506cdf885cb922a8",
+          "scope": "abstract"
+        }
+      ]
+    },
+    {
+      "workId": "arxiv:2610.40700",
+      "currentVersionId": "arxiv:2610.40700:v1:metadata-c05b44ce3bd6d5f0",
+      "sourceId": "arxiv-cs-lg",
+      "versions": [
+        {
+          "versionId": "arxiv:2610.40700:v1:metadata-c05b44ce3bd6d5f0",
+          "contentHash": "74ad2c6018c6778fefa8c9fdfc2d8be7a5fe1cc0d117d3cc8f1032d6d01a2f14",
+          "scope": "abstract"
+        }
+      ]
+    },
+    {
+      "workId": "arxiv:2310.11511",
+      "currentVersionId": "arxiv:2310.11511:v1",
+      "sourceId": "scientific-sample",
+      "versions": [
+        {
+          "versionId": "arxiv:2310.11511:v1",
+          "contentHash": "2abdf85aaa8a79285bb62cb626c09065da880b8da7efc449be8a9022e5de8b9d",
+          "scope": "metadata"
+        }
+      ]
+    },
+    {
+      "workId": "arxiv:2210.03629",
+      "currentVersionId": "arxiv:2210.03629:v3",
+      "sourceId": "scientific-sample",
+      "versions": [
+        {
+          "versionId": "arxiv:2210.03629:v3",
+          "contentHash": "d816508359f2e74c2e4d1cf5b724d241a9e9f4f229e383627edd0d39fd03f88f",
+          "scope": "metadata"
+        }
+      ]
+    }
+  ],
+  "reviewSha256": "cd1bfd1c02c02f08f4f74120c5b5793be75f39611e4b7e481f815a2b6ff915d3",
+  "recurrenceEnabled": false
+}

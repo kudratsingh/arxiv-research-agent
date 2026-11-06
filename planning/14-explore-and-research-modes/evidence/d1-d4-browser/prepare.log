@@ -1,0 +1,123 @@
+{
+  "status": "prepared_not_run",
+  "preparedAtUtc": "2026-11-05T13:21:42.067Z",
+  "cases": [
+    {
+      "id": "D1-01",
+      "status": "not_run"
+    },
+    {
+      "id": "D1-02",
+      "status": "not_run"
+    },
+    {
+      "id": "D1-03",
+      "status": "not_run"
+    },
+    {
+      "id": "D1-04",
+      "status": "not_run"
+    },
+    {
+      "id": "D1-05",
+      "status": "not_run"
+    },
+    {
+      "id": "D1-06",
+      "status": "not_run"
+    },
+    {
+      "id": "D2-01",
+      "status": "not_run"
+    },
+    {
+      "id": "D2-02",
+      "status": "not_run"
+    },
+    {
+      "id": "D2-03",
+      "status": "not_run"
+    },
+    {
+      "id": "D2-04",
+      "status": "not_run"
+    },
+    {
+      "id": "D2-05",
+      "status": "not_run"
+    },
+    {
+      "id": "D2-06",
+      "status": "not_run"
+    },
+    {
+      "id": "D3-01",
+      "status": "not_run"
+    },
+    {
+      "id": "D3-02",
+      "status": "not_run"
+    },
+    {
+      "id": "D4-01",
+      "status": "not_run"
+    },
+    {
+      "id": "D4-02",
+      "status": "not_run"
+    },
+    {
+      "id": "D4-03",
+      "status": "not_run"
+    },
+    {
+      "id": "D4-04",
+      "status": "not_run"
+    },
+    {
+      "id": "D4-05",
+      "status": "not_run"
+    },
+    {
+      "id": "D4-06",
+      "status": "not_run"
+    },
+    {
+      "id": "D4-07",
+      "status": "not_run"
+    },
+    {
+      "id": "D4-08",
+      "status": "not_run"
+    },
+    {
+      "id": "D4-09",
+      "status": "not_run"
+    },
+    {
+      "id": "D4-10",
+      "status": "not_run"
+    }
+  ],
+  "contractBindings": [
+    {
+      "path": "planning/14-explore-and-research-modes/06-context-api-contract.md",
+      "sha256": "26ec4697edd942e263e7cf9aacec66b2a7cdda8e5108dbf7d4a9cf690c4a87ed"
+    },
+    {
+      "path": "planning/14-explore-and-research-modes/07-ranking-policy-v1.md",
+      "sha256": "7f9821c4777c8c0390def7abe3b366046247bc972681336e915bc7b6be976474"
+    }
+  ],
+  "runtimeReady": false,
+  "networkRequests": 0,
+  "browserLaunches": 0,
+  "writes": 0,
+  "sourceChanges": 0,
+  "prerequisites": [
+    "ROOT runtimeReady signal and source/build/PID/principal/database receipt",
+    "Frontend final locator contract confirmation at same application commit",
+    "Actual public corpus manifest and optional labelled synthetic Unicode/two-version fixture receipts",
+    "ROOT restart checkpoint coordination; harness never restarts services"
+  ]
+}

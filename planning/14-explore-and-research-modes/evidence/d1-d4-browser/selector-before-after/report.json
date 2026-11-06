@@ -1,0 +1,66 @@
+{
+  "status": "pass",
+  "scope": "Actual before/after immutable runtimes, same labelled public example and viewport; GET only",
+  "observations": [
+    {
+      "producer": "cea881e",
+      "theme": "light",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "selector": {
+        "x": 20,
+        "y": 212.59375,
+        "width": 93.328125,
+        "height": 44
+      },
+      "expected": "below240px"
+    },
+    {
+      "producer": "62c761a",
+      "theme": "light",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "selector": {
+        "x": 20,
+        "y": 176.59375,
+        "width": 316,
+        "height": 44
+      },
+      "expected": "atleast240px"
+    },
+    {
+      "producer": "cea881e",
+      "theme": "dark",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "selector": {
+        "x": 20,
+        "y": 212.59375,
+        "width": 93.328125,
+        "height": 44
+      },
+      "expected": "below240px"
+    },
+    {
+      "producer": "62c761a",
+      "theme": "dark",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "selector": {
+        "x": 20,
+        "y": 176.59375,
+        "width": 316,
+        "height": 44
+      },
+      "expected": "atleast240px"
+    }
+  ]
+}

@@ -1,0 +1,131 @@
+{
+  "backend_commit": "8dad572",
+  "source_tree": "251e407ea5e87dde5efeae70adfdbabbe624ac27",
+  "coverage": {
+    "passed": 6310,
+    "skipped": 54,
+    "e2e_deselected": 53,
+    "percent": 94.76,
+    "api": 88,
+    "agents": 96,
+    "security": 100,
+    "eval": 95,
+    "reason_for_local_skips": "Inherited host-postgres-binary guards; new context SQL tests used isolated Docker Postgres15478."
+  },
+  "python_e2e": {
+    "passed": 53,
+    "deselected": 6364
+  },
+  "simulation": {
+    "succeeded": 20,
+    "errors": 0,
+    "usd": 0
+  },
+  "registry": {
+    "objects": 260,
+    "mismatches": 0
+  },
+  "initial_coverage_attempt": {
+    "passed": 6301,
+    "failed": 1,
+    "reason": "Exact OpenAPI route inventory needed the14 additive context endpoints; fixed before successful rerun."
+  },
+  "provider_contacts": 0,
+  "recurrence": false,
+  "remote_ci_for_new_branch": "not_yet_run",
+  "logs": {
+    "context-contract-regressions.log": "c7826a7089c9e0f0a262d692512a3d2ceef2a9ca0b3495c1178b238e870cbc8a",
+    "context-ship-regressions.log": "7f40e2e5ceacd106c74ff43c39c5ef861e058c49e843f7a5c1b240284a84fa81",
+    "documented-claims-publication-normal-access.log": "77d4b2633424b3ba80a32c645ff8eec5c4b9d86b06588d11b12e55aa261fb208",
+    "documented-claims-publication.log": "ba75531af8507c66a12b2898871842a4ee46a8d2912220074959f7e9a1605aad",
+    "documented-claims-refresh.log": "db62195cbe7445e09c02143e59a68ccec455ffccff973469dbd17dfadbb10da3",
+    "full-python-coverage-final.log": "4085ffeb0babfc84931390e7f4366aff70461aa81855c7c619d9aa195c718d7d",
+    "full-python-coverage.log": "4d7c981dd6835f8d62004593272455e5bfa4f64533f3ee5523b7e2fccdc79f74",
+    "global-mypy.log": "708dd26d3e3340a041b8b6e76d37049974d296e37f7c8c4771fbafe59a5f2785",
+    "global-ruff.log": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+    "material-link-identity-green.log": "39e5d91781a02300095c1f4108519bd1b837cdb5b29bdf0a3c2eec8abbd6a288",
+    "material-link-identity-red.log": "fd8267ae77c8cbace04ccf984ceddf20ca5f2d934a8139add8e567dbeecceaad",
+    "material-selection-green.log": "10f8efed1b06b3914a2de9bc325704e254cabc83507ded113057c8525aad1e4d",
+    "material-selection-red.log": "8f5f103aa1abc1e8f206f3a3ba81178f01f632ca0426a7e31945ca1ddefa25de",
+    "patch-coverage-before-publication.log": "7646837d40d49fc7d477269713329d3c9f9e3c2d4d9f1896a815781adfd8344d",
+    "patch-coverage-complete-reference-final.log": "d96b8a55151292b0fcb89f72b63b305e7cfd5d3a0b40dbff0d512cc9686d93a8",
+    "patch-coverage-count-refresh-final.log": "d966800d34c3d101021305a8502aba393751872307c9b6049422f8c2eee90a2c",
+    "patch-coverage-final-polish-publication.log": "9d62063675af34b6f87f91dfc560fee816b60d4c275d095a391fe3dc60b9e4a9",
+    "patch-coverage-final.log": "a45096fc5bbcf14add0cacd796f43ae2f9dffea256d31927d02b7b6801d76404",
+    "patch-coverage-pinned-material-final.log": "8f3651eb32c07bb99d5cc6a6a92da65770a7810ec6c81519f55c17d73f7eb556",
+    "python-e2e.log": "1d0ca8b2263dbe113a482576639401e4d57fb89c4ac40a82cfd1de340a8fd9d8",
+    "registry-parity.log": "ffe3a2763694f735d44ac4b58fee474f7091fa78a56db0f351933f7a88375886",
+    "simulate-research.log": "35f7e353a8fb14ca214a39d4ad4fa029a62f9445bb294487f5e850560837a630"
+  },
+  "final_patch_gate": {
+    "verification_head": "2a3b0ede371c4c21b794ad8b293bafb3f8641cfb",
+    "source_tree": "16cc0220cd060cead41eecdf08d641e8d0705dcb",
+    "passed": 6318,
+    "skipped": 54,
+    "e2e_deselected": 53,
+    "overall_percent": 94.77,
+    "patch_percent": 98,
+    "python_source_unchanged_at_application": "8e346704e9f18bd6aea016c09bd4416f1ea58f61",
+    "log": "patch-coverage-count-refresh-final.log",
+    "sha256": "d966800d34c3d101021305a8502aba393751872307c9b6049422f8c2eee90a2c",
+    "raw_original_sha256": "7596ba6ef531a6e391bc8f93fd3b1975da73f645aaefe39dde521d82324bd011",
+    "raw_archive": "patch-coverage-count-refresh-final.log.raw.gz"
+  },
+  "package_floors": {
+    "api": {
+      "floor": 88,
+      "actual": "88"
+    },
+    "agents": {
+      "floor": 96,
+      "actual": "96"
+    },
+    "security": {
+      "floor": 100,
+      "actual": "100"
+    },
+    "eval": {
+      "floor": 95,
+      "actual": "95"
+    }
+  },
+  "reproduced_documentation_failure": "A newly expanded214-file web suite exceeded the former193-file record freshness band; refreshed measured count and upward function ratchet, then full gate passed. Original failed log preserved.",
+  "publication_gate": {
+    "application_source": "62c761a9c7b690e0b681857fe48edc75d3785ef6",
+    "python_tree": "16cc0220cd060cead41eecdf08d641e8d0705dcb",
+    "passed": 6318,
+    "skipped": 54,
+    "separate_e2e_deselected": 53,
+    "patch_percent": 98,
+    "log": "patch-coverage-final-polish-publication.log",
+    "sha256": "9d62063675af34b6f87f91dfc560fee816b60d4c275d095a391fe3dc60b9e4a9",
+    "frontend_measurement_record": "4217/216; all floors preserved",
+    "raw_original_sha256": "22c21968d4dd46545624af325f48edb5000091c333fc9fbbea2ad150ee7ea262",
+    "raw_archive": "patch-coverage-final-polish-publication.log.raw.gz"
+  },
+  "logs_original_hashes": {
+    "context-contract-regressions.log": "c7826a7089c9e0f0a262d692512a3d2ceef2a9ca0b3495c1178b238e870cbc8a",
+    "context-ship-regressions.log": "7f40e2e5ceacd106c74ff43c39c5ef861e058c49e843f7a5c1b240284a84fa81",
+    "documented-claims-publication-normal-access.log": "77d4b2633424b3ba80a32c645ff8eec5c4b9d86b06588d11b12e55aa261fb208",
+    "documented-claims-publication.log": "ba75531af8507c66a12b2898871842a4ee46a8d2912220074959f7e9a1605aad",
+    "documented-claims-refresh.log": "db62195cbe7445e09c02143e59a68ccec455ffccff973469dbd17dfadbb10da3",
+    "full-python-coverage-final.log": "4085ffeb0babfc84931390e7f4366aff70461aa81855c7c619d9aa195c718d7d",
+    "full-python-coverage.log": "3df8558c915cba3ef8c85c46e668ca454ccd4a97f97944377a4fc328b6918c02",
+    "global-mypy.log": "708dd26d3e3340a041b8b6e76d37049974d296e37f7c8c4771fbafe59a5f2785",
+    "global-ruff.log": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+    "material-link-identity-green.log": "39e5d91781a02300095c1f4108519bd1b837cdb5b29bdf0a3c2eec8abbd6a288",
+    "material-link-identity-red.log": "fd8267ae77c8cbace04ccf984ceddf20ca5f2d934a8139add8e567dbeecceaad",
+    "material-selection-green.log": "10f8efed1b06b3914a2de9bc325704e254cabc83507ded113057c8525aad1e4d",
+    "material-selection-red.log": "8f5f103aa1abc1e8f206f3a3ba81178f01f632ca0426a7e31945ca1ddefa25de",
+    "patch-coverage-before-publication.log": "28dc30d682882cf3e12e5a6a9d767c5669787dc6145c07a65ba96b073947dc1d",
+    "patch-coverage-complete-reference-final.log": "b489dd5fad64b2340d1d4c20ab3cb899656bf4f3d95a77d84fd0fe7b69a8e2b6",
+    "patch-coverage-count-refresh-final.log": "7596ba6ef531a6e391bc8f93fd3b1975da73f645aaefe39dde521d82324bd011",
+    "patch-coverage-final-polish-publication.log": "22c21968d4dd46545624af325f48edb5000091c333fc9fbbea2ad150ee7ea262",
+    "patch-coverage-final.log": "9af664463e8d6b37047c1cd6e3f30d6b86a7f107ef9af9873cdc7479dc975af7",
+    "patch-coverage-pinned-material-final.log": "31e7cf2fac7227588b4f104300b41b0630f8ff294041f03d35fd6981594810a4",
+    "python-e2e.log": "1d0ca8b2263dbe113a482576639401e4d57fb89c4ac40a82cfd1de340a8fd9d8",
+    "registry-parity.log": "ffe3a2763694f735d44ac4b58fee474f7091fa78a56db0f351933f7a88375886",
+    "simulate-research.log": "bacd4092d6f2141d7e41fc5b7d9a354fdcb5f09fb67f444ca7013f0d9e658c64"
+  },
+  "log_display_policy": "Whitespace-normalized display; originals in paired .raw.gz, indexed by evidence/log-originals.json"
+}

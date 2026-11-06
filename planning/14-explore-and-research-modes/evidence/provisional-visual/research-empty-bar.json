@@ -1,0 +1,63 @@
+{
+  "sourceCommit": null,
+  "buildId": "DvLBxnx2yfYFJ7MXXpx3W",
+  "scope": "Additional readonly Research empty bar geometry after visible mode switch",
+  "geometry": {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "documentOverflow": 0,
+    "scrollY": 0,
+    "bar": [
+      {
+        "tag": "DIV",
+        "class": "ws-bar",
+        "text": "SearchSearch",
+        "top": 810,
+        "bottom": 832,
+        "left": 12,
+        "right": 378,
+        "height": 22,
+        "display": "block",
+        "position": "fixed",
+        "hit": true
+      }
+    ],
+    "composer": [
+      {
+        "tag": "FORM",
+        "class": "ws-composer ws-composer-shell",
+        "text": "SearchSearch",
+        "top": 821,
+        "bottom": 865,
+        "left": 23,
+        "right": 83,
+        "height": 44,
+        "display": "flex",
+        "position": "absolute",
+        "hit": true
+      }
+    ],
+    "searchButtons": [
+      {
+        "tag": "BUTTON",
+        "class": "ws-composer-toggle",
+        "text": "Search",
+        "top": 821,
+        "bottom": 865,
+        "left": 23,
+        "right": 83,
+        "height": 44,
+        "display": "flex",
+        "position": "static",
+        "hit": true
+      }
+    ],
+    "hosts": []
+  },
+  "stateBefore": "8ddbf5e4049b262ee86a0e4493683b021117aef07bc60632576a578772d56b02",
+  "stateAfter": "8ddbf5e4049b262ee86a0e4493683b021117aef07bc60632576a578772d56b02",
+  "protectedStateUnchanged": true,
+  "blocked": []
+}

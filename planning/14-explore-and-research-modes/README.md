@@ -1,7 +1,7 @@
 # Explore & Learn and Research
 
 Owner-adopted product direction, recorded **2026-11-04 America/Los_Angeles**.
-Status: **D0 verified locally; D1–D4 implementation in progress**.
+Status: **D0–D4 verified locally at application62c761a; exact-head CI separately linked; D5 gated**.
 
 The workspace will have two main modes sharing one Library, Reader, source
 identity system and durable personal records. Explore & Learn supports daily
@@ -19,6 +19,7 @@ between them carries exact source versions, passages and the user's work.
 | [05-d0-implementation-baseline.md](05-d0-implementation-baseline.md) | Exact source, isolation and baseline evidence |
 | [06-context-api-contract.md](06-context-api-contract.md) | Frozen manual context contract |
 | [07-ranking-policy-v1.md](07-ranking-policy-v1.md) | Predeclared mode formulas and comparison |
+| [08-local-walkthrough.md](08-local-walkthrough.md) | Isolated launch, manual journey and restore boundary |
 | [STATUS.md](STATUS.md) | What is planned, implemented, verified and owner-gated |
 
 This is an additive direction kit, not another original-discovery phase.
@@ -31,14 +32,15 @@ Keep Jazzy, the single-paper stage, readable mobile layout and shared controller
 
 Use the completed, stopped diagnostic benchmark without altering its frozen
 questions, rankings, corpus, thresholds or historical failures. q04 stopped at
-repair admission; q05–q10 remain unrun, and the scoped approval is closed. Continue the
-controller's already assigned P7 and P8 gates. The next feature batch establishes
+repair admission; q05–q10 remain unrun, and the scoped approval is closed. Preserve the
+completed controller checkpoint `7e1bd97`. The current feature batch establishes
 the mode switch, question-specific retrieval and persistent project context,
 then richer teaching and research tools in working increments.
 
 This kit does not activate model calls, recurring work, notifications or paid
 services. The separate owner-authorized cumulative $10 evaluation program is
-quarantined; it does not authorize everyday generation. No additional paid
+quarantined; its current scoped approval is closed and all dispatch, including
+counts, remains stopped. It does not authorize everyday generation. No additional paid
 allocation is created here. Human relevance, comprehension and checker-quality
 judgments remain unfilled until supplied.
 

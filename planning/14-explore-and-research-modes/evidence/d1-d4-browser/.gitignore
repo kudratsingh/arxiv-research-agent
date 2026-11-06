@@ -1,0 +1,3 @@
+# Full raw recordings/diagnostics remain local and SHA-indexed in accepted evidence.
+runs/
+diagnostics/

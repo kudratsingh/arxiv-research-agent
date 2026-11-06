@@ -1,0 +1,13 @@
+
+> arxiv-research-agent-web@0.1.0 test
+> vitest run --run tests/workspace/optional-context-surfaces.test.tsx
+
+
+ RUN  v4.1.11 /private/tmp/arxiv-agent-eng-workspace-mode-build/web
+
+Not implemented: navigation to another Document
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  14:39:49
+   Duration  1.80s (transform 150ms, setup 169ms, import 77ms, tests 872ms, environment 524ms)

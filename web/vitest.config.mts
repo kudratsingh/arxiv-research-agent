@@ -449,6 +449,10 @@ export default defineConfig(async () => ({
       // The recorded193-file suite exceeded the existing15-file freshness band.
       // Preserve statement/branch/line floors and all inputs, exclusions and tiers;
       // ratchet functions92.2 to93.4 under measured93.80, within the same half-point band.
+      // Final project/thread + selector verification: 4,217 tests across 216 files:
+      // 6363/6478 statements, 5479/5814 branches, 2120/2260 functions, 5026/5053 lines.
+      // Application62c761a; complete stable production-build run, zero skips.
+      // Measurement comment only: retain all floors, inputs, exclusions and tiers.
       thresholds: {
         statements: 98.15,
         branches: 94.0,

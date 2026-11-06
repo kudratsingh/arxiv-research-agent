@@ -1,0 +1,25 @@
+
+Running 16 tests using 1 worker
+
+(node:19083) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 [desktop] › live-workspace-e2e/live.spec.ts:38:5 › real Today → source → server-saved question → reload → Library export (4.7s)
+  ✓   2 [desktop] › live-workspace-e2e/live.spec.ts:120:5 › a failed real save retains the draft across reload and permits recovery (3.8s)
+  ✓   3 [desktop] › live-workspace-e2e/live.spec.ts:167:5 › real filters, editable interests, honest source receipts and disabled schedule (4.8s)
+  ✓   4 [desktop] › live-workspace-e2e/live.spec.ts:221:5 › keyboard-only source-to-question flow keeps the real server record (2.9s)
+  ✓   5 [desktop] › live-workspace-e2e/live.spec.ts:269:5 › editing an earlier question becomes latest activity, pins its exact version and returns to the Library view (14.6s)
+  ✓   6 [desktop] › live-workspace-e2e/live.spec.ts:428:5 › a frozen candidate review stays unlabelled until an explicit verification judgment is saved (4.8s)
+  ✓   7 [desktop] › live-workspace-e2e/live.spec.ts:508:5 › an explicit synthetic request uses only selected retained text and exposes its zero-dollar checkpoint (3.4s)
+  ✓   8 [desktop] › live-workspace-e2e/readiness.spec.ts:5:5 › Today puts the saved thread and first reading item within reach (1.6s)
+(node:19394) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   9 [mobile] › live-workspace-e2e/live.spec.ts:38:5 › real Today → source → server-saved question → reload → Library export (4.9s)
+  ✓  10 [mobile] › live-workspace-e2e/live.spec.ts:120:5 › a failed real save retains the draft across reload and permits recovery (3.9s)
+  ✓  11 [mobile] › live-workspace-e2e/live.spec.ts:167:5 › real filters, editable interests, honest source receipts and disabled schedule (4.0s)
+  ✓  12 [mobile] › live-workspace-e2e/live.spec.ts:221:5 › keyboard-only source-to-question flow keeps the real server record (2.8s)
+  ✓  13 [mobile] › live-workspace-e2e/live.spec.ts:269:5 › editing an earlier question becomes latest activity, pins its exact version and returns to the Library view (14.0s)
+  ✓  14 [mobile] › live-workspace-e2e/live.spec.ts:428:5 › a frozen candidate review stays unlabelled until an explicit verification judgment is saved (4.9s)
+  ✓  15 [mobile] › live-workspace-e2e/live.spec.ts:508:5 › an explicit synthetic request uses only selected retained text and exposes its zero-dollar checkpoint (3.1s)
+  ✓  16 [mobile] › live-workspace-e2e/readiness.spec.ts:5:5 › Today puts the saved thread and first reading item within reach (1.4s)
+
+  16 passed (1.4m)

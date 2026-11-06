@@ -1,0 +1,47 @@
+{
+  "runtimeReady": false,
+  "applicationCommit": null,
+  "webTree": null,
+  "buildId": null,
+  "frontendBase": "http://127.0.0.1:3179",
+  "apiPort": 8179,
+  "frontendPid": null,
+  "apiPid": null,
+  "database": "workspace_modes_browser",
+  "principal": "modes-browser",
+  "ownerIsolationReceipt": "outputs/modes-d0/browser-setup.json + browser-fixtures.json (ROOT-owned; ready/PIDs still pending)",
+  "providerConfiguration": "local-preview-disabled",
+  "recurrenceEnabled": false,
+  "initialQuestionEmpty": true,
+  "allowLegacyProfileWrites": false,
+  "expectedWorks": 42,
+  "expectedVersions": 44,
+  "locatorContractReviewedAtSourceCommit": null,
+  "corpusManifestSha256": null,
+  "unicodeReference": {
+    "work_id": "verification:unicode-boundaries",
+    "version_id": "verification:unicode-boundaries:v1",
+    "anchor": "abstract:0:9",
+    "quote": "\u03b1\ud83e\uddea cafe\u0301.",
+    "kind": "labelled-synthetic",
+    "requiresNonAscii": true
+  },
+  "olderVersionReference": {
+    "work_id": "verification:unicode-boundaries",
+    "version_id": "verification:unicode-boundaries:v1",
+    "anchor": "abstract:20:29",
+    "quote": "Repeated.",
+    "kind": "labelled-synthetic"
+  },
+  "outsideInterestResearchCase": {
+    "work_id": "arxiv:2610.40740",
+    "version_id": "arxiv:2610.40740:v1:metadata-b471d2e5f0142ad7",
+    "title": "Certified Behavioral Retention for Continual Adaptation with Held-Out Anchors",
+    "reference": "../ranking/actual-context-outside-interest.json",
+    "expectedProfileKeywordScore": 0,
+    "expectedQuestionScore": "positive for the explicitly verification-authored project question; do not reuse owner-question rank11 as a prediction"
+  },
+  "restartCheckpointReceipt": null,
+  "notes": "ROOT supplies this receipt and a runtime-ready signal after integration. Do not put any auth/provider key or DSN here. No service/DB changes are performed by this harness.",
+  "unownedProjectId": "project-88888888888888888888888888888888"
+}

@@ -1,0 +1,94 @@
+[
+  {
+    "context": "desktop-light",
+    "rawVideoLocalPath": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/runs/2026-11-05T23-53-49-246Z-18433d73/desktop-light/actual-workflow.webm",
+    "rawSha256": "38e656becc8569be78eeea06bd0a1cb5d9474e9b4e3c9acafb58f0cdcf0e9d80",
+    "rawBytes": 13890480,
+    "fullDecodeExitCode": 0,
+    "connectedClip": "desktop-light/connected-walkthrough.webm",
+    "coreRequestedDurationSeconds": 23.643,
+    "queueClip": "desktop-light/native-queue-interaction.webm",
+    "queueRequestedOffsetSeconds": 97.921,
+    "queueRequestedDurationSeconds": 2.497,
+    "trimScope": "Lossless packet copy from actual captured browser video; queue seek can include nearby keyframe preroll; no retiming or fixture animation",
+    "nativeFrames": 62,
+    "contactSheets": [
+      "native-queue-sheet-1.png",
+      "native-queue-sheet-2.png",
+      "native-queue-sheet-3.png",
+      "native-queue-sheet-4.png"
+    ],
+    "visualReview": "Rejected as timing-aligned motion evidence: wall-clock trim offsets do not reliably align with captured video. Original raw video is preserved locally and fully decodes. Use untrimmed supplementary navigation recording.",
+    "historicalClipLocalDirectory": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/diagnostics/misaligned-wall-clock-clips/desktop-light",
+    "replacement": "navigation-untrimmed/desktop-light/navigation.webm"
+  },
+  {
+    "context": "desktop-dark",
+    "rawVideoLocalPath": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/runs/2026-11-05T23-53-49-246Z-18433d73/desktop-dark/actual-workflow.webm",
+    "rawSha256": "07ec408ab3270d472a82e2577dfc1862b29231e21a2dd40c9eeb95ca51ac8a2a",
+    "rawBytes": 14008078,
+    "fullDecodeExitCode": 0,
+    "connectedClip": "desktop-dark/connected-walkthrough.webm",
+    "coreRequestedDurationSeconds": 22.565,
+    "queueClip": "desktop-dark/native-queue-interaction.webm",
+    "queueRequestedOffsetSeconds": 97.029,
+    "queueRequestedDurationSeconds": 2.417,
+    "trimScope": "Lossless packet copy from actual captured browser video; queue seek can include nearby keyframe preroll; no retiming or fixture animation",
+    "nativeFrames": 61,
+    "contactSheets": [
+      "native-queue-sheet-1.png",
+      "native-queue-sheet-2.png",
+      "native-queue-sheet-3.png",
+      "native-queue-sheet-4.png"
+    ],
+    "visualReview": "Rejected as timing-aligned motion evidence: wall-clock trim offsets do not reliably align with captured video. Original raw video is preserved locally and fully decodes. Use untrimmed supplementary navigation recording.",
+    "historicalClipLocalDirectory": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/diagnostics/misaligned-wall-clock-clips/desktop-dark",
+    "replacement": "navigation-untrimmed/desktop-dark/navigation.webm"
+  },
+  {
+    "context": "mobile-light",
+    "rawVideoLocalPath": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/runs/2026-11-05T23-53-49-246Z-18433d73/mobile-light/actual-workflow.webm",
+    "rawSha256": "c9d6471a16621663be262f634199edfdb0b3cbcc3cf04531188a035c9f06bf46",
+    "rawBytes": 12584228,
+    "fullDecodeExitCode": 0,
+    "connectedClip": "mobile-light/connected-walkthrough.webm",
+    "coreRequestedDurationSeconds": 22.656,
+    "queueClip": "mobile-light/native-queue-interaction.webm",
+    "queueRequestedOffsetSeconds": 96.757,
+    "queueRequestedDurationSeconds": 2.503,
+    "trimScope": "Lossless packet copy from actual captured browser video; queue seek can include nearby keyframe preroll; no retiming or fixture animation",
+    "nativeFrames": 63,
+    "contactSheets": [
+      "native-queue-sheet-1.png",
+      "native-queue-sheet-2.png",
+      "native-queue-sheet-3.png",
+      "native-queue-sheet-4.png"
+    ],
+    "visualReview": "Rejected as timing-aligned motion evidence: wall-clock trim offsets do not reliably align with captured video. Original raw video is preserved locally and fully decodes. Use untrimmed supplementary navigation recording.",
+    "historicalClipLocalDirectory": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/diagnostics/misaligned-wall-clock-clips/mobile-light",
+    "replacement": "navigation-untrimmed/mobile-light/navigation.webm"
+  },
+  {
+    "context": "mobile-dark",
+    "rawVideoLocalPath": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/runs/2026-11-05T23-53-49-246Z-18433d73/mobile-dark/actual-workflow.webm",
+    "rawSha256": "4d1b3bf4e40046ac9d4cb11c92924462626ba85391ee072aa754005c01805701",
+    "rawBytes": 12561195,
+    "fullDecodeExitCode": 0,
+    "connectedClip": "mobile-dark/connected-walkthrough.webm",
+    "coreRequestedDurationSeconds": 22.72,
+    "queueClip": "mobile-dark/native-queue-interaction.webm",
+    "queueRequestedOffsetSeconds": 97.465,
+    "queueRequestedDurationSeconds": 2.4299999999999997,
+    "trimScope": "Lossless packet copy from actual captured browser video; queue seek can include nearby keyframe preroll; no retiming or fixture animation",
+    "nativeFrames": 61,
+    "contactSheets": [
+      "native-queue-sheet-1.png",
+      "native-queue-sheet-2.png",
+      "native-queue-sheet-3.png",
+      "native-queue-sheet-4.png"
+    ],
+    "visualReview": "Rejected as timing-aligned motion evidence: wall-clock trim offsets do not reliably align with captured video. Original raw video is preserved locally and fully decodes. Use untrimmed supplementary navigation recording.",
+    "historicalClipLocalDirectory": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/diagnostics/misaligned-wall-clock-clips/mobile-dark",
+    "replacement": "navigation-untrimmed/mobile-dark/navigation.webm"
+  }
+]

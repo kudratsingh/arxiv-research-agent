@@ -1,0 +1,49 @@
+{
+  "scope": "Actual WebM full decode + nominal one-fps contact sheets; explicit visual review still required",
+  "videos": [
+    {
+      "video": "desktop-dark/connected-example.webm",
+      "sha256": "7b9b34b572e7d00fe7adcfb2a3bce960b282971c21fb366f64b6700ac8498b3c",
+      "bytes": 2387936,
+      "width": 1440,
+      "height": 1000,
+      "durationSeconds": 19.76,
+      "fullDecodeExitCode": 0,
+      "contactSheet": "desktop-dark-contact-sheet.png",
+      "visualAssessment": "Actual full-workflow contact sheet manually inspected in this theme/width. Question/project/evidence/thread/Library and exact source returns clear; screenshots support detail. Not human usefulness or physical-device qualification."
+    },
+    {
+      "video": "desktop-light/connected-example.webm",
+      "sha256": "aceacf18e721a4bf8bc0904fe522540c72bc1f8f5b8acd66aeaea12f66fb16a6",
+      "bytes": 2390816,
+      "width": 1440,
+      "height": 1000,
+      "durationSeconds": 19.88,
+      "fullDecodeExitCode": 0,
+      "contactSheet": "desktop-light-contact-sheet.png",
+      "visualAssessment": "Actual full-workflow contact sheet manually inspected in this theme/width. Question/project/evidence/thread/Library and exact source returns clear; screenshots support detail. Not human usefulness or physical-device qualification."
+    },
+    {
+      "video": "mobile-dark/connected-example.webm",
+      "sha256": "5073e2f1ebecda94fb72bad2c6b3fde853a3c86b13eef151a1bfd868b64cbc2b",
+      "bytes": 1746439,
+      "width": 390,
+      "height": 844,
+      "durationSeconds": 18.16,
+      "fullDecodeExitCode": 0,
+      "contactSheet": "mobile-dark-contact-sheet.png",
+      "visualAssessment": "Actual full-workflow contact sheet manually inspected in this theme/width. Question/project/evidence/thread/Library and exact source returns clear; screenshots support detail. Not human usefulness or physical-device qualification."
+    },
+    {
+      "video": "mobile-light/connected-example.webm",
+      "sha256": "038865b64bb98692d2ae2b8ff6b132e165803534177eae7af308866c892b8645",
+      "bytes": 1718315,
+      "width": 390,
+      "height": 844,
+      "durationSeconds": 18.36,
+      "fullDecodeExitCode": 0,
+      "contactSheet": "mobile-light-contact-sheet.png",
+      "visualAssessment": "Actual full-workflow contact sheet manually inspected in this theme/width. Question/project/evidence/thread/Library and exact source returns clear; screenshots support detail. Not human usefulness or physical-device qualification."
+    }
+  ]
+}

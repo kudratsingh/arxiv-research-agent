@@ -1,0 +1,35 @@
+'use strict';
+// Final CSS-only geometry gate; full mutation/recovery proof remains source-attributed separately.
+const fs=require('node:fs/promises'),path=require('node:path');
+const {chromium}=require('@playwright/test');
+const {ROOT,APP,Guard,loadReceipt,bindActualSource,assert,expect,settled,focusedClearance,durable}=require('./support.cjs');
+(async()=>{
+ const receipt=await loadReceipt(path.join(ROOT,'service-receipt.json'));
+ const prior=JSON.parse(await fs.readFile(path.join(APP,'outputs/modes-d0/polish-functional-report-path.json'),'utf8'));
+ const reportBefore=JSON.parse(await fs.readFile(prior.report,'utf8'));assert.equal(reportBefore.cases.length,96);assert(reportBefore.cases.every(c=>c.status==='pass'));
+ const core=reportBefore.cases.find(c=>c.id==='D4-01'&&c.context==='desktop-light').proof;
+ const out=path.join(ROOT,'final-layout',receipt.applicationCommit.slice(0,7));await fs.mkdir(out,{recursive:true});await bindActualSource(receipt,out);
+ const report={applicationCommit:receipt.applicationCommit,buildId:receipt.buildId,functionalCohort:reportBefore.applicationCommit,scope:'Final selector CSS + all routes/widths/themes/motion, no authored writes; full96-case functional cohort separately bound',observations:[],errors:[],blocked:[],requests:[]};
+ const guard=new Guard(receipt,report),browser=await chromium.launch();
+ try{for(const[width,height]of[[1440,1000],[390,844]])for(const theme of['light','dark'])for(const motion of['no-preference','reduce']){
+  const name=(width===390?'mobile':'desktop')+'-'+theme+'-'+motion,context=await browser.newContext({viewport:{width,height},deviceScaleFactor:2,colorScheme:theme,reducedMotion:motion,isMobile:width===390,hasTouch:width===390});await guard.install(context);
+  await context.route('**/api/workspace/**',async route=>{if(!['GET','HEAD'].includes(route.request().method())){report.blocked.push({path:new URL(route.request().url()).pathname,reason:'Final layout gate is read-only'});return route.abort();}return route.fallback();});
+  await context.addInitScript(()=>{window.__finalAnimations=[];const original=Element.prototype.animate;Element.prototype.animate=function(frames,options){if(this.matches?.('article.ws-focus'))window.__finalAnimations.push(typeof options==='number'?options:options?.duration);return original.call(this,frames,options);};});
+  const page=await context.newPage();page.on('pageerror',e=>report.errors.push(String(e)));const before=await guard.get(context,'state'),index=await guard.get(context,'context');
+  for(const[label,href]of[['today','/workspace/today?mode=learn'],['reader',core.exactHref],['projects','/workspace/projects?mode=research&project='+core.project.id],['thread','/workspace/threads/'+core.thread.id+'?mode=learn&thread='+core.thread.id],['library','/workspace/library?mode=learn&view=notes'],['interests','/workspace/interests?mode=learn'],['operations','/workspace/operations?mode=learn'],['review','/workspace/review?mode=learn']]){
+   const response=await page.goto(guard.base+href,{waitUntil:'networkidle'});await settled(page);assert(response.headers()['content-security-policy'].includes("'nonce-"));
+   const geometry=await page.evaluate(()=>({overflow:document.documentElement.scrollWidth-innerWidth,theme:document.documentElement.getAttribute('data-theme'),heading:document.querySelector('main h1').getBoundingClientRect().toJSON()}));assert(geometry.overflow<=1);assert.equal(geometry.theme,theme);
+   if(label==='projects'){
+    const select=page.getByRole('combobox',{name:'Active research project',exact:true});const box=await select.boundingBox();assert(box.width>=(width===1440?240:180),'Project selector must retain readable width');geometry.projectSelector=box;
+   }
+   if(label==='today'){
+    geometry.initial=await focusedClearance(page);await page.mouse.move(width-8,height/2);await page.mouse.wheel(0,360);await page.keyboard.press('j');geometry.next=await focusedClearance(page);await page.keyboard.press('k');geometry.previous=await focusedClearance(page);
+    if(motion==='reduce')assert.deepEqual(await page.evaluate(()=>window.__finalAnimations),[]);else assert((await page.evaluate(()=>window.__finalAnimations)).includes(170));
+   }
+   const axe=await new(require('@axe-core/playwright').default)({page}).analyze();const violations=axe.violations.map(v=>({id:v.id,impact:v.impact}));assert(!violations.some(v=>['serious','critical'].includes(v.impact)));
+   if(motion==='no-preference')await page.screenshot({path:path.join(out,name+'-'+label+'.png')});report.observations.push({context:name,route:label,geometry,violations});
+  }
+  assert.deepEqual(durable(await guard.get(context,'state')),durable(before));assert.deepEqual(await guard.get(context,'context'),index);await context.close();console.log('PASS final layout',name);
+ }}finally{await browser.close();report.requests=guard.requests;report.status=report.observations.length===64&&!report.errors.length&&!report.blocked.length?'pass':'incomplete_or_failed';await fs.writeFile(path.join(out,'report.json'),JSON.stringify(report,null,2)+'\n');}
+ assert.equal(report.status,'pass');
+})().catch(e=>{console.error(e);process.exitCode=1;});

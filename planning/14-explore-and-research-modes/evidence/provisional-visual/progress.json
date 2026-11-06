@@ -1,0 +1,27 @@
+{
+  "name": "desktop-light",
+  "phase": "initial",
+  "title": {
+    "top": 488.96875,
+    "bottom": 616.375,
+    "left": 636,
+    "right": 1344
+  },
+  "firstTwoAbstractLines": [
+    {
+      "top": 697.875,
+      "bottom": 724.875
+    },
+    {
+      "top": 729.375,
+      "bottom": 756.375
+    }
+  ],
+  "playerTop": 780,
+  "titleClear": true,
+  "twoLinesClear": true,
+  "documentOverflow": 0,
+  "bodyOverflow": 0,
+  "windowScroll": 0,
+  "mainScroll": 0
+}

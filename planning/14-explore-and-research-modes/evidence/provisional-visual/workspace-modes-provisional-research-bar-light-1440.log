@@ -1,0 +1,40 @@
+{
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "documentOverflow": 0,
+  "scrollY": 0,
+  "bar": [
+    {
+      "tag": "DIV",
+      "class": "ws-bar",
+      "text": "CloseSearch",
+      "top": 880,
+      "bottom": 976,
+      "left": 484,
+      "right": 1304,
+      "height": 96,
+      "display": "block",
+      "position": "fixed",
+      "hit": true
+    }
+  ],
+  "composer": [
+    {
+      "tag": "FORM",
+      "class": "ws-composer ws-composer-shell",
+      "text": "CloseSearch",
+      "top": 893,
+      "bottom": 963,
+      "left": 497,
+      "right": 1291,
+      "height": 70,
+      "display": "flex",
+      "position": "static",
+      "hit": true
+    }
+  ],
+  "searchButtons": [],
+  "hosts": []
+}

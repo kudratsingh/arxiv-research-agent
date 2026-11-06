@@ -1,0 +1,350 @@
+{
+  "applicationCommit": "8e346704e9f18bd6aea016c09bd4416f1ea58f61",
+  "principal": "modes-browser-r13",
+  "database": "workspace_modes_browser",
+  "createdAtUtc": "2026-11-06T00:01:33.476Z",
+  "projectId": "project-33c76cd7329b487f89af164fbbc408de",
+  "projectSha256": "d5a5eb0708138d88b9ba22cc5d2ea5cf56a01154aa17bc212020da949b34e074",
+  "threadId": "thread-53cf956a6f5742a5ba0a3852a3ff7881",
+  "threadSha256": "b32619ccc76de77cf42025a97493d6781df768e6d1118716ba66b6c6bea0290f",
+  "entryId": "ad4c6dd9-6677-4ee2-aa85-4311ec028cd7",
+  "entrySha256": "a3ec22793a4e0075335ad193e1c4e205b872e4c4be7dab1ab3b17953b257e76f",
+  "resumeHref": "/workspace/items/arxiv%3A2610.40927?version=arxiv%3A2610.40927%3Av1%3Ametadata-b09108e19893972e&entry=ad4c6dd9-6677-4ee2-aa85-4311ec028cd7&return_to=%2Fworkspace%2Flibrary%3Fmode%3Dlearn%26view%3Dnotes%26focus%3Darxiv%253A2610.40927&mode=research&project=project-33c76cd7329b487f89af164fbbc408de#abstract%3A0",
+  "exactHref": "/workspace/items/arxiv%3A2610.40927?version=arxiv%3A2610.40927%3Av1%3Ametadata-b09108e19893972e&return_to=%2Fworkspace%2Fprojects%3Fmode%3Dresearch%26project%3Dproject-33c76cd7329b487f89af164fbbc408de&mode=research&project=project-33c76cd7329b487f89af164fbbc408de#abstract%3A0",
+  "project": {
+    "id": "project-33c76cd7329b487f89af164fbbc408de",
+    "revision": 14,
+    "data": {
+      "title": "Verification behavioral retention 2026-11-05T23-53-49-246Z-18433d73 mobile-dark",
+      "question": "MECHANICAL VERIFICATION 2026-11-05T23-53-49-246Z-18433d73 mobile-dark: How can held-out anchors certify behavioral retention during continual adaptation? Latest pending project question. What independent conditions bound this retention claim?",
+      "scope": "MECHANICAL VERIFICATION latest scope; preserve through a real concurrent revision conflict.",
+      "constraints": "MECHANICAL VERIFICATION: retained public evidence only; no model/source calls or owner judgments. MECHANICAL parallel artifact control.",
+      "next_actions": [
+        "Inspect the exact retained passage",
+        "Keep proposed checks manual and unverified"
+      ],
+      "status": "active"
+    },
+    "created_at": "2026-11-05T23:59:46.380178+00:00",
+    "updated_at": "2026-11-06T00:01:08.913411+00:00",
+    "activity_sequence": 376,
+    "sources": [
+      {
+        "id": "link-2ce83f81b689dc1280b97642bacd1964",
+        "role": "evidence",
+        "label": "",
+        "status": "active",
+        "reference": {
+          "work_id": "verification:unicode-boundaries",
+          "version_id": "verification:unicode-boundaries:v1",
+          "anchor": "abstract:0:9",
+          "version_hash": "synthetic-boundaries-v1",
+          "material_id": "mat-5c9192129528fb8ca32f82561540ff25",
+          "material_hash": "sha256:cac58eb48e7285c352532136a1798c760e27d7affe5a5431eb8d5cecec73ba4d",
+          "parser_revision": "workspace-plain-text-v1",
+          "source_scope": "abstract",
+          "title": "Synthetic verification only: astral and combining-text boundaries",
+          "source_url": "https://example.invalid/verification-unicode-boundaries",
+          "page": null,
+          "start": 0,
+          "end": 9,
+          "quote": "\u03b1\ud83e\uddea cafe\u0301.",
+          "offset_basis": "page-local Unicode code points; end exclusive",
+          "available": true,
+          "unavailable_reason": null
+        }
+      },
+      {
+        "id": "link-44ef665a36c9da8eb26668c512e0c9ba",
+        "role": "evidence",
+        "label": "",
+        "status": "active",
+        "reference": {
+          "work_id": "arxiv:2610.40927",
+          "version_id": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+          "anchor": "abstract:0:60",
+          "version_hash": "b1e003848d7d156da1ba4dc05a910ce19a741f9d997d91ce66c2ab86f28d1beb",
+          "material_id": "mat-e4adcf0135fbaa3982584da87b0040b2",
+          "material_hash": "sha256:ddfd0d20c492543731ef25078ad89ed24cfc3ac719d149c396fe28a339f5d508",
+          "parser_revision": "workspace-plain-text-v1",
+          "source_scope": "abstract",
+          "title": "Agentic World Modeling for Agent Test-time Scaling without Environment Replica",
+          "source_url": "https://arxiv.org/abs/2610.40927v1",
+          "page": null,
+          "start": 0,
+          "end": 60,
+          "quote": "Test-time scaling (TTS) improves large language model agents",
+          "offset_basis": "page-local Unicode code points; end exclusive",
+          "available": true,
+          "unavailable_reason": null
+        }
+      },
+      {
+        "id": "link-dd66d5a9e17731fce9a38caf40aae8b3",
+        "role": "source",
+        "label": "",
+        "status": "active",
+        "reference": {
+          "work_id": "arxiv:2610.40927",
+          "version_id": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+          "anchor": "abstract:0",
+          "version_hash": "b1e003848d7d156da1ba4dc05a910ce19a741f9d997d91ce66c2ab86f28d1beb",
+          "material_id": "mat-e4adcf0135fbaa3982584da87b0040b2",
+          "material_hash": "sha256:ddfd0d20c492543731ef25078ad89ed24cfc3ac719d149c396fe28a339f5d508",
+          "parser_revision": "workspace-plain-text-v1",
+          "source_scope": "abstract",
+          "title": "Agentic World Modeling for Agent Test-time Scaling without Environment Replica",
+          "source_url": "https://arxiv.org/abs/2610.40927v1",
+          "page": null,
+          "start": 0,
+          "end": 0,
+          "quote": "",
+          "offset_basis": "page-local Unicode code points; end exclusive",
+          "available": true,
+          "unavailable_reason": null
+        }
+      }
+    ],
+    "entries": [
+      {
+        "entry_id": "ad4c6dd9-6677-4ee2-aa85-4311ec028cd7",
+        "entry_revision": 1,
+        "entry": {
+          "work_id": "arxiv:2610.40927",
+          "version_id": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+          "kind": "question",
+          "body": "MECHANICAL VERIFICATION 2026-11-05T23-53-49-246Z-18433d73 mobile-dark: How can held-out anchors certify behavioral retention during continual adaptation?",
+          "anchor": "abstract:0",
+          "id": "ad4c6dd9-6677-4ee2-aa85-4311ec028cd7",
+          "revision": 1,
+          "updated_at": "",
+          "activity_sequence": 0
+        },
+        "current_revision": 3,
+        "available": true
+      }
+    ],
+    "artifacts": [
+      {
+        "id": "artifact-2e24a505419643daa8bb3c4652b54bcb",
+        "revision": 1,
+        "data": {
+          "kind": "proposed-experiment",
+          "body": "MECHANICAL VERIFICATION proposed-experiment; no scientific/factual/experiment outcome is asserted.",
+          "entry": null,
+          "evidence_link_ids": []
+        },
+        "authorship": "manual",
+        "verification": "unverified"
+      },
+      {
+        "id": "artifact-62040e57ac7c429f9a75515a62f668d8",
+        "revision": 1,
+        "data": {
+          "kind": "comparison",
+          "body": "MECHANICAL VERIFICATION comparison; no scientific/factual/experiment outcome is asserted.",
+          "entry": null,
+          "evidence_link_ids": []
+        },
+        "authorship": "manual",
+        "verification": "unverified"
+      },
+      {
+        "id": "artifact-aa6a989011744d0c826c1b512c436351",
+        "revision": 1,
+        "data": {
+          "kind": "hypothesis",
+          "body": "MECHANICAL VERIFICATION hypothesis; no scientific/factual/experiment outcome is asserted.",
+          "entry": null,
+          "evidence_link_ids": []
+        },
+        "authorship": "manual",
+        "verification": "unverified"
+      },
+      {
+        "id": "artifact-d6bbb5d1e8904bb491f36064ad7b6611",
+        "revision": 1,
+        "data": {
+          "kind": "observation",
+          "body": "MECHANICAL VERIFICATION observation; no scientific/factual/experiment outcome is asserted.",
+          "entry": null,
+          "evidence_link_ids": []
+        },
+        "authorship": "manual",
+        "verification": "unverified"
+      },
+      {
+        "id": "artifact-f2909fe489bb49cab07fa6f78935eee4",
+        "revision": 1,
+        "data": {
+          "kind": "assumption",
+          "body": "MECHANICAL VERIFICATION assumption; no scientific/factual/experiment outcome is asserted.",
+          "entry": null,
+          "evidence_link_ids": []
+        },
+        "authorship": "manual",
+        "verification": "unverified"
+      },
+      {
+        "id": "artifact-fdcb69f068fa437fab9dcd41da70f6c6",
+        "revision": 1,
+        "data": {
+          "kind": "hypothesis",
+          "body": "MECHANICAL VERIFICATION latest authored hypothesis; no scientific claim or executed experiment.",
+          "entry": null,
+          "evidence_link_ids": []
+        },
+        "authorship": "manual",
+        "verification": "unverified"
+      }
+    ],
+    "threads": [
+      {
+        "id": "thread-53cf956a6f5742a5ba0a3852a3ff7881",
+        "revision": 4,
+        "data": {
+          "title": "Verification prerequisite 2026-11-05T23-53-49-246Z-18433d73 mobile-dark",
+          "goal": "MECHANICAL VERIFICATION: latest retained prerequisite goal \u0394\ud83d\ude80.",
+          "prerequisite": "held-out anchor",
+          "status": "active",
+          "origin": {
+            "mode": "research",
+            "project_id": "project-33c76cd7329b487f89af164fbbc408de",
+            "thread_id": null,
+            "return_to": "/workspace/projects?mode=research&project=project-33c76cd7329b487f89af164fbbc408de"
+          },
+          "source": {
+            "work_id": "arxiv:2610.40927",
+            "version_id": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+            "anchor": "abstract:0:60",
+            "version_hash": "b1e003848d7d156da1ba4dc05a910ce19a741f9d997d91ce66c2ab86f28d1beb",
+            "material_id": null,
+            "material_hash": null,
+            "parser_revision": null,
+            "source_scope": "abstract"
+          },
+          "entry": {
+            "entry_id": "ad4c6dd9-6677-4ee2-aa85-4311ec028cd7",
+            "entry_revision": 1
+          }
+        },
+        "source": {
+          "work_id": "arxiv:2610.40927",
+          "version_id": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+          "anchor": "abstract:0:60",
+          "version_hash": "b1e003848d7d156da1ba4dc05a910ce19a741f9d997d91ce66c2ab86f28d1beb",
+          "material_id": "mat-e4adcf0135fbaa3982584da87b0040b2",
+          "material_hash": "sha256:ddfd0d20c492543731ef25078ad89ed24cfc3ac719d149c396fe28a339f5d508",
+          "parser_revision": "workspace-plain-text-v1",
+          "source_scope": "abstract",
+          "title": "Agentic World Modeling for Agent Test-time Scaling without Environment Replica",
+          "source_url": "https://arxiv.org/abs/2610.40927v1",
+          "page": null,
+          "start": 0,
+          "end": 60,
+          "quote": "Test-time scaling (TTS) improves large language model agents",
+          "offset_basis": "page-local Unicode code points; end exclusive",
+          "available": true,
+          "unavailable_reason": null
+        },
+        "created_at": "2026-11-05T23:59:51.405767+00:00",
+        "updated_at": "2026-11-06T00:00:37.751094+00:00",
+        "activity_sequence": 369
+      }
+    ]
+  },
+  "thread": {
+    "id": "thread-53cf956a6f5742a5ba0a3852a3ff7881",
+    "revision": 4,
+    "data": {
+      "title": "Verification prerequisite 2026-11-05T23-53-49-246Z-18433d73 mobile-dark",
+      "goal": "MECHANICAL VERIFICATION: latest retained prerequisite goal \u0394\ud83d\ude80.",
+      "prerequisite": "held-out anchor",
+      "status": "active",
+      "origin": {
+        "mode": "research",
+        "project_id": "project-33c76cd7329b487f89af164fbbc408de",
+        "thread_id": null,
+        "return_to": "/workspace/projects?mode=research&project=project-33c76cd7329b487f89af164fbbc408de"
+      },
+      "source": {
+        "work_id": "arxiv:2610.40927",
+        "version_id": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+        "anchor": "abstract:0:60",
+        "version_hash": "b1e003848d7d156da1ba4dc05a910ce19a741f9d997d91ce66c2ab86f28d1beb",
+        "material_id": null,
+        "material_hash": null,
+        "parser_revision": null,
+        "source_scope": "abstract"
+      },
+      "entry": {
+        "entry_id": "ad4c6dd9-6677-4ee2-aa85-4311ec028cd7",
+        "entry_revision": 1
+      }
+    },
+    "source": {
+      "work_id": "arxiv:2610.40927",
+      "version_id": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+      "anchor": "abstract:0:60",
+      "version_hash": "b1e003848d7d156da1ba4dc05a910ce19a741f9d997d91ce66c2ab86f28d1beb",
+      "material_id": "mat-e4adcf0135fbaa3982584da87b0040b2",
+      "material_hash": "sha256:ddfd0d20c492543731ef25078ad89ed24cfc3ac719d149c396fe28a339f5d508",
+      "parser_revision": "workspace-plain-text-v1",
+      "source_scope": "abstract",
+      "title": "Agentic World Modeling for Agent Test-time Scaling without Environment Replica",
+      "source_url": "https://arxiv.org/abs/2610.40927v1",
+      "page": null,
+      "start": 0,
+      "end": 60,
+      "quote": "Test-time scaling (TTS) improves large language model agents",
+      "offset_basis": "page-local Unicode code points; end exclusive",
+      "available": true,
+      "unavailable_reason": null
+    },
+    "created_at": "2026-11-05T23:59:51.405767+00:00",
+    "updated_at": "2026-11-06T00:00:37.751094+00:00",
+    "activity_sequence": 369
+  },
+  "entry": {
+    "work_id": "arxiv:2610.40927",
+    "version_id": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+    "kind": "question",
+    "body": "MECHANICAL VERIFICATION 2026-11-05T23-53-49-246Z-18433d73 mobile-dark: How can held-out anchors certify behavioral retention during continual adaptation? Latest unsaved \u0394\ud83d\ude80 verification draft.",
+    "anchor": "abstract:0",
+    "id": "ad4c6dd9-6677-4ee2-aa85-4311ec028cd7",
+    "revision": 3,
+    "updated_at": "2026-11-06T00:00:15.351510+00:00",
+    "activity_sequence": 225,
+    "context": {
+      "mode": "research",
+      "project_id": "project-33c76cd7329b487f89af164fbbc408de",
+      "thread_id": null,
+      "return_to": "/workspace/library?mode=research&project=project-33c76cd7329b487f89af164fbbc408de&view=notes&focus=arxiv%3A2610.40927"
+    }
+  },
+  "ownedResources": {
+    "projects": [
+      "project-0fea5b0f21e944b59a7ee14501da5444",
+      "project-4d18cf57f53e43ce95ba30aa0f252505",
+      "project-402b671c4d0349b9a10b80495e9b5e1e",
+      "project-445f28cda8cc4332b98c47dec357d7d4",
+      "project-760fbac80f364780bde2cf28c2b93756",
+      "project-a31c0e950e104a09b70fdf3c7ddefb3b",
+      "project-33c76cd7329b487f89af164fbbc408de",
+      "project-052ebf618a634fca941b446dbc966108"
+    ],
+    "threads": [
+      "thread-7df7b5c8339b46f8bccc766364bb45b7",
+      "thread-d385825eeaa343618d0cf35862252939",
+      "thread-1a2decac643941e8b7ec90a0ff510a93",
+      "thread-53cf956a6f5742a5ba0a3852a3ff7881"
+    ],
+    "entries": [
+      "72986b69-c310-4727-80db-c20b720f2fb0",
+      "fe682a88-cab1-459a-9def-37cfbf30cc8d",
+      "7954bd00-2aa8-4360-bf77-95b0e2f61c63",
+      "ad4c6dd9-6677-4ee2-aa85-4311ec028cd7"
+    ]
+  },
+  "scope": "ROOT restarts only dedicated stack after this checkpoint; browser resumes with fresh context. No restart performed by harness."
+}

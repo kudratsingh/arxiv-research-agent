@@ -1,0 +1,12 @@
+
+> arxiv-research-agent-web@0.1.0 test
+> vitest run --run tests/workspace/project-presentation.test.tsx tests/workspace/thread-presentation.test.tsx tests/workspace/context-forms-edge.test.tsx tests/workspace/context-forms.test.tsx
+
+
+ RUN  v4.1.11 /private/tmp/arxiv-agent-eng-workspace-mode-build/web
+
+
+ Test Files  4 passed (4)
+      Tests  72 passed (72)
+   Start at  16:36:34
+   Duration  3.23s (transform 612ms, setup 776ms, import 503ms, tests 4.38s, environment 2.26s)

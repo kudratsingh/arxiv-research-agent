@@ -1,0 +1,146 @@
+[
+  {
+    "local_original": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/runs/2026-11-05T22-32-11-463Z-7ff9c8a0/report.json",
+    "sha256": "839a89a25d79e1b4d131cf1984a8f2dd7fff823074535e63c3ae6ce52e271b86",
+    "application_commit": "79e7be7c0480809aac7248a5310a0ee7fde99a6e",
+    "recorded_status": "fail",
+    "cases": 3,
+    "failed": 3,
+    "interpretation": "Original chronological state retained; interrupted/zero-case/failed runs are not passes"
+  },
+  {
+    "local_original": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/runs/2026-11-05T22-32-49-072Z-7de0c47b/report.json",
+    "sha256": "64cd676857674ebfe789056100dca311ff95909b6bf79aeb3c18623a0bfcc280",
+    "application_commit": "79e7be7c0480809aac7248a5310a0ee7fde99a6e",
+    "recorded_status": "fail",
+    "cases": 4,
+    "failed": 4,
+    "interpretation": "Original chronological state retained; interrupted/zero-case/failed runs are not passes"
+  },
+  {
+    "local_original": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/runs/2026-11-05T22-37-18-717Z-20b8d1cc/report.json",
+    "sha256": "2c9ae5d340a668c1176e86fe863ab1e2f928c8857f458ee7a027f124ed722c6c",
+    "application_commit": "ba3d74a3a447614c276c4d644c911f1cd93ce443",
+    "recorded_status": "running",
+    "cases": 2,
+    "failed": 2,
+    "interpretation": "Original chronological state retained; interrupted/zero-case/failed runs are not passes"
+  },
+  {
+    "local_original": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/runs/2026-11-05T22-39-35-934Z-947a8574/report.json",
+    "sha256": "05369739a8be28c53a6d0ae4471a4ad583d8fdccba00c95f0b3e171d2dd04476",
+    "application_commit": "de5f3f1ffc578c4e0ef49b7c0add85f74bbc71f7",
+    "recorded_status": "fail",
+    "cases": 3,
+    "failed": 3,
+    "interpretation": "Original chronological state retained; interrupted/zero-case/failed runs are not passes"
+  },
+  {
+    "local_original": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/runs/2026-11-05T22-41-05-330Z-a80f6c8c/report.json",
+    "sha256": "82216568725af522bdc2574127de0ad873d1f8ddb9150e6cc4ba01865d71e586",
+    "application_commit": "6bef6fc98d3c0028eeed31979569ee319b3f602f",
+    "recorded_status": "diagnostic_core_only",
+    "cases": 1,
+    "failed": 0,
+    "interpretation": "Original chronological state retained; interrupted/zero-case/failed runs are not passes"
+  },
+  {
+    "local_original": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/runs/2026-11-05T22-42-00-309Z-125d5af4/report.json",
+    "sha256": "2083dcaa43a2ffd425b2e4fe144f69318417d0ca89ad7da3d76a8f0503143823",
+    "application_commit": "6bef6fc98d3c0028eeed31979569ee319b3f602f",
+    "recorded_status": "fail",
+    "cases": 24,
+    "failed": 3,
+    "interpretation": "Original chronological state retained; interrupted/zero-case/failed runs are not passes"
+  },
+  {
+    "local_original": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/runs/2026-11-05T22-43-13-757Z-7af337f1/report.json",
+    "sha256": "53b95f0af88e0871ab3ba0faec5f1c758531114b44920091fec9f9a3330cffb2",
+    "application_commit": "6bef6fc98d3c0028eeed31979569ee319b3f602f",
+    "recorded_status": "fail",
+    "cases": 26,
+    "failed": 1,
+    "interpretation": "Original chronological state retained; interrupted/zero-case/failed runs are not passes"
+  },
+  {
+    "local_original": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/runs/2026-11-05T22-59-11-674Z-d371e15a/report.json",
+    "sha256": "cfc90f2f339c6bf4908424371c9fea7e78995e6ea88dd2aaebc83412dc934e53",
+    "application_commit": "ca81dce08abdd44de05834e1688b9872bf0d38db",
+    "recorded_status": "fail",
+    "cases": 52,
+    "failed": 4,
+    "interpretation": "Original chronological state retained; interrupted/zero-case/failed runs are not passes"
+  },
+  {
+    "local_original": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/runs/2026-11-05T23-10-22-316Z-e078c43a/report.json",
+    "sha256": "fe922d77f5dede34928d58765866ba03559a313252958ad72f50590fb684b5a7",
+    "application_commit": "2a3b0ede371c4c21b794ad8b293bafb3f8641cfb",
+    "recorded_status": "fail",
+    "cases": 1,
+    "failed": 1,
+    "interpretation": "Original chronological state retained; interrupted/zero-case/failed runs are not passes"
+  },
+  {
+    "local_original": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/runs/2026-11-05T23-12-35-667Z-031b3d69/report.json",
+    "sha256": "b0052d387a08174297b38d9e9faf1e416b154746ca98134649c5b041fb6805e0",
+    "application_commit": "9b2aaf552509e307b6e4bedf03e91f4f33360fbc",
+    "recorded_status": "diagnostic_core_only",
+    "cases": 1,
+    "failed": 0,
+    "interpretation": "Original chronological state retained; interrupted/zero-case/failed runs are not passes"
+  },
+  {
+    "local_original": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/runs/2026-11-05T23-23-27-130Z-6da0453e/report.json",
+    "sha256": "5fcb66e2e3d440e609045ea94844b384d6662e61fe817d62712538f105c6bff4",
+    "application_commit": "031524fd120749af8ea25f7bf6ac5911f14342de",
+    "recorded_status": "fail",
+    "cases": 96,
+    "failed": 2,
+    "interpretation": "Original chronological state retained; interrupted/zero-case/failed runs are not passes"
+  },
+  {
+    "local_original": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/runs/2026-11-05T23-42-29-853Z-05a0c461/report.json",
+    "sha256": "38880e0d56d32eb53b874271cb83b7d0e1a06a48c0758c5d219892f42b5a973a",
+    "application_commit": "8e346704e9f18bd6aea016c09bd4416f1ea58f61",
+    "recorded_status": "fail",
+    "cases": 96,
+    "failed": 4,
+    "interpretation": "Original chronological state retained; interrupted/zero-case/failed runs are not passes"
+  },
+  {
+    "local_original": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/runs/2026-11-05T23-53-49-246Z-18433d73/report.json",
+    "sha256": "8a1675aae03eb2d47f06998820cc222229c398db1cb5a4e4125a298d74fa9b56",
+    "application_commit": "8e346704e9f18bd6aea016c09bd4416f1ea58f61",
+    "recorded_status": "awaiting_root_restart_checkpoint",
+    "cases": 96,
+    "failed": 0,
+    "interpretation": "Original chronological state retained; interrupted/zero-case/failed runs are not passes"
+  },
+  {
+    "local_original": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/runs/2026-11-06T00-42-04-777Z-e3faab46/report.json",
+    "sha256": "1d92ecad243cc833929b597e6dae15a4083930a5de89fa74b634499ea7223ebe",
+    "application_commit": "cea881e0f0335f1f51fff29f83c5ce35305aebd5",
+    "recorded_status": "fail",
+    "cases": 96,
+    "failed": 4,
+    "interpretation": "Original chronological state retained; interrupted/zero-case/failed runs are not passes"
+  },
+  {
+    "local_original": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/runs/2026-11-06T00-46-26-880Z-b07d6c9f/report.json",
+    "sha256": "3d00a262ffa831b2657ada60c66c957c6afe9bb00d0c7fa4ba94c4f159d8efe2",
+    "application_commit": "cea881e0f0335f1f51fff29f83c5ce35305aebd5",
+    "recorded_status": "awaiting_root_restart_checkpoint",
+    "cases": 0,
+    "failed": 0,
+    "interpretation": "Original chronological state retained; interrupted/zero-case/failed runs are not passes"
+  },
+  {
+    "local_original": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/runs/2026-11-06T00-48-43-041Z-9c42c3d7/report.json",
+    "sha256": "c59f5a711bfbf878b3411ce56b2c40afa119066b67b4e9338c233a1b974a6067",
+    "application_commit": "cea881e0f0335f1f51fff29f83c5ce35305aebd5",
+    "recorded_status": "awaiting_root_restart_checkpoint",
+    "cases": 96,
+    "failed": 0,
+    "interpretation": "Original chronological state retained; interrupted/zero-case/failed runs are not passes"
+  }
+]

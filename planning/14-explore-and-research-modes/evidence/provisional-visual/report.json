@@ -1,0 +1,1479 @@
+{
+  "status": "provisional_findings",
+  "scope": "READ-ONLY PROVISIONAL visual diagnostic; not final24group acceptance",
+  "sourceCommit": null,
+  "startedAtUtc": "2026-11-05T13:59:43.260Z",
+  "contexts": [
+    {
+      "name": "mobile-light",
+      "width": 390,
+      "height": 844,
+      "theme": "light",
+      "sourceCommit": null,
+      "buildId": "DvLBxnx2yfYFJ7MXXpx3W",
+      "clearance": [
+        {
+          "phase": "initial",
+          "title": {
+            "top": 516.359375,
+            "bottom": 601.296875,
+            "left": 16,
+            "right": 374
+          },
+          "firstTwoAbstractLines": [
+            {
+              "top": 672.296875,
+              "bottom": 696.296875
+            },
+            {
+              "top": 699.484375,
+              "bottom": 723.484375
+            }
+          ],
+          "playerTop": 712,
+          "titleClear": true,
+          "twoLinesClear": false,
+          "documentOverflow": 0,
+          "bodyOverflow": 0,
+          "windowScroll": 0,
+          "mainScroll": 0
+        },
+        {
+          "phase": "queue",
+          "title": {
+            "top": 73.41616821289062,
+            "bottom": 186.66616821289062,
+            "left": 16,
+            "right": 374
+          },
+          "firstTwoAbstractLines": [
+            {
+              "top": 239.66616821289062,
+              "bottom": 263.6661682128906
+            },
+            {
+              "top": 266.8536682128906,
+              "bottom": 290.8536682128906
+            }
+          ],
+          "playerTop": 712,
+          "titleClear": true,
+          "twoLinesClear": true,
+          "documentOverflow": 0,
+          "bodyOverflow": 0,
+          "windowScroll": 448,
+          "mainScroll": 0
+        },
+        {
+          "phase": "return",
+          "title": {
+            "top": 68.359375,
+            "bottom": 181.609375,
+            "left": 16,
+            "right": 374
+          },
+          "firstTwoAbstractLines": [
+            {
+              "top": 234.609375,
+              "bottom": 258.609375
+            },
+            {
+              "top": 261.796875,
+              "bottom": 285.796875
+            }
+          ],
+          "playerTop": 712,
+          "titleClear": true,
+          "twoLinesClear": true,
+          "documentOverflow": 0,
+          "bodyOverflow": 0,
+          "windowScroll": 448,
+          "mainScroll": 0
+        }
+      ],
+      "stateBefore": "9242ecc646c1f6b78e1cc18e04dd93550d0c0ddf1894b1004b3610d006309ec2",
+      "contextBefore": "9e23e31faceb220fdabf1969b4082dfd0018553f23f3e809882161f9039a0a01",
+      "reviewBefore": "cd1bfd1c02c02f08f4f74120c5b5793be75f39611e4b7e481f815a2b6ff915d3",
+      "csp": {
+        "nonce": true,
+        "unsafeEval": false
+      },
+      "reader": {
+        "href": "/workspace/items/arxiv%3A2610.40871?version=arxiv%3A2610.40871%3Av1%3Ametadata-0be4ee69b6741057&return_to=%2Fworkspace%2Ftoday%3Fmode%3Dlearn%26focus%3Darxiv%253A2610.40871&mode=learn#abstract%3A0",
+        "workId": "arxiv:2610.40871",
+        "versionId": "arxiv:2610.40871:v1:metadata-0be4ee69b6741057",
+        "title": "TensorSSM: Memorizing Spatial Position in Dynamic State Space for Tensor Core Generation",
+        "abstractSha256": "0a0d6c2b721f9e82465d91ea96cec77e8245c6cccbe44e194b19a14db5f36be0"
+      },
+      "researchWithoutProject": "honest explicit selection state; no organizing-question import",
+      "status": "confirmed_clearance_failure",
+      "stateAfter": "9242ecc646c1f6b78e1cc18e04dd93550d0c0ddf1894b1004b3610d006309ec2",
+      "contextAfter": "9e23e31faceb220fdabf1969b4082dfd0018553f23f3e809882161f9039a0a01",
+      "reviewAfter": "cd1bfd1c02c02f08f4f74120c5b5793be75f39611e4b7e481f815a2b6ff915d3",
+      "protectedStateUnchanged": true
+    },
+    {
+      "name": "desktop-dark",
+      "width": 1440,
+      "height": 1000,
+      "theme": "dark",
+      "sourceCommit": null,
+      "buildId": "DvLBxnx2yfYFJ7MXXpx3W",
+      "clearance": [
+        {
+          "phase": "initial",
+          "title": {
+            "top": 488.96875,
+            "bottom": 616.375,
+            "left": 636,
+            "right": 1344
+          },
+          "firstTwoAbstractLines": [
+            {
+              "top": 697.875,
+              "bottom": 724.875
+            },
+            {
+              "top": 729.375,
+              "bottom": 756.375
+            }
+          ],
+          "playerTop": 780,
+          "titleClear": true,
+          "twoLinesClear": true,
+          "documentOverflow": 0,
+          "bodyOverflow": 0,
+          "windowScroll": 0,
+          "mainScroll": 0
+        },
+        {
+          "phase": "queue",
+          "title": {
+            "top": 64.0213623046875,
+            "bottom": 191.4276123046875,
+            "left": 636,
+            "right": 1344
+          },
+          "firstTwoAbstractLines": [
+            {
+              "top": 272.9276123046875,
+              "bottom": 299.9276123046875
+            },
+            {
+              "top": 304.4276123046875,
+              "bottom": 331.4276123046875
+            }
+          ],
+          "playerTop": 780,
+          "titleClear": true,
+          "twoLinesClear": true,
+          "documentOverflow": 0,
+          "bodyOverflow": 0,
+          "windowScroll": 0,
+          "mainScroll": 430
+        },
+        {
+          "phase": "return",
+          "title": {
+            "top": 58.96875,
+            "bottom": 186.375,
+            "left": 636,
+            "right": 1344
+          },
+          "firstTwoAbstractLines": [
+            {
+              "top": 267.875,
+              "bottom": 294.875
+            },
+            {
+              "top": 299.375,
+              "bottom": 326.375
+            }
+          ],
+          "playerTop": 780,
+          "titleClear": true,
+          "twoLinesClear": true,
+          "documentOverflow": 0,
+          "bodyOverflow": 0,
+          "windowScroll": 0,
+          "mainScroll": 430
+        }
+      ],
+      "stateBefore": "9242ecc646c1f6b78e1cc18e04dd93550d0c0ddf1894b1004b3610d006309ec2",
+      "contextBefore": "9e23e31faceb220fdabf1969b4082dfd0018553f23f3e809882161f9039a0a01",
+      "reviewBefore": "cd1bfd1c02c02f08f4f74120c5b5793be75f39611e4b7e481f815a2b6ff915d3",
+      "csp": {
+        "nonce": true,
+        "unsafeEval": false
+      },
+      "reader": {
+        "href": "/workspace/items/arxiv%3A2610.40871?version=arxiv%3A2610.40871%3Av1%3Ametadata-0be4ee69b6741057&return_to=%2Fworkspace%2Ftoday%3Fmode%3Dlearn%26focus%3Darxiv%253A2610.40871&mode=learn#abstract%3A0",
+        "workId": "arxiv:2610.40871",
+        "versionId": "arxiv:2610.40871:v1:metadata-0be4ee69b6741057",
+        "title": "TensorSSM: Memorizing Spatial Position in Dynamic State Space for Tensor Core Generation",
+        "abstractSha256": "0a0d6c2b721f9e82465d91ea96cec77e8245c6cccbe44e194b19a14db5f36be0"
+      },
+      "researchWithoutProject": "honest explicit selection state; no organizing-question import",
+      "status": "pass",
+      "stateAfter": "9242ecc646c1f6b78e1cc18e04dd93550d0c0ddf1894b1004b3610d006309ec2",
+      "contextAfter": "9e23e31faceb220fdabf1969b4082dfd0018553f23f3e809882161f9039a0a01",
+      "reviewAfter": "cd1bfd1c02c02f08f4f74120c5b5793be75f39611e4b7e481f815a2b6ff915d3",
+      "protectedStateUnchanged": true
+    },
+    {
+      "name": "mobile-dark",
+      "width": 390,
+      "height": 844,
+      "theme": "dark",
+      "sourceCommit": null,
+      "buildId": "DvLBxnx2yfYFJ7MXXpx3W",
+      "clearance": [
+        {
+          "phase": "initial",
+          "title": {
+            "top": 516.359375,
+            "bottom": 601.296875,
+            "left": 16,
+            "right": 374
+          },
+          "firstTwoAbstractLines": [
+            {
+              "top": 672.296875,
+              "bottom": 696.296875
+            },
+            {
+              "top": 699.484375,
+              "bottom": 723.484375
+            }
+          ],
+          "playerTop": 712,
+          "titleClear": true,
+          "twoLinesClear": false,
+          "documentOverflow": 0,
+          "bodyOverflow": 0,
+          "windowScroll": 0,
+          "mainScroll": 0
+        },
+        {
+          "phase": "queue",
+          "title": {
+            "top": 73.41339874267578,
+            "bottom": 186.6634063720703,
+            "left": 16,
+            "right": 374
+          },
+          "firstTwoAbstractLines": [
+            {
+              "top": 239.6634063720703,
+              "bottom": 263.66339111328125
+            },
+            {
+              "top": 266.85089111328125,
+              "bottom": 290.85089111328125
+            }
+          ],
+          "playerTop": 712,
+          "titleClear": true,
+          "twoLinesClear": true,
+          "documentOverflow": 0,
+          "bodyOverflow": 0,
+          "windowScroll": 448,
+          "mainScroll": 0
+        },
+        {
+          "phase": "return",
+          "title": {
+            "top": 68.359375,
+            "bottom": 181.609375,
+            "left": 16,
+            "right": 374
+          },
+          "firstTwoAbstractLines": [
+            {
+              "top": 234.609375,
+              "bottom": 258.609375
+            },
+            {
+              "top": 261.796875,
+              "bottom": 285.796875
+            }
+          ],
+          "playerTop": 712,
+          "titleClear": true,
+          "twoLinesClear": true,
+          "documentOverflow": 0,
+          "bodyOverflow": 0,
+          "windowScroll": 448,
+          "mainScroll": 0
+        }
+      ],
+      "stateBefore": "9242ecc646c1f6b78e1cc18e04dd93550d0c0ddf1894b1004b3610d006309ec2",
+      "contextBefore": "9e23e31faceb220fdabf1969b4082dfd0018553f23f3e809882161f9039a0a01",
+      "reviewBefore": "cd1bfd1c02c02f08f4f74120c5b5793be75f39611e4b7e481f815a2b6ff915d3",
+      "csp": {
+        "nonce": true,
+        "unsafeEval": false
+      },
+      "reader": {
+        "href": "/workspace/items/arxiv%3A2610.40871?version=arxiv%3A2610.40871%3Av1%3Ametadata-0be4ee69b6741057&return_to=%2Fworkspace%2Ftoday%3Fmode%3Dlearn%26focus%3Darxiv%253A2610.40871&mode=learn#abstract%3A0",
+        "workId": "arxiv:2610.40871",
+        "versionId": "arxiv:2610.40871:v1:metadata-0be4ee69b6741057",
+        "title": "TensorSSM: Memorizing Spatial Position in Dynamic State Space for Tensor Core Generation",
+        "abstractSha256": "0a0d6c2b721f9e82465d91ea96cec77e8245c6cccbe44e194b19a14db5f36be0"
+      },
+      "researchWithoutProject": "honest explicit selection state; no organizing-question import",
+      "status": "confirmed_clearance_failure",
+      "stateAfter": "9242ecc646c1f6b78e1cc18e04dd93550d0c0ddf1894b1004b3610d006309ec2",
+      "contextAfter": "9e23e31faceb220fdabf1969b4082dfd0018553f23f3e809882161f9039a0a01",
+      "reviewAfter": "cd1bfd1c02c02f08f4f74120c5b5793be75f39611e4b7e481f815a2b6ff915d3",
+      "protectedStateUnchanged": true
+    },
+    {
+      "name": "desktop-light",
+      "width": 1440,
+      "height": 1000,
+      "theme": "light",
+      "sourceCommit": null,
+      "buildId": "DvLBxnx2yfYFJ7MXXpx3W",
+      "clearance": [
+        {
+          "phase": "initial",
+          "title": {
+            "top": 488.96875,
+            "bottom": 616.375,
+            "left": 636,
+            "right": 1344
+          },
+          "firstTwoAbstractLines": [
+            {
+              "top": 697.875,
+              "bottom": 724.875
+            },
+            {
+              "top": 729.375,
+              "bottom": 756.375
+            }
+          ],
+          "playerTop": 780,
+          "titleClear": true,
+          "twoLinesClear": true,
+          "documentOverflow": 0,
+          "bodyOverflow": 0,
+          "windowScroll": 0,
+          "mainScroll": 0
+        },
+        {
+          "phase": "queue",
+          "title": {
+            "top": 64.0481948852539,
+            "bottom": 191.45443725585938,
+            "left": 636,
+            "right": 1344
+          },
+          "firstTwoAbstractLines": [
+            {
+              "top": 272.9544372558594,
+              "bottom": 299.9544372558594
+            },
+            {
+              "top": 304.4544372558594,
+              "bottom": 331.4544372558594
+            }
+          ],
+          "playerTop": 780,
+          "titleClear": true,
+          "twoLinesClear": true,
+          "documentOverflow": 0,
+          "bodyOverflow": 0,
+          "windowScroll": 0,
+          "mainScroll": 430
+        },
+        {
+          "phase": "return",
+          "title": {
+            "top": 58.96875,
+            "bottom": 186.375,
+            "left": 636,
+            "right": 1344
+          },
+          "firstTwoAbstractLines": [
+            {
+              "top": 267.875,
+              "bottom": 294.875
+            },
+            {
+              "top": 299.375,
+              "bottom": 326.375
+            }
+          ],
+          "playerTop": 780,
+          "titleClear": true,
+          "twoLinesClear": true,
+          "documentOverflow": 0,
+          "bodyOverflow": 0,
+          "windowScroll": 0,
+          "mainScroll": 430
+        }
+      ],
+      "stateBefore": "9242ecc646c1f6b78e1cc18e04dd93550d0c0ddf1894b1004b3610d006309ec2",
+      "contextBefore": "9e23e31faceb220fdabf1969b4082dfd0018553f23f3e809882161f9039a0a01",
+      "reviewBefore": "cd1bfd1c02c02f08f4f74120c5b5793be75f39611e4b7e481f815a2b6ff915d3",
+      "csp": {
+        "nonce": true,
+        "unsafeEval": false
+      },
+      "reader": {
+        "href": "/workspace/items/arxiv%3A2610.40871?version=arxiv%3A2610.40871%3Av1%3Ametadata-0be4ee69b6741057&return_to=%2Fworkspace%2Ftoday%3Fmode%3Dlearn%26focus%3Darxiv%253A2610.40871&mode=learn#abstract%3A0",
+        "workId": "arxiv:2610.40871",
+        "versionId": "arxiv:2610.40871:v1:metadata-0be4ee69b6741057",
+        "title": "TensorSSM: Memorizing Spatial Position in Dynamic State Space for Tensor Core Generation",
+        "abstractSha256": "0a0d6c2b721f9e82465d91ea96cec77e8245c6cccbe44e194b19a14db5f36be0"
+      },
+      "researchWithoutProject": "honest explicit selection state; no organizing-question import",
+      "status": "pass",
+      "stateAfter": "9242ecc646c1f6b78e1cc18e04dd93550d0c0ddf1894b1004b3610d006309ec2",
+      "contextAfter": "9e23e31faceb220fdabf1969b4082dfd0018553f23f3e809882161f9039a0a01",
+      "reviewAfter": "cd1bfd1c02c02f08f4f74120c5b5793be75f39611e4b7e481f815a2b6ff915d3",
+      "protectedStateUnchanged": true
+    }
+  ],
+  "axes": [
+    {
+      "name": "mobile-light",
+      "phase": "initial",
+      "geometry": {
+        "theme": "light",
+        "canvas": "rgb(245, 245, 245)",
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "documentVerticalOverflow": 1453
+      },
+      "violations": []
+    },
+    {
+      "name": "mobile-light",
+      "phase": "reader",
+      "geometry": {
+        "theme": "light",
+        "canvas": "rgb(245, 245, 245)",
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "documentVerticalOverflow": 2157
+      },
+      "violations": []
+    },
+    {
+      "name": "mobile-light",
+      "phase": "return",
+      "geometry": {
+        "theme": "light",
+        "canvas": "rgb(245, 245, 245)",
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "documentVerticalOverflow": 1686
+      },
+      "violations": []
+    },
+    {
+      "name": "mobile-light",
+      "phase": "research-empty",
+      "geometry": {
+        "theme": "light",
+        "canvas": "rgb(245, 245, 245)",
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "documentVerticalOverflow": 0
+      },
+      "violations": []
+    },
+    {
+      "name": "desktop-dark",
+      "phase": "initial",
+      "geometry": {
+        "theme": "dark",
+        "canvas": "rgb(10, 10, 10)",
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "documentVerticalOverflow": 0
+      },
+      "violations": []
+    },
+    {
+      "name": "desktop-dark",
+      "phase": "reader",
+      "geometry": {
+        "theme": "dark",
+        "canvas": "rgb(10, 10, 10)",
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "documentVerticalOverflow": 0
+      },
+      "violations": []
+    },
+    {
+      "name": "desktop-dark",
+      "phase": "return",
+      "geometry": {
+        "theme": "dark",
+        "canvas": "rgb(10, 10, 10)",
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "documentVerticalOverflow": 0
+      },
+      "violations": []
+    },
+    {
+      "name": "desktop-dark",
+      "phase": "research-empty",
+      "geometry": {
+        "theme": "dark",
+        "canvas": "rgb(10, 10, 10)",
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "documentVerticalOverflow": 0
+      },
+      "violations": []
+    },
+    {
+      "name": "mobile-dark",
+      "phase": "initial",
+      "geometry": {
+        "theme": "dark",
+        "canvas": "rgb(10, 10, 10)",
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "documentVerticalOverflow": 1453
+      },
+      "violations": []
+    },
+    {
+      "name": "mobile-dark",
+      "phase": "reader",
+      "geometry": {
+        "theme": "dark",
+        "canvas": "rgb(10, 10, 10)",
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "documentVerticalOverflow": 2157
+      },
+      "violations": []
+    },
+    {
+      "name": "mobile-dark",
+      "phase": "return",
+      "geometry": {
+        "theme": "dark",
+        "canvas": "rgb(10, 10, 10)",
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "documentVerticalOverflow": 1686
+      },
+      "violations": []
+    },
+    {
+      "name": "mobile-dark",
+      "phase": "research-empty",
+      "geometry": {
+        "theme": "dark",
+        "canvas": "rgb(10, 10, 10)",
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "documentVerticalOverflow": 0
+      },
+      "violations": []
+    },
+    {
+      "name": "desktop-light",
+      "phase": "initial",
+      "geometry": {
+        "theme": "light",
+        "canvas": "rgb(245, 245, 245)",
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "documentVerticalOverflow": 0
+      },
+      "violations": []
+    },
+    {
+      "name": "desktop-light",
+      "phase": "reader",
+      "geometry": {
+        "theme": "light",
+        "canvas": "rgb(245, 245, 245)",
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "documentVerticalOverflow": 0
+      },
+      "violations": []
+    },
+    {
+      "name": "desktop-light",
+      "phase": "return",
+      "geometry": {
+        "theme": "light",
+        "canvas": "rgb(245, 245, 245)",
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "documentVerticalOverflow": 0
+      },
+      "violations": []
+    },
+    {
+      "name": "desktop-light",
+      "phase": "research-empty",
+      "geometry": {
+        "theme": "light",
+        "canvas": "rgb(245, 245, 245)",
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "documentVerticalOverflow": 0
+      },
+      "violations": []
+    }
+  ],
+  "blocked": [],
+  "errors": [],
+  "cspViolations": [],
+  "observedAssets": [
+    {
+      "name": "mobile-light",
+      "path": ".next/static/css/f4b04de22fdebcb9.css",
+      "sha256": "032e80bd851fb58ab79f027bab0070e0c21b0adaaf6d2f51587564792b9cfdee",
+      "bytes": 35720
+    },
+    {
+      "name": "mobile-light",
+      "path": ".next/static/css/7cd7f3878632625c.css",
+      "sha256": "b713911d7349e74ee6dce5e35d74eac0490a08a0078d76922197452fd3762d00",
+      "bytes": 1528
+    },
+    {
+      "name": "mobile-light",
+      "path": ".next/static/css/8609413464d16cbc.css",
+      "sha256": "6fdf4595cca85fb2cb9aa5942307c7fa24c6bb057450c5ad1113c7e275dcfabe",
+      "bytes": 15885
+    },
+    {
+      "name": "mobile-light",
+      "path": ".next/static/css/5d816b8c0dad564e.css",
+      "sha256": "28098bd6541c7eceddfdc8daeac40a06d56e339265f0885ac016fd26a48fa1b4",
+      "bytes": 3938
+    },
+    {
+      "name": "mobile-light",
+      "path": ".next/static/css/fadd03207f4f952a.css",
+      "sha256": "2ff4a712fb3de90adb7a73787a54eb80583384f4eb2ccc2b124285015b224e82",
+      "bytes": 433
+    },
+    {
+      "name": "mobile-light",
+      "path": ".next/static/css/3a15f9ed253396a6.css",
+      "sha256": "fd6454426023536ee9233fd5479538fb8ce93b59b214c980aba9f16eb70de3a3",
+      "bytes": 51409
+    },
+    {
+      "name": "mobile-light",
+      "path": ".next/static/chunks/webpack-c0d4a585beed0941.js",
+      "sha256": "ec5d28369e5208d5a138e6513cd698f4d271b7c9b7db6aa40697b648413b0e46",
+      "bytes": 5675
+    },
+    {
+      "name": "mobile-light",
+      "path": ".next/static/chunks/main-app-72f0dfd8fb6f243f.js",
+      "sha256": "b5da80d7a751a6c9cc34c3c733298053ca0dfe12a52026366b2d38492c921656",
+      "bytes": 483
+    },
+    {
+      "name": "mobile-light",
+      "path": ".next/static/chunks/app/(live)/layout-e451eddf1bf39e7e.js",
+      "sha256": "ec106cda43ab1049e43b606eab2a048f4aef93bdec89e8457a1eaf4dba23910c",
+      "bytes": 436
+    },
+    {
+      "name": "mobile-light",
+      "path": ".next/static/chunks/3775-6ff43f6997bafff4.js",
+      "sha256": "d1ac52096e6f941e70b511ae67ca71b73aa68fa9ff729cd34154b35445d2451c",
+      "bytes": 7670
+    },
+    {
+      "name": "mobile-light",
+      "path": ".next/static/chunks/9334-01aa99a98dcfb6c4.js",
+      "sha256": "84b98d05c3c5cb6cec5030a225c605bd0bd653d271fa658b704fd901b67096ab",
+      "bytes": 7186
+    },
+    {
+      "name": "mobile-light",
+      "path": ".next/static/chunks/7564-a3a27336685eccd1.js",
+      "sha256": "3adf6e7960b6d3f1d38586d7bb6b3486881dee37824d84a2d66b7bf3dadec76d",
+      "bytes": 16760
+    },
+    {
+      "name": "mobile-light",
+      "path": ".next/static/chunks/4807-1d9d553154a2793d.js",
+      "sha256": "15197b24d49bb7d28e5ab95c4607a76b8ccd8953371b4bd1e06920ed4ea0cfc6",
+      "bytes": 4384
+    },
+    {
+      "name": "mobile-light",
+      "path": ".next/static/chunks/d7f0adb4-193a72ce2b28742d.js",
+      "sha256": "4f92fc8ab9713f4234d6264cd624183a82c4c43a848b7be2736a6483ff059bd2",
+      "bytes": 203726
+    },
+    {
+      "name": "mobile-light",
+      "path": ".next/static/chunks/6290-5a3103fd13985e8c.js",
+      "sha256": "bde23754741fb1e853a8b4dbe68286ce91a7b28648959536a03eefce23ebe482",
+      "bytes": 242317
+    },
+    {
+      "name": "mobile-light",
+      "path": ".next/static/chunks/app/(live)/template-76e32dea910fb76e.js",
+      "sha256": "3bb29acd9b2f3d685bd2551e94640c8794475d55578db73f90f597f3a1231aa7",
+      "bytes": 12764
+    },
+    {
+      "name": "mobile-light",
+      "path": ".next/static/chunks/2107-18fb2b95d98f92a7.js",
+      "sha256": "0be061269ff41164c1e23ab591e6f9169b7657e8353fa2c12a79e46c6d49e51a",
+      "bytes": 17026
+    },
+    {
+      "name": "mobile-light",
+      "path": ".next/static/chunks/app/(live)/workspace/today/page-64e4f50960c6cb39.js",
+      "sha256": "a00f1da529f3bb7784d031dc0c17d96829d6e20d2ef4798e8bf00bcd842ba8fe",
+      "bytes": 13562
+    },
+    {
+      "name": "mobile-light",
+      "path": ".next/static/chunks/app/global-error-5fcd0913e513300b.js",
+      "sha256": "a13f1d6b570d6001f9556c4c8985273c547940aff83399dbab348dd06969f621",
+      "bytes": 1851
+    },
+    {
+      "name": "mobile-light",
+      "path": ".next/static/chunks/2944-11cad9a2f4366836.js",
+      "sha256": "f9a574fe884873f5e1315b309c3e5f4dea17126b0370d6442c620475f2163c8f",
+      "bytes": 4710
+    },
+    {
+      "name": "mobile-light",
+      "path": ".next/static/chunks/app/(workspace)/layout-a3583ad4c49a4086.js",
+      "sha256": "f9ca2c34ddd2210bea82fe5c3408c87ea1734a1ac8bbbb76713f02293ae7aca6",
+      "bytes": 255
+    },
+    {
+      "name": "mobile-light",
+      "path": ".next/static/chunks/app/not-found-831165b852a42d59.js",
+      "sha256": "a752972c8c05541ac7809c66f5b996909598a9210081018c11657b86faaebb7f",
+      "bytes": 345
+    },
+    {
+      "name": "mobile-light",
+      "path": ".next/static/chunks/4794-fa9d9ee0d46129c4.js",
+      "sha256": "9cec5817c879160670ba50ac2c6e80f1393df58904d9831074b927f0149effd9",
+      "bytes": 7070
+    },
+    {
+      "name": "mobile-light",
+      "path": ".next/static/chunks/1713.5cc6f8515ad9ae03.js",
+      "sha256": "eb316e2ee6441443032ca2738c5f8005cc66136f9c0a898d26b72ec543d4287f",
+      "bytes": 2782
+    },
+    {
+      "name": "mobile-light",
+      "path": ".next/static/chunks/7296.d91df7a95c2f8339.js",
+      "sha256": "da793a4f794d93ed20552580ef119621d6716afbfa35b33fe8ea048121e885ec",
+      "bytes": 6747
+    },
+    {
+      "name": "mobile-light",
+      "path": ".next/static/chunks/1919.c00ed5a0756f3d2f.js",
+      "sha256": "ad0d3345957c2b26f890a1e542315be6a531b99d3d0feb76138a9be0755e7291",
+      "bytes": 37084
+    },
+    {
+      "name": "mobile-light",
+      "path": ".next/static/chunks/4537.acfbc9b4aa1b19ce.js",
+      "sha256": "791f66f055beba5eb70bf2a8ae84c73c6e54170e391a56327791a48f4fa2c4f6",
+      "bytes": 2632
+    },
+    {
+      "name": "desktop-dark",
+      "path": ".next/static/css/5d816b8c0dad564e.css",
+      "sha256": "28098bd6541c7eceddfdc8daeac40a06d56e339265f0885ac016fd26a48fa1b4",
+      "bytes": 3938
+    },
+    {
+      "name": "desktop-dark",
+      "path": ".next/static/css/7cd7f3878632625c.css",
+      "sha256": "b713911d7349e74ee6dce5e35d74eac0490a08a0078d76922197452fd3762d00",
+      "bytes": 1528
+    },
+    {
+      "name": "desktop-dark",
+      "path": ".next/static/css/f4b04de22fdebcb9.css",
+      "sha256": "032e80bd851fb58ab79f027bab0070e0c21b0adaaf6d2f51587564792b9cfdee",
+      "bytes": 35720
+    },
+    {
+      "name": "desktop-dark",
+      "path": ".next/static/css/8609413464d16cbc.css",
+      "sha256": "6fdf4595cca85fb2cb9aa5942307c7fa24c6bb057450c5ad1113c7e275dcfabe",
+      "bytes": 15885
+    },
+    {
+      "name": "desktop-dark",
+      "path": ".next/static/css/fadd03207f4f952a.css",
+      "sha256": "2ff4a712fb3de90adb7a73787a54eb80583384f4eb2ccc2b124285015b224e82",
+      "bytes": 433
+    },
+    {
+      "name": "desktop-dark",
+      "path": ".next/static/css/3a15f9ed253396a6.css",
+      "sha256": "fd6454426023536ee9233fd5479538fb8ce93b59b214c980aba9f16eb70de3a3",
+      "bytes": 51409
+    },
+    {
+      "name": "desktop-dark",
+      "path": ".next/static/chunks/webpack-c0d4a585beed0941.js",
+      "sha256": "ec5d28369e5208d5a138e6513cd698f4d271b7c9b7db6aa40697b648413b0e46",
+      "bytes": 5675
+    },
+    {
+      "name": "desktop-dark",
+      "path": ".next/static/chunks/main-app-72f0dfd8fb6f243f.js",
+      "sha256": "b5da80d7a751a6c9cc34c3c733298053ca0dfe12a52026366b2d38492c921656",
+      "bytes": 483
+    },
+    {
+      "name": "desktop-dark",
+      "path": ".next/static/chunks/app/(live)/layout-e451eddf1bf39e7e.js",
+      "sha256": "ec106cda43ab1049e43b606eab2a048f4aef93bdec89e8457a1eaf4dba23910c",
+      "bytes": 436
+    },
+    {
+      "name": "desktop-dark",
+      "path": ".next/static/chunks/3775-6ff43f6997bafff4.js",
+      "sha256": "d1ac52096e6f941e70b511ae67ca71b73aa68fa9ff729cd34154b35445d2451c",
+      "bytes": 7670
+    },
+    {
+      "name": "desktop-dark",
+      "path": ".next/static/chunks/9334-01aa99a98dcfb6c4.js",
+      "sha256": "84b98d05c3c5cb6cec5030a225c605bd0bd653d271fa658b704fd901b67096ab",
+      "bytes": 7186
+    },
+    {
+      "name": "desktop-dark",
+      "path": ".next/static/chunks/7564-a3a27336685eccd1.js",
+      "sha256": "3adf6e7960b6d3f1d38586d7bb6b3486881dee37824d84a2d66b7bf3dadec76d",
+      "bytes": 16760
+    },
+    {
+      "name": "desktop-dark",
+      "path": ".next/static/chunks/4807-1d9d553154a2793d.js",
+      "sha256": "15197b24d49bb7d28e5ab95c4607a76b8ccd8953371b4bd1e06920ed4ea0cfc6",
+      "bytes": 4384
+    },
+    {
+      "name": "desktop-dark",
+      "path": ".next/static/chunks/app/(live)/template-76e32dea910fb76e.js",
+      "sha256": "3bb29acd9b2f3d685bd2551e94640c8794475d55578db73f90f597f3a1231aa7",
+      "bytes": 12764
+    },
+    {
+      "name": "desktop-dark",
+      "path": ".next/static/chunks/d7f0adb4-193a72ce2b28742d.js",
+      "sha256": "4f92fc8ab9713f4234d6264cd624183a82c4c43a848b7be2736a6483ff059bd2",
+      "bytes": 203726
+    },
+    {
+      "name": "desktop-dark",
+      "path": ".next/static/chunks/2107-18fb2b95d98f92a7.js",
+      "sha256": "0be061269ff41164c1e23ab591e6f9169b7657e8353fa2c12a79e46c6d49e51a",
+      "bytes": 17026
+    },
+    {
+      "name": "desktop-dark",
+      "path": ".next/static/chunks/app/(live)/workspace/today/page-64e4f50960c6cb39.js",
+      "sha256": "a00f1da529f3bb7784d031dc0c17d96829d6e20d2ef4798e8bf00bcd842ba8fe",
+      "bytes": 13562
+    },
+    {
+      "name": "desktop-dark",
+      "path": ".next/static/chunks/6290-5a3103fd13985e8c.js",
+      "sha256": "bde23754741fb1e853a8b4dbe68286ce91a7b28648959536a03eefce23ebe482",
+      "bytes": 242317
+    },
+    {
+      "name": "desktop-dark",
+      "path": ".next/static/chunks/app/global-error-5fcd0913e513300b.js",
+      "sha256": "a13f1d6b570d6001f9556c4c8985273c547940aff83399dbab348dd06969f621",
+      "bytes": 1851
+    },
+    {
+      "name": "desktop-dark",
+      "path": ".next/static/chunks/2944-11cad9a2f4366836.js",
+      "sha256": "f9a574fe884873f5e1315b309c3e5f4dea17126b0370d6442c620475f2163c8f",
+      "bytes": 4710
+    },
+    {
+      "name": "desktop-dark",
+      "path": ".next/static/chunks/app/(workspace)/layout-a3583ad4c49a4086.js",
+      "sha256": "f9ca2c34ddd2210bea82fe5c3408c87ea1734a1ac8bbbb76713f02293ae7aca6",
+      "bytes": 255
+    },
+    {
+      "name": "desktop-dark",
+      "path": ".next/static/chunks/app/not-found-831165b852a42d59.js",
+      "sha256": "a752972c8c05541ac7809c66f5b996909598a9210081018c11657b86faaebb7f",
+      "bytes": 345
+    },
+    {
+      "name": "desktop-dark",
+      "path": ".next/static/chunks/4794-fa9d9ee0d46129c4.js",
+      "sha256": "9cec5817c879160670ba50ac2c6e80f1393df58904d9831074b927f0149effd9",
+      "bytes": 7070
+    },
+    {
+      "name": "desktop-dark",
+      "path": ".next/static/chunks/625-05fe949121f1c617.js",
+      "sha256": "256ab345a9d2d481c59548d895665c95c851be4e16064175b2fb1f7f3443a73c",
+      "bytes": 15966
+    },
+    {
+      "name": "desktop-dark",
+      "path": ".next/static/chunks/4767-2e25841d3365039c.js",
+      "sha256": "066967832a948ce6a4b5f895c7949f4dfcf42152dd9595869d555baab3d5523d",
+      "bytes": 8291
+    },
+    {
+      "name": "desktop-dark",
+      "path": ".next/static/chunks/4795-0e72b8753e0bd224.js",
+      "sha256": "98cb988269121520cb33462cf7be8564c3c42f31b8213acf2306add7c491cb86",
+      "bytes": 11114
+    },
+    {
+      "name": "desktop-dark",
+      "path": ".next/static/chunks/707-09a942942815e75e.js",
+      "sha256": "b273add4a2f63f058b3c846a4479f91ecd37a5c411bb0aac7640b4ef37fa7003",
+      "bytes": 10533
+    },
+    {
+      "name": "desktop-dark",
+      "path": ".next/static/chunks/9747.93ef21b7e9587df4.js",
+      "sha256": "7755a9ddfa93f940c2fec0a44677498658fdb11425fa682222e3e53b32f99df1",
+      "bytes": 52056
+    },
+    {
+      "name": "desktop-dark",
+      "path": ".next/static/chunks/4727.d0179de729d02eb1.js",
+      "sha256": "dccc94d914d074135106e3c3ec6a3e842850c678a4c60e4fd0746ac9a0f9e44c",
+      "bytes": 38538
+    },
+    {
+      "name": "desktop-dark",
+      "path": ".next/static/chunks/8143-138781162d594194.js",
+      "sha256": "0749920ae5771388d49a26c77f161db720c28bd33459dec3415c06c309c0464e",
+      "bytes": 3261
+    },
+    {
+      "name": "desktop-dark",
+      "path": ".next/static/chunks/5075.68ecb3dfd7d75a99.js",
+      "sha256": "0f566c11ff3c5e9538641aa0811f88e065d85b17703c3ed5acad746dc2dae80a",
+      "bytes": 9089
+    },
+    {
+      "name": "desktop-dark",
+      "path": ".next/static/chunks/1713.5cc6f8515ad9ae03.js",
+      "sha256": "eb316e2ee6441443032ca2738c5f8005cc66136f9c0a898d26b72ec543d4287f",
+      "bytes": 2782
+    },
+    {
+      "name": "desktop-dark",
+      "path": ".next/static/chunks/7296.d91df7a95c2f8339.js",
+      "sha256": "da793a4f794d93ed20552580ef119621d6716afbfa35b33fe8ea048121e885ec",
+      "bytes": 6747
+    },
+    {
+      "name": "desktop-dark",
+      "path": ".next/static/chunks/1919.c00ed5a0756f3d2f.js",
+      "sha256": "ad0d3345957c2b26f890a1e542315be6a531b99d3d0feb76138a9be0755e7291",
+      "bytes": 37084
+    },
+    {
+      "name": "desktop-dark",
+      "path": ".next/static/chunks/4537.acfbc9b4aa1b19ce.js",
+      "sha256": "791f66f055beba5eb70bf2a8ae84c73c6e54170e391a56327791a48f4fa2c4f6",
+      "bytes": 2632
+    },
+    {
+      "name": "mobile-dark",
+      "path": ".next/static/css/7cd7f3878632625c.css",
+      "sha256": "b713911d7349e74ee6dce5e35d74eac0490a08a0078d76922197452fd3762d00",
+      "bytes": 1528
+    },
+    {
+      "name": "mobile-dark",
+      "path": ".next/static/css/fadd03207f4f952a.css",
+      "sha256": "2ff4a712fb3de90adb7a73787a54eb80583384f4eb2ccc2b124285015b224e82",
+      "bytes": 433
+    },
+    {
+      "name": "mobile-dark",
+      "path": ".next/static/css/8609413464d16cbc.css",
+      "sha256": "6fdf4595cca85fb2cb9aa5942307c7fa24c6bb057450c5ad1113c7e275dcfabe",
+      "bytes": 15885
+    },
+    {
+      "name": "mobile-dark",
+      "path": ".next/static/css/f4b04de22fdebcb9.css",
+      "sha256": "032e80bd851fb58ab79f027bab0070e0c21b0adaaf6d2f51587564792b9cfdee",
+      "bytes": 35720
+    },
+    {
+      "name": "mobile-dark",
+      "path": ".next/static/css/5d816b8c0dad564e.css",
+      "sha256": "28098bd6541c7eceddfdc8daeac40a06d56e339265f0885ac016fd26a48fa1b4",
+      "bytes": 3938
+    },
+    {
+      "name": "mobile-dark",
+      "path": ".next/static/css/3a15f9ed253396a6.css",
+      "sha256": "fd6454426023536ee9233fd5479538fb8ce93b59b214c980aba9f16eb70de3a3",
+      "bytes": 51409
+    },
+    {
+      "name": "mobile-dark",
+      "path": ".next/static/chunks/webpack-c0d4a585beed0941.js",
+      "sha256": "ec5d28369e5208d5a138e6513cd698f4d271b7c9b7db6aa40697b648413b0e46",
+      "bytes": 5675
+    },
+    {
+      "name": "mobile-dark",
+      "path": ".next/static/chunks/main-app-72f0dfd8fb6f243f.js",
+      "sha256": "b5da80d7a751a6c9cc34c3c733298053ca0dfe12a52026366b2d38492c921656",
+      "bytes": 483
+    },
+    {
+      "name": "mobile-dark",
+      "path": ".next/static/chunks/app/(live)/layout-e451eddf1bf39e7e.js",
+      "sha256": "ec106cda43ab1049e43b606eab2a048f4aef93bdec89e8457a1eaf4dba23910c",
+      "bytes": 436
+    },
+    {
+      "name": "mobile-dark",
+      "path": ".next/static/chunks/3775-6ff43f6997bafff4.js",
+      "sha256": "d1ac52096e6f941e70b511ae67ca71b73aa68fa9ff729cd34154b35445d2451c",
+      "bytes": 7670
+    },
+    {
+      "name": "mobile-dark",
+      "path": ".next/static/chunks/9334-01aa99a98dcfb6c4.js",
+      "sha256": "84b98d05c3c5cb6cec5030a225c605bd0bd653d271fa658b704fd901b67096ab",
+      "bytes": 7186
+    },
+    {
+      "name": "mobile-dark",
+      "path": ".next/static/chunks/7564-a3a27336685eccd1.js",
+      "sha256": "3adf6e7960b6d3f1d38586d7bb6b3486881dee37824d84a2d66b7bf3dadec76d",
+      "bytes": 16760
+    },
+    {
+      "name": "mobile-dark",
+      "path": ".next/static/chunks/4807-1d9d553154a2793d.js",
+      "sha256": "15197b24d49bb7d28e5ab95c4607a76b8ccd8953371b4bd1e06920ed4ea0cfc6",
+      "bytes": 4384
+    },
+    {
+      "name": "mobile-dark",
+      "path": ".next/static/chunks/app/(live)/template-76e32dea910fb76e.js",
+      "sha256": "3bb29acd9b2f3d685bd2551e94640c8794475d55578db73f90f597f3a1231aa7",
+      "bytes": 12764
+    },
+    {
+      "name": "mobile-dark",
+      "path": ".next/static/chunks/app/global-error-5fcd0913e513300b.js",
+      "sha256": "a13f1d6b570d6001f9556c4c8985273c547940aff83399dbab348dd06969f621",
+      "bytes": 1851
+    },
+    {
+      "name": "mobile-dark",
+      "path": ".next/static/chunks/app/(live)/workspace/today/page-64e4f50960c6cb39.js",
+      "sha256": "a00f1da529f3bb7784d031dc0c17d96829d6e20d2ef4798e8bf00bcd842ba8fe",
+      "bytes": 13562
+    },
+    {
+      "name": "mobile-dark",
+      "path": ".next/static/chunks/2107-18fb2b95d98f92a7.js",
+      "sha256": "0be061269ff41164c1e23ab591e6f9169b7657e8353fa2c12a79e46c6d49e51a",
+      "bytes": 17026
+    },
+    {
+      "name": "mobile-dark",
+      "path": ".next/static/chunks/d7f0adb4-193a72ce2b28742d.js",
+      "sha256": "4f92fc8ab9713f4234d6264cd624183a82c4c43a848b7be2736a6483ff059bd2",
+      "bytes": 203726
+    },
+    {
+      "name": "mobile-dark",
+      "path": ".next/static/chunks/6290-5a3103fd13985e8c.js",
+      "sha256": "bde23754741fb1e853a8b4dbe68286ce91a7b28648959536a03eefce23ebe482",
+      "bytes": 242317
+    },
+    {
+      "name": "mobile-dark",
+      "path": ".next/static/chunks/2944-11cad9a2f4366836.js",
+      "sha256": "f9a574fe884873f5e1315b309c3e5f4dea17126b0370d6442c620475f2163c8f",
+      "bytes": 4710
+    },
+    {
+      "name": "mobile-dark",
+      "path": ".next/static/chunks/4794-fa9d9ee0d46129c4.js",
+      "sha256": "9cec5817c879160670ba50ac2c6e80f1393df58904d9831074b927f0149effd9",
+      "bytes": 7070
+    },
+    {
+      "name": "mobile-dark",
+      "path": ".next/static/chunks/app/(workspace)/layout-a3583ad4c49a4086.js",
+      "sha256": "f9ca2c34ddd2210bea82fe5c3408c87ea1734a1ac8bbbb76713f02293ae7aca6",
+      "bytes": 255
+    },
+    {
+      "name": "mobile-dark",
+      "path": ".next/static/chunks/app/not-found-831165b852a42d59.js",
+      "sha256": "a752972c8c05541ac7809c66f5b996909598a9210081018c11657b86faaebb7f",
+      "bytes": 345
+    },
+    {
+      "name": "mobile-dark",
+      "path": ".next/static/chunks/1713.5cc6f8515ad9ae03.js",
+      "sha256": "eb316e2ee6441443032ca2738c5f8005cc66136f9c0a898d26b72ec543d4287f",
+      "bytes": 2782
+    },
+    {
+      "name": "mobile-dark",
+      "path": ".next/static/chunks/7296.d91df7a95c2f8339.js",
+      "sha256": "da793a4f794d93ed20552580ef119621d6716afbfa35b33fe8ea048121e885ec",
+      "bytes": 6747
+    },
+    {
+      "name": "mobile-dark",
+      "path": ".next/static/chunks/1919.c00ed5a0756f3d2f.js",
+      "sha256": "ad0d3345957c2b26f890a1e542315be6a531b99d3d0feb76138a9be0755e7291",
+      "bytes": 37084
+    },
+    {
+      "name": "mobile-dark",
+      "path": ".next/static/chunks/4537.acfbc9b4aa1b19ce.js",
+      "sha256": "791f66f055beba5eb70bf2a8ae84c73c6e54170e391a56327791a48f4fa2c4f6",
+      "bytes": 2632
+    },
+    {
+      "name": "desktop-light",
+      "path": ".next/static/css/7cd7f3878632625c.css",
+      "sha256": "b713911d7349e74ee6dce5e35d74eac0490a08a0078d76922197452fd3762d00",
+      "bytes": 1528
+    },
+    {
+      "name": "desktop-light",
+      "path": ".next/static/css/8609413464d16cbc.css",
+      "sha256": "6fdf4595cca85fb2cb9aa5942307c7fa24c6bb057450c5ad1113c7e275dcfabe",
+      "bytes": 15885
+    },
+    {
+      "name": "desktop-light",
+      "path": ".next/static/css/5d816b8c0dad564e.css",
+      "sha256": "28098bd6541c7eceddfdc8daeac40a06d56e339265f0885ac016fd26a48fa1b4",
+      "bytes": 3938
+    },
+    {
+      "name": "desktop-light",
+      "path": ".next/static/css/fadd03207f4f952a.css",
+      "sha256": "2ff4a712fb3de90adb7a73787a54eb80583384f4eb2ccc2b124285015b224e82",
+      "bytes": 433
+    },
+    {
+      "name": "desktop-light",
+      "path": ".next/static/css/f4b04de22fdebcb9.css",
+      "sha256": "032e80bd851fb58ab79f027bab0070e0c21b0adaaf6d2f51587564792b9cfdee",
+      "bytes": 35720
+    },
+    {
+      "name": "desktop-light",
+      "path": ".next/static/css/3a15f9ed253396a6.css",
+      "sha256": "fd6454426023536ee9233fd5479538fb8ce93b59b214c980aba9f16eb70de3a3",
+      "bytes": 51409
+    },
+    {
+      "name": "desktop-light",
+      "path": ".next/static/chunks/webpack-c0d4a585beed0941.js",
+      "sha256": "ec5d28369e5208d5a138e6513cd698f4d271b7c9b7db6aa40697b648413b0e46",
+      "bytes": 5675
+    },
+    {
+      "name": "desktop-light",
+      "path": ".next/static/chunks/main-app-72f0dfd8fb6f243f.js",
+      "sha256": "b5da80d7a751a6c9cc34c3c733298053ca0dfe12a52026366b2d38492c921656",
+      "bytes": 483
+    },
+    {
+      "name": "desktop-light",
+      "path": ".next/static/chunks/app/(live)/layout-e451eddf1bf39e7e.js",
+      "sha256": "ec106cda43ab1049e43b606eab2a048f4aef93bdec89e8457a1eaf4dba23910c",
+      "bytes": 436
+    },
+    {
+      "name": "desktop-light",
+      "path": ".next/static/chunks/3775-6ff43f6997bafff4.js",
+      "sha256": "d1ac52096e6f941e70b511ae67ca71b73aa68fa9ff729cd34154b35445d2451c",
+      "bytes": 7670
+    },
+    {
+      "name": "desktop-light",
+      "path": ".next/static/chunks/9334-01aa99a98dcfb6c4.js",
+      "sha256": "84b98d05c3c5cb6cec5030a225c605bd0bd653d271fa658b704fd901b67096ab",
+      "bytes": 7186
+    },
+    {
+      "name": "desktop-light",
+      "path": ".next/static/chunks/4807-1d9d553154a2793d.js",
+      "sha256": "15197b24d49bb7d28e5ab95c4607a76b8ccd8953371b4bd1e06920ed4ea0cfc6",
+      "bytes": 4384
+    },
+    {
+      "name": "desktop-light",
+      "path": ".next/static/chunks/7564-a3a27336685eccd1.js",
+      "sha256": "3adf6e7960b6d3f1d38586d7bb6b3486881dee37824d84a2d66b7bf3dadec76d",
+      "bytes": 16760
+    },
+    {
+      "name": "desktop-light",
+      "path": ".next/static/chunks/app/(live)/template-76e32dea910fb76e.js",
+      "sha256": "3bb29acd9b2f3d685bd2551e94640c8794475d55578db73f90f597f3a1231aa7",
+      "bytes": 12764
+    },
+    {
+      "name": "desktop-light",
+      "path": ".next/static/chunks/2107-18fb2b95d98f92a7.js",
+      "sha256": "0be061269ff41164c1e23ab591e6f9169b7657e8353fa2c12a79e46c6d49e51a",
+      "bytes": 17026
+    },
+    {
+      "name": "desktop-light",
+      "path": ".next/static/chunks/app/(live)/workspace/today/page-64e4f50960c6cb39.js",
+      "sha256": "a00f1da529f3bb7784d031dc0c17d96829d6e20d2ef4798e8bf00bcd842ba8fe",
+      "bytes": 13562
+    },
+    {
+      "name": "desktop-light",
+      "path": ".next/static/chunks/app/global-error-5fcd0913e513300b.js",
+      "sha256": "a13f1d6b570d6001f9556c4c8985273c547940aff83399dbab348dd06969f621",
+      "bytes": 1851
+    },
+    {
+      "name": "desktop-light",
+      "path": ".next/static/chunks/2944-11cad9a2f4366836.js",
+      "sha256": "f9a574fe884873f5e1315b309c3e5f4dea17126b0370d6442c620475f2163c8f",
+      "bytes": 4710
+    },
+    {
+      "name": "desktop-light",
+      "path": ".next/static/chunks/app/(workspace)/layout-a3583ad4c49a4086.js",
+      "sha256": "f9ca2c34ddd2210bea82fe5c3408c87ea1734a1ac8bbbb76713f02293ae7aca6",
+      "bytes": 255
+    },
+    {
+      "name": "desktop-light",
+      "path": ".next/static/chunks/app/not-found-831165b852a42d59.js",
+      "sha256": "a752972c8c05541ac7809c66f5b996909598a9210081018c11657b86faaebb7f",
+      "bytes": 345
+    },
+    {
+      "name": "desktop-light",
+      "path": ".next/static/chunks/4794-fa9d9ee0d46129c4.js",
+      "sha256": "9cec5817c879160670ba50ac2c6e80f1393df58904d9831074b927f0149effd9",
+      "bytes": 7070
+    },
+    {
+      "name": "desktop-light",
+      "path": ".next/static/chunks/d7f0adb4-193a72ce2b28742d.js",
+      "sha256": "4f92fc8ab9713f4234d6264cd624183a82c4c43a848b7be2736a6483ff059bd2",
+      "bytes": 203726
+    },
+    {
+      "name": "desktop-light",
+      "path": ".next/static/chunks/6290-5a3103fd13985e8c.js",
+      "sha256": "bde23754741fb1e853a8b4dbe68286ce91a7b28648959536a03eefce23ebe482",
+      "bytes": 242317
+    },
+    {
+      "name": "desktop-light",
+      "path": ".next/static/chunks/625-05fe949121f1c617.js",
+      "sha256": "256ab345a9d2d481c59548d895665c95c851be4e16064175b2fb1f7f3443a73c",
+      "bytes": 15966
+    },
+    {
+      "name": "desktop-light",
+      "path": ".next/static/chunks/4767-2e25841d3365039c.js",
+      "sha256": "066967832a948ce6a4b5f895c7949f4dfcf42152dd9595869d555baab3d5523d",
+      "bytes": 8291
+    },
+    {
+      "name": "desktop-light",
+      "path": ".next/static/chunks/707-09a942942815e75e.js",
+      "sha256": "b273add4a2f63f058b3c846a4479f91ecd37a5c411bb0aac7640b4ef37fa7003",
+      "bytes": 10533
+    },
+    {
+      "name": "desktop-light",
+      "path": ".next/static/chunks/4795-0e72b8753e0bd224.js",
+      "sha256": "98cb988269121520cb33462cf7be8564c3c42f31b8213acf2306add7c491cb86",
+      "bytes": 11114
+    },
+    {
+      "name": "desktop-light",
+      "path": ".next/static/chunks/8143-138781162d594194.js",
+      "sha256": "0749920ae5771388d49a26c77f161db720c28bd33459dec3415c06c309c0464e",
+      "bytes": 3261
+    },
+    {
+      "name": "desktop-light",
+      "path": ".next/static/chunks/4727.d0179de729d02eb1.js",
+      "sha256": "dccc94d914d074135106e3c3ec6a3e842850c678a4c60e4fd0746ac9a0f9e44c",
+      "bytes": 38538
+    },
+    {
+      "name": "desktop-light",
+      "path": ".next/static/chunks/9747.93ef21b7e9587df4.js",
+      "sha256": "7755a9ddfa93f940c2fec0a44677498658fdb11425fa682222e3e53b32f99df1",
+      "bytes": 52056
+    },
+    {
+      "name": "desktop-light",
+      "path": ".next/static/chunks/5075.68ecb3dfd7d75a99.js",
+      "sha256": "0f566c11ff3c5e9538641aa0811f88e065d85b17703c3ed5acad746dc2dae80a",
+      "bytes": 9089
+    },
+    {
+      "name": "desktop-light",
+      "path": ".next/static/chunks/1713.5cc6f8515ad9ae03.js",
+      "sha256": "eb316e2ee6441443032ca2738c5f8005cc66136f9c0a898d26b72ec543d4287f",
+      "bytes": 2782
+    },
+    {
+      "name": "desktop-light",
+      "path": ".next/static/chunks/7296.d91df7a95c2f8339.js",
+      "sha256": "da793a4f794d93ed20552580ef119621d6716afbfa35b33fe8ea048121e885ec",
+      "bytes": 6747
+    },
+    {
+      "name": "desktop-light",
+      "path": ".next/static/chunks/1919.c00ed5a0756f3d2f.js",
+      "sha256": "ad0d3345957c2b26f890a1e542315be6a531b99d3d0feb76138a9be0755e7291",
+      "bytes": 37084
+    },
+    {
+      "name": "desktop-light",
+      "path": ".next/static/chunks/4537.acfbc9b4aa1b19ce.js",
+      "sha256": "791f66f055beba5eb70bf2a8ae84c73c6e54170e391a56327791a48f4fa2c4f6",
+      "bytes": 2632
+    },
+    {
+      "name": "mobile-light",
+      "path": ".next/static/chunks/app/(live)/workspace/items/[id]/page-89c41e519a9cd8ac.js",
+      "sha256": "6360f3b2937573c30bce7ae511c194ff92adbfa557839e965c6d9632296c1a18",
+      "resolvedEncodedPathObserver": true
+    },
+    {
+      "name": "desktop-dark",
+      "path": ".next/static/chunks/app/(live)/workspace/items/[id]/page-89c41e519a9cd8ac.js",
+      "sha256": "6360f3b2937573c30bce7ae511c194ff92adbfa557839e965c6d9632296c1a18",
+      "resolvedEncodedPathObserver": true
+    },
+    {
+      "name": "mobile-dark",
+      "path": ".next/static/chunks/app/(live)/workspace/items/[id]/page-89c41e519a9cd8ac.js",
+      "sha256": "6360f3b2937573c30bce7ae511c194ff92adbfa557839e965c6d9632296c1a18",
+      "resolvedEncodedPathObserver": true
+    },
+    {
+      "name": "desktop-light",
+      "path": ".next/static/chunks/app/(live)/workspace/items/[id]/page-89c41e519a9cd8ac.js",
+      "sha256": "6360f3b2937573c30bce7ae511c194ff92adbfa557839e965c6d9632296c1a18",
+      "resolvedEncodedPathObserver": true
+    }
+  ],
+  "buildId": "DvLBxnx2yfYFJ7MXXpx3W",
+  "backendCommit": "12637c07393fb39f6487af5b9d81a4c79b159196",
+  "runtimeDirectory": "/private/tmp/arxiv-agent-eng-workspace-mode-build/outputs/modes-runtime/provisional-DvLBxnx2yfYFJ7MXXpx3W",
+  "runtimeAssetsVerified": 251,
+  "compiledAssetsUnchangedAfter": true,
+  "endedAtUtc": "2026-11-05T14:00:11.650Z",
+  "networkCancellations": [
+    {
+      "name": "mobile-light",
+      "phase": "initial",
+      "kind": "requestfailed",
+      "path": "/api/workspace/context/state",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "name": "desktop-dark",
+      "phase": "initial",
+      "kind": "requestfailed",
+      "path": "/api/workspace/context/state",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "name": "mobile-dark",
+      "phase": "initial",
+      "kind": "requestfailed",
+      "path": "/api/workspace/context/state",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "name": "desktop-light",
+      "phase": "initial",
+      "kind": "requestfailed",
+      "path": "/api/workspace/context/state",
+      "error": "net::ERR_ABORTED"
+    }
+  ],
+  "networkCancellationInterpretation": "Four observed initial same-origin contextual GET cancellations. All four routes subsequently settle and complete state-preservation checks; exact lifecycle cause not inferred by this diagnostic. No console/hydration error.",
+  "assetObserverNormalization": [
+    {
+      "name": "mobile-light",
+      "encodedURLKey": ".next/static/chunks/app/(live)/workspace/items/%5Bid%5D/page-89c41e519a9cd8ac.js",
+      "canonicalFilesystemKey": ".next/static/chunks/app/(live)/workspace/items/[id]/page-89c41e519a9cd8ac.js",
+      "observedResponseSha256": "6360f3b2937573c30bce7ae511c194ff92adbfa557839e965c6d9632296c1a18",
+      "expectedReceiptSha256": "6360f3b2937573c30bce7ae511c194ff92adbfa557839e965c6d9632296c1a18",
+      "scope": "Observer URL-percent-decoding correction; byte hash comparison remains exact."
+    },
+    {
+      "name": "desktop-dark",
+      "encodedURLKey": ".next/static/chunks/app/(live)/workspace/items/%5Bid%5D/page-89c41e519a9cd8ac.js",
+      "canonicalFilesystemKey": ".next/static/chunks/app/(live)/workspace/items/[id]/page-89c41e519a9cd8ac.js",
+      "observedResponseSha256": "6360f3b2937573c30bce7ae511c194ff92adbfa557839e965c6d9632296c1a18",
+      "expectedReceiptSha256": "6360f3b2937573c30bce7ae511c194ff92adbfa557839e965c6d9632296c1a18",
+      "scope": "Observer URL-percent-decoding correction; byte hash comparison remains exact."
+    },
+    {
+      "name": "mobile-dark",
+      "encodedURLKey": ".next/static/chunks/app/(live)/workspace/items/%5Bid%5D/page-89c41e519a9cd8ac.js",
+      "canonicalFilesystemKey": ".next/static/chunks/app/(live)/workspace/items/[id]/page-89c41e519a9cd8ac.js",
+      "observedResponseSha256": "6360f3b2937573c30bce7ae511c194ff92adbfa557839e965c6d9632296c1a18",
+      "expectedReceiptSha256": "6360f3b2937573c30bce7ae511c194ff92adbfa557839e965c6d9632296c1a18",
+      "scope": "Observer URL-percent-decoding correction; byte hash comparison remains exact."
+    },
+    {
+      "name": "desktop-light",
+      "encodedURLKey": ".next/static/chunks/app/(live)/workspace/items/%5Bid%5D/page-89c41e519a9cd8ac.js",
+      "canonicalFilesystemKey": ".next/static/chunks/app/(live)/workspace/items/[id]/page-89c41e519a9cd8ac.js",
+      "observedResponseSha256": "6360f3b2937573c30bce7ae511c194ff92adbfa557839e965c6d9632296c1a18",
+      "expectedReceiptSha256": "6360f3b2937573c30bce7ae511c194ff92adbfa557839e965c6d9632296c1a18",
+      "scope": "Observer URL-percent-decoding correction; byte hash comparison remains exact."
+    }
+  ],
+  "observerHistory": "initial-observer-report.json and harness-at-initial-capture.cjs preserve original raw assertions; percent-encoded Reader route filenames normalized against literal filesystem manifest without relaxing hash equality."
+}

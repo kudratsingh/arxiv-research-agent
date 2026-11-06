@@ -1,0 +1,20 @@
+{
+  "repair_commit": "e7ba0d7",
+  "before_commit": "12637c0",
+  "reproduction": "A second valid text extraction sorted before an older explicitly pinned material; the old passage incorrectly became unavailable.",
+  "fix": "Select requested material_id explicitly; do not silently substitute a newer extraction.",
+  "red_log": "material-selection-red.log",
+  "green_log": "material-selection-green.log",
+  "focused_passed": 59,
+  "pre_repair_full_patch": {
+    "passed": 6317,
+    "skipped": 54,
+    "e2e_deselected": 53,
+    "project_coverage": 94.77,
+    "patch_coverage": 98,
+    "source_commit": "12637c0"
+  },
+  "final_post_repair_patch": "running; acceptance pending",
+  "new_provider_contacts": 0,
+  "new_source_requests": 0
+}

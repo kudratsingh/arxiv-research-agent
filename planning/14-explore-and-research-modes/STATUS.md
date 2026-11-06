@@ -1,21 +1,158 @@
 # Two-mode implementation status
 
-Recorded **2026-11-04 America/Los_Angeles**; controller gate refreshed **2026-11-05 UTC**. This kit is an additive planning
-checkpoint. D0 is now verified locally; D1–D4 implementation is in progress. No owner data migration.
+Updated **2026-11-06 UTC / November 5 Pacific**. D0–D4 are implemented and
+verified locally. Application **`62c761a9c7b690e0b681857fe48edc75d3785ef6`**;
+immutable production build **`T8_ju09AUeIr5jhzAjpoG`**. Publication and exact-head remote CI are independently visible in the
+[branch workflow record](https://github.com/kudratsingh/arxiv-research-agent/actions/workflows/ci.yml?query=branch%3Acodex%2Fworkspace-modes-d0-d4); the final owner checkpoint identifies the published SHA/run. Owner experience review
+and D5 grounded assistance remain pending.
 
-| Item | Current state | Evidence / next boundary |
+## Current gate table
+
+| Gate | Delivered | Actual local evidence |
 |---|---|---|
-| Owner direction | Adopted in conversation | Two modes, shared records, question-free learning, project-driven research |
-| Planning docs | Written locally in this kit | Linked direction, experience, data/ranking, ordered work and separate evaluations |
-| Controller kit-start provenance | Controller `dff860e` / G6 app `fda9d` | P0–P6 were complete and G7/G8 pending when this direction kit began; its CSS exception was historical, not final acceptance |
-| Controller current local verification | G7/G8 local verification complete at application `6b2eccf069537d90423359fc74c033f27e665cd6`; root shipping record accompanies the requested branch push, with remote CI separately attributed | [Controller gate record](../12-workspace-controller-revamp/STATUS.md): 4,079 frontend tests; CSS 23,940/25,600 B; unchanged JS ceilings; independent final browser/static release |
-| Frontend continuation | Controller implementation and local acceptance complete; owner experience review remains pending | No mode UI or product-mode implementation is included in the controller polish |
-| Diagnostic benchmark | Stopped diagnostic; scoped approval closed | q01 development; q02/q03/q04 failed; q05–q10 unrun; unchanged targets and original aggregate |
-| Mode switch / project context | Planned D1/D2 | No fake persistence or silent organizing-question import |
-| Split discovery policies | Planned D3 | Existing ranker topic-gates profile-question terms; new Research must not |
-| Reader cross-mode tools | Planned D4 | Exact source/version/passage, draft recovery and owned shared records |
-| Generated explanations / dives | Future D5, gated | Diagnostic trial does not enable everyday generation or checker qualification |
-| Owner usefulness / longitudinal use | Pending actual owner review | All owner labels remain blank |
+| D0 baseline | Controller `7e1bd97` reconciled with backend `10b4260` | Isolated DB/principals/ports; owner3137 untouched |
+| D1 modes | Desktop/mobile mode switch, URL/project context, question-free Learn, independent editable learning preferences | Complete frontend gate plus four connected browser journeys |
+| D2 persistence | Migration010, ownership/CAS/retry-safe projects/threads, shared source/note links and typed manual records | Real Postgres/API; fresh-browser resume after actual API/Node restart; private dump restored into a new disposable DB, all38 table/sequence fingerprints match |
+| D3 discovery | Frozen `workspace-modes-lexical-v1`, distinct Learn/Research policies, context-bound editions/cursors |46 focused tests; ranking100% statement/branch; same40-work offline pool; proposed labels unjudged and chronology limited |
+| D4 continuity | Explicit investigation, exact-version/passage evidence, prerequisite threads, shared Library resume, failed-save/conflict/draft protections |96/96 new browser cases;16/16 existing live regressions; actual restart, unlink and archive preserve shared data |
+| D5 assistance | Not enabled | Grounded explanations, comparisons and guided dives need a separate quality/spending decision |
+| Owner usefulness / longitudinal use | Pending | No owner labels filled; mechanical sessions are not five days of owner use |
+
+## Runnable preview and isolation
+
+**http://127.0.0.1:3178/workspace/today?mode=learn** — API8178, database
+`workspace_modes`, principal`modes-preview`, Postgres15478.40 retained real
+public works and an isolated copy of the actual saved11-interest/15-minute
+profile. The saved organizing question is preserved but ignored by Learn;
+it does not silently create a project. No owner notes/history/judgments copied.
+Coverage is limited; retained records do not imply a fresh source check.
+
+Write verification uses3179/API8179, database`workspace_modes_browser`,
+principal`modes-browser-r15`. Its organizing question is explicitly empty.
+Two clearly labelled synthetic works/four versions add Unicode/version fixtures
+without rewriting the40 real retained works. All authored questions, projects,
+notes and artifacts are mechanical-verification content. Existing live regression
+uses separate3180/API8180/database/principal, with captured Nov3 source receipts,
+not newly fetched metadata. Owner3137/API8137/storage15438 remain untouched.
+
+See [walkthrough and exact launch commands](08-local-walkthrough.md),
+[browser evidence](evidence/d1-d4-browser/README.md),
+[frontend results](evidence/frontend/README.md) and
+[backend results](evidence/backend/README.md).
+
+## Checks and source attribution
+
+- Application62c761a: complete combined Vitest/Storybook **4,217 tests /216 files,
+  zero skips**. Statements98.22%, branches94.23%, functions93.80%, lines99.46%.
+  Functions floor raised92.2→93.4 to satisfy existing measured-count/headroom
+  policy. No floor lowered, coverage input/exclusion/tier removed or runtime
+  dependency added. The incomplete concurrent-build run with5 skips is retained
+  and superseded by the stable-build zero-skip run.
+- Lint, typecheck, production build and **22/22 budgets** pass. CSS24,688/25,600B;
+  Today169,862/169,984B; Projects169,959/169,984B; legacy conversation192,354/192,512B.
+  No cap increased. Existing lockfile; installed dependency tree APFS-cloned from
+  shared installation to resolve local Storybook symlink issues, without install.
+- Python final patch gate: **6,318 passed**,54 inherited local skips,
+  53 workflow-e2e deselections,94.77% overall, **98% patch**. Source tree
+  `16cc0220cd060cead41eecdf08d641e8d0705dcb` is unchanged through application62c761a.
+  The publication patch gate reran with the final4,217/216 measurement record:6,318
+  passed,54 inherited skips,53 separate-tier deselections,98% patch. Package floors api88/agents96/security100/eval95 preserved.
+  Host-Postgres binary skips do not substitute for new real Docker Postgres tests.
+- Separate workflow e2e53/53, mock simulation20/20 at$0, registry parity260/0,
+  global Ruff and strict mypy173 sources pass. Raw failed attempts/cohorts retained.
+- Project/thread polish `cea881e` passes96/96 integrated browser cases across
+  1440×1000/390×844 light/dark plus reduced motion, actual restart and archive.
+  Final `62c761a` changes only selector CSS and passes64 additional route/theme/
+  width/motion geometry and axe checks. Both64-scan cohorts have no serious/critical
+  violations. Four readable example journeys and four untrimmed queue/Reader motion
+  captures pass at62c761a. No console exceptions, blocked requests or provider/source contacts.
+  Restart and archive are separately completed in the fresh-browser report;
+  the immutable main report correctly retains its earlier awaiting-restart status.
+- Actual isolated backup/restore: private dump,38 tables/sequences matched,
+  source DB unchanged; only the newly created restore database removed.
+
+## Corrections found during verification
+
+`ca81dce` fixes same-route Radar dispatch mixing new context with old cursor;
+red/green tests preserve retry and stale-response behavior. `c834207` contains
+project/thread/editor forms at390px. Independent review found the compact mobile
+continuation had hidden the saved question/status; `031524f` restores both while
+keeping full title plus two abstract lines clear of the player. `8e34670` makes
+Library resume preserve saved mode/project/version/anchor while returning to the
+current Library view/focus. Activity continuation intentionally resumes its saved
+workflow origin. Source scopes and unavailable pinned versions never fall forward.
+
+Supplementary untrimmed desktop/mobile recordings capture native queue changes,
+Reader entry and return. Actual decoded native-frame sheets and screenshots were
+manually inspected. Earlier misaligned wall-clock trims are rejected as motion
+evidence and preserved locally. Owner experience review remains pending.
+
+## Final targeted polish and useful examples
+
+`cea881e` adds scannable project cards/current status and a stronger question,
+next-action and evidence hierarchy. Goals, prerequisites and source excerpts lead
+learning threads. Native disclosures retain source/version/material IDs, hashes,
+scope/parser/offsets, and routine revisions; conflicts and unavailable/history
+warnings stay visible. Forms and all exact hrefs/payloads/guards are preserved.
+New presentation tests plus existing forms pass72/72. The carried-source test
+now opens the native disclosure and pins each exact value, retaining payload pins.
+
+Screenshot review found the selector inheriting a two-column filter grid.
+`62c761a` fixes it: actual same-example desktop before/after measures93.328px→316px
+in both themes. Only three lines of CSS differ from the96-case functional cohort.
+All22 budgets pass after reducing redundant new empty-state copy; no ceiling moved.
+An independent read-only source review found no actionable P0–P2 regression;
+runtime/native-frame inspection supplies the separate visual evidence.
+
+3178 has three clearly labelled agent-authored example projects/questions/threads,
+using real retained ReAct, Self-RAG and retention sources. They are not owner work
+or judgments. The explicit import replays without duplicate logical records and
+refuses to overwrite edited examples; interests/profile/source-health remain
+unchanged. Long mechanical fixtures remain on3179. The short readable walkthrough
+opens saved examples; the96-case matrix separately proves new UI saves/creation.
+Reader tabs may save only the example's reading position during that walkthrough.
+Library resumes the saved question, then Source context opens its exact passage.
+
+Reviewed actual decoded frames/contact sheets in all four themes/widths; native
+motion frames inspect queue settling separately. Source/heading landings, exact
+project return, Library passage, logical focus, player clearance and mobile drawer
+flow checked. Reduced motion is independently asserted. This is implementation
+review, not owner usefulness or physical-device acceptance. Original failures,
+transient animation sampling and earlier wrongly timed clip trims remain local
+and hash-indexed. Final axe waits for actual animation completion, with no scan,
+assertion or floor removed. Copied preference values/bulk API abstracts are omitted
+from committed receipts; originals and full personal-profile recordings remain
+local. Selected labelled-example screenshots and neutral motion clips are committed.
+
+## Remaining limits and publication
+
+Browser-store Back/Forward recovery passes where storage works. With storage
+unavailable, a full reload loses unsaved text after an explicit warning; this is
+an unresolved reliability limit, not durable persistence. Corrupt storage warns,
+keeps the current draft and preserves the corrupt bytes. Physical mobile OS
+keyboard, Safari and real IME are not qualified by Chromium viewport/event tests.
+Manual records and exact citations are not model factual-support/quality evidence.
+Human usefulness/comprehension and longitudinal daily use remain unmeasured.
+
+Local gates are attributed to exact application/source commits above. Remote CI
+is a separate exact-published-head gate, available in the branch workflow record
+and the final owner checkpoint; local success never substitutes for it. No merge
+or deployment. The original failed browser runs remain
+local and hash-indexed; accepted evidence does not relabel failures as passes.
+
+## Preserved authority and accounting
+
+No provider or token-count contacts, source acquisition, recurrence, notification
+or everyday generation. Historical accounting receipt SHA256
+`92c3c54c962171e3473344856276d6a5f81593ae5e3a129d45a0e28ad8c304ee`
+remains unchanged: estimated$0.109967 (workflow$0.094655/checker$0.015312),
+unknown0,9Messages/15counts/6jobs. q01 development,q02–q04 failed,q05–q10 unrun.
+Scoped approval closed; later paid validation needs fresh explicit approval.
+No new PR, merge or deployment. Existing PRs remain unmerged.
+
+## Historical records (superseded implementation snapshots)
+
+The following entries describe their original dates, not the current gate table.
 
 ## First reviewable milestone after controller/benchmark checkpoints
 

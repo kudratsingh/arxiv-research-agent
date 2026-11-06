@@ -1,0 +1,29 @@
+{
+  "status": "preparation_checks_pass_not_runtime_acceptance",
+  "checkedAtUtc": "2026-11-05T13:21:42.097740+00:00",
+  "cjsSyntaxFiles": [
+    "adversarial.cjs",
+    "continuity.cjs",
+    "journey.cjs",
+    "locators.cjs",
+    "resume.cjs",
+    "secondary.cjs",
+    "suite.cjs",
+    "support.cjs"
+  ],
+  "pythonAstSyntax": "pass",
+  "coverageMapGroups": 24,
+  "defaultPrepareLaunchesBrowsers": false,
+  "apiNetworkCalls": 0,
+  "writes": 0,
+  "unicodeDryHelper": {
+    "scope": "Pure local harness logic only, not a browser/source acceptance result",
+    "text": "\u03b1\ud83e\uddea cafe\u0301.",
+    "unicodeCodePoints": 9,
+    "utf16Units": 10,
+    "normalization": "unchanged"
+  },
+  "runtimeGate": "false/null source/build/PIDs; template cannot authorize browser launch",
+  "preparationToolingCorrection": "Python AST caught missing whitespace in conditional expression before any decoder/browser execution; corrected and syntax validated.",
+  "latestLocatorUpdates": "All four manual-form actual409s use read-only reload + explicit Keep my edits on reviewed revision; Reader carried context stays frozen across viewed hash; closed pending details stay mounted/reopen on veto; Research uses unrestricted known-date window unless selected."
+}

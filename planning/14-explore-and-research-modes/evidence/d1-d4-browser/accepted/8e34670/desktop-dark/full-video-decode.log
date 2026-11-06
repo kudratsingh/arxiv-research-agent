@@ -1,0 +1,26 @@
+[libvpx @ 0x77eec24000] v1.14.1
+Input #0, matroska,webm, from '/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/runs/2026-11-05T23-53-49-246Z-18433d73/desktop-dark/actual-workflow.webm':
+  Metadata:
+    ENCODER         : Lavf61.1.100
+  Duration: 00:01:56.32, start: 0.000000, bitrate: 963 kb/s
+  Stream #0:0(eng): Video: vp8 (libvpx), yuv420p(tv, progressive), 1440x1000, SAR 1:1 DAR 36:25, 25 fps, 25 tbr, 1k tbn (default)
+      Metadata:
+        ENCODER         : Lavc61.3.100 libvpx
+        DURATION        : 00:01:56.320000000
+[libvpx @ 0x77eec24700] v1.14.1
+Stream mapping:
+  Stream #0:0 -> #0:0 (vp8 (libvpx) -> png (native))
+Output #0, image2, to '/dev/null':
+  Metadata:
+    encoder         : Lavf61.1.100
+  Stream #0:0(eng): Video: png, rgb24(pc, gbr/unknown/unknown, progressive), 16x16 [SAR 36:25 DAR 36:25], q=2-31, 200 kb/s, 25 fps, 25 tbn (default)
+      Metadata:
+        DURATION        : 00:01:56.320000000
+        encoder         : Lavc61.3.100 png
+frame=  535 fps=0.0 q=-0.0 size=N/A time=00:00:21.40 bitrate=N/A speed=42.8x
+frame= 1092 fps=1086 q=-0.0 size=N/A time=00:00:43.68 bitrate=N/A speed=43.5x
+frame= 1598 fps=1060 q=-0.0 size=N/A time=00:01:03.92 bitrate=N/A speed=42.4x
+frame= 2093 fps=1041 q=-0.0 size=N/A time=00:01:23.72 bitrate=N/A speed=41.6x
+frame= 2624 fps=1043 q=-0.0 size=N/A time=00:01:44.96 bitrate=N/A speed=41.7x
+[out#0/image2 @ 0x77ef0083c0] video:1036KiB audio:0KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: unknown
+frame= 2908 fps=1035 q=-0.0 Lsize=N/A time=00:01:56.32 bitrate=N/A speed=41.4x

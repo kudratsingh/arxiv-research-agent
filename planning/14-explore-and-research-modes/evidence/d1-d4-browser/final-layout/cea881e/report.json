@@ -1,0 +1,379 @@
+{
+  "applicationCommit": "cea881e0f0335f1f51fff29f83c5ce35305aebd5",
+  "buildId": "YEs1EnypIwGcU-n2LZwvx",
+  "functionalCohort": "cea881e0f0335f1f51fff29f83c5ce35305aebd5",
+  "scope": "Final selector CSS + all routes/widths/themes/motion, no authored writes; full96-case functional cohort separately bound",
+  "observations": [],
+  "errors": [],
+  "blocked": [],
+  "requests": [
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/api/workspace/state",
+      "query": "",
+      "forwarded": true,
+      "kind": "guarded own-principal API read"
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/api/workspace/context",
+      "query": "",
+      "forwarded": true,
+      "kind": "guarded own-principal API read"
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/workspace/today",
+      "query": "?mode=learn",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/media/8b355a0d3365113c.p.woff2",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/css/f4b04de22fdebcb9.css",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/css/7cd7f3878632625c.css",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/css/8609413464d16cbc.css",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/css/9e826ae3e0aeffdc.css",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/css/fadd03207f4f952a.css",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/css/5d816b8c0dad564e.css",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/webpack-317dabc987082ff7.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/4bd1b696-8cd12253b448cc13.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/3794-645b4e36f579c297.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/main-app-fb8b42f9a8a78965.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/app/(live)/layout-9a8f0aea48954ea0.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/8500-63a4afbeacab3b52.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/4626-cf362315d29c4232.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/9144-eafb1e989c5e2aa8.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/5296-bbf3a8acb7e96e31.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/app/(live)/template-cd87073a974d8731.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/7027-dd230d6a81ade9d3.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/app/(live)/workspace/today/page-8a7722914b4f817f.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/app/global-error-92372a2e8d0a8485.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/2300-fef9c607c7d0d03d.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/7214-97ac8441d28158e2.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/app/(workspace)/layout-35c24da9e70b3ac9.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/app/not-found-f4f9aa14b0d55755.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/media/c9067fc2f3d1f4e5.woff2",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/media/4a7f5dc07e8cb505.woff2",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/1935-0eaf16140caba45f.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/6708-0e965688a143e126.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/6430-b4cfeac34c90c86f.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/3146.447eb1860fbe825b.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/2982.64aaff10ed198e57.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/7817-0dafa8de8996ba33.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/2316-28e5fb89c0d84257.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/1423.12f1e0d2a8f077f4.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/1540.ffc9bbc96cb89b09.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/chunks/2565.799f0dba503f8e7e.js",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/api/workspace/context/state",
+      "query": "?mode=learn",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    },
+    {
+      "phase": "preflight",
+      "method": "GET",
+      "path": "/_next/static/media/b75e973a7f03466f.woff2",
+      "query": "",
+      "kind": "browser",
+      "write": false,
+      "forwarded": true
+    }
+  ],
+  "status": "incomplete_or_failed"
+}

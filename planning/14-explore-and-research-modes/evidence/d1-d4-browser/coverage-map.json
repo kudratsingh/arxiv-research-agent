@@ -1,0 +1,219 @@
+{
+  "status": "prepared_not_run",
+  "cases": [
+    {
+      "id": "D1-01",
+      "name": "Question-free Explore",
+      "preparedHandlers": [
+        "journey.cjs:coreJourney"
+      ],
+      "runtimeStatus": "not_run"
+    },
+    {
+      "id": "D1-02",
+      "name": "Visible mode switch/mobile controls",
+      "preparedHandlers": [
+        "journey.cjs:coreJourney",
+        "suite.cjs:readonlyChecks"
+      ],
+      "runtimeStatus": "not_run"
+    },
+    {
+      "id": "D1-03",
+      "name": "Research explicit setup",
+      "preparedHandlers": [
+        "journey.cjs:coreJourney"
+      ],
+      "runtimeStatus": "not_run"
+    },
+    {
+      "id": "D1-04",
+      "name": "Mode URL/reload/history",
+      "preparedHandlers": [
+        "adversarial.cjs:urlHistoryAndInvalid",
+        "resume.cjs"
+      ],
+      "runtimeStatus": "not_run"
+    },
+    {
+      "id": "D1-05",
+      "name": "Invalid and unowned context",
+      "preparedHandlers": [
+        "adversarial.cjs:urlHistoryAndInvalid"
+      ],
+      "runtimeStatus": "not_run"
+    },
+    {
+      "id": "D1-06",
+      "name": "Explicit start preference",
+      "preparedHandlers": [
+        "secondary.cjs:explicitPreferences"
+      ],
+      "runtimeStatus": "not_run"
+    },
+    {
+      "id": "D2-01",
+      "name": "Explicit project from saved question",
+      "preparedHandlers": [
+        "journey.cjs:coreJourney"
+      ],
+      "runtimeStatus": "not_run"
+    },
+    {
+      "id": "D2-02",
+      "name": "Retry identity/deduplication",
+      "preparedHandlers": [
+        "adversarial.cjs:duplicateProjectRequest",
+        "adversarial.cjs:pendingProject"
+      ],
+      "runtimeStatus": "not_run"
+    },
+    {
+      "id": "D2-03",
+      "name": "Actual concurrent409",
+      "preparedHandlers": [
+        "adversarial.cjs:actualProjectConflict",
+        "continuity.cjs:additionalReviewedConflicts"
+      ],
+      "runtimeStatus": "not_run"
+    },
+    {
+      "id": "D2-04",
+      "name": "Pinned source/evidence/entry associations",
+      "preparedHandlers": [
+        "journey.cjs:unicodeIdentity",
+        "continuity.cjs:laterSharedRevision"
+      ],
+      "runtimeStatus": "not_run"
+    },
+    {
+      "id": "D2-05",
+      "name": "Unlink and archive non-destructive",
+      "preparedHandlers": [
+        "secondary.cjs:unlinkArchive",
+        "resume.cjs"
+      ],
+      "runtimeStatus": "not_run"
+    },
+    {
+      "id": "D2-06",
+      "name": "Restart persistence",
+      "preparedHandlers": [
+        "suite.cjs:checkpoint",
+        "resume.cjs"
+      ],
+      "runtimeStatus": "not_run"
+    },
+    {
+      "id": "D3-01",
+      "name": "Outside-interest real public match",
+      "preparedHandlers": [
+        "journey.cjs:coreJourney"
+      ],
+      "runtimeStatus": "not_run"
+    },
+    {
+      "id": "D3-02",
+      "name": "Authoritative context edition/cursor",
+      "preparedHandlers": [
+        "secondary.cjs:editionAndCursor"
+      ],
+      "runtimeStatus": "not_run"
+    },
+    {
+      "id": "D4-01",
+      "name": "Connected daily journey",
+      "preparedHandlers": [
+        "journey.cjs:coreJourney"
+      ],
+      "runtimeStatus": "not_run"
+    },
+    {
+      "id": "D4-02",
+      "name": "Exact Unicode/source version",
+      "preparedHandlers": [
+        "journey.cjs:unicodeIdentity",
+        "secondary.cjs:oldVersionAndHash",
+        "support.cjs:exactMark",
+        "continuity.cjs:frozenCarriedSource"
+      ],
+      "runtimeStatus": "not_run"
+    },
+    {
+      "id": "D4-03",
+      "name": "Older and unavailable pinned version",
+      "preparedHandlers": [
+        "secondary.cjs:oldVersionAndHash",
+        "secondary.cjs:unavailablePinned"
+      ],
+      "runtimeStatus": "not_run"
+    },
+    {
+      "id": "D4-04",
+      "name": "Pending write navigation veto",
+      "preparedHandlers": [
+        "adversarial.cjs:pendingReader",
+        "adversarial.cjs:pendingProject",
+        "adversarial.cjs:pendingThread",
+        "continuity.cjs:selectorAndPalettePending",
+        "continuity.cjs:frozenCarriedSource"
+      ],
+      "runtimeStatus": "not_run"
+    },
+    {
+      "id": "D4-05",
+      "name": "Failed save and recovery",
+      "preparedHandlers": [
+        "adversarial.cjs:pendingReader",
+        "adversarial.cjs:pendingProject",
+        "adversarial.cjs:pendingThread"
+      ],
+      "runtimeStatus": "not_run"
+    },
+    {
+      "id": "D4-06",
+      "name": "Back/Forward unsaved draft recovery",
+      "preparedHandlers": [
+        "adversarial.cjs:dirtyReaderHistory",
+        "continuity.cjs:manualHistory",
+        "continuity.cjs:corruptStorage",
+        "continuity.cjs:unavailableStorage"
+      ],
+      "runtimeStatus": "not_run"
+    },
+    {
+      "id": "D4-07",
+      "name": "Rapid queue and keyboard safety",
+      "preparedHandlers": [
+        "secondary.cjs:rapidAndKeyboard"
+      ],
+      "runtimeStatus": "not_run"
+    },
+    {
+      "id": "D4-08",
+      "name": "Mobile field and keyboard clearance",
+      "preparedHandlers": [
+        "secondary.cjs:mobileKeyboardProxy",
+        "support.cjs:reveal"
+      ],
+      "runtimeStatus": "not_run"
+    },
+    {
+      "id": "D4-09",
+      "name": "Typed authored records",
+      "preparedHandlers": [
+        "adversarial.cjs:typedManualArtifact"
+      ],
+      "runtimeStatus": "not_run"
+    },
+    {
+      "id": "D4-10",
+      "name": "Theme/reduced-motion/accessibility",
+      "preparedHandlers": [
+        "suite.cjs:readonlyChecks",
+        "inspect-recordings.py"
+      ],
+      "runtimeStatus": "not_run"
+    }
+  ]
+}

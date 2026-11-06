@@ -1,0 +1,26 @@
+{
+  "applicationCommit": "8e346704e9f18bd6aea016c09bd4416f1ea58f61",
+  "buildId": "eowUn8EF-pUTqkGvzyuNn",
+  "cases": {
+    "passed": 96,
+    "failed": 0
+  },
+  "readonlyAxeScans": 64,
+  "mainReportOriginalStatus": "awaiting_root_restart_checkpoint",
+  "postRestartStatus": "pass",
+  "nonDestructiveArchive": true,
+  "restoreTables": 38,
+  "restoreMatches": true,
+  "sourceDatabaseUnchanged": true,
+  "visualReview": "Selected actual screenshots and native-frame sheets reviewed; no confirmed defect in reviewed samples. Four new untrimmed motion captures; owner experience review pending. Earlier trim alignment rejected and preserved locally.",
+  "providerContacts": 0,
+  "sourceRequests": 0,
+  "recurrence": false,
+  "owner3137": "untouched",
+  "limitations": [
+    "Unavailable browser storage plus full reload loses unsaved draft after explicit warning",
+    "Physical OS keyboard, Safari and IME not qualified",
+    "No owner relevance/usefulness or model/checker-quality evidence"
+  ],
+  "remoteCI": "pending publication"
+}

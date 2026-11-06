@@ -1,0 +1,85 @@
+{
+  "scope": "Prepared harness snapshot only; no runtime outputs exist. All root files except this manifest.",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 10235,
+      "sha256": "69b0f4cee78ce115af4651022194e948d85d91aef56807c5b5aba287a29907da"
+    },
+    {
+      "path": "acceptance-plan.json",
+      "bytes": 9473,
+      "sha256": "047764983a19d6a0efdf6e0c4bf9dfb5d58dc5c2daba43cff2ad415c419bdf97"
+    },
+    {
+      "path": "adversarial.cjs",
+      "bytes": 16989,
+      "sha256": "5f4ed2421fe60d0e3537a7ffa877d44e4537665fedf65ac6229b2165e15f2de2"
+    },
+    {
+      "path": "continuity.cjs",
+      "bytes": 19282,
+      "sha256": "96474b15d8a4b7d55885092729b595de57de83d1c0e8ad8cdc391e25766ecca2"
+    },
+    {
+      "path": "coverage-map.json",
+      "bytes": 5500,
+      "sha256": "4fc3e76b6d184a259d27e91dae89538e60feb6433c9c4bf66e28682f541367bb"
+    },
+    {
+      "path": "inspect-recordings.py",
+      "bytes": 2526,
+      "sha256": "db115f381759a6a088ce089be1796c2456e5561f808d25cf421615301ccff446"
+    },
+    {
+      "path": "journey.cjs",
+      "bytes": 14969,
+      "sha256": "2d22ab0e3bd88cd2fc3b6f9b89289c41c2fbf997aae14f0faa83a10b48537d89"
+    },
+    {
+      "path": "locators.cjs",
+      "bytes": 2341,
+      "sha256": "19406e312cabecf000b516c5a1ea510ccfdbcb72d4e15d700704707cda9cddb8"
+    },
+    {
+      "path": "preparation-checks.json",
+      "bytes": 1246,
+      "sha256": "dd3bec18bb1a6ea986ce89557c24f63a84a92b8b17cc63190a9ed34ed850297c"
+    },
+    {
+      "path": "preparation-receipt.json",
+      "bytes": 2399,
+      "sha256": "f12ea550eb511d52aa56c23d4fea7f3fed93331cd9d5a73ace07ac5bc985fce2"
+    },
+    {
+      "path": "prepare.log",
+      "bytes": 2399,
+      "sha256": "f12ea550eb511d52aa56c23d4fea7f3fed93331cd9d5a73ace07ac5bc985fce2"
+    },
+    {
+      "path": "resume.cjs",
+      "bytes": 4737,
+      "sha256": "e9a0b6f4de063cd77dd19bb42974c7684750d423867f39f8b7c97cc33d5e7276"
+    },
+    {
+      "path": "secondary.cjs",
+      "bytes": 14242,
+      "sha256": "14785e38a0c1b2eaa3d52e64362c6d4c17dbae252e345266b263322d6125ace7"
+    },
+    {
+      "path": "service-receipt.example.json",
+      "bytes": 1968,
+      "sha256": "29fecbd9e6f617cb6bea094dbf1b48beef5d51dacf37cd9dfaab978b8423cbf0"
+    },
+    {
+      "path": "suite.cjs",
+      "bytes": 18340,
+      "sha256": "a0f6c3f17f265e86f4bb4d57af1b62d443e878c6e6e5a13fd21d0bff8a21c5a0"
+    },
+    {
+      "path": "support.cjs",
+      "bytes": 16617,
+      "sha256": "6fc2ce6daccfccdf6e548c414710198d57a82dfb6f23d19c735bd72d99b5de9e"
+    }
+  ]
+}
