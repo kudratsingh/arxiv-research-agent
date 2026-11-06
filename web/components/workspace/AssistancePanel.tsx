@@ -121,8 +121,8 @@ export default function AssistancePanel({ owner, workId, versionId, returnTo, on
     <p className="workspace-version-notice">Local simulation · provider execution disabled · $0. These extractive fixtures exercise the pipeline; semantic support, checker reliability and human usefulness are unmeasured.</p>
     <Message>{notice || form.notice}</Message>
     <button type="button" disabled={form.busy} onClick={() => { setNotice(""); setAttempt(n => n + 1); }}>Reload assistance context</button>
-    {!loaded && <button type="button" onClick={() => { setNotice(""); setAttempt(n => n + 1); }}>Retry loading assistance</button>}
-    {context.mode === "research" && <p>{project ? <>Research question: <strong>{project.data.question}</strong></> : "Select a Research project before preparing an answer."}</p>}
+    {!loaded && notice && <button type="button" onClick={() => { setNotice(""); setAttempt(n => n + 1); }}>Retry loading assistance</button>}
+    {context.mode === "research" && <p>{project ? <>Research question: <strong>{project.data.question}</strong></> : !loaded ? notice ? "Research project context is unavailable. Retry before preparing an answer." : "Loading research project context…" : "Select a Research project before preparing an answer."}</p>}
     <form id={form.surfaceId} className="workspace-controls" onSubmit={event => { event.preventDefault(); void prepare(); }}>
       <label>Explanation depth<select disabled={form.busy} value={form.values.depth} onChange={e => change("depth", e.target.value)}><option value="overview">Conceptual overview</option><option value="technical">Technical details</option></select></label>
       <label>Background to include explicitly<textarea maxLength={1000} rows={2} readOnly={form.busy} value={form.values.background} onChange={e => change("background", e.target.value)} /></label>
@@ -131,7 +131,8 @@ export default function AssistancePanel({ owner, workId, versionId, returnTo, on
       <label>Follow-up question<textarea rows={2} maxLength={1000} readOnly={form.busy} value={form.values.follow_up} onChange={e => change("follow_up", e.target.value)} /></label>
       <fieldset disabled={form.busy}><legend>Select retained evidence · maximum eight units</legend>
         {selected.some(id => !units.some(unit => unit.id === id)) && <p className="workspace-version-notice">Some selected passages are unavailable. Explicitly discard or reselect; no newer source version was substituted.</p>}
-        {!units.length && <p>No coherent retained passages are available. Manual reading remains available; no source is fabricated.</p>}
+        {!loaded && !notice && <p aria-busy="true">Loading retained evidence…</p>}
+        {loaded && !units.length && <p>No coherent retained passages are available. Manual reading remains available; no source is fabricated.</p>}
         {units.map(unit => <details className="ws-record-details" data-assistance-unit={unit.id} key={unit.id}><summary>{unit.title} · {unit.reference.scope}{unit.reference.page ? ` · page ${unit.reference.page}` : ""}</summary>
           <label><input type="checkbox" checked={selected.includes(unit.id)} onChange={e => change("units", JSON.stringify(e.target.checked ? [...selected, unit.id] : selected.filter(id => id !== unit.id)))} />Include this evidence unit</label>
           <blockquote>{unit.reference.quote}</blockquote><p>{unit.complete ? "Retained text coverage recorded as complete; extraction quality remains a separate question." : "Selected abstract or excerpt; omitted material may change interpretation."}</p>

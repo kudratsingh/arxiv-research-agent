@@ -182,5 +182,10 @@ it("ignores a late catalog response after navigation without starting work",asyn
  let release!:(value:unknown)=>void;const pending=new Promise(resolve=>{release=resolve});
  mock.request.mockImplementation((p:string,b?:Record<string,unknown>)=>p.startsWith("assistance/catalog")?pending:request(p,b));
  history.replaceState(null,"","/workspace/items/one?mode=learn");const view=render(<AssistancePanel owner="verification" workId="one" versionId="one:v1" returnTo="/workspace/today" onSource={onSource}/>);
- view.unmount();await act(async()=>release({units}));expect(mock.request.mock.calls.every(([,b])=>b===undefined)).toBe(true);
+ expect(screen.getByText("Loading retained evidence…")).toBeInTheDocument();expect(screen.queryByText(/No coherent retained passages/)).not.toBeInTheDocument();view.unmount();await act(async()=>release({units}));expect(mock.request.mock.calls.every(([,b])=>b===undefined)).toBe(true);
+});
+it("distinguishes unavailable project context from an empty project selection",async()=>{
+ failures.add(`context/projects/${PID}`);history.replaceState(null,"",`/workspace/items/one?mode=research&project=${PID}`);
+ render(<AssistancePanel owner="verification" workId="one" versionId="one:v1" returnTo="/workspace/projects" onSource={onSource}/>);
+ await screen.findByText(/Research project context is unavailable/);expect(screen.getByRole("button",{name:"Preview assistance request"})).toBeDisabled();expect(mock.request.mock.calls.every(([,b])=>b===undefined)).toBe(true);
 });
