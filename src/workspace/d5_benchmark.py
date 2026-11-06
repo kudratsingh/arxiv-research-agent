@@ -147,7 +147,7 @@ def results(store: WorkspaceStore, packet: dict[str, Any]) -> dict[str, Any]:
             else None,
             "invoice_confirmed": False,
         },
-        "acceptance": "HOLD: human judgments and real provider/token/schema measurements absent",
+        "acceptance": "HOLD: independent human quality and usefulness judgments absent; inspect transport and usage receipts separately",
         "checker_qualified": False,
         "everyday_generation": False,
         "human_labels": None,
