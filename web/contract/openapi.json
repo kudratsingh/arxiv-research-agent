@@ -6,7 +6,7 @@
     "command": ".venv/bin/python -c \"import json; from src.api.app import create_app; print(json.dumps(create_app().openapi(), indent=2))\" > web/contract/openapi.json  # then re-add this x-provenance header",
     "consumers": "web/lib/api/generated/schema.d.ts via `npm run generate:types`.",
     "note": "JSON has no comment syntax, so this OpenAPI 3.1 x- extension carries the header. Strip the 'x-provenance' key before comparing against a freshly generated create_app().openapi().",
-    "workspace_update": "2026-11-05 D0-D4 manual product context; migration010, no provider contacts; base 10b4260"
+    "workspace_update": "D5 offline assistance; migration011, no provider contacts; base3859f933"
   },
   "openapi": "3.1.0",
   "info": {
@@ -2571,6 +2571,297 @@
           }
         }
       }
+    },
+    "/workspace/assistance/catalog": {
+      "get": {
+        "tags": [
+          "workspace-assistance"
+        ],
+        "summary": "Catalog",
+        "operationId": "catalog_workspace_assistance_catalog_get",
+        "parameters": [
+          {
+            "name": "work_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Work Id"
+            }
+          },
+          {
+            "name": "version_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Version Id"
+            }
+          },
+          {
+            "name": "project",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Project"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Catalog Workspace Assistance Catalog Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/assistance/preview": {
+      "post": {
+        "tags": [
+          "workspace-assistance"
+        ],
+        "summary": "Preview",
+        "operationId": "preview_workspace_assistance_preview_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreviewWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Preview Workspace Assistance Preview Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/assistance/jobs": {
+      "post": {
+        "tags": [
+          "workspace-assistance"
+        ],
+        "summary": "Submit",
+        "operationId": "submit_workspace_assistance_jobs_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Submit Workspace Assistance Jobs Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "workspace-assistance"
+        ],
+        "summary": "Jobs",
+        "operationId": "jobs_workspace_assistance_jobs_get",
+        "parameters": [
+          {
+            "name": "work_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Work Id"
+            }
+          },
+          {
+            "name": "version_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Version Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Jobs Workspace Assistance Jobs Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/assistance/jobs/{job_id}": {
+      "get": {
+        "tags": [
+          "workspace-assistance"
+        ],
+        "summary": "Job",
+        "operationId": "job_workspace_assistance_jobs__job_id__get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Job Workspace Assistance Jobs  Job Id  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/assistance/jobs/{job_id}/{action}": {
+      "post": {
+        "tags": [
+          "workspace-assistance"
+        ],
+        "summary": "Action",
+        "operationId": "action_workspace_assistance_jobs__job_id___action__post",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          },
+          {
+            "name": "action",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Action"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Action Workspace Assistance Jobs  Job Id   Action  Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2698,6 +2989,146 @@
           "kind"
         ],
         "title": "ArtifactData"
+      },
+      "AssistanceInput": {
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "learn",
+              "research"
+            ],
+            "title": "Mode"
+          },
+          "work_id": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Work Id"
+          },
+          "version_id": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Version Id"
+          },
+          "material_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 3,
+            "minItems": 1,
+            "title": "Material Ids"
+          },
+          "span_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 8,
+            "minItems": 1,
+            "title": "Span Ids"
+          },
+          "unit_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 8,
+            "minItems": 1,
+            "title": "Unit Ids"
+          },
+          "depth": {
+            "type": "string",
+            "enum": [
+              "overview",
+              "technical"
+            ],
+            "title": "Depth",
+            "default": "overview"
+          },
+          "background": {
+            "type": "string",
+            "maxLength": 1000,
+            "title": "Background",
+            "default": ""
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "overview",
+              "method",
+              "assumptions",
+              "implementation"
+            ],
+            "title": "Direction",
+            "default": "overview"
+          },
+          "follow_up": {
+            "type": "string",
+            "maxLength": 1000,
+            "title": "Follow Up",
+            "default": ""
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^project-[a-f0-9]{32}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id"
+          },
+          "project_revision": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Revision"
+          },
+          "parent_job": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^fake-[a-f0-9]{40}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Job"
+          },
+          "origin": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResumeContext"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "mode",
+          "work_id",
+          "version_id",
+          "material_ids",
+          "span_ids",
+          "unit_ids"
+        ],
+        "title": "AssistanceInput"
       },
       "BoundSource": {
         "properties": {
@@ -6449,6 +6880,19 @@
         ],
         "title": "PreviewRecord"
       },
+      "PreviewWrite": {
+        "properties": {
+          "input": {
+            "$ref": "#/components/schemas/AssistanceInput"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "input"
+        ],
+        "title": "PreviewWrite"
+      },
       "ProfileData": {
         "properties": {
           "topics": {
@@ -8609,6 +9053,31 @@
           "name"
         ],
         "title": "SourceStatus"
+      },
+      "SubmitWrite": {
+        "properties": {
+          "input": {
+            "$ref": "#/components/schemas/AssistanceInput"
+          },
+          "request_id": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Request Id"
+          },
+          "expected_digest": {
+            "type": "string",
+            "title": "Expected Digest"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "input",
+          "request_id",
+          "expected_digest"
+        ],
+        "title": "SubmitWrite"
       },
       "UsefulnessFeedback": {
         "properties": {

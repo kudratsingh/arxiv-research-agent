@@ -538,3 +538,25 @@ describe("retained document reading", () => {
     ).toHaveAttribute("href", base.url);
   });
 });
+
+// D5 integration: the heavy panel is verified separately; this pins the lazy
+// Reader entry and exact retained-passage callback without a provider client.
+vi.mock("@/components/workspace/AssistancePanel", () => ({ default: ({ onSource }: {onSource:(anchor:string)=>void}) => <button onClick={() => onSource(`material:${MAT}:page:3:0:14`)}>Test exact assistance passage</button> }));
+it("opens assistance explicitly and routes its exact passage back into Source", async () => {
+  const user = userEvent.setup(); render(<LiveReader id={work().work_id}/>);
+  await screen.findByRole("heading", {name:"Retained source abstract"});
+  await user.click(screen.getByRole("link", {name:"Understand"}));
+  expect(screen.queryByRole("button", {name:"Test exact assistance passage"})).not.toBeInTheDocument();
+  await user.click(screen.getByRole("button", {name:"Open assisted reading · local simulation"}));
+  await user.click(await screen.findByRole("button", {name:"Test exact assistance passage"}));
+  expect(decodeURIComponent(location.hash)).toContain(`material:${MAT}:page:3:0:14`);
+  expect(calls.filter(call=>call.path==="context/reading").at(-1)!.body).toMatchObject({data:{version_id:work().version_id,anchor:`material:${MAT}:page:3:0:14`}});
+});
+it("resumes a saved simulated result without dispatching and preserves its exact version",async()=>{
+ const base=work(),id=`assistance-fake-${"e".repeat(40)}`;
+ state.works=[work({entries:[{id,revision:1,work_id:base.work_id,version_id:base.version_id,anchor:"abstract:0:14",kind:"note",body:"Saved simulation",updated_at:"2026-11-05T00:00:00Z",activity_sequence:1}]})];
+ const user=userEvent.setup();render(<LiveReader id={base.work_id}/>);await screen.findByRole("heading",{name:"Retained source abstract"});
+ await user.click(screen.getByRole("link",{name:"Your notes"}));
+ expect(screen.getByRole("link",{name:"Resume saved assistance →"})).toHaveAttribute("href",expect.stringContaining(`assistance=fake-${"e".repeat(40)}`));
+ expect(calls.filter(c=>c.path.startsWith("assistance/jobs"))).toHaveLength(0);
+});

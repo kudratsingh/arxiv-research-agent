@@ -230,8 +230,16 @@ def _claim_shape(claim: ResearchClaim) -> None:
         raise GroundingError("inference_label_required")
     if claim.kind == ClaimKind.FACTUAL and claim.inference_label is not None:
         raise GroundingError("factual_claim_cannot_be_labelled_inference")
-    if len({ref.span_id for ref in claim.evidence}) != len(claim.evidence):
-        raise GroundingError("duplicate_evidence_span")
+    # Distinct, nonoverlapping quotations from one retained parent remain
+    # separate citations. Do not merge their intervening, unselected text.
+    for index, ref in enumerate(claim.evidence):
+        if any(
+            other.material_id == ref.material_id
+            and other.span_id == ref.span_id
+            and max(other.start, ref.start) < min(other.end, ref.end)
+            for other in claim.evidence[:index]
+        ):
+            raise GroundingError("duplicate_evidence_span")
 
 
 def _digest(claim: ResearchClaim, resolved: Sequence[tuple[SourceMaterial, SourceSpan]]) -> str:

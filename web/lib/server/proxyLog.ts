@@ -45,6 +45,8 @@
  */
 export const LITERAL_SEGMENTS: ReadonlySet<string> = new Set([
   "artifacts",
+  "assistance",
+  "catalog",
   "context",
   "conversations",
   "export",
@@ -96,6 +98,7 @@ const PARAMETER_PREFIXES: readonly (readonly string[])[] = [
   ["learn", "paths"],
   ["learn", "sessions"],
   ["workspace", "generation", "jobs"],
+  ["workspace", "assistance", "jobs"],
   ["workspace", "materials"],
   ["workspace", "context", "projects"],
   ["workspace", "context", "threads"],
@@ -108,6 +111,8 @@ export function pathTemplate(segments: readonly string[]): string {
       prefix.every((segment, index) => segments[index] === segment),
     ).map((prefix) => prefix.length),
   );
+  // The versioned assistance contract has two opaque path parameters.
+  if (segments[0] === "workspace" && segments[1] === "assistance" && segments[2] === "jobs") parameterPositions.add(4);
   const rendered = segments
     .map((segment, index) =>
       !parameterPositions.has(index) && LITERAL_SEGMENTS.has(segment)

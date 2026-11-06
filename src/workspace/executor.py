@@ -65,6 +65,14 @@ class FakeCancelled(Exception):
     """Cooperative local cancellation; no provider request was made."""
 
 
+class FakeCompletedResponseError(ValueError):
+    """A recorded complete local response failed content validation, not receipt."""
+
+    def __init__(self, response: dict[str, Any]):
+        super().__init__("completed_fake_response_invalid")
+        self.response = response
+
+
 class FakeJobState(StrEnum):
     QUEUED = "queued"
     DRAFTING = "drafting"
@@ -644,8 +652,8 @@ class FakeExecutor:
             raise ExecutorError("invalid_job_limit")
         with self.store.pool.connection() as conn:
             ids = conn.execute(
-                "SELECT id FROM workspace_fake_generation_jobs WHERE owner=%s ORDER BY created_at DESC,id DESC LIMIT %s",
-                (owner, limit),
+                "SELECT id FROM workspace_fake_generation_jobs WHERE owner=%s AND request->>'schema_revision'=%s ORDER BY created_at DESC,id DESC LIMIT %s",
+                (owner, SCHEMA_REVISION, limit),
             ).fetchall()
             return [self._snapshot(conn, self._row(conn, owner, row[0])) for row in ids]
 
@@ -685,8 +693,7 @@ class FakeExecutor:
             raise ExecutorError("sealed_request_or_source_drift")
         return materials
 
-    @staticmethod
-    def _stage(row: tuple[Any, ...], materials: tuple[SourceMaterial, ...]) -> dict[str, Any]:
+    def _stage(self, row: tuple[Any, ...], materials: tuple[SourceMaterial, ...]) -> dict[str, Any]:
         data = row[6]
         phase = data["next_phase"]
         contract = row[5]["stage_contracts"][phase]
@@ -734,6 +741,8 @@ class FakeExecutor:
         with self.store.pool.connection() as conn:
             self._lock(conn, owner)
             row = self._row(conn, owner, job_id, lock=True)
+            if type(self) is FakeExecutor and row[5].get("schema_revision") != SCHEMA_REVISION:
+                raise ExecutorError("use_the_versioned_assistance_endpoint")
             if row[2] in TERMINAL:
                 return self._snapshot(conn, row)
             if row[9] is not None:
@@ -810,6 +819,10 @@ class FakeExecutor:
                 error = "fake_output_envelope_exceeded"
         except FakeCancelled:
             error = "cancelled"
+        except FakeCompletedResponseError as exc:
+            response = exc.response
+            output_units = _size(response)
+            error = "completed_fake_response_invalid"
         except Exception:
             response = None
             error = "fake_provider_error"

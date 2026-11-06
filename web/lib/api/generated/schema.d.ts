@@ -1186,6 +1186,92 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/workspace/assistance/catalog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Catalog */
+        get: operations["catalog_workspace_assistance_catalog_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspace/assistance/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview */
+        post: operations["preview_workspace_assistance_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspace/assistance/jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Jobs */
+        get: operations["jobs_workspace_assistance_jobs_get"];
+        put?: never;
+        /** Submit */
+        post: operations["submit_workspace_assistance_jobs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspace/assistance/jobs/{job_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Job */
+        get: operations["job_workspace_assistance_jobs__job_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspace/assistance/jobs/{job_id}/{action}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Action */
+        post: operations["action_workspace_assistance_jobs__job_id___action__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1234,6 +1320,53 @@ export interface components {
             entry?: components["schemas"]["EntryReference"] | null;
             /** Evidence Link Ids */
             evidence_link_ids?: string[];
+        };
+        /** AssistanceInput */
+        AssistanceInput: {
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "learn" | "research";
+            /** Work Id */
+            work_id: string;
+            /** Version Id */
+            version_id: string;
+            /** Material Ids */
+            material_ids: string[];
+            /** Span Ids */
+            span_ids: string[];
+            /** Unit Ids */
+            unit_ids: string[];
+            /**
+             * Depth
+             * @default overview
+             * @enum {string}
+             */
+            depth: "overview" | "technical";
+            /**
+             * Background
+             * @default
+             */
+            background: string;
+            /**
+             * Direction
+             * @default overview
+             * @enum {string}
+             */
+            direction: "overview" | "method" | "assumptions" | "implementation";
+            /**
+             * Follow Up
+             * @default
+             */
+            follow_up: string;
+            /** Project Id */
+            project_id?: string | null;
+            /** Project Revision */
+            project_revision?: number | null;
+            /** Parent Job */
+            parent_job?: string | null;
+            origin?: components["schemas"]["ResumeContext"] | null;
         };
         /** BoundSource */
         BoundSource: {
@@ -2845,6 +2978,10 @@ export interface components {
             /** Streams */
             streams: string[];
         };
+        /** PreviewWrite */
+        PreviewWrite: {
+            input: components["schemas"]["AssistanceInput"];
+        };
         /** ProfileData */
         ProfileData: {
             /** Topics */
@@ -3812,6 +3949,14 @@ export interface components {
             receipt?: {
                 [key: string]: unknown;
             };
+        };
+        /** SubmitWrite */
+        SubmitWrite: {
+            input: components["schemas"]["AssistanceInput"];
+            /** Request Id */
+            request_id: string;
+            /** Expected Digest */
+            expected_digest: string;
         };
         /** UsefulnessFeedback */
         UsefulnessFeedback: {
@@ -5752,6 +5897,200 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ContextWorkPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    catalog_workspace_assistance_catalog_get: {
+        parameters: {
+            query: {
+                work_id: string;
+                version_id: string;
+                project?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_workspace_assistance_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PreviewWrite"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    jobs_workspace_assistance_jobs_get: {
+        parameters: {
+            query: {
+                work_id: string;
+                version_id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    submit_workspace_assistance_jobs_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmitWrite"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    job_workspace_assistance_jobs__job_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_workspace_assistance_jobs__job_id___action__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+                action: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */

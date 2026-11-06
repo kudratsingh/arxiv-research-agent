@@ -929,3 +929,9 @@
 /* The active project is a full-width sidebar choice, not a two-column filter. */
 .workspace-app .ws-project-selector { grid-template-columns: minmax(0, 1fr); gap: 8px; }
 .workspace-app .ws-project-selector label { display: grid; gap: 6px; }
+/* D5 deferred reading tools use the existing controller tokens and type. */
+.workspace-app .ws-assistance { display: grid; gap: 16px; min-width: 0; padding-block: 16px; }
+.workspace-app .ws-assistance :is(section, article, fieldset) { min-width: 0; }
+.workspace-app .ws-assistance blockquote { margin: 16px 0; padding-inline-start: 16px; border-inline-start: 2px solid var(--color-signature); overflow-wrap: anywhere; }
+.workspace-app .ws-assistance pre { max-height: 24rem; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+.workspace-app .ws-assistance .workspace-toolbar { flex-wrap: wrap; }

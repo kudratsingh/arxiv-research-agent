@@ -7,6 +7,7 @@ import { contextRequest, errorMessage, readerHref, type LearningThread } from "@
 import { contextHref, useProductContext } from "@/lib/workspace/productContext";
 import { useContextIndex } from "@/lib/workspace/useContextIndex";
 import { SourceReferenceDetails } from "./SourceReferenceDetails";
+import { assistanceResumeHref } from "@/lib/workspace/assistanceLinks";
 const ThreadEditor = lazy(() => loadContextEditors().then(module => ({ default: module.ThreadEditor })));
 export function LiveLearningThread({ id }: { id: string }) {
   return <ThreadScreen key={id} id={id} />;
@@ -35,6 +36,7 @@ function ThreadScreen({ id }: { id: string }) {
       {thread.source && <section className="ws-context-section ws-source-card"><h2>Exact source context</h2><h3>{thread.source.title}</h3><SourceReferenceDetails reference={thread.source} />{thread.source.quote && <blockquote>{thread.source.quote}</blockquote>}
         {thread.source.available ? <Link className="daily-link" href={contextHref(readerHref(thread.source, thread.source.version_id, thread.source.anchor, undefined, contextHref(`/workspace/threads/${thread.id}`, { ...context, mode: "learn", thread: thread.id, explicit: true })), { ...context, mode: "learn", project: null, thread: thread.id, explicit: true })} prefetch={false}>Read this exact prerequisite source →</Link> : <p>This pinned source is unavailable; a newer version has not been substituted.</p>}</section>}
       {thread.data.entry && <section className="ws-context-section"><h2>Linked shared note</h2><p>Later edits are not substituted into this source link.</p><details className="ws-record-details"><summary>Linked note details</summary><p>Linked shared entry {thread.data.entry.entry_id} · exact revision {thread.data.entry.entry_revision}.</p></details></section>}
+      {thread.source && thread.data.entry && assistanceResumeHref(thread.data.entry.entry_id, thread.source, thread.data.origin) && <p><Link className="daily-link" href={assistanceResumeHref(thread.data.entry.entry_id, thread.source, thread.data.origin)!}>Resume saved assistance →</Link> · Local simulation; quality unmeasured.</p>}
       <details className="ws-record-details"><summary>Learning thread details</summary><p>Thread {thread.id} · revision {thread.revision}</p></details>
       <div className="workspace-toolbar"><Link className="daily-link" href={returnHref} prefetch={false} scroll={false}>{origin?.project_id ? "Return to project" : "Return to originating source"}</Link><button type="button" onClick={() => setEdit(true)}>Edit learning thread</button></div>
       {edit && index && <Suspense fallback={<p aria-busy="true">Opening thread editor…</p>}><ThreadEditor owner={index.principal_key_id} thread={thread} origin={thread.data.origin} onCancel={() => setEdit(false)} onReload={() => setRetry(value => value + 1)} onSaved={value => { setThread(value); setEdit(false); }} /></Suspense>}

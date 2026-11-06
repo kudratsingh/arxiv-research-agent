@@ -487,6 +487,12 @@ describe("the committed OpenAPI snapshot", () => {
       "/research/{job_id}/export",
       "/research/{job_id}/review",
       "/research/{job_id}/stream",
+      // D5 adds a separately gated offline contract; the live surface stays pinned.
+      "/workspace/assistance/catalog",
+      "/workspace/assistance/jobs",
+      "/workspace/assistance/jobs/{job_id}",
+      "/workspace/assistance/jobs/{job_id}/{action}",
+      "/workspace/assistance/preview",
       "/workspace/context",
       "/workspace/context/entries",
       "/workspace/context/items",

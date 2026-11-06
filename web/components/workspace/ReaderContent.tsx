@@ -18,9 +18,11 @@ import ReaderQueue from "./ReaderQueue";
 import { parseMaterialAnchor, RetainedSourceReader } from "./RetainedSource";
 import { Message, ServiceNotice } from "./Common";
 import GenerationBoundary from "./GenerationBoundary";
+import { assistanceResumeHref } from "@/lib/workspace/assistanceLinks";
 
 const ReaderContextActions = lazy(() => loadContextEditors().then(module => ({ default: module.ReaderContextActions })));
 const SyntheticWorkbench = lazy(() => import("./SyntheticWorkbench").then(workbench => ({ default: workbench.SyntheticWorkbench })));
+const AssistancePanel = lazy(() => import("./AssistancePanel"));
 
 const emptyDraft = (scope = "abstract"): ReaderDraft => ({
   id: requestId(),
@@ -122,6 +124,7 @@ export default function ReaderContent({
         : "source",
   );
   const [workbenchOpened, setWorkbenchOpened] = useState(initial.fragment === "understand");
+  const [assistanceOpened, setAssistanceOpened] = useState(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).has("assistance"));
   const [draft, setDraft] = useState<ReaderDraft>(initial.draft);
   const [notice, setNotice] = useState(initial.notice);
   const [busy, setBusy] = useState(false);
@@ -793,6 +796,15 @@ export default function ReaderContent({
             <br />
             the source supports.
           </h2>
+          {assistanceOpened ? <Suspense fallback={<p aria-busy="true">Opening assisted reading…</p>}><AssistancePanel
+            key={`${owner}:${material.version_id}:${context.mode}:${context.project ?? ""}`}
+            owner={owner} workId={item.work_id} versionId={material.version_id} returnTo={returnTo}
+            onSource={anchor => {
+              jumpToSource.current = true; setSourceAnchor(anchor); setActive("source");
+              window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}#${encodeURIComponent(anchor)}`);
+              void reading(item.reading.status, anchor);
+            }}
+          /></Suspense> : <button type="button" className="daily-button" onClick={() => setAssistanceOpened(true)}>Open assisted reading · local simulation</button>}
           <p>
             Your current question:{" "}
             {state.profile.data.research_question ||
@@ -941,6 +953,7 @@ export default function ReaderContent({
                   Your {entry.kind.replaceAll("-", " ")}
                 </span>
                 <p>{entry.body}</p>
+                {assistanceResumeHref(entry.id, { work_id: item.work_id, version_id: entry.version_id }, entry.context ?? resumeContext(context, returnTo), returnTo) && <Link className="daily-link" href={assistanceResumeHref(entry.id, { work_id: item.work_id, version_id: entry.version_id }, entry.context ?? resumeContext(context, returnTo), returnTo)!}>Resume saved assistance →</Link>}
                 <p className="workspace-note-context">
                   {entry.version_id} · {entry.anchor} · revision{" "}
                   {entry.revision}

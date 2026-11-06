@@ -1343,4 +1343,7 @@ def create_app(
     from src.workspace.context_routes import router as workspace_context_router
 
     app.include_router(workspace_context_router)
+    from src.workspace.assistance_routes import router as workspace_assistance_router
+
+    app.include_router(workspace_assistance_router)
     return app
