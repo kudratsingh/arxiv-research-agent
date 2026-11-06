@@ -93,6 +93,8 @@ def code_bindings() -> dict[str, str]:
         "d5_freeze.py",
         "d5_benchmark.py",
         "d5_scoring.py",
+        "d5_reviews.py",
+        "d5_review_scoring.py",
         "d5_fixture.py",
         "d5_results.py",
         "d5_routes.py",
@@ -565,6 +567,14 @@ def freeze(
             "human_missing": "HOLD",
             "minimum_feasibility": "7 potentially answerable fresh cases x 6 claims = 42 slots; 20 not guaranteed. Fewer observed facts means HOLD, no added cases.",
             "correlation": "Report by case/source; claims are not independent samples",
+        },
+        "review_policy": {
+            "format": "d5-human-review-v1",
+            "scorer_version": "d5-reviewed-quality-v1",
+            "storage": "Append-only external sidecars; exact original packet/run/output/evidence binding, explicit adjudication, no raw/accounting/approval writes",
+            "missing": "null/UNSCORED/HOLD; failed required provenance cannot be overridden",
+            "checker_denominators": "Conditional on decisive human and machine judgments; abstentions, insufficient and unreviewable labels reported separately",
+            "minimums": "Unchanged scoring thresholds; unique fully reviewed fresh generated facts only, decisive observed probe labels, never assumed negativity",
         },
         "human_rubric": [
             "whole-claim support",

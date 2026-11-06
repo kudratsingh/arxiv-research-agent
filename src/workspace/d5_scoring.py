@@ -108,7 +108,12 @@ def markdown(report: dict[str, Any]) -> str:
         "",
         "Whole-claim support, comparison compatibility, counterevidence, omissions and personal usefulness require independent review. The machine checker and mechanical provenance validator do not supply those labels.",
         "",
-        "Human labels remain blank. Unknown and empty denominators are unscored. No checker qualification or everyday generation is enabled.",
+        (
+            "No review labels have been supplied. Unknown and empty denominators are unscored."
+            if report.get("human_labels") is None
+            else "Supplied review labels are graded separately from mechanical integrity. Inspect their provenance; synthetic labels are not human evidence."
+        )
+        + " No checker qualification or everyday generation is enabled.",
         "",
         "Accounting:",
         "",
@@ -118,4 +123,14 @@ def markdown(report: dict[str, Any]) -> str:
         "",
         "Historical 0/9 aggregate is unchanged. q01 is development; q02–q04 are preserved failures/stops, not replayed here.",
     ]
+    if report.get("quality"):
+        rows += [
+            "",
+            "Review grading (" + report["quality"]["basis"] + "):",
+            "",
+            "```json",
+            __import__("json").dumps(report["quality"], indent=2),
+            "```",
+            "",
+        ]
     return "\n".join(rows) + "\n"

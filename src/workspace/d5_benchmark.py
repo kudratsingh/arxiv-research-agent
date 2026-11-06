@@ -121,22 +121,12 @@ def results(store: WorkspaceStore, packet: dict[str, Any]) -> dict[str, Any]:
                 "basis": "Proposed negative labels are not independent gold; raw machine opinions and scope overrides are distinct",
             }
         )
-    return {
+    report = {
         "packet_digest": packet["packet_digest"],
         "basis": "Quarantined retained-data replay; synthetic transport/counts/usage in offline mode. Mechanical evidence is not semantic qualification or fresh intake.",
         "cases": scores,
         "probe_diagnostics": probes,
-        "denominators": {
-            "fresh_system_cases": 8,
-            "fresh_completed": sum(
-                c["completion"] for c in scores if c["cohort"] == "fresh_system"
-            ),
-            "human_supported_generated_claims": 0,
-            "human_judged_adversarial_items": 0,
-            "known_reference_judgments": 0,
-            "accepted_results": 0,
-            "cost_per_accepted_result": None,
-        },
+        "denominators": {},
         "raw_results": snapshots,
         "accounting": {
             "cumulative": accounting,
@@ -152,6 +142,10 @@ def results(store: WorkspaceStore, packet: dict[str, Any]) -> dict[str, Any]:
         "everyday_generation": False,
         "human_labels": None,
     }
+    from src.workspace.d5_review_scoring import grade_report
+
+    return grade_report(packet, report)
+
 
 
 async def run(

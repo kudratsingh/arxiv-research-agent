@@ -62,6 +62,8 @@ def qualification_producer() -> dict[str, Any]:
         "workspace/d5_freeze.py",
         "workspace/d5_benchmark.py",
         "workspace/d5_scoring.py",
+        "workspace/d5_reviews.py",
+        "workspace/d5_review_scoring.py",
         "workspace/d5_fixture.py",
         "workspace/d5_results.py",
         "workspace/d5_operator.py",
