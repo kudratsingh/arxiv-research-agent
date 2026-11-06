@@ -1,0 +1,112 @@
+
+Running 16 tests using 1 worker
+
+(node:79351) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 [desktop] › live-workspace-e2e/live.spec.ts:38:5 › real Today → source → server-saved question → reload → Library export (2.2s)
+  ✓   2 [desktop] › live-workspace-e2e/live.spec.ts:120:5 › a failed real save retains the draft across reload and permits recovery (869ms)
+  ✓   3 [desktop] › live-workspace-e2e/live.spec.ts:167:5 › real filters, editable interests, honest source receipts and disabled schedule (1.6s)
+  ✓   4 [desktop] › live-workspace-e2e/live.spec.ts:221:5 › keyboard-only source-to-question flow keeps the real server record (596ms)
+  ✘   5 [desktop] › live-workspace-e2e/live.spec.ts:269:5 › editing an earlier question becomes latest activity, pins its exact version and returns to the Library view (12.2s)
+  -   6 [desktop] › live-workspace-e2e/live.spec.ts:428:5 › a frozen candidate review stays unlabelled until an explicit verification judgment is saved
+  -   7 [desktop] › live-workspace-e2e/live.spec.ts:508:5 › an explicit synthetic request uses only selected retained text and exposes its zero-dollar checkpoint
+(node:79492) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   8 [desktop] › live-workspace-e2e/readiness.spec.ts:5:5 › Today puts the saved thread and first reading item within reach (417ms)
+(node:79512) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   9 [mobile] › live-workspace-e2e/live.spec.ts:38:5 › real Today → source → server-saved question → reload → Library export (1.7s)
+  ✓  10 [mobile] › live-workspace-e2e/live.spec.ts:120:5 › a failed real save retains the draft across reload and permits recovery (726ms)
+  ✓  11 [mobile] › live-workspace-e2e/live.spec.ts:167:5 › real filters, editable interests, honest source receipts and disabled schedule (1.5s)
+  ✓  12 [mobile] › live-workspace-e2e/live.spec.ts:221:5 › keyboard-only source-to-question flow keeps the real server record (544ms)
+  ✘  13 [mobile] › live-workspace-e2e/live.spec.ts:269:5 › editing an earlier question becomes latest activity, pins its exact version and returns to the Library view (11.4s)
+  -  14 [mobile] › live-workspace-e2e/live.spec.ts:428:5 › a frozen candidate review stays unlabelled until an explicit verification judgment is saved
+  -  15 [mobile] › live-workspace-e2e/live.spec.ts:508:5 › an explicit synthetic request uses only selected retained text and exposes its zero-dollar checkpoint
+(node:79616) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  16 [mobile] › live-workspace-e2e/readiness.spec.ts:5:5 › Today puts the saved thread and first reading item within reach (427ms)
+
+
+  1) [desktop] › live-workspace-e2e/live.spec.ts:269:5 › editing an earlier question becomes latest activity, pins its exact version and returns to the Library view
+
+    Error: expect(locator).toHaveAttribute(expected) failed
+
+    Locator:  getByRole('link', { name: '← Library', exact: true })
+    Expected: "/workspace/library?view=notes&focus=ci%3Aworkspace-feed-excerpt"
+    Received: "/workspace/library?view=notes&focus=ci%3Aworkspace-agent-evaluation"
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toHaveAttribute" with timeout 10000ms
+      - waiting for getByRole('link', { name: '← Library', exact: true })
+        24 × locator resolved to <a class="daily-link" href="/workspace/library?view=notes&focus=ci%3Aworkspace-agent-evaluation">← Library</a>
+           - unexpected value "/workspace/library?view=notes&focus=ci%3Aworkspace-agent-evaluation"
+
+
+      373 |       "is saved on the server",
+      374 |     );
+    > 375 |     await expect(page.getByRole("link", { name: "← Library", exact: true })).toHaveAttribute("href", libraryReturn.pathname + libraryReturn.search);
+          |                                                                              ^
+      376 |     await page.getByRole("link", { name: "← Library", exact: true }).click();
+      377 |     await expect(page).toHaveURL(libraryReturn.href);
+      378 |     await openControls(page);
+        at /private/tmp/arxiv-agent-eng-workspace-mode-build/web/live-workspace-e2e/live.spec.ts:375:78
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    build/workspace-live/test-results/live-editing-an-earlier-qu-e85a7-returns-to-the-Library-view-desktop/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: build/workspace-live/test-results/live-editing-an-earlier-qu-e85a7-returns-to-the-Library-view-desktop/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    build/workspace-live/test-results/live-editing-an-earlier-qu-e85a7-returns-to-the-Library-view-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace build/workspace-live/test-results/live-editing-an-earlier-qu-e85a7-returns-to-the-Library-view-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [mobile] › live-workspace-e2e/live.spec.ts:269:5 › editing an earlier question becomes latest activity, pins its exact version and returns to the Library view
+
+    Error: expect(locator).toHaveAttribute(expected) failed
+
+    Locator:  getByRole('link', { name: '← Library', exact: true })
+    Expected: "/workspace/library?view=notes&focus=ci%3Aworkspace-feed-excerpt"
+    Received: "/workspace/library?view=notes&focus=ci%3Aworkspace-agent-evaluation"
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toHaveAttribute" with timeout 10000ms
+      - waiting for getByRole('link', { name: '← Library', exact: true })
+        24 × locator resolved to <a class="daily-link" href="/workspace/library?view=notes&focus=ci%3Aworkspace-agent-evaluation">← Library</a>
+           - unexpected value "/workspace/library?view=notes&focus=ci%3Aworkspace-agent-evaluation"
+
+
+      373 |       "is saved on the server",
+      374 |     );
+    > 375 |     await expect(page.getByRole("link", { name: "← Library", exact: true })).toHaveAttribute("href", libraryReturn.pathname + libraryReturn.search);
+          |                                                                              ^
+      376 |     await page.getByRole("link", { name: "← Library", exact: true }).click();
+      377 |     await expect(page).toHaveURL(libraryReturn.href);
+      378 |     await openControls(page);
+        at /private/tmp/arxiv-agent-eng-workspace-mode-build/web/live-workspace-e2e/live.spec.ts:375:78
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    build/workspace-live/test-results/live-editing-an-earlier-qu-e85a7-returns-to-the-Library-view-mobile/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: build/workspace-live/test-results/live-editing-an-earlier-qu-e85a7-returns-to-the-Library-view-mobile/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    build/workspace-live/test-results/live-editing-an-earlier-qu-e85a7-returns-to-the-Library-view-mobile/trace.zip
+    Usage:
+
+        npx playwright show-trace build/workspace-live/test-results/live-editing-an-earlier-qu-e85a7-returns-to-the-Library-view-mobile/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2 failed
+    [desktop] › live-workspace-e2e/live.spec.ts:269:5 › editing an earlier question becomes latest activity, pins its exact version and returns to the Library view
+    [mobile] › live-workspace-e2e/live.spec.ts:269:5 › editing an earlier question becomes latest activity, pins its exact version and returns to the Library view
+  4 did not run
+  10 passed (36.2s)

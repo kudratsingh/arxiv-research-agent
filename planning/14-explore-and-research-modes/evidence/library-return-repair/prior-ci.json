@@ -1,0 +1,55 @@
+{
+  "head": "ff516640ece4e2dd9535bd095c1e8b7b6c690b33",
+  "url": "https://github.com/kudratsingh/arxiv-research-agent/actions/runs/42146309700",
+  "conclusion": "failure",
+  "jobs": [
+    {
+      "name": "web dependency audit",
+      "conclusion": "success",
+      "url": "https://github.com/kudratsingh/arxiv-research-agent/actions/runs/42146309700/job/127658518101"
+    },
+    {
+      "name": "docker build",
+      "conclusion": "success",
+      "url": "https://github.com/kudratsingh/arxiv-research-agent/actions/runs/42146309700/job/127658518271"
+    },
+    {
+      "name": "lint (ruff)",
+      "conclusion": "success",
+      "url": "https://github.com/kudratsingh/arxiv-research-agent/actions/runs/42146309700/job/127658518362"
+    },
+    {
+      "name": "mypy (strict, src/)",
+      "conclusion": "success",
+      "url": "https://github.com/kudratsingh/arxiv-research-agent/actions/runs/42146309700/job/127658518398"
+    },
+    {
+      "name": "web (typecheck + lint + test + build)",
+      "conclusion": "success",
+      "url": "https://github.com/kudratsingh/arxiv-research-agent/actions/runs/42146309700/job/127658518410"
+    },
+    {
+      "name": "web e2e (full matrix + axe)",
+      "conclusion": "failure",
+      "url": "https://github.com/kudratsingh/arxiv-research-agent/actions/runs/42146309700/job/127658518435"
+    },
+    {
+      "name": "web image smoke",
+      "conclusion": "success",
+      "url": "https://github.com/kudratsingh/arxiv-research-agent/actions/runs/42146309700/job/127658518447"
+    },
+    {
+      "name": "web storybook (static build + story tests)",
+      "conclusion": "success",
+      "url": "https://github.com/kudratsingh/arxiv-research-agent/actions/runs/42146309700/job/127658518564"
+    },
+    {
+      "name": "pytest (all tiers + coverage)",
+      "conclusion": "success",
+      "url": "https://github.com/kudratsingh/arxiv-research-agent/actions/runs/42146309700/job/127658518578"
+    }
+  ],
+  "browser_failure": "Cross-paper Library link mutated its own return_to during click capture; reproduced on both widths. Existing live assertions unchanged.",
+  "classic_browser_suite": "Passed with one existing Pixel7 initial attempt retried under existing CI retry policy",
+  "first_run": "42143933569 interrupted/cancelled; cancellation endpoints returned502; no broader outage inferred"
+}

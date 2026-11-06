@@ -1,34 +1,34 @@
 {
-  "verified_application_commit": "62c761a9c7b690e0b681857fe48edc75d3785ef6",
+  "verified_application_commit": "b261ddc5e0e034438a4dcc90bbbcb0ca42c76de3",
   "publication_head": "Resolve published branch head; exact-head GitHub CI linked in final checkpoint",
-  "build_id": "T8_ju09AUeIr5jhzAjpoG",
+  "build_id": "PwbeWv0RU7h8JGqumje0V",
   "tests": 4217,
   "suites": 216,
   "skipped": 0,
   "coverage": {
     "lines": {
-      "total": 5053,
-      "covered": 5026,
+      "total": 5049,
+      "covered": 5024,
       "skipped": 0,
-      "pct": 99.46
+      "pct": 99.5
     },
     "statements": {
-      "total": 6478,
-      "covered": 6363,
+      "total": 6471,
+      "covered": 6355,
       "skipped": 0,
-      "pct": 98.22
+      "pct": 98.2
     },
     "functions": {
-      "total": 2260,
+      "total": 2258,
       "covered": 2120,
       "skipped": 0,
-      "pct": 93.8
+      "pct": 93.88
     },
     "branches": {
-      "total": 5814,
-      "covered": 5479,
+      "total": 5808,
+      "covered": 5476,
       "skipped": 0,
-      "pct": 94.23
+      "pct": 94.28
     },
     "branchesTrue": {
       "total": 0,
@@ -55,12 +55,13 @@
   "legacy_live": {
     "passed": 16,
     "skipped": 0,
-    "source_scope": "Separate real local Postgres/API with retained public works and captured Nov3 receipts, plus clearly labelled software fixtures; no current source/provider requests"
+    "retries": 0,
+    "source_scope": "Exact checked-in three-work synthetic CI seed on separate real Postgres/API; no source/provider contacts"
   },
   "new_runtime_dependencies": 0,
-  "remote_ci": "Separate exact-published-head workflow, not inferred from local gates",
-  "browser_acceptance": "96/96 +restart at cea881e; CSS-only62c761a passes64 route axes +4 readable journeys +4 native motion captures",
-  "incomplete_runs": "Five build-dependent tests skipped during concurrent build; original log preserved and superseded by the complete stable-build run.",
+  "remote_ci": "Prior ff51664:8 jobs pass/1 browser failure; fix published for a separate exact-head run. Final owner checkpoint provides result/link.",
+  "browser_acceptance": "b261ddc: unchanged16/16 exact CI fixture;64/64 route/theme/width/motion/axe;4 readable journeys and4 neutral captures. Earlier96-case mutation/restart remains attributed to cea881e.",
+  "incomplete_runs": "Earlier concurrent-build and pre-fix failure cohorts retained; full stable coverage run4217/4217 no skips.",
   "logs": {
     "budgets.log": "1ea1245676e4ffc063100bd335ac477761eab48055de7c9862b8862c686726a3",
     "documented-claims-publication-normal-access.log": "77d4b2633424b3ba80a32c645ff8eec5c4b9d86b06588d11b12e55aa261fb208",
@@ -81,7 +82,20 @@
     "route-and-retained-material-tests.log": "32840681a28fe078d455b7b9744e5ebd9fc1632fe0023ab826225be37a2b18e8",
     "route-budgets.log": "767732bdf3ed12f5d8cc93d8c24c35cb9096ce0cdef46ec4e6a85678cc57607e",
     "sandbox-healthcheck-denied.log": "d24135e5eb332c99b1e0bf149d8842d213bb7a0668e9a1845461eb68f36f7415",
-    "typecheck.log": "384572031aba9897e82b5c532c0ed616773f40b35c2cd6b063760667e7428438"
+    "typecheck.log": "384572031aba9897e82b5c532c0ed616773f40b35c2cd6b063760667e7428438",
+    "../library-return-repair/unit-red.log": "7c3bb30f2872b6dbb5ba41d5861ae24bd31226fe89ccab7d792b45c8d025b430",
+    "../library-return-repair/unit-green.log": "695f16283ead5cc87893dd1ac6db482cfe3a053a701da190ce99a0ecfb7ee0e0",
+    "../library-return-repair/live-red.log": "c67af189fbf0ffee981bf7851817bbf994a729f2728df6b156c491eb7cff8f5a",
+    "../library-return-repair/live-green.log": "8a25b38c845bdaf989f4c4edeafa25b5898c502fc02c4b6debbfd97445e6e950",
+    "../library-return-repair/frontend-coverage.log": "c6db98cbce82f669fcda11ead958c631487568f5ce605b65de4ebf0a851e7800",
+    "../library-return-repair/lint.log": "477edbab4d628690874271246cf83cc8273de7151a0bf06e8d242216380c3fef",
+    "../library-return-repair/typecheck.log": "384572031aba9897e82b5c532c0ed616773f40b35c2cd6b063760667e7428438",
+    "../library-return-repair/build.log": "bc49e8e07b9595396086b0a1117fd15823caf38a4899473d61179c6de1909d15",
+    "../library-return-repair/budgets.log": "6c4e838b74cc54e8cb13e04ff94b6a7c324bb736550dc8c6c5ae790ceb1b781a",
+    "../library-return-repair/geometry-axe.log": "5900400804bd7637ab531cdcd84517b3e6874a5daf809ab26bd3b89972cad0be",
+    "../library-return-repair/readable-journeys.log": "dec523567e9fd18266b1c4868a8ea54ab786925af1171122acbb92aca396f209",
+    "../library-return-repair/motion.log": "163d600d77e82bea455d155d82faaf0a96eea015089986bc2e38a230f69b6a31",
+    "../library-return-repair/python-patch-coverage.log": "0391e3b75562f661c792c1b5efc17cf0c78e6e38cff53e8a3cc2217a893863b5"
   },
   "logs_original_hashes": {
     "budgets.log": "1ea1245676e4ffc063100bd335ac477761eab48055de7c9862b8862c686726a3",

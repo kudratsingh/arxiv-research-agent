@@ -1,7 +1,7 @@
 # Explore & Learn and Research
 
 Owner-adopted product direction, recorded **2026-11-04 America/Los_Angeles**.
-Status: **D0–D4 verified locally at application62c761a; exact-head CI separately linked; D5 gated**.
+Status: **D0–D4 verified locally at applicationb261ddc; exact-head CI separately linked; D5 gated**.
 
 The workspace will have two main modes sharing one Library, Reader, source
 identity system and durable personal records. Explore & Learn supports daily

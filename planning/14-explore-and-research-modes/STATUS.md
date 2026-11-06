@@ -1,10 +1,48 @@
 # Two-mode implementation status
 
 Updated **2026-11-06 UTC / November 5 Pacific**. D0–D4 are implemented and
-verified locally. Application **`62c761a9c7b690e0b681857fe48edc75d3785ef6`**;
-immutable production build **`T8_ju09AUeIr5jhzAjpoG`**. Publication and exact-head remote CI are independently visible in the
+verified locally. Application **`b261ddc5e0e034438a4dcc90bbbcb0ca42c76de3`**;
+immutable production build **`PwbeWv0RU7h8JGqumje0V`**. Publication and exact-head remote CI are independently visible in the
 [branch workflow record](https://github.com/kudratsingh/arxiv-research-agent/actions/workflows/ci.yml?query=branch%3Acodex%2Fworkspace-modes-d0-d4); the final owner checkpoint identifies the published SHA/run. Owner experience review
 and D5 grounded assistance remain pending.
+
+## Publication repair and final application cohort
+
+Application `b261ddc` fixes a real Library click-capture race found by exact-head
+CI on publication `ff51664`. A cross-paper notebook click updated the focus cache
+during capture, rerendering its advertised href before Next read it. The fix
+leaves explicit queue selection in charge of Library focus and preserves the
+launching view/focus, clicked source/version/passage and exact return destination.
+The old unit test codified implicit promotion; its replacement pins the unchanged
+advertised destination, exact version/anchor, account/view cache and remount.
+No existing live assertion, timeout, coverage floor or request body was weakened.
+
+The exact three-work CI fixture reproduced the old failure on both desktop and
+mobile (10 passed,2 failed,4 serial dependents unrun). With the fix the unchanged
+full live suite passes **16/16**, no retries/skips. The earlier40-work local pass
+had not exposed the different-paper focus case; both cohorts remain recorded.
+
+Final pre-push Python gate:6,318passed,54inherited skips,53separate-tier
+deselections,98%patch. [Repair evidence](evidence/library-return-repair/README.md)
+records commands, red/green proof and source attribution.
+
+Final app `b261ddc`: **4,217/4,217 tests,216 files,zero skips**; coverage
+statements98.20%, branches94.28%, functions93.88%, lines99.50%. Lint/typecheck,
+production build and22/22 budgets pass, with no ceiling changes. CSS24,688/25,600B;
+Library168,997/169,984B; Projects169,959/169,984B. The final app also passes all
+64 route/theme/width/motion geometry and axe observations, and four fresh readable
+example journeys/recordings. Source bindings and originals are retained separately
+from the earlier62c761a and96-case mutation/restart cohorts.
+
+Remote `ff51664` run [42146309700](https://github.com/kudratsingh/arxiv-research-agent/actions/runs/42146309700)
+finished **8 successful jobs /1 failed browser job**. Python all tiers/coverage,
+package/patch gates, simulation, web build/coverage/budgets and all other jobs
+passed. The browser job's classic multi-browser suite passed (one existing Pixel7
+attempt retried); its durable workspace step exposed the race above. Earlier run
+42143933569 was interrupted/cancelled and returned502 to cancellation attempts;
+its state is retained without claiming a wider service outage. A new exact-head
+workflow is required for this fixed publication; final result/URL is reported
+in the owner checkpoint, not inferred from local results.
 
 ## Current gate table
 

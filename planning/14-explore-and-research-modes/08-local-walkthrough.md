@@ -104,7 +104,7 @@ its static assets. The final status records the exact command and runtime path.
 Exact recorded frontend invocation (only when3178 is free):
 
 ```bash
-MODE_RUNTIME="$PWD/outputs/modes-runtime/T8_ju09AUeIr5jhzAjpoG"
+MODE_RUNTIME="$PWD/outputs/modes-runtime/PwbeWv0RU7h8JGqumje0V"
 MODE_LOCAL_KEY="$(cat outputs/modes-d0/.workspace-api-key)"
 cd "$MODE_RUNTIME"
 ANTHROPIC_API_KEY=local-preview-disabled USE_MOCK_DATA=true \
@@ -157,7 +157,7 @@ this question → Source context. The last action opens the exact passage; the
 saved-question resume intentionally opens the question first.
 
 Full readable recordings are local under
-`evidence/d1-d4-browser/owner-walkthrough/62c761a/{desktop,mobile}-{light,dark}/connected-example.webm`.
+`evidence/d1-d4-browser/owner-walkthrough/b261ddc/{desktop,mobile}-{light,dark}/connected-example.webm`.
 They include the copied personal profile and are omitted from remote publication.
 Committed [browser evidence](evidence/d1-d4-browser/README.md) includes labelled
 example screenshots, exact request/source receipts and neutral navigation clips.

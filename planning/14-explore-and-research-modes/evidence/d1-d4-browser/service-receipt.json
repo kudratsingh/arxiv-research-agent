@@ -1,11 +1,11 @@
 {
   "runtimeReady": true,
-  "applicationCommit": "62c761a9c7b690e0b681857fe48edc75d3785ef6",
-  "webTree": "cae68589fe84b545d6049659388bbf7b91215128",
-  "buildId": "T8_ju09AUeIr5jhzAjpoG",
+  "applicationCommit": "b261ddc5e0e034438a4dcc90bbbcb0ca42c76de3",
+  "webTree": "4e140f730929fe000ed44cb0c2b389c001d058d7",
+  "buildId": "PwbeWv0RU7h8JGqumje0V",
   "frontendBase": "http://127.0.0.1:3179",
   "apiPort": 8179,
-  "frontendPid": 51536,
+  "frontendPid": 81897,
   "apiPid": 49909,
   "database": "workspace_modes_browser",
   "principal": "modes-browser-r15",
@@ -16,7 +16,7 @@
   "allowLegacyProfileWrites": false,
   "expectedWorks": 42,
   "expectedVersions": 44,
-  "locatorContractReviewedAtSourceCommit": "62c761a9c7b690e0b681857fe48edc75d3785ef6",
+  "locatorContractReviewedAtSourceCommit": "b261ddc5e0e034438a4dcc90bbbcb0ca42c76de3",
   "corpusManifestSha256": "d9c1e54b28379845f8f408f32cb2b563895fec065d851b1958689b9ee5381499",
   "unicodeReference": {
     "work_id": "verification:unicode-boundaries",
@@ -43,7 +43,7 @@
   },
   "notes": "Immutable production runtime with both static and server bundles byte-matched to the build. Later test/documentation-only commits are distinguished from application changes. Root owns browser execution after designated agent usage limit. No provider/source routes permitted.",
   "unownedProjectId": "project-88888888888888888888888888888888",
-  "runtimeDirectory": "/private/tmp/arxiv-agent-eng-workspace-mode-build/outputs/modes-runtime/T8_ju09AUeIr5jhzAjpoG",
+  "runtimeDirectory": "/private/tmp/arxiv-agent-eng-workspace-mode-build/outputs/modes-runtime/PwbeWv0RU7h8JGqumje0V",
   "corpusManifestPath": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/corpus-manifest.json",
   "restartCheckpointReceipt": "planning/14-explore-and-research-modes/evidence/d1-d4-browser/runs/2026-11-06T00-48-43-041Z-9c42c3d7/root-restart-receipt.json"
 }

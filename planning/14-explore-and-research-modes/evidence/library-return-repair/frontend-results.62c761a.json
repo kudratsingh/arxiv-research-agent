@@ -1,0 +1,109 @@
+{
+  "verified_application_commit": "62c761a9c7b690e0b681857fe48edc75d3785ef6",
+  "publication_head": "Resolve published branch head; exact-head GitHub CI linked in final checkpoint",
+  "build_id": "T8_ju09AUeIr5jhzAjpoG",
+  "tests": 4217,
+  "suites": 216,
+  "skipped": 0,
+  "coverage": {
+    "lines": {
+      "total": 5053,
+      "covered": 5026,
+      "skipped": 0,
+      "pct": 99.46
+    },
+    "statements": {
+      "total": 6478,
+      "covered": 6363,
+      "skipped": 0,
+      "pct": 98.22
+    },
+    "functions": {
+      "total": 2260,
+      "covered": 2120,
+      "skipped": 0,
+      "pct": 93.8
+    },
+    "branches": {
+      "total": 5814,
+      "covered": 5479,
+      "skipped": 0,
+      "pct": 94.23
+    },
+    "branchesTrue": {
+      "total": 0,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 100
+    }
+  },
+  "floors": {
+    "statements": 98.15,
+    "branches": 94,
+    "functions": 93.4,
+    "lines": 99.11
+  },
+  "floor_changes": {
+    "functions": {
+      "from": 92.2,
+      "to": 93.4,
+      "reason": "Existing documented-count freshness policy requires the measured record and floor headroom to stay within half a point; upward ratchet only"
+    }
+  },
+  "coverage_inputs_exclusions_tiers_unchanged": true,
+  "budgets_passed": 22,
+  "legacy_live": {
+    "passed": 16,
+    "skipped": 0,
+    "source_scope": "Separate real local Postgres/API with retained public works and captured Nov3 receipts, plus clearly labelled software fixtures; no current source/provider requests"
+  },
+  "new_runtime_dependencies": 0,
+  "remote_ci": "Separate exact-published-head workflow, not inferred from local gates",
+  "browser_acceptance": "96/96 +restart at cea881e; CSS-only62c761a passes64 route axes +4 readable journeys +4 native motion captures",
+  "incomplete_runs": "Five build-dependent tests skipped during concurrent build; original log preserved and superseded by the complete stable-build run.",
+  "logs": {
+    "budgets.log": "1ea1245676e4ffc063100bd335ac477761eab48055de7c9862b8862c686726a3",
+    "documented-claims-publication-normal-access.log": "77d4b2633424b3ba80a32c645ff8eec5c4b9d86b06588d11b12e55aa261fb208",
+    "documented-claims-publication.log": "ba75531af8507c66a12b2898871842a4ee46a8d2912220074959f7e9a1605aad",
+    "existing-live16.log": "13e20531a5138aedbaafdeddc0ebc1d6de3cc351ce11d0132512b3e5087bb32a",
+    "focused-polish.log": "09d1959940742237ecffff4d7399b67a4bd45da500fbbac4ceb0f2c1dde8755b",
+    "full-coverage-final.log": "16923f246568d05e745e3fa7a83e93b1ae70e957c619a134992814ad740fcc65",
+    "full-frontend-coverage.log": "4db3f172aa26223bc6cc47e03fa7e513c0b57862eedc1a014b4bcc45fbbb620d",
+    "incomplete-concurrent-build-coverage.log": "e6d806a01691f223e98c54e0c92e097dd4ad3ac6747017fd53e0ff88b842157e",
+    "legacy-live.log": "3cb3314be13e8fa28df456532c60dbb279133551b40d1e70d0e38894cdf04488",
+    "library-return-fixed.log": "21c9ee1c23c94f0b591d9e41d4da99dc2f7019060bb9325789faef0778d992da",
+    "library-return-reproduced.log": "321cfaa324db19bb4272b0c835810906b8994aca8d2401fb5668fcf6fd578296",
+    "lint.log": "477edbab4d628690874271246cf83cc8273de7151a0bf06e8d242216380c3fef",
+    "no-owned-snapshot-test.log": "ca5cae0ad9867d45ae1df11020e7de5e6d238f397726c85d079ca2707f11f7d0",
+    "production-build.log": "44a9e1af6a5008f4339f951e1a2d10f24abdc671f026f466680bf53400e7eb8c",
+    "radar-binding-fixed.log": "45a6a5f15c24c908570975ec9dc8968f1878f5fa8c2cbf1efc114c367fe9b211",
+    "radar-binding-reproduced.log": "83ec18fa12c985434cf1c8d90008f765dd9bf53e9b7d21a21a3c038f49eeb6a1",
+    "route-and-retained-material-tests.log": "32840681a28fe078d455b7b9744e5ebd9fc1632fe0023ab826225be37a2b18e8",
+    "route-budgets.log": "767732bdf3ed12f5d8cc93d8c24c35cb9096ce0cdef46ec4e6a85678cc57607e",
+    "sandbox-healthcheck-denied.log": "d24135e5eb332c99b1e0bf149d8842d213bb7a0668e9a1845461eb68f36f7415",
+    "typecheck.log": "384572031aba9897e82b5c532c0ed616773f40b35c2cd6b063760667e7428438"
+  },
+  "logs_original_hashes": {
+    "budgets.log": "1ea1245676e4ffc063100bd335ac477761eab48055de7c9862b8862c686726a3",
+    "documented-claims-publication-normal-access.log": "77d4b2633424b3ba80a32c645ff8eec5c4b9d86b06588d11b12e55aa261fb208",
+    "documented-claims-publication.log": "ba75531af8507c66a12b2898871842a4ee46a8d2912220074959f7e9a1605aad",
+    "existing-live16.log": "13e20531a5138aedbaafdeddc0ebc1d6de3cc351ce11d0132512b3e5087bb32a",
+    "focused-polish.log": "2da38f7511323467c736c0f4debd82973cafc317333003a766fd96edd78cd3d7",
+    "full-coverage-final.log": "ed2ea1ab3423800c15af8e63227ab2d4e1c1d55d3b7829eddb77ee4d202fa286",
+    "full-frontend-coverage.log": "dc23e35afdfc4589d429793148e362d9ff530bb3c7a59bb693466c530bbb4d92",
+    "incomplete-concurrent-build-coverage.log": "bcb6c675aa7adf341cda2f0b06d4ab6d5ddaa634362b86ed338d9d5cef27197d",
+    "legacy-live.log": "3cb3314be13e8fa28df456532c60dbb279133551b40d1e70d0e38894cdf04488",
+    "library-return-fixed.log": "d2380b5fae42c07a136a13368282dafc29adefc6884f012982b6ed44cca58a3c",
+    "library-return-reproduced.log": "c2fbceb85c05d8bc2f4eaf694e19a55e1bef6d5a5cdbd92c175fd9cbcf0db859",
+    "lint.log": "3abf1d9178e65389b228b48abcf35554976381024c89ace777f11f80205faf37",
+    "no-owned-snapshot-test.log": "5966230e4cf4329d5111d50b5fab347ec9dfc7a712f45af9da3c85ace471b5be",
+    "production-build.log": "f7f44421de66d8be9640a8b87e4d13723db23d76b21bfe25c4943a859199a8c9",
+    "radar-binding-fixed.log": "377a795c7886612f3d67b1a0f7bc09828ff4350861f99ea4125733e0ad5885f5",
+    "radar-binding-reproduced.log": "592aafc24adeb5e342a5e7d43333ebcf81e8e5a747d980cd3292459f53aa3368",
+    "route-and-retained-material-tests.log": "e14b491c53adb2b10c9f7016bfc4792953e23781174b891bdb26c5e687e20d12",
+    "route-budgets.log": "767732bdf3ed12f5d8cc93d8c24c35cb9096ce0cdef46ec4e6a85678cc57607e",
+    "sandbox-healthcheck-denied.log": "ae03aa61077e8981291270cfb401178460ac15cd9b6e666a0a80be16fe8659cb",
+    "typecheck.log": "a7d3e417b6cd1706638232a0866a3d00e29d67d337e100e7c609cec19e0c149d"
+  },
+  "log_display_policy": "Whitespace-normalized display; originals in paired .raw.gz, indexed by evidence/log-originals.json"
+}

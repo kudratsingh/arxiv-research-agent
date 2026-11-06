@@ -1,3 +1,15 @@
+# Final frontend verification
+
+Final application **b261ddc** passes4,217tests/216files with zero skips. Coverage:
+statements98.20%, branches94.28%, functions93.88%, lines99.50%; all existing floors
+unchanged. Lint/typecheck, production build and22budgets pass. The unchanged
+16-case real API/Postgres live suite now passes on the exact three-work CI seed
+after reproducing and fixing its cross-paper Library race. Fresh64route/axe
+observations and4 readable recorded journeys pass. See [repair evidence](../library-return-repair/README.md).
+
+The following preserves the preceding application cohort. Remote CI remains a
+separate exact-published-head result in the final checkpoint.
+
 # Frontend verification
 
 Final application62c761a: **4,217 tests /216 files, zero skips**, combined Vitest

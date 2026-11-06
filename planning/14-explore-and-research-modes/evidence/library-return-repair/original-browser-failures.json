@@ -1,0 +1,121 @@
+{
+  "scope": "Unmodified old-build traces/screenshots retained locally; synthetic CI seed, isolated principal",
+  "application": "62c761a9c7b690e0b681857fe48edc75d3785ef6",
+  "files": [
+    {
+      "local_path": "outputs/modes-d0/ci-click-browser-red-artifacts/.last-run.json",
+      "bytes": 145,
+      "sha256": "4e54a5d3e009194429b43bb69603c2d9d1c105a9106eff543889b2a01c039b77"
+    },
+    {
+      "local_path": "outputs/modes-d0/ci-click-browser-red-artifacts/live-editing-an-earlier-qu-e85a7-returns-to-the-Library-view-desktop/error-context.md",
+      "bytes": 10918,
+      "sha256": "11444c2d8d1a3faa76da5322bc9f54ff29a457be6d87fa9e5fda165c0b5137a2"
+    },
+    {
+      "local_path": "outputs/modes-d0/ci-click-browser-red-artifacts/live-editing-an-earlier-qu-e85a7-returns-to-the-Library-view-desktop/test-failed-1.png",
+      "bytes": 139430,
+      "sha256": "2261b52220f8e85f0bae6141545ada03013833d375f0c6a694925bff09f8bf39"
+    },
+    {
+      "local_path": "outputs/modes-d0/ci-click-browser-red-artifacts/live-editing-an-earlier-qu-e85a7-returns-to-the-Library-view-desktop/trace.zip",
+      "bytes": 2984970,
+      "sha256": "1141c49d76caf73c52d4845a5df9d3af46ee47298b1cba338788c90d5eb51bae"
+    },
+    {
+      "local_path": "outputs/modes-d0/ci-click-browser-red-artifacts/live-editing-an-earlier-qu-e85a7-returns-to-the-Library-view-mobile/error-context.md",
+      "bytes": 10918,
+      "sha256": "11444c2d8d1a3faa76da5322bc9f54ff29a457be6d87fa9e5fda165c0b5137a2"
+    },
+    {
+      "local_path": "outputs/modes-d0/ci-click-browser-red-artifacts/live-editing-an-earlier-qu-e85a7-returns-to-the-Library-view-mobile/test-failed-1.png",
+      "bytes": 40604,
+      "sha256": "b5a8d02a5e61f69c4ac6949f3f7c1a76f22468fb9ade9b409c157084003fbb50"
+    },
+    {
+      "local_path": "outputs/modes-d0/ci-click-browser-red-artifacts/live-editing-an-earlier-qu-e85a7-returns-to-the-Library-view-mobile/trace.zip",
+      "bytes": 1572888,
+      "sha256": "dca03ec9ad3320ddd59fa98d9f911c0b88fa0389a5a228ccbfd4c0eca073036b"
+    },
+    {
+      "local_path": "outputs/modes-d0/ci-click-browser-red-artifacts/live-real-Today-\u2192-source-\u2192-513ec-n-\u2192-reload-\u2192-Library-export-desktop/notes.md",
+      "bytes": 552,
+      "sha256": "0fdb15c30c5b029e47b55b9e2e8af19449d7e0b5207aba7c6743e8ed855a64c2"
+    },
+    {
+      "local_path": "outputs/modes-d0/ci-click-browser-red-artifacts/live-real-Today-\u2192-source-\u2192-513ec-n-\u2192-reload-\u2192-Library-export-desktop/reader-notes.png",
+      "bytes": 134248,
+      "sha256": "34eff9a8cf8eb5aac8524d01130b87539c20077199a2a416b7971aaec3f894dd"
+    },
+    {
+      "local_path": "outputs/modes-d0/ci-click-browser-red-artifacts/live-real-Today-\u2192-source-\u2192-513ec-n-\u2192-reload-\u2192-Library-export-desktop/today.png",
+      "bytes": 189621,
+      "sha256": "be9d2edd3450a57689ba4a450308bdfe777ad630f75aaa6d3da90340f18659e2"
+    },
+    {
+      "local_path": "outputs/modes-d0/ci-click-browser-red-artifacts/live-real-Today-\u2192-source-\u2192-513ec-n-\u2192-reload-\u2192-Library-export-mobile/notes.md",
+      "bytes": 1696,
+      "sha256": "543d820505076e0f074e0bd1176e5b958a1a929f9cc2bbf752eebfa48673179e"
+    },
+    {
+      "local_path": "outputs/modes-d0/ci-click-browser-red-artifacts/live-real-Today-\u2192-source-\u2192-513ec-n-\u2192-reload-\u2192-Library-export-mobile/reader-notes.png",
+      "bytes": 158039,
+      "sha256": "6b5afd5e839748af122b8913c3021324a9c04b1413334e1e65d59645b1739741"
+    },
+    {
+      "local_path": "outputs/modes-d0/ci-click-browser-red-artifacts/live-real-Today-\u2192-source-\u2192-513ec-n-\u2192-reload-\u2192-Library-export-mobile/today.png",
+      "bytes": 108176,
+      "sha256": "2907b7a573ce47d5596454d503edfb47b4572a9539a69ab5d4e532a68889a8c9"
+    },
+    {
+      "local_path": "outputs/modes-d0/ci-click-browser-red-artifacts/live-real-filters-editable-6870f-eipts-and-disabled-schedule-desktop/interests.png",
+      "bytes": 175713,
+      "sha256": "4a45f3fadda63df9640636ef31a38c6f5e0727892992721714cb66c7e5e1f8ad"
+    },
+    {
+      "local_path": "outputs/modes-d0/ci-click-browser-red-artifacts/live-real-filters-editable-6870f-eipts-and-disabled-schedule-desktop/operations.png",
+      "bytes": 156612,
+      "sha256": "20cafaf1bfb8d7212604619ef132331aa90ecbe609c9f18ad2c124dbe1602338"
+    },
+    {
+      "local_path": "outputs/modes-d0/ci-click-browser-red-artifacts/live-real-filters-editable-6870f-eipts-and-disabled-schedule-desktop/radar.png",
+      "bytes": 150481,
+      "sha256": "efcf62d4e13251730bf82c2a5ba9148d70a142326e02ebf2fee04abcf1982c66"
+    },
+    {
+      "local_path": "outputs/modes-d0/ci-click-browser-red-artifacts/live-real-filters-editable-6870f-eipts-and-disabled-schedule-mobile/interests.png",
+      "bytes": 278004,
+      "sha256": "4b5dbc42f73bbe73a64d26726505b58498a16416ab90b0328bbb8ec443c2b1f7"
+    },
+    {
+      "local_path": "outputs/modes-d0/ci-click-browser-red-artifacts/live-real-filters-editable-6870f-eipts-and-disabled-schedule-mobile/operations.png",
+      "bytes": 141025,
+      "sha256": "a331ed0d6ef0240dcf235d4f70238a6b455481e919adff26541eed491f0e0df4"
+    },
+    {
+      "local_path": "outputs/modes-d0/ci-click-browser-red-artifacts/live-real-filters-editable-6870f-eipts-and-disabled-schedule-mobile/radar.png",
+      "bytes": 80325,
+      "sha256": "355102ea96ace28e69b9551bd4ec765da3481cc329304f4c55d740cf8688e487"
+    },
+    {
+      "local_path": "outputs/modes-d0/ci-click-browser-red-artifacts/readiness-Today-puts-the-s-26fcc-t-reading-item-within-reach-desktop/today-compact.png",
+      "bytes": 197041,
+      "sha256": "11ce538e99a075582158e1d91fffd698189d193a70882e46d5013f778fbd4aaf"
+    },
+    {
+      "local_path": "outputs/modes-d0/ci-click-browser-red-artifacts/readiness-Today-puts-the-s-26fcc-t-reading-item-within-reach-desktop/today-viewport.png",
+      "bytes": 197012,
+      "sha256": "591541dd345e2500502e237697d552af5f85713e2d9cfa6d558679357f178ad3"
+    },
+    {
+      "local_path": "outputs/modes-d0/ci-click-browser-red-artifacts/readiness-Today-puts-the-s-26fcc-t-reading-item-within-reach-mobile/today-compact.png",
+      "bytes": 101421,
+      "sha256": "b327970143dc9ec3c550af2a78d4ee95f44d47091c5c1cc2631b8b0e72424607"
+    },
+    {
+      "local_path": "outputs/modes-d0/ci-click-browser-red-artifacts/readiness-Today-puts-the-s-26fcc-t-reading-item-within-reach-mobile/today-viewport.png",
+      "bytes": 81357,
+      "sha256": "506f2291041aef362aacd24a02360016e75013310dda2e571774daa920cb1a4c"
+    }
+  ]
+}

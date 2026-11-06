@@ -1,0 +1,45 @@
+{
+  "scope": "Contiguous native decoded frames; no wall-clock seek or temporal resampling",
+  "contexts": [
+    {
+      "context": "desktop-dark",
+      "nativeFrameRangeZeroBased": [
+        100,
+        131
+      ],
+      "frames": 32,
+      "frameRateConversion": false,
+      "visualAssessment": "Actual contiguous native frames inspected in this theme/width. Changing stage fades/settles while shell/player stay stable; rapid superseded selection returns to final paper. Frame100-131 cohort additionally inspects Reader-entry/final settled content. No physical-device or human-usefulness claim."
+    },
+    {
+      "context": "desktop-light",
+      "nativeFrameRangeZeroBased": [
+        100,
+        131
+      ],
+      "frames": 32,
+      "frameRateConversion": false,
+      "visualAssessment": "Actual contiguous native frames inspected in this theme/width. Changing stage fades/settles while shell/player stay stable; rapid superseded selection returns to final paper. Frame100-131 cohort additionally inspects Reader-entry/final settled content. No physical-device or human-usefulness claim."
+    },
+    {
+      "context": "mobile-dark",
+      "nativeFrameRangeZeroBased": [
+        100,
+        131
+      ],
+      "frames": 32,
+      "frameRateConversion": false,
+      "visualAssessment": "Actual contiguous native frames inspected in this theme/width. Changing stage fades/settles while shell/player stay stable; rapid superseded selection returns to final paper. Frame100-131 cohort additionally inspects Reader-entry/final settled content. No physical-device or human-usefulness claim."
+    },
+    {
+      "context": "mobile-light",
+      "nativeFrameRangeZeroBased": [
+        100,
+        131
+      ],
+      "frames": 32,
+      "frameRateConversion": false,
+      "visualAssessment": "Actual contiguous native frames inspected in this theme/width. Changing stage fades/settles while shell/player stay stable; rapid superseded selection returns to final paper. Frame100-131 cohort additionally inspects Reader-entry/final settled content. No physical-device or human-usefulness claim."
+    }
+  ]
+}

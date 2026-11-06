@@ -1,0 +1,30 @@
+[libvpx @ 0x7741034000] v1.14.1
+Input #0, matroska,webm, from '/private/tmp/arxiv-agent-eng-workspace-mode-build/planning/14-explore-and-research-modes/evidence/d1-d4-browser/owner-walkthrough/b261ddc/mobile-light/connected-example.webm':
+  Metadata:
+    ENCODER         : Lavf61.1.100
+  Duration: 00:00:20.88, start: 0.000000, bitrate: 707 kb/s
+  Stream #0:0(eng): Video: vp8 (libvpx), yuv420p(tv, progressive), 390x844, SAR 1:1 DAR 195:422, 25 fps, 25 tbr, 1k tbn (default)
+      Metadata:
+        ENCODER         : Lavc61.3.100 libvpx
+        DURATION        : 00:00:20.880000000
+[libvpx @ 0x7741034700] v1.14.1
+Stream mapping:
+  Stream #0:0 -> #0:0 (vp8 (libvpx) -> png (native))
+[swscaler @ 0x77417dc000] [swscaler @ 0x77417ec000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[swscaler @ 0x77417dc000] [swscaler @ 0x7741800000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[swscaler @ 0x77417dc000] [swscaler @ 0x7741810000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[swscaler @ 0x77417dc000] [swscaler @ 0x7741820000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[swscaler @ 0x77417dc000] [swscaler @ 0x7741830000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[swscaler @ 0x77417dc000] [swscaler @ 0x7741840000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[swscaler @ 0x77417dc000] [swscaler @ 0x7741850000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[swscaler @ 0x77417dc000] [swscaler @ 0x7741860000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[swscaler @ 0x77417dc000] [swscaler @ 0x7741870000] No accelerated colorspace conversion found from yuv420p to rgb24.
+Output #0, image2, to '/private/tmp/modes-browser-video-k79wptai/%04d.png':
+  Metadata:
+    encoder         : Lavf61.1.100
+  Stream #0:0(eng): Video: png, rgb24(pc, gbr/unknown/unknown, progressive), 390x844 [SAR 1:1 DAR 195:422], q=2-31, 200 kb/s, 1 fps, 1 tbn (default)
+      Metadata:
+        DURATION        : 00:00:20.880000000
+        encoder         : Lavc61.3.100 png
+[out#0/image2 @ 0x7741030180] video:2268KiB audio:0KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: unknown
+frame=   22 fps=0.0 q=-0.0 Lsize=N/A time=00:00:22.00 bitrate=N/A dup=0 drop=501 speed=99.8x

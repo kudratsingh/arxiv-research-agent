@@ -1,7 +1,7 @@
 # Final two-mode browser evidence
 
-Final application **62c761a9c7b690e0b681857fe48edc75d3785ef6**, production build
-**T8_ju09AUeIr5jhzAjpoG**, runnable at **http://127.0.0.1:3178/workspace/today?mode=learn**.
+Final application **b261ddc5e0e034438a4dcc90bbbcb0ca42c76de3**, production build
+**PwbeWv0RU7h8JGqumje0V**, runnable at **http://127.0.0.1:3178/workspace/today?mode=learn**.
 Owner3137 and its data are untouched. Provider/count/source contacts0,
 everyday generation/recurrence off, owner usefulness labels unchanged.
 
@@ -9,6 +9,7 @@ everyday generation/recurrence off, owner usefulness labels unchanged.
 
 | Cohort | Actual proof |
 |---|---|
+| Finalb261ddc | Library cross-paper click-capture repair: unchanged16/16 live cases on the exact CI fixture; fresh64 route/axe observations and4 readable connected journeys; [repair evidence](../library-return-repair/README.md) |
 | Original8e34670 |96-case matrix plus real restart/archive/38-table restore; independently retained in accepted/8e34670 |
 | Project/thread polish cea881e |[96/96 cases](accepted/cea881e/report.json), desktop/mobile/light/dark + reduced motion; [actual restart](accepted/cea881e/root-restart-receipt.json), [fresh-browser exact resume/archive](accepted/cea881e/post-restart/report.json), existing live16/16 |
 | Final62c761a |Only3 selector CSS lines differ from cea881e. [64 route/theme/width/motion geometry and axe checks](final-layout/62c761a/report.json) pass; all4,217frontend tests and22budgets pass at this application source |
@@ -97,3 +98,14 @@ acceptance. See [runbook](../../08-local-walkthrough.md) for runtime commands.
 
 CLI display logs normalize trailing whitespace only; every raw byte is retained
 in paired gzip archives and the [log-original index](../log-originals.json).
+
+## Final publication application b261ddc
+
+The original evidence above remains unchanged. The final application is the small
+Library activation fix described in [repair evidence](../library-return-repair/README.md).
+Fresh [64 geometry/axe observations](final-layout/b261ddc/report.json) and
+[four readable journeys](owner-walkthrough/b261ddc/report.json) pass. New screenshots
+and local full videos are in `owner-walkthrough/b261ddc/`; neutral untrimmed motion
+is in `accepted/b261ddc/navigation-untrimmed/`. The exact CI three-work fixture
+reproduced the pre-fix failure on both widths; all16 unchanged cases pass afterward.
+Earlier40-work passes alone did not establish this cross-paper behavior.

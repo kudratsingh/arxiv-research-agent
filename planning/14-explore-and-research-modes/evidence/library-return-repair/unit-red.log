@@ -1,0 +1,35 @@
+
+> arxiv-research-agent-web@0.1.0 test
+> vitest run --run tests/workspace/library-controller.test.tsx
+
+
+ RUN  v4.1.11 /private/tmp/arxiv-agent-eng-workspace-mode-build/web
+
+Not implemented: Window's scrollTo() method
+ ❯ |unit| tests/workspace/library-controller.test.tsx (20 tests | 1 failed) 2371ms
+     × keeps a cross-paper resume destination fixed while preserving the launching Library focus 49ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |unit| tests/workspace/library-controller.test.tsx > Library controller > keeps a cross-paper resume destination fixed while preserving the launching Library focus
+Error: expect(element).toHaveAttribute("href", "/workspace/items/arxiv%3A2610.00003?version=arxiv%3A2610.00003%3Av2&entry=entry-2&return_to=%2Fworkspace%2Flibrary%3Fview%3Dnotes%26focus%3Darxiv%253A2610.00002#abstract%3A2%3A7") // element.getAttribute("href") === "/workspace/items/arxiv%3A2610.00003?version=arxiv%3A2610.00003%3Av2&entry=entry-2&return_to=%2Fworkspace%2Flibrary%3Fview%3Dnotes%26focus%3Darxiv%253A2610.00002#abstract%3A2%3A7"
+
+Expected the element to have attribute:
+  href="/workspace/items/arxiv%3A2610.00003?version=arxiv%3A2610.00003%3Av2&entry=entry-2&return_to=%2Fworkspace%2Flibrary%3Fview%3Dnotes%26focus%3Darxiv%253A2610.00002#abstract%3A2%3A7"
+Received:
+  href="/workspace/items/arxiv%3A2610.00003?version=arxiv%3A2610.00003%3Av2&entry=entry-2&return_to=%2Fworkspace%2Flibrary%3Fview%3Dnotes%26focus%3Darxiv%253A2610.00003#abstract%3A2%3A7"
+ ❯ tests/workspace/library-controller.test.tsx:106:20
+    104|     resume.addEventListener("click", (event) => event.preventDefault()…
+    105|     await user.click(resume);
+    106|     expect(resume).toHaveAttribute("href", advertised);
+       |                    ^
+    107|     expect(sessionStorage.getItem("arxiv.workspace.library-focus.v1:ow…
+    108|     focused("Beta");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 19 passed (20)
+   Start at  18:10:15
+   Duration  3.44s (transform 288ms, setup 165ms, import 224ms, tests 2.37s, environment 569ms)

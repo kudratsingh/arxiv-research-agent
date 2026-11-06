@@ -1,0 +1,49 @@
+{
+  "scope": "Actual WebM full decode + nominal one-fps contact sheets; explicit visual review still required",
+  "videos": [
+    {
+      "video": "desktop-dark/navigation.webm",
+      "sha256": "131ab89e6be7938c7f06ce4ca9eca2ac1c2093ca3d1899659e959fc316888a71",
+      "bytes": 1706234,
+      "width": 1440,
+      "height": 1000,
+      "durationSeconds": 10.64,
+      "fullDecodeExitCode": 0,
+      "contactSheet": "desktop-dark-contact-sheet.png",
+      "visualAssessment": "Actual decoded workflow contact sheet inspected in this context. Source/heading landings, logical focus, exact project/Library returns and player clearance reviewed. Decode alone is not acceptance; physical-device and owner usefulness remain pending."
+    },
+    {
+      "video": "desktop-light/navigation.webm",
+      "sha256": "7ab679c75103db40b6bcf41eb4654a6233cf87cecb3444a5f493f5bf1cd191cf",
+      "bytes": 1796447,
+      "width": 1440,
+      "height": 1000,
+      "durationSeconds": 11.12,
+      "fullDecodeExitCode": 0,
+      "contactSheet": "desktop-light-contact-sheet.png",
+      "visualAssessment": "Actual decoded workflow contact sheet inspected in this context. Source/heading landings, logical focus, exact project/Library returns and player clearance reviewed. Decode alone is not acceptance; physical-device and owner usefulness remain pending."
+    },
+    {
+      "video": "mobile-dark/navigation.webm",
+      "sha256": "09daefe0bee805b0f8cf8c2cb51888668c21972fe56cc65304964b3220046d47",
+      "bytes": 819256,
+      "width": 390,
+      "height": 844,
+      "durationSeconds": 9.0,
+      "fullDecodeExitCode": 0,
+      "contactSheet": "mobile-dark-contact-sheet.png",
+      "visualAssessment": "Actual decoded workflow contact sheet inspected in this context. Source/heading landings, logical focus, exact project/Library returns and player clearance reviewed. Decode alone is not acceptance; physical-device and owner usefulness remain pending."
+    },
+    {
+      "video": "mobile-light/navigation.webm",
+      "sha256": "2a5cfeccbee438e7922dcf09c6c21b07afd51c32877ead472afa35b817781545",
+      "bytes": 743733,
+      "width": 390,
+      "height": 844,
+      "durationSeconds": 8.6,
+      "fullDecodeExitCode": 0,
+      "contactSheet": "mobile-light-contact-sheet.png",
+      "visualAssessment": "Actual decoded workflow contact sheet inspected in this context. Source/heading landings, logical focus, exact project/Library returns and player clearance reviewed. Decode alone is not acceptance; physical-device and owner usefulness remain pending."
+    }
+  ]
+}

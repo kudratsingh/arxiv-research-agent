@@ -1,0 +1,14 @@
+
+> arxiv-research-agent-web@0.1.0 test
+> vitest run --run tests/workspace/library-controller.test.tsx tests/workspace/library-note-versions.test.tsx tests/workspace/reader-context-continuity.test.tsx
+
+
+ RUN  v4.1.11 /private/tmp/arxiv-agent-eng-workspace-mode-build/web
+
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+
+ Test Files  2 passed (2)
+      Tests  25 passed (25)
+   Start at  18:12:52
+   Duration  4.40s (transform 646ms, setup 354ms, import 481ms, tests 4.21s, environment 1.18s)
