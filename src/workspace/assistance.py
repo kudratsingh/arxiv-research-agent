@@ -325,6 +325,13 @@ class AssistanceExecutor(FakeExecutor):
                     ]
                 }
                 value["previous_grounding"] = parent["previous_grounding"]
+        if (
+            "capacity" in original
+            and _size(build_wire(value)) > original["capacity"]["stage_input_bytes_max"][phase]
+        ):
+            # Refuse before the executor journals an in-flight step. A capacity
+            # contradiction is contract drift, not an uncertain completion.
+            raise ValueError("sealed_stage_capacity_exceeded")
         return value
 
 

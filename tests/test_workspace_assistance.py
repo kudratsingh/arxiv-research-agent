@@ -665,3 +665,18 @@ def test_two_source_pipeline_survives_shared_executor_canonical_selection_order(
     assert len(result["assistance_output"]["claims"]) == 2
     assert result["assistance_output"]["comparison_basis"] == ["c1", "c2"]
     assert len({ref["work_id"] for ref in result["request"]["units"].values()}) == 2
+
+
+def test_wire_capacity_contradiction_refuses_before_inflight_or_transport(store):
+    service, value = setup(store)
+    job = queue(service, value)
+    with store.pool.connection() as conn:
+        row = list(service.executor._row(conn, "a", job.id))
+        materials = service.executor._sources(conn, "a", value.material_ids)
+        row[5]["capacity"]["stage_input_bytes_max"]["draft"] = 1
+        with pytest.raises(ValueError, match="sealed_stage_capacity"):
+            service.executor._stage(tuple(row), materials)
+    saved = service.get("a", job.id)
+    assert saved["state"] == "queued" and saved["usage"]["used_calls"] == 0
+    assert saved["usage"]["unknown"] == {"input_tokens": 0, "output_tokens": 0}
+    assert not saved["wire_records"]
