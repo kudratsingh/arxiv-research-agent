@@ -6,6 +6,7 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { contextRequest, errorMessage, readerHref, type LearningThread } from "@/lib/workspace/api";
 import { contextHref, useProductContext } from "@/lib/workspace/productContext";
 import { useContextIndex } from "@/lib/workspace/useContextIndex";
+import { SourceReferenceDetails } from "./SourceReferenceDetails";
 const ThreadEditor = lazy(() => loadContextEditors().then(module => ({ default: module.ThreadEditor })));
 export function LiveLearningThread({ id }: { id: string }) {
   return <ThreadScreen key={id} id={id} />;
@@ -27,11 +28,14 @@ function ThreadScreen({ id }: { id: string }) {
   return <div className="ws-learning-thread"><h1>{thread?.data.title ?? "Learning thread"}</h1>
     {!thread && !error && <p aria-busy="true">Loading the saved learning context…</p>}
     {error && <section data-workspace-unavailable=""><h2>This learning thread is unavailable.</h2><p>{error}</p><button type="button" onClick={() => setRetry(value => value + 1)}>Retry thread</button></section>}
-    {thread && <><p>Declared learning goal · {thread.data.status} · revision {thread.revision}</p><h2>What you want to understand</h2><p>{thread.data.goal}</p><h3>Prerequisite</h3><p>{thread.data.prerequisite || "No prerequisite declared."}</p>
+    {thread && <><p className="ws-context-status">Declared learning goal · {thread.data.status}</p>
+      <section className="ws-context-section" aria-label="Learning goal"><h2>What you want to understand</h2><p className="ws-context-lead">{thread.data.goal}</p></section>
+      <section className="ws-context-section" aria-label="Declared prerequisite"><h3>Prerequisite</h3><p>{thread.data.prerequisite || "No prerequisite declared."}</p></section>
       <p className="daily-muted">This is a manual learning thread. No explanation was generated and reading does not establish mastery.</p>
-      {thread.source && <section><h2>Exact source context</h2><p>{thread.source.title} · {thread.source.version_id} · {thread.source.anchor}</p>{thread.source.quote && <blockquote>{thread.source.quote}</blockquote>}
+      {thread.source && <section className="ws-context-section ws-source-card"><h2>Exact source context</h2><h3>{thread.source.title}</h3><SourceReferenceDetails reference={thread.source} />{thread.source.quote && <blockquote>{thread.source.quote}</blockquote>}
         {thread.source.available ? <Link className="daily-link" href={contextHref(readerHref(thread.source, thread.source.version_id, thread.source.anchor, undefined, contextHref(`/workspace/threads/${thread.id}`, { ...context, mode: "learn", thread: thread.id, explicit: true })), { ...context, mode: "learn", project: null, thread: thread.id, explicit: true })} prefetch={false}>Read this exact prerequisite source →</Link> : <p>This pinned source is unavailable; a newer version has not been substituted.</p>}</section>}
-      {thread.data.entry && <p>Linked shared entry {thread.data.entry.entry_id} · exact revision {thread.data.entry.entry_revision}. Later edits are not substituted into this source link.</p>}
+      {thread.data.entry && <section className="ws-context-section"><h2>Linked shared note</h2><p>Later edits are not substituted into this source link.</p><details className="ws-record-details"><summary>Linked note details</summary><p>Linked shared entry {thread.data.entry.entry_id} · exact revision {thread.data.entry.entry_revision}.</p></details></section>}
+      <details className="ws-record-details"><summary>Learning thread details</summary><p>Thread {thread.id} · revision {thread.revision}</p></details>
       <div className="workspace-toolbar"><Link className="daily-link" href={returnHref} prefetch={false} scroll={false}>{origin?.project_id ? "Return to project" : "Return to originating source"}</Link><button type="button" onClick={() => setEdit(true)}>Edit learning thread</button></div>
       {edit && index && <Suspense fallback={<p aria-busy="true">Opening thread editor…</p>}><ThreadEditor owner={index.principal_key_id} thread={thread} origin={thread.data.origin} onCancel={() => setEdit(false)} onReload={() => setRetry(value => value + 1)} onSaved={value => { setThread(value); setEdit(false); }} /></Suspense>}
     </>}

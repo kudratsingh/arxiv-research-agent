@@ -250,7 +250,9 @@ describe("adversarial context regressions", () => {
     await screen.findByLabelText("Project for this source"); click("Investigate this in a new project"); await screen.findByLabelText("Project title");
     edit("Project title", "Reasoning about the original passage"); edit("Research question", "Why does the original passage say this?");
     view.rerender(<ReaderContextActions owner="owner-a" source={{ ...source, anchor: "abstract:40:60" }} entries={[]} returnTo="/workspace/radar?q=other" />);
-    expect(screen.getByText(/Carried source:/)).toHaveTextContent("abstract:3:9"); click("Create project");
+    const carried = screen.getByRole("heading", { name: "Carried source" }).closest("section")!;
+    fireEvent.click(within(carried).getByText("Exact source details"));
+    expect(within(carried).getByText("abstract:3:9", { exact: true })).toBeVisible(); click("Create project");
     await waitFor(() => expect(writes).toHaveLength(1));
     expect(writes[0]!.body).toMatchObject({ initial_source: source, data: { question: "Why does the original passage say this?" } });
   });

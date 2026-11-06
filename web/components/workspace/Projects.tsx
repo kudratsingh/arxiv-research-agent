@@ -9,6 +9,7 @@ import { WORKSPACE_URL_EVENT } from "@/lib/workspace/urlState";
 import { useContextIndex } from "@/lib/workspace/useContextIndex";
 import { useDraftGuard } from "@/lib/workspace/useManualForm";
 import { Message } from "./Common";
+import { SourceReferenceDetails } from "./SourceReferenceDetails";
 const ProjectEditor = lazy(() => loadContextEditors().then(module => ({ default: module.ProjectEditor })));
 const ArtifactEditor = lazy(() => loadContextEditors().then(module => ({ default: module.ArtifactEditor })));
 const ThreadEditor = lazy(() => loadContextEditors().then(module => ({ default: module.ThreadEditor })));
@@ -54,7 +55,10 @@ function ProjectScreen() {
     {!index && !error && <p aria-busy="true">Loading owned projects…</p>}
     {error && <p role="alert">{error} <button type="button" onClick={() => void reload()}>Retry project list</button></p>}
     {index && <><div className="workspace-toolbar"><button className="daily-button" type="button" disabled={busy || create || edit || artifact || thread} onClick={() => setCreate(true)}>Create a project</button><Link className="daily-link" href={contextHref("/workspace/library", context)} prefetch={false}>Shared Library →</Link></div>
-      <ul>{index.projects.map(project => <li key={project.id}><Link prefetch={false} scroll={false} href={contextHref("/workspace/projects", { ...projectContext, project: project.id })}>{project.data.title}</Link> · {project.data.status} · revision {project.revision}</li>)}</ul>
+      <ul className="ws-project-list" aria-label="Owned projects">{index.projects.map(project => <li key={project.id} className="ws-project-card">
+        <Link prefetch={false} scroll={false} aria-current={context.project === project.id ? "page" : undefined} href={contextHref("/workspace/projects", { ...projectContext, project: project.id })}>{project.data.title}</Link>
+        <p className="ws-context-status"><span>{project.data.status}</span>{context.project === project.id && <span>Current project</span>}</p>
+      </li>)}</ul>
       {!index.projects.length && <p>No projects yet. Create one explicitly; your saved organizing question has not been imported.</p>}
     </>}
     {context.project && !current && !failure && <p aria-busy="true">Loading this owned project…</p>}
@@ -62,29 +66,51 @@ function ProjectScreen() {
     {failure && <section data-workspace-unavailable=""><h2>This project is unavailable.</h2><p>{failure} Another project has not been substituted.</p><button type="button" onClick={() => setReadRevision(value => value + 1)}>Retry project</button></section>}
     {create && index && <Suspense fallback={<p aria-busy="true">Opening project form…</p>}><ProjectEditor owner={index.principal_key_id} onSaved={saved} onCancel={() => setCreate(false)} /></Suspense>}
     {current && index && <section aria-label="Project workspace">
-      <h2>{current.data.title}</h2><p className="ws-question">{current.data.question}</p><p>Project revision {current.revision} · {current.data.status}</p>
-      <p>{current.data.scope || "No scope declared."}</p><p>{current.data.constraints || "No constraints declared."}</p>
+      <div className="ws-project-overview">
+        <p className="ws-context-status">{current.data.status}</p><h2>{current.data.title}</h2>
+        <h3>Research question</h3><p className="ws-question">{current.data.question}</p>
+        <dl><dt>Scope</dt><dd>{current.data.scope || "No scope declared."}</dd><dt>Constraints</dt><dd>{current.data.constraints || "No constraints declared."}</dd></dl>
+        <details className="ws-record-details"><summary>Project details</summary><p>Project revision {current.revision}</p><p>Project ID: {current.id}</p></details>
+      </div>
       <div className="workspace-toolbar"><Link className="daily-link" href={contextHref("/workspace/today", projectContext)} prefetch={false}>Research this question →</Link><Link className="daily-link" href={contextHref("/workspace/radar", projectContext)} prefetch={false}>Search project sources →</Link>
         <button type="button" disabled={busy || create || artifact || thread} onClick={() => setEdit(true)}>Edit project</button>{!edit && <button type="button" disabled={busy || create || artifact || thread} onClick={() => setReadRevision(value => value + 1)}>Reload saved project</button>}</div>
       {edit && <Suspense fallback={<p aria-busy="true">Opening project editor…</p>}><ProjectEditor owner={index.principal_key_id} project={current} onSaved={saved} onCancel={() => setEdit(false)} onReload={() => setReadRevision(value => value + 1)} /></Suspense>}
-      <h3>Next actions</h3><ul>{current.data.next_actions.map((action, i) => <li key={i}>{action}</li>)}</ul>
-      <h3>Sources and exact evidence</h3><p>Source identity and retained passages are inspectable. A citation alone does not establish factual support.</p>
+      <section className="ws-context-section" aria-labelledby="project-next-actions"><h3 id="project-next-actions">Next actions</h3>
+        {current.data.next_actions.length ? <ul>{current.data.next_actions.map((action, i) => <li key={i}>{action}</li>)}</ul> : <p>No next actions yet.</p>}
+      </section>
+      <section className="ws-context-section" aria-labelledby="project-evidence">
+      <h3 id="project-evidence">Sources and exact evidence</h3><p>Source identity and retained passages are inspectable. A citation alone does not establish factual support.</p>
       {!current.sources.some(source => source.status === "active") && <p>No linked sources. Open a Reader source and choose Investigate this.</p>}
-      {current.sources.map(source => <article key={source.id} className="workspace-artifact"><h4>{source.reference.title}</h4><p>{source.role === "evidence" ? "Retained evidence passage" : "Whole-source reference"} · {source.status} · {source.reference.version_id} · {source.reference.anchor}</p>
+      {current.sources.map(source => <article key={source.id} className="workspace-artifact ws-source-card"><h4>{source.reference.title}</h4><p className="ws-context-status">{source.role === "evidence" ? "Retained evidence passage" : "Source reference"} · {source.status}</p>
         {source.label && <p>{source.label}</p>}{source.reference.quote && <blockquote>{source.reference.quote}</blockquote>}
         {source.reference.available ? <Link className="daily-link" href={contextHref(readerHref(source.reference, source.reference.version_id, source.reference.anchor, undefined, projectHref), projectContext)} prefetch={false}>Open exact project passage →</Link> : <p>This pinned source is unavailable. No newer version is substituted.</p>}
+        <SourceReferenceDetails reference={source.reference} />
         {source.status === "active" && <button type="button" disabled={busy || current.data.status === "archived"} onClick={() => void unlink(source.id)}>Remove project link</button>}
       </article>)}
-      <h3>Linked shared notes</h3>{current.entries.map(link => <article key={link.entry_id}><p>Entry {link.entry_id} · linked revision {link.entry_revision}{link.current_revision !== link.entry_revision ? ` · current revision ${link.current_revision ?? "unavailable"}` : ""}</p>
+      </section>
+      <section className="ws-context-section" aria-labelledby="project-notes"><h3 id="project-notes">Linked shared notes</h3>
+      {!current.entries.length && <p>No linked notes yet. Link one from Reader.</p>}
+      {current.entries.map(link => <article key={link.entry_id} className="ws-source-card">
+        {link.current_revision !== link.entry_revision && <p className="workspace-version-notice">linked revision {link.entry_revision} · current revision {link.current_revision ?? "unavailable"}</p>}
         {link.entry ? <><p>{link.entry.body}</p><Link className="daily-link" href={contextHref(readerHref(link.entry, link.entry.version_id, link.entry.anchor, link.current_revision === link.entry_revision ? link.entry.id : undefined, projectHref), projectContext)} prefetch={false}>Open linked note source →</Link>{link.current_revision !== link.entry_revision && <p>The linked historical text is shown here. Reader opens this exact source passage without substituting a later note revision.</p>}</> : <p>This linked entry is unavailable; its reference remains recorded.</p>}
+        <details className="ws-record-details"><summary>Linked note details</summary><p>Entry {link.entry_id}</p><p>Linked note revision {link.entry_revision}</p></details>
       </article>)}
-      <h3>Authored records</h3>{current.artifacts.map(item => <article key={item.id}><h4>{item.data.kind.replaceAll("-", " ")}</h4><p>Manual · unverified · revision {item.revision}</p><p>{item.data.body || `Linked entry ${item.data.entry?.entry_id}`}</p><p>{item.data.evidence_link_ids.length} explicit evidence links</p></article>)}
+      </section>
+      <section className="ws-context-section" aria-labelledby="project-records"><h3 id="project-records">Authored records</h3>
+      {!current.artifacts.length && <p>No authored records yet.</p>}
+      {current.artifacts.map(item => <article key={item.id} className="ws-source-card"><h4>{item.data.kind.replaceAll("-", " ")}</h4><p className="ws-context-status">Manual · unverified</p><p>{item.data.body || "Linked shared note"}</p><p>{item.data.evidence_link_ids.length} explicit evidence links</p>
+        <details className="ws-record-details"><summary>Authored record details</summary><p>Record ID: {item.id}</p><p>Record revision {item.revision}</p>{item.data.entry && <p>Linked entry {item.data.entry.entry_id}</p>}{item.data.entry && <p>Linked note revision {item.data.entry.entry_revision}</p>}{item.data.evidence_link_ids.length > 0 && <p>Evidence link IDs: {item.data.evidence_link_ids.join(", ")}</p>}</details>
+      </article>)}
       {current.data.status === "archived" && <p className="workspace-version-notice">This project is archived. Source links and authored records are read-only until you explicitly edit and unarchive it. Shared notes remain available; manual learning threads can retain this origin.</p>}
       <button type="button" disabled={current.data.status === "archived" || create || edit || thread} onClick={() => setArtifact(true)}>Add authored research record</button>
       {artifact && <Suspense fallback={<p aria-busy="true">Opening authored-record form…</p>}><ArtifactEditor key={current.revision} owner={index.principal_key_id} project={current} onReload={() => setReadRevision(value => value + 1)} onSaved={value => { setDetail(value); setArtifact(false); }} /></Suspense>}
-      <h3>Learning threads</h3><ul>{current.threads.map(item => <li key={item.id}><Link href={contextHref(`/workspace/threads/${item.id}`, { ...projectContext, mode: "learn", project: null, thread: item.id })} prefetch={false}>{item.data.title}</Link></li>)}</ul>
+      </section>
+      <section className="ws-context-section" aria-labelledby="project-threads"><h3 id="project-threads">Learning threads</h3>
+      {!current.threads.length && <p>No learning threads yet.</p>}
+      <ul>{current.threads.map(item => <li key={item.id}><Link href={contextHref(`/workspace/threads/${item.id}`, { ...projectContext, mode: "learn", project: null, thread: item.id })} prefetch={false}>{item.data.title}</Link></li>)}</ul>
       <button type="button" disabled={create || edit || artifact} onClick={() => setThread(true)}>Learn this prerequisite</button>
       {thread && <Suspense fallback={<p aria-busy="true">Opening learning-thread form…</p>}><ThreadEditor owner={index.principal_key_id} origin={resumeContext(projectContext, projectHref)} onCancel={() => setThread(false)} onSaved={value => { setDetail({ ...current, threads: [...current.threads, value] }); setThread(false); }} /></Suspense>}
+      </section>
     </section>}
     <Message>{notice}</Message>
   </div>;

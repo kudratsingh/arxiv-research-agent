@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { contextRequest, errorMessage, type EntryReference, type LearningThread, type LearningThreadWrite, type ResumeContext, type SourceReference } from "@/lib/workspace/api";
 import { stableContextId, useManualForm } from "@/lib/workspace/useManualForm";
 import { Message } from "./Common";
+import { SourceReferenceDetails } from "./SourceReferenceDetails";
 import { invalidateContextIndex } from "@/lib/workspace/useContextIndex";
 
 export default function ThreadEditor({ owner, thread, origin: originInput, source: sourceInput, entry: entryInput, onSaved, onCancel, onReload }: {
@@ -27,8 +28,8 @@ export default function ThreadEditor({ owner, thread, origin: originInput, sourc
     <h2>{thread ? "Edit learning thread" : "Learn this prerequisite"}</h2>
     <p className="daily-muted">Record what you want to understand. The originating project and exact source remain attached. No model runs.</p>
     {thread && thread.revision > form.draft.revision && <section className="workspace-version-notice" aria-label="Latest saved thread for review"><h3>Review the latest saved revision</h3><p>{thread.data.title}</p><p>{thread.data.goal}</p><p>{thread.data.prerequisite}</p><p>Status: {thread.data.status}</p><button type="button" disabled={form.busy} onClick={() => form.rebase(thread.revision)}>Keep my edits on reviewed revision</button></section>}
-    {source && <p>Source: {source.work_id} · {source.version_id} · {source.anchor}</p>}
-    <p>Carried origin: {origin.mode} · {origin.project_id ?? "no project"} · {origin.return_to}</p>
+    {source && <section className="ws-source-card"><h3>Prerequisite source</h3><SourceReferenceDetails reference={source} /></section>}
+    <details className="ws-record-details"><summary>Origin and return details</summary><p>Carried origin: {origin.mode} · {origin.project_id ?? "no project"} · {origin.return_to}</p></details>
     {([['title', 'Thread title', 240], ['goal', 'What do you want to understand?', 4000], ['prerequisite', 'Prerequisite or term to learn', 2000]] as const).map(([field, label, max]) => <label key={field}>{label}<textarea rows={field === "title" ? 1 : 3} required={field !== "prerequisite"} maxLength={max} value={form.values[field]} readOnly={form.busy} onChange={event => form.change(field, event.target.value)} /></label>)}
     {thread && <label>Status<select value={form.values.status} disabled={form.busy} onChange={event => form.change("status", event.target.value)}><option value="active">Active</option><option value="archived">Archived</option></select></label>}
     <div className="workspace-toolbar"><button className="daily-button" disabled={form.busy}>{form.busy ? "Saving thread…" : "Save learning thread"}</button><button type="button" className="daily-secondary" disabled={form.busy} onClick={() => { form.clear(true); onCancel?.(); }}>Discard local thread edits</button>{onReload && <button type="button" disabled={form.busy} onClick={onReload}>Reload saved thread</button>}</div>

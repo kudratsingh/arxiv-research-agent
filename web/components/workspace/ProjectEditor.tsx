@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { contextRequest, errorMessage, type EntryReference, type ProjectDetail, type ProjectWrite, type ResearchProject, type SourceReference } from "@/lib/workspace/api";
 import { stableContextId, useManualForm } from "@/lib/workspace/useManualForm";
 import { Message } from "./Common";
+import { SourceReferenceDetails } from "./SourceReferenceDetails";
 import { invalidateContextIndex } from "@/lib/workspace/useContextIndex";
 
 export default function ProjectEditor({ owner, project, source: sourceInput, entry: entryInput, question = "", onSaved, onCancel, onReload }: {
@@ -26,8 +27,8 @@ export default function ProjectEditor({ owner, project, source: sourceInput, ent
   return <form id={form.surfaceId} className="workspace-controls" onSubmit={event => void save(event)} aria-label={project ? "Edit research project" : "Create research project"}>
     <h2>{project ? "Edit project" : "Create a research project"}</h2>
     <p className="daily-muted">A project organizes your question and explicit links. Creating it runs no model and changes no interests.</p>
-    {source && <p>Carried source: {source.work_id} · {source.version_id} · {source.anchor}</p>}
-    {entry && <p>Explicit saved-entry link: {entry.entry_id} · revision {entry.entry_revision}</p>}
+    {source && <section className="ws-source-card"><h3>Carried source</h3><SourceReferenceDetails reference={source} /></section>}
+    {entry && <details className="ws-record-details"><summary>Linked saved question details</summary><p>Explicit saved-entry link: {entry.entry_id} · revision {entry.entry_revision}</p></details>}
     {project && <p>Saved project revision {project.revision} · local edit base {form.draft.revision}. Reloading does not overwrite local edits.</p>}
     {project && project.revision > form.draft.revision && <section className="workspace-version-notice" aria-label="Latest saved project for review"><h3>Review the latest saved revision</h3><p>{project.data.title}</p><p>{project.data.question}</p><p>{project.data.scope}</p><p>{project.data.constraints}</p><ul>{project.data.next_actions.map((action, i) => <li key={i}>{action}</li>)}</ul><p>Status: {project.data.status}</p><button type="button" disabled={form.busy} onClick={() => form.rebase(project.revision)}>Keep my edits on reviewed revision</button></section>}
     {([['title', 'Project title', 240], ['question', 'Research question', 4000], ['scope', 'Scope', 4000], ['constraints', 'Constraints', 4000], ['actions', 'Next actions, one per line', 10000]] as const).map(([field, label, limit]) => <label key={field}>{label}
