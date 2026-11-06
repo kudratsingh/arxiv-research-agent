@@ -6,22 +6,29 @@ are written; public source material, historical receipts and owner data are read
 without mutation. Rebuilding must use a new output path after any source change.
 """
 import argparse
-import hashlib
 import gzip
+import hashlib
 import json
 import os
 import subprocess
+from dataclasses import asdict
 from pathlib import Path
 from urllib.parse import urlsplit
 
-from psycopg_pool import ConnectionPool
-from src.workspace.assistance import AssistanceInput, AssistanceService, CANDIDATE_MODEL, Checks, build_wire
 from anthropic import transform_schema
-from dataclasses import asdict
-from src.workspace.grounding import EvidenceRef, ResearchClaim, ClaimKind, claim_input_digest
+from psycopg_pool import ConnectionPool
+
+from src.workspace.assistance import (
+    CANDIDATE_MODEL,
+    AssistanceInput,
+    AssistanceService,
+    Checks,
+    build_wire,
+)
 from src.workspace.assistance_contract import REVISION, digest
 from src.workspace.context_schemas import ProjectData, ProjectWrite
 from src.workspace.context_store import WorkspaceContext
+from src.workspace.grounding import ClaimKind, EvidenceRef, ResearchClaim, claim_input_digest
 from src.workspace.store import WorkspaceStore
 
 ROOT = Path.cwd()
@@ -113,7 +120,8 @@ def main():
                 claim = ResearchClaim('c' + str(i+1), text, ClaimKind.FACTUAL, (ref,), required_scope='full_text' if batch == 3 else ref.scope)
                 with pool.connection() as conn:
                     materials = service.executor._sources(conn, owner, [ref.material_id])
-                claims.append(asdict(claim)); refs.append(asdict(ref))
+                claims.append(asdict(claim))
+                refs.append(asdict(ref))
                 inputs.append({'claim_id':claim.claim_id,'input_digest':claim_input_digest(claim, materials)})
             stage = {'phase':'check','role':'checker','sealed_request':{'schema_revision':REVISION,'private_context':False},'draft':{'claims':claims},'claim_inputs':inputs,'unscored_prose':{},'output_schema':transform_schema(Checks)}
             wire = build_wire(stage)

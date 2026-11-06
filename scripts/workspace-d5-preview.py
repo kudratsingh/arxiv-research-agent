@@ -8,7 +8,6 @@ from __future__ import annotations
 import argparse
 import json
 import os
-from pathlib import Path
 import re
 import secrets
 import shutil
@@ -17,6 +16,7 @@ import subprocess
 import sys
 import time
 import urllib.request
+from pathlib import Path
 
 os.environ["ANTHROPIC_API_KEY"] = "local-preview-disabled"
 import src  # noqa: E402

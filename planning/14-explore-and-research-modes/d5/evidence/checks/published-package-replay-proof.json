@@ -1,0 +1,10 @@
+{
+  "packet_digest": "1e5716df09364be0db9501e9d2bc7ff3184fc65655dbbb77c6cd658a2ae6a76f",
+  "fresh_database": "workspace_d5_package_replay",
+  "same_case_claims_and_denominators": true,
+  "different_runtime_timestamps_expected": true,
+  "provider_contacts": 0,
+  "actual_new_spend_usd": "0",
+  "human_labels": null,
+  "replayed_results_sha256": "d39d3a95f5143d67dbe158e4ace77ce849a8c26f0f3cc5a864ebdf5513e9745c"
+}

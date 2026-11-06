@@ -37,3 +37,11 @@ Earlier unprefixed1440/390captures and`browser-report.json` belong to the core c
 Original local failed attempts are retained under`outputs/d5/`: sandbox listener denials, coverage misses, an old route-set pin, and browser harness locator/message mistakes. Corrections added meaningful coverage or used the existing truthful UI flow; no coverage floor, test tier, product-truth assertion, source metadata or owner judgment was weakened. New real token measurements, provider schema acceptance, factual support, owner usefulness and paid execution are **unrun**, not skips or passes.
 
 The readable `.log` copies normalize terminal carriage returns/trailing whitespace only. Byte-exact originals are preserved as adjacent `.log.gz` files, with hashes in [the raw-log index](checks/raw-log-index.json); reported outputs/numbers were not edited.
+
+## Publication correction and fresh replay
+
+The first published head57b7181 CI run [42203019523](https://github.com/kudratsingh/arxiv-research-agent/actions/runs/42203019523) exposed three Ruff findings in two helper scripts (imports and one semicolon-separated statement). Global local Ruff had previously covered `src/`, not CI's complete repository command. The helper-only correction preserves active source/wire/packet bindings; [repository-wide Ruff now passes](checks/ruff-repository-final.log). No source or schema is re-frozen for import ordering. Final-head CI is a new separate run reported in the owner checkpoint.
+
+The published snapshot+seal were installed into a **new** disposable `workspace_d5_package_replay` database and the complete protected offline benchmark rerun: [proof](checks/published-package-replay-proof.json), [log](checks/published-package-replay.log). Claims and scoring denominators match the original final run exactly; runtime timestamps are expected to differ. This adds no real provider contact, human label or scientific-quality evidence.
+
+After the helper-only lint correction, the full required `make test-cov-diff` gate reran: **6,453 passed /54 inherited skips /53 separate-tier deselections, 94.54% total and97% patch**,550.27seconds. [Log](checks/full-patch-helper-lint-fix.log). The active `src/`/`web/` application, packet digest and producer hashes are unchanged; this is not another evidence/schema revision.

@@ -1,0 +1,3 @@
+{"initialized": true, "fixture": true, "approval_created": false, "provider_contacts": 0}
+{"packet_digest": "1e5716df09364be0db9501e9d2bc7ff3184fc65655dbbb77c6cd658a2ae6a76f", "cases": 10, "completed": 10, "report": "outputs/d5/published-package-replay", "acceptance": "HOLD: independent human quality and usefulness judgments absent; inspect transport and usage receipts separately"}
+PASS: checked-in snapshot and seal reproduce all case claims and scoring denominators in a new isolated DB; real provider contacts0
