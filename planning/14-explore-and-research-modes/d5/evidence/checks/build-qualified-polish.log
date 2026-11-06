@@ -1,0 +1,55 @@
+
+> arxiv-research-agent-web@0.1.0 build
+> next build --webpack
+
+▲ Next.js 16.4.4 (webpack)
+✓ Running next.config.mjs took 11ms
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead.
+
+  To migrate automatically, run:
+  npx @next/codemod@canary middleware-to-proxy .
+
+  Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+✓ Compiled successfully in 5.1s
+  Running TypeScript ...
+  Finished TypeScript in 2.5s ...
+  Collecting page data using 7 workers ...
+  Generating static pages using 7 workers (0/9) ...
+  Generating static pages using 7 workers (2/9)
+  Generating static pages using 7 workers (4/9)
+  Generating static pages using 7 workers (6/9)
+✓ Generating static pages using 7 workers (9/9) in 191ms
+  Finalizing page optimization ...
+  Collecting build traces ...
+
+Route (app)
+┌ ƒ /
+├ ƒ /_not-found
+├ ƒ /api/[...path]
+├ ƒ /c/[id]
+├ ○ /icon.svg
+├ ƒ /interests
+├ ƒ /learn
+├ ƒ /learn/paths/[id]
+├ ƒ /learn/progress
+├ ƒ /learn/sessions/[id]
+├ ƒ /library
+├ ƒ /library/items/[id]
+├ ƒ /today
+├ ƒ /workspace/interests
+├ ƒ /workspace/items/[id]
+├ ƒ /workspace/library
+├ ƒ /workspace/operations
+├ ƒ /workspace/projects
+├ ƒ /workspace/radar
+├ ƒ /workspace/review
+├ ƒ /workspace/threads/[id]
+└ ƒ /workspace/today
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand

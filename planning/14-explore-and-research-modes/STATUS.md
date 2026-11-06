@@ -3,8 +3,23 @@
 Updated **2026-11-06 UTC / November 5 Pacific**. D0–D4 are implemented and
 verified locally. Application **`b261ddc5e0e034438a4dcc90bbbcb0ca42c76de3`**;
 immutable production build **`PwbeWv0RU7h8JGqumje0V`**. Publication and exact-head remote CI are independently visible in the
-[branch workflow record](https://github.com/kudratsingh/arxiv-research-agent/actions/workflows/ci.yml?query=branch%3Acodex%2Fworkspace-modes-d0-d4); the final owner checkpoint identifies the published SHA/run. Owner experience review
-and D5 grounded assistance remain pending.
+[branch workflow record](https://github.com/kudratsingh/arxiv-research-agent/actions/workflows/ci.yml?query=branch%3Acodex%2Fworkspace-modes-d0-d4); the final owner checkpoint identifies the published SHA/run. Owner experience review and D5 paid quality qualification remain pending; the protected D5 implementation/offline checkpoint is recorded below.
+
+## D5 protected qualification checkpoint — November6
+
+D5 implementation/offline verification is complete at application **`b7240cf34b1ef1331e33fb992870da71528105e2`**, build`Mh3EAZc3soYDoaWmy__H5`, branch`codex/workspace-d5-grounded-assistance`. The final publication is a documentation/evidence commit after this application; exact-head remote CI is a separate gate reported in the owner checkpoint. [D5 overview](d5/README.md), [runbook](d5/RUNBOOK.md), [quality report](d5/OFFLINE-QUALITY.md), [unexecuted proposal](d5/PAID-VALIDATION-PROPOSAL.md), [evidence](d5/evidence/README.md).
+
+Preview **http://localhost:3192/workspace/today?mode=learn**, isolated API8192/DB`workspace_d5_benchmark_final`/principal`d5-validation-run` on dedicated Postgres15488. Owner3137 and completed review3178 are preserved. Allprovider/count contacts0;newactualspendUSD0; recurrence/notifications/everydaygeneration disabled; unmerged/undeployed.
+
+The real production qualification adapter now consumes D5 multi-citation contracts, external packet-bound permission, cumulative ledger, complete four-stage reservations and per-stage paired-count/contact journal. The same controls run with injected MockTransport. A-only permission forbids Messages; later funded stages need explicit append-only stage grants or their original explicit authorization. No provider runner or Reader can approve itself. The validation DB has0new policies/scopes/grants/fixturemarkers and refuses `owner_approval_required` before transport.
+
+Frozen active system packetv2 digest **`1e5716df09364be0db9501e9d2bc7ff3184fc65655dbbb77c6cd658a2ae6a76f`**; public/financial replay digest **`69966d4b4eb2f2a281527c78d3c194af735449c5e73541465e3c913a8afcc198`**. Systemv1 preserved; v2 is only a report-wording fix distinguishing missing human review from missing provider measurements. No paid D5 output was inspected. Prototype packetsv2–v7 remain inactive.
+
+Final offline end-to-end replay:8/8 fresh system workflows,2/2 separate fixed-evidence development workflows,4checker batches/20proposed items,4count-onlyhelpers;44syntheticMessages/48syntheticcounts,0realcontacts. Fresh cases use actual frozen discovery/context, not handpicked gold.15generatedclaims total/12fresh;0humanfacts,0humanprobejudgments;allfactualgatesUNSCORED/HOLD,0acceptedresults. Insufficient-case fake extraction is not semantic abstention/coverage proof. Oldq01development,q02/q03failures,q04stopped and0/9originalaggregate remain unchanged. HistoricalestimatedUSD0.109967,9Messages/15counts,0pending/unknown preserved separately.
+
+Local final gate:6453Pythonpass/54inheritedskips/53separate-tierdeselections,94.54%overall,97%patch; packagefloorspass.4261frontendtests/219files/0skips,98.16%statements;lint/typecheck/mypy187sources/build/22budgets pass. CSS24,868/25,600B;Today169,848/169,984B;Reader165,928/169,984B.53separatee2epass,20/20mockresearchUSD0,registry260/0. Unchangedlivebrowser16/16 onexactseparate3work/4versionCIseed.8D5journeys+4exactPDFchecksacrossdesktop/mobilethemes;0serious/criticalaxe,0consoleexceptions. ActualAPI/webrestartpreservedjobs/notes/threads/projects/reading/reservations;desktop/mobileLibraryresumeandfailedreadrecoverypass. [Raw logs and recordings](d5/evidence/README.md) distinguish prior failures/core cohorts from this source. RemoteCI is not inferred.
+
+Real token fit, remote schema acceptance, whole-claim support, checker error rates, owner usefulness and everyday paid assistance remain separate unmeasured/release gates. Two retained PDF samples remain partial; general extraction and broader unsaved-draft browser-history reliability remain limitations. No owner labels filled or key inspected. Paid validation proposal is ready for a separate decision, not executed.
 
 ## Publication repair and final application cohort
 
@@ -53,7 +68,7 @@ in the owner checkpoint, not inferred from local results.
 | D2 persistence | Migration010, ownership/CAS/retry-safe projects/threads, shared source/note links and typed manual records | Real Postgres/API; fresh-browser resume after actual API/Node restart; private dump restored into a new disposable DB, all38 table/sequence fingerprints match |
 | D3 discovery | Frozen `workspace-modes-lexical-v1`, distinct Learn/Research policies, context-bound editions/cursors |46 focused tests; ranking100% statement/branch; same40-work offline pool; proposed labels unjudged and chronology limited |
 | D4 continuity | Explicit investigation, exact-version/passage evidence, prerequisite threads, shared Library resume, failed-save/conflict/draft protections |96/96 new browser cases;16/16 existing live regressions; actual restart, unlink and archive preserve shared data |
-| D5 assistance | Not enabled | Grounded explanations, comparisons and guided dives need a separate quality/spending decision |
+| D5 assistance | Implemented offline; paid/everyday disabled | Protected adapter + frozen executable benchmark + Reader results at b7240cf; independent quality/spending decision pending |
 | Owner usefulness / longitudinal use | Pending | No owner labels filled; mechanical sessions are not five days of owner use |
 
 ## Runnable preview and isolation

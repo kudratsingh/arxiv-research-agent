@@ -1,0 +1,23 @@
+{
+  "packet": "sha256:dd41141ee0959e6b604106e7b17787f883df06a400e25ceb38d823f4a6db52d9",
+  "schemas": 20,
+  "blank_workflow_reviews": 10,
+  "blank_probe_labels": 20,
+  "claim_capacity": 42,
+  "planned_generated_reviews": 21,
+  "refusal_cases": [
+    {
+      "case": "approved",
+      "refused": true
+    },
+    {
+      "case": "code_drift",
+      "refused": true
+    },
+    {
+      "case": "wire_drift",
+      "refused": true
+    }
+  ],
+  "provider_contacts": 0
+}

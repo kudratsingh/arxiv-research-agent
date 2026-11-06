@@ -1,0 +1,336 @@
+{
+  "basis": "Offline synthetic replay; synthetic contacts below are NOT provider contacts. Historical paid receipts are preserved separately.",
+  "application_commit": "b7240cf34b1ef1331e33fb992870da71528105e2",
+  "packet_digest": "1e5716df09364be0db9501e9d2bc7ff3184fc65655dbbb77c6cd658a2ae6a76f",
+  "accounting": {
+    "cumulative": {
+      "messages": 53,
+      "counts": 63,
+      "known_usd": "0.109967",
+      "pending_usd": "0",
+      "active_jobs": [],
+      "uncertain_contacts": false,
+      "unknown_usd": "0",
+      "generation_job_ids": [
+        "gen-0220a7f7d2d6e7e418db416894b26ae219103cf3",
+        "gen-0fb1168dad991d340ef7e4295e925e6a1d4a128e",
+        "gen-1ae5d8a9cd5808e8b5bca05f95f363fbd3782772",
+        "gen-201ce6b1d33086d623620acb9d517a1389f2512e",
+        "gen-40911bfbdb66e3aa6d05a0ddbe0e2c823887fb43",
+        "gen-553404f96785eed1998e339aec8831db1afc4b2a",
+        "gen-59a784e9e2548c7448ef9e1c6e726feb4f6edd18",
+        "gen-5dc6d01049822c3eef861ce68ba6d80582c20361",
+        "gen-6a14facb2264519e6807c05fcd4962cc349327ce",
+        "gen-6b0167f1654114cce615297572ab0bb5ddb62d52",
+        "gen-7d39f01ef595dc04a764c3783a42a57d4a8d5903",
+        "gen-82c609340b161fa70538e80dbc87b3bdd4479933",
+        "gen-8756d45f6d6f45ab8639bc20a373e8cdcfb66de3",
+        "gen-9802e08012c0d673126e3a3b65deb1ebb435962b",
+        "gen-9ad7294cf4131d231a122a8c275297f468793c7f",
+        "gen-a1d29836ee4918191a9a5bc74c8275af20754d26",
+        "gen-a1edbace2b3f53fc2f7742bb958013467e9274dc",
+        "gen-ba107fcfecc532337aee5cbd543259e045ae6c78",
+        "gen-ebb7fac951acba5d4e2a429049165fb4c87f9dde",
+        "gen-fa96b4ece589ed33caa94b106ce4abd231be2976",
+        "gen-fb0daa4ba032390f19127387e4551990258cb0f6"
+      ],
+      "models": [
+        "claude-sonnet-4-6",
+        "claude-sonnet-5-5"
+      ],
+      "contact_checkpoints": {
+        "gen-0220a7f7d2d6e7e418db416894b26ae219103cf3": {
+          "length": 2,
+          "digest": "17c7a5e039ceeba4db63439dd509c4efde182c4cf0bc2dc0573ec027dd40d944"
+        },
+        "gen-0ef0ee9242fe052829387cb2dec2922c074040da": {
+          "length": 1,
+          "digest": "1119afecf567cdb894276ebb5a0ca11f24617b52c94733c0395139d01a01792e"
+        },
+        "gen-0fb1168dad991d340ef7e4295e925e6a1d4a128e": {
+          "length": 8,
+          "digest": "8f0893b03075af0086c81c9ce45a0776608f9b880aa37d4ca6e2413eb3b75842"
+        },
+        "gen-168ffaa4899d154c0162c615df5b31a91eb9c5aa": {
+          "length": 1,
+          "digest": "2aa8f576ca9546ed3ca4bc06573ee9ea2d471e23bf4b0bfa2b3a08a65c979243"
+        },
+        "gen-1ae5d8a9cd5808e8b5bca05f95f363fbd3782772": {
+          "length": 2,
+          "digest": "dd15b181fd6c94884db460da593321fd55fc1f960aff521d2606d234cf0b753b"
+        },
+        "gen-201ce6b1d33086d623620acb9d517a1389f2512e": {
+          "length": 8,
+          "digest": "a03877e39f36979130062d7d950f86b85b12e2f3763e4dcdffe70b949d49d243"
+        },
+        "gen-40911bfbdb66e3aa6d05a0ddbe0e2c823887fb43": {
+          "length": 3,
+          "digest": "4fea58d87001e3f79e0cb2daec11780c3c8f6980798a2dcdedd3cd3ccd52c485"
+        },
+        "gen-553404f96785eed1998e339aec8831db1afc4b2a": {
+          "length": 8,
+          "digest": "28fa6fefa66cada5df1e41620b165b32e56a239be01df1192e2cd9dfbf1a7bd0"
+        },
+        "gen-59535cc51e120d0c904ffe141c28ffd81f69b9ae": {
+          "length": 1,
+          "digest": "1bdc04ce5816143e7b019aad05094ff06d746d0535f89a3e8bd996a59fa94aae"
+        },
+        "gen-59a784e9e2548c7448ef9e1c6e726feb4f6edd18": {
+          "length": 2,
+          "digest": "291e134246ff408fb09d87248d7a0c7c4d9ad498a6fa5f4db8281488a6931b68"
+        },
+        "gen-5dc6d01049822c3eef861ce68ba6d80582c20361": {
+          "length": 8,
+          "digest": "67653793b3dbf7e7a27d4ca5b969171c85d6e206dc6ef1476c432cdec229adf8"
+        },
+        "gen-6a14facb2264519e6807c05fcd4962cc349327ce": {
+          "length": 8,
+          "digest": "d195f794580907e5d7c64ef8350cd3b1113306d5e901079e3782c4e82963243f"
+        },
+        "gen-6b0167f1654114cce615297572ab0bb5ddb62d52": {
+          "length": 4,
+          "digest": "14ccfd643d38681f28f61e0a994209f22833c8dcb428c58d36605716f62f2e1c"
+        },
+        "gen-7d39f01ef595dc04a764c3783a42a57d4a8d5903": {
+          "length": 2,
+          "digest": "c07f677b3d90ee09bfd5cf611bf0a6670b34f7f7582b3818690cf7f7af3a6bc1"
+        },
+        "gen-804e573d60d8f1c4a755c7084395c2ab5f5984eb": {
+          "length": 1,
+          "digest": "bef8f251d6183432dd38e2598ec85c275f1aba34b99587957ec66961a4a26a79"
+        },
+        "gen-81caf070f44eb27bd0572ddf0ee18d4a61ae9e28": {
+          "length": 1,
+          "digest": "66c64ec25538c87dd71e375bef628d38c369fe9997d53201a9b3fbca04b882ca"
+        },
+        "gen-82c609340b161fa70538e80dbc87b3bdd4479933": {
+          "length": 5,
+          "digest": "61d4886104c3c6faa56a69b5c57b75c0ff293e7d041167de6648bd98c4cf50f2"
+        },
+        "gen-8756d45f6d6f45ab8639bc20a373e8cdcfb66de3": {
+          "length": 8,
+          "digest": "dc8adf9ed554e674c756c53ea959084f3ba1904d115e506ddde0b48db3407fd3"
+        },
+        "gen-9802e08012c0d673126e3a3b65deb1ebb435962b": {
+          "length": 8,
+          "digest": "04fd73adef84363e14e37808c0f0de1bbc28c7dcc8f01d641a491ee10aef9fee"
+        },
+        "gen-98c11075af7601190e1dc54cf368e07127d97b17": {
+          "length": 1,
+          "digest": "7ee23c7395b5f602ba1586937fb85ae40e83df46f7d00951945c606b84a34abe"
+        },
+        "gen-9ad7294cf4131d231a122a8c275297f468793c7f": {
+          "length": 8,
+          "digest": "17ced7abd81ab90fdd1ad91cd68c6f42c98e34cb468c33852258790a62c8c37d"
+        },
+        "gen-a1d29836ee4918191a9a5bc74c8275af20754d26": {
+          "length": 8,
+          "digest": "58563bfc9743cc594aa331e052f01f0e56d131f3ec45a2f8cee8bbc92f81f55b"
+        },
+        "gen-a1edbace2b3f53fc2f7742bb958013467e9274dc": {
+          "length": 8,
+          "digest": "f7477f760ef48efb93e2f8fb90562f561c6f0088c43bffd83526350fd79e5fb8"
+        },
+        "gen-ba107fcfecc532337aee5cbd543259e045ae6c78": {
+          "length": 2,
+          "digest": "35adece8143c629d78aacfbdb9448f21743ff4a3f8160d3b4acf2098b7dfa4d2"
+        },
+        "gen-d47a9ebeabb7845388e9d375ae384dd429ae117e": {
+          "length": 1,
+          "digest": "ce653e3154d69ee270137fc0b72301284b2382bdcf8e30fe1924d94c83eb7ab3"
+        },
+        "gen-e8aa5fc60857879aaac6f6e25aa1e6868af2096b": {
+          "length": 1,
+          "digest": "c53044d693ff0243ee9352a2144a538e809a216ae701262d8cbeb0dc297fd3e9"
+        },
+        "gen-ebb7fac951acba5d4e2a429049165fb4c87f9dde": {
+          "length": 2,
+          "digest": "3fd4d17a7fc0ed63e737351f4010a49848252e0954169f2e702ab9a3607f3b49"
+        },
+        "gen-fa96b4ece589ed33caa94b106ce4abd231be2976": {
+          "length": 2,
+          "digest": "b393d457ef50c2c05af8f0719830c7617f2dd13bf752a871f4df9d9558e70293"
+        },
+        "gen-fb0daa4ba032390f19127387e4551990258cb0f6": {
+          "length": 2,
+          "digest": "6b2b1ba79a7161104bfdbe21eb013518be12a53d13e80017ffa1b9a9eb89a8bc"
+        }
+      },
+      "history_digest": "ed8b1c47d9933de60379d597eb369f34490627d081748bfec06d75843c072608"
+    },
+    "new_scope": {
+      "messages": 44,
+      "counts": 48,
+      "known_usd": "0",
+      "pending_usd": "0",
+      "active_jobs": [],
+      "uncertain_contacts": false,
+      "unknown_usd": "0",
+      "generation_job_ids": [
+        "gen-0220a7f7d2d6e7e418db416894b26ae219103cf3",
+        "gen-0fb1168dad991d340ef7e4295e925e6a1d4a128e",
+        "gen-201ce6b1d33086d623620acb9d517a1389f2512e",
+        "gen-553404f96785eed1998e339aec8831db1afc4b2a",
+        "gen-5dc6d01049822c3eef861ce68ba6d80582c20361",
+        "gen-6a14facb2264519e6807c05fcd4962cc349327ce",
+        "gen-8756d45f6d6f45ab8639bc20a373e8cdcfb66de3",
+        "gen-9802e08012c0d673126e3a3b65deb1ebb435962b",
+        "gen-9ad7294cf4131d231a122a8c275297f468793c7f",
+        "gen-a1d29836ee4918191a9a5bc74c8275af20754d26",
+        "gen-a1edbace2b3f53fc2f7742bb958013467e9274dc",
+        "gen-ebb7fac951acba5d4e2a429049165fb4c87f9dde",
+        "gen-fa96b4ece589ed33caa94b106ce4abd231be2976",
+        "gen-fb0daa4ba032390f19127387e4551990258cb0f6"
+      ],
+      "models": [
+        "claude-sonnet-5-5"
+      ],
+      "contact_checkpoints": {
+        "gen-0220a7f7d2d6e7e418db416894b26ae219103cf3": {
+          "length": 2,
+          "digest": "17c7a5e039ceeba4db63439dd509c4efde182c4cf0bc2dc0573ec027dd40d944"
+        },
+        "gen-0ef0ee9242fe052829387cb2dec2922c074040da": {
+          "length": 1,
+          "digest": "1119afecf567cdb894276ebb5a0ca11f24617b52c94733c0395139d01a01792e"
+        },
+        "gen-0fb1168dad991d340ef7e4295e925e6a1d4a128e": {
+          "length": 8,
+          "digest": "8f0893b03075af0086c81c9ce45a0776608f9b880aa37d4ca6e2413eb3b75842"
+        },
+        "gen-201ce6b1d33086d623620acb9d517a1389f2512e": {
+          "length": 8,
+          "digest": "a03877e39f36979130062d7d950f86b85b12e2f3763e4dcdffe70b949d49d243"
+        },
+        "gen-553404f96785eed1998e339aec8831db1afc4b2a": {
+          "length": 8,
+          "digest": "28fa6fefa66cada5df1e41620b165b32e56a239be01df1192e2cd9dfbf1a7bd0"
+        },
+        "gen-59535cc51e120d0c904ffe141c28ffd81f69b9ae": {
+          "length": 1,
+          "digest": "1bdc04ce5816143e7b019aad05094ff06d746d0535f89a3e8bd996a59fa94aae"
+        },
+        "gen-5dc6d01049822c3eef861ce68ba6d80582c20361": {
+          "length": 8,
+          "digest": "67653793b3dbf7e7a27d4ca5b969171c85d6e206dc6ef1476c432cdec229adf8"
+        },
+        "gen-6a14facb2264519e6807c05fcd4962cc349327ce": {
+          "length": 8,
+          "digest": "d195f794580907e5d7c64ef8350cd3b1113306d5e901079e3782c4e82963243f"
+        },
+        "gen-8756d45f6d6f45ab8639bc20a373e8cdcfb66de3": {
+          "length": 8,
+          "digest": "dc8adf9ed554e674c756c53ea959084f3ba1904d115e506ddde0b48db3407fd3"
+        },
+        "gen-9802e08012c0d673126e3a3b65deb1ebb435962b": {
+          "length": 8,
+          "digest": "04fd73adef84363e14e37808c0f0de1bbc28c7dcc8f01d641a491ee10aef9fee"
+        },
+        "gen-9ad7294cf4131d231a122a8c275297f468793c7f": {
+          "length": 8,
+          "digest": "17ced7abd81ab90fdd1ad91cd68c6f42c98e34cb468c33852258790a62c8c37d"
+        },
+        "gen-a1d29836ee4918191a9a5bc74c8275af20754d26": {
+          "length": 8,
+          "digest": "58563bfc9743cc594aa331e052f01f0e56d131f3ec45a2f8cee8bbc92f81f55b"
+        },
+        "gen-a1edbace2b3f53fc2f7742bb958013467e9274dc": {
+          "length": 8,
+          "digest": "f7477f760ef48efb93e2f8fb90562f561c6f0088c43bffd83526350fd79e5fb8"
+        },
+        "gen-d47a9ebeabb7845388e9d375ae384dd429ae117e": {
+          "length": 1,
+          "digest": "ce653e3154d69ee270137fc0b72301284b2382bdcf8e30fe1924d94c83eb7ab3"
+        },
+        "gen-e8aa5fc60857879aaac6f6e25aa1e6868af2096b": {
+          "length": 1,
+          "digest": "c53044d693ff0243ee9352a2144a538e809a216ae701262d8cbeb0dc297fd3e9"
+        },
+        "gen-ebb7fac951acba5d4e2a429049165fb4c87f9dde": {
+          "length": 2,
+          "digest": "3fd4d17a7fc0ed63e737351f4010a49848252e0954169f2e702ab9a3607f3b49"
+        },
+        "gen-fa96b4ece589ed33caa94b106ce4abd231be2976": {
+          "length": 2,
+          "digest": "b393d457ef50c2c05af8f0719830c7617f2dd13bf752a871f4df9d9558e70293"
+        },
+        "gen-fb0daa4ba032390f19127387e4551990258cb0f6": {
+          "length": 2,
+          "digest": "6b2b1ba79a7161104bfdbe21eb013518be12a53d13e80017ffa1b9a9eb89a8bc"
+        }
+      },
+      "history_digest": "2692ea841ad1f3f04319f93ad227e9febc7732b4025c62b4680c8dd69dfb07f6"
+    },
+    "historical": {
+      "messages": 9,
+      "counts": 15,
+      "known_usd": "0.109967",
+      "pending_usd": "0",
+      "active_jobs": [],
+      "uncertain_contacts": false,
+      "unknown_usd": "0",
+      "generation_job_ids": [
+        "gen-1ae5d8a9cd5808e8b5bca05f95f363fbd3782772",
+        "gen-40911bfbdb66e3aa6d05a0ddbe0e2c823887fb43",
+        "gen-59a784e9e2548c7448ef9e1c6e726feb4f6edd18",
+        "gen-6b0167f1654114cce615297572ab0bb5ddb62d52",
+        "gen-7d39f01ef595dc04a764c3783a42a57d4a8d5903",
+        "gen-82c609340b161fa70538e80dbc87b3bdd4479933",
+        "gen-ba107fcfecc532337aee5cbd543259e045ae6c78"
+      ],
+      "models": [
+        "claude-sonnet-4-6",
+        "claude-sonnet-5-5"
+      ],
+      "contact_checkpoints": {
+        "gen-168ffaa4899d154c0162c615df5b31a91eb9c5aa": {
+          "length": 1,
+          "digest": "2aa8f576ca9546ed3ca4bc06573ee9ea2d471e23bf4b0bfa2b3a08a65c979243"
+        },
+        "gen-1ae5d8a9cd5808e8b5bca05f95f363fbd3782772": {
+          "length": 2,
+          "digest": "dd15b181fd6c94884db460da593321fd55fc1f960aff521d2606d234cf0b753b"
+        },
+        "gen-40911bfbdb66e3aa6d05a0ddbe0e2c823887fb43": {
+          "length": 3,
+          "digest": "4fea58d87001e3f79e0cb2daec11780c3c8f6980798a2dcdedd3cd3ccd52c485"
+        },
+        "gen-59a784e9e2548c7448ef9e1c6e726feb4f6edd18": {
+          "length": 2,
+          "digest": "291e134246ff408fb09d87248d7a0c7c4d9ad498a6fa5f4db8281488a6931b68"
+        },
+        "gen-6b0167f1654114cce615297572ab0bb5ddb62d52": {
+          "length": 4,
+          "digest": "14ccfd643d38681f28f61e0a994209f22833c8dcb428c58d36605716f62f2e1c"
+        },
+        "gen-7d39f01ef595dc04a764c3783a42a57d4a8d5903": {
+          "length": 2,
+          "digest": "c07f677b3d90ee09bfd5cf611bf0a6670b34f7f7582b3818690cf7f7af3a6bc1"
+        },
+        "gen-804e573d60d8f1c4a755c7084395c2ab5f5984eb": {
+          "length": 1,
+          "digest": "bef8f251d6183432dd38e2598ec85c275f1aba34b99587957ec66961a4a26a79"
+        },
+        "gen-81caf070f44eb27bd0572ddf0ee18d4a61ae9e28": {
+          "length": 1,
+          "digest": "66c64ec25538c87dd71e375bef628d38c369fe9997d53201a9b3fbca04b882ca"
+        },
+        "gen-82c609340b161fa70538e80dbc87b3bdd4479933": {
+          "length": 5,
+          "digest": "61d4886104c3c6faa56a69b5c57b75c0ff293e7d041167de6648bd98c4cf50f2"
+        },
+        "gen-98c11075af7601190e1dc54cf368e07127d97b17": {
+          "length": 1,
+          "digest": "7ee23c7395b5f602ba1586937fb85ae40e83df46f7d00951945c606b84a34abe"
+        },
+        "gen-ba107fcfecc532337aee5cbd543259e045ae6c78": {
+          "length": 2,
+          "digest": "35adece8143c629d78aacfbdb9448f21743ff4a3f8160d3b4acf2098b7dfa4d2"
+        }
+      },
+      "history_digest": "11afb945528e842e4af88b990d873185749b100ee8947a1a8ead20e1776448a8"
+    },
+    "actual_new_provider_contacts": 0,
+    "invoice_confirmed": false
+  }
+}

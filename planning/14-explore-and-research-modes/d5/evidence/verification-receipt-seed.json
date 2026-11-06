@@ -1,0 +1,14 @@
+{
+  "database": "workspace_d5_verify",
+  "updated": [
+    "arxiv-cs-lg",
+    "arxiv-cs-ai",
+    "arxiv-cs-cl",
+    "hugging-face",
+    "google-research"
+  ],
+  "requests": 0,
+  "owner_modified": false,
+  "preview_modified": false,
+  "meaning": "Explicit not-checked state, not a successful source receipt"
+}

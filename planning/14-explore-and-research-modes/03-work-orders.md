@@ -78,6 +78,8 @@ realistic wire/local schemas, usage split/reservations/uncertain completion,
 qualified evaluation evidence and **separate owner authorization for everyday
 paid execution**. No everyday release follows from unused trial budget.
 
+D5 implementation checkpoint: applicationb7240cf, protected production adapter/admission with injected MockTransport, frozen end-to-end benchmark and GET-only Reader results are implemented and verified offline. [Current runbook](d5/RUNBOOK.md) and [quality report](d5/OFFLINE-QUALITY.md) separate software completion from semantic qualification. Next: separately approve the named StageA measurement scope, inspect actual fit, then explicitly authorize funded stages. No stage was dispatched and this document grants none. Independent factual/checker/usefulness evidence remains required before everyday release.
+
 ## D6 — owner daily-use review
 
 Run finite manual sessions in both modes with real metadata/source links and

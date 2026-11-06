@@ -1,0 +1,18 @@
+{
+  "api": {
+    "floor": 86,
+    "actual_rounded": "88"
+  },
+  "agents": {
+    "floor": 92,
+    "actual_rounded": "96"
+  },
+  "security": {
+    "floor": 97,
+    "actual_rounded": "100"
+  },
+  "eval": {
+    "floor": 91,
+    "actual_rounded": "95"
+  }
+}

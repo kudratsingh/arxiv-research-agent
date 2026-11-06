@@ -1,0 +1,54 @@
+[
+  {
+    "width": 1440,
+    "restartResume": true,
+    "failedReadRecovery": true,
+    "consoleErrors": []
+  },
+  {
+    "width": 390,
+    "restartResume": true,
+    "failedReadRecovery": true,
+    "consoleErrors": []
+  },
+  {
+    "recording": "1440-light",
+    "duration": 17.88,
+    "frames": [
+      0.15,
+      0.5,
+      0.85
+    ],
+    "review": "sampled frames from original WebM; no blanket animation-quality claim"
+  },
+  {
+    "recording": "1440-dark",
+    "duration": 17.36,
+    "frames": [
+      0.15,
+      0.5,
+      0.85
+    ],
+    "review": "sampled frames from original WebM; no blanket animation-quality claim"
+  },
+  {
+    "recording": "390-light",
+    "duration": 16.56,
+    "frames": [
+      0.15,
+      0.5,
+      0.85
+    ],
+    "review": "sampled frames from original WebM; no blanket animation-quality claim"
+  },
+  {
+    "recording": "390-dark",
+    "duration": 16.88,
+    "frames": [
+      0.15,
+      0.5,
+      0.85
+    ],
+    "review": "sampled frames from original WebM; no blanket animation-quality claim"
+  }
+]

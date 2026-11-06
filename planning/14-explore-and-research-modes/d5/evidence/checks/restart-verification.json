@@ -1,0 +1,22 @@
+{
+  "before": {
+    "workspace_generation_jobs": 29,
+    "workspace_entries": 2,
+    "workspace_learning_threads": 1,
+    "workspace_projects": 10,
+    "workspace_reading": 3,
+    "workspace_spend_reservations": 29
+  },
+  "after": {
+    "workspace_generation_jobs": 29,
+    "workspace_entries": 2,
+    "workspace_learning_threads": 1,
+    "workspace_projects": 10,
+    "workspace_reading": 3,
+    "workspace_spend_reservations": 29
+  },
+  "new_processes": true,
+  "unchanged_build": "Mh3EAZc3soYDoaWmy__H5",
+  "owner3137_and_review3178_listening": true,
+  "provider_contacts": 0
+}

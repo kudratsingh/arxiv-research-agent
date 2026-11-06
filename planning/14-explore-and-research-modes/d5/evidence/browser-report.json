@@ -1,0 +1,489 @@
+{
+  "applicationCommit": "67f90046483506636f9786caa182465f73861605",
+  "buildId": "Bff_24k2dBoujsa9esh0E",
+  "contexts": [
+    {
+      "name": "1440-light",
+      "mode": "learn",
+      "job": "fake-75bd7d8e3bea9ed836c8d2ea0891f56ebf5c69fa",
+      "state": "ready_partial",
+      "citations": [
+        {
+          "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+          "span_id": "span-f6302b12e1703fd9e72c10e91b06a42b",
+          "work_id": "arxiv:2210.03629",
+          "version_id": "arxiv:2210.03629:v3",
+          "source_hash": "sha256:f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69",
+          "scope": "excerpt",
+          "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+          "page": 3,
+          "start": 0,
+          "end": 1530,
+          "quote": "Published as a conference paper at ICLR 2023\n\n\n\n\nWe conduct empirical evaluations of ReAct and state-of-the-art baselines on four diverse benchmarks:\nquestion answering (HotPotQA, Yang et al., 2018), fact veriﬁcation (Fever, Thorne et al., 2018),\ntext-based game (ALFWorld, Shridhar et al., 2020b), and webpage navigation (WebShop, Yao\net al., 2022). For HotPotQA and Fever, with access to a Wikipedia API that the model can interact\nwith, ReAct outperforms vanilla action generation models while being competitive with chain-of-\nthought reasoning (CoT) (Wei et al., 2022). The best approach overall is a combination of ReAct\nand CoT that allows for the use of both internal knowledge and externally obtained information\nduring reasoning. On ALFWorld and WebShop, two or even one-shot ReAct prompting is able\nto outperform imitation or reinforcement learning methods trained with 103 ∼105 task instances,\nwith an absolute improvement of 34% and 10% in success rates respectively. We also demonstrate\nthe importance of sparse, versatile reasoning in decision making by showing consistent advantages\nover controlled baselines with actions only. Besides general applicability and performance boost,\nthe combination of reasoning and acting also contributes to model interpretability, trustworthiness,\nand diagnosability across all domains, as humans can readily distinguish information from model’s\ninternal knowledge versus external environments, as well as inspect reasoning traces to understand\nthe decision basis of model actions."
+        }
+      ],
+      "axeSerious": 0,
+      "reload": "pass",
+      "recurrence": false
+    },
+    {
+      "name": "1440-light",
+      "mode": "research",
+      "job": "fake-cf4f1f0b65f56297bcd35698434c053381094053",
+      "state": "ready_partial",
+      "citations": [
+        {
+          "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+          "span_id": "span-f6302b12e1703fd9e72c10e91b06a42b",
+          "work_id": "arxiv:2210.03629",
+          "version_id": "arxiv:2210.03629:v3",
+          "source_hash": "sha256:f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69",
+          "scope": "excerpt",
+          "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+          "page": 3,
+          "start": 0,
+          "end": 1530,
+          "quote": "Published as a conference paper at ICLR 2023\n\n\n\n\nWe conduct empirical evaluations of ReAct and state-of-the-art baselines on four diverse benchmarks:\nquestion answering (HotPotQA, Yang et al., 2018), fact veriﬁcation (Fever, Thorne et al., 2018),\ntext-based game (ALFWorld, Shridhar et al., 2020b), and webpage navigation (WebShop, Yao\net al., 2022). For HotPotQA and Fever, with access to a Wikipedia API that the model can interact\nwith, ReAct outperforms vanilla action generation models while being competitive with chain-of-\nthought reasoning (CoT) (Wei et al., 2022). The best approach overall is a combination of ReAct\nand CoT that allows for the use of both internal knowledge and externally obtained information\nduring reasoning. On ALFWorld and WebShop, two or even one-shot ReAct prompting is able\nto outperform imitation or reinforcement learning methods trained with 103 ∼105 task instances,\nwith an absolute improvement of 34% and 10% in success rates respectively. We also demonstrate\nthe importance of sparse, versatile reasoning in decision making by showing consistent advantages\nover controlled baselines with actions only. Besides general applicability and performance boost,\nthe combination of reasoning and acting also contributes to model interpretability, trustworthiness,\nand diagnosability across all domains, as humans can readily distinguish information from model’s\ninternal knowledge versus external environments, as well as inspect reasoning traces to understand\nthe decision basis of model actions."
+        },
+        {
+          "material_id": "mat-f98fbd73f423776117f60cac36edc90a",
+          "span_id": "span-680cf9eb89733bb45f3d65a0af448ca4",
+          "work_id": "arxiv:2310.11511",
+          "version_id": "arxiv:2310.11511:v1",
+          "source_hash": "sha256:d9eaa1398abac0df67a9d0933a5bf8b6d9d83d2e72da2a486073cd842dd52978",
+          "scope": "excerpt",
+          "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+          "page": 1,
+          "start": 25,
+          "end": 1480,
+          "quote": "Preprint.\n\n\n\n           SELF-RAG: LEARNING TO RETRIEVE, GENERATE, AND\n           CRITIQUE THROUGH SELF-REFLECTION\n\n\n                     Akari Asai†, Zeqiu Wu†, Yizhong Wang†§, Avirup Sil‡, Hannaneh Hajishirzi†§\n                         †University of Washington   §Allen Institute for AI  ‡IBM Research AI\n                  {akari,zeqiuwu,yizhongw,hannaneh}@cs.washington.edu, avi@us.ibm.com\n\n\n                                       ABSTRACT\n\n                               Despite their remarkable capabilities, large language models (LLMs) often produce\n                               responses containing factual inaccuracies due to their sole reliance on the paramet-2023\n                                     ric knowledge they encapsulate. Retrieval-Augmented Generation (RAG), an ad\n                            hoc approach that augments LMs with retrieval of relevant knowledge, decreases\n                              such issues. However, indiscriminately retrieving and incorporating a fixed numberOct                                of retrieved passages, regardless of whether retrieval is necessary, or passages are\n17                 Werelevant,introducediminishesa new frameworkLM versatilitycalledorSelf-Reflectivecan lead to unhelpfulRetrieval-Augmentedresponse generation.Gen-\n                               eration (SELF-RAG) that enhances an LM’s quality and factuality through retrieval\n                           and self-reflection."
+        }
+      ],
+      "axeSerious": 0,
+      "reload": "pass",
+      "recurrence": false
+    },
+    {
+      "name": "1440-dark",
+      "mode": "learn",
+      "job": "fake-75bd7d8e3bea9ed836c8d2ea0891f56ebf5c69fa",
+      "state": "ready_partial",
+      "citations": [
+        {
+          "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+          "span_id": "span-f6302b12e1703fd9e72c10e91b06a42b",
+          "work_id": "arxiv:2210.03629",
+          "version_id": "arxiv:2210.03629:v3",
+          "source_hash": "sha256:f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69",
+          "scope": "excerpt",
+          "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+          "page": 3,
+          "start": 0,
+          "end": 1530,
+          "quote": "Published as a conference paper at ICLR 2023\n\n\n\n\nWe conduct empirical evaluations of ReAct and state-of-the-art baselines on four diverse benchmarks:\nquestion answering (HotPotQA, Yang et al., 2018), fact veriﬁcation (Fever, Thorne et al., 2018),\ntext-based game (ALFWorld, Shridhar et al., 2020b), and webpage navigation (WebShop, Yao\net al., 2022). For HotPotQA and Fever, with access to a Wikipedia API that the model can interact\nwith, ReAct outperforms vanilla action generation models while being competitive with chain-of-\nthought reasoning (CoT) (Wei et al., 2022). The best approach overall is a combination of ReAct\nand CoT that allows for the use of both internal knowledge and externally obtained information\nduring reasoning. On ALFWorld and WebShop, two or even one-shot ReAct prompting is able\nto outperform imitation or reinforcement learning methods trained with 103 ∼105 task instances,\nwith an absolute improvement of 34% and 10% in success rates respectively. We also demonstrate\nthe importance of sparse, versatile reasoning in decision making by showing consistent advantages\nover controlled baselines with actions only. Besides general applicability and performance boost,\nthe combination of reasoning and acting also contributes to model interpretability, trustworthiness,\nand diagnosability across all domains, as humans can readily distinguish information from model’s\ninternal knowledge versus external environments, as well as inspect reasoning traces to understand\nthe decision basis of model actions."
+        }
+      ],
+      "axeSerious": 0,
+      "reload": "pass",
+      "recurrence": false
+    },
+    {
+      "name": "1440-dark",
+      "mode": "research",
+      "job": "fake-4c7add85c6e876394fbe8ecb65631c682767726a",
+      "state": "ready_partial",
+      "citations": [
+        {
+          "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+          "span_id": "span-f6302b12e1703fd9e72c10e91b06a42b",
+          "work_id": "arxiv:2210.03629",
+          "version_id": "arxiv:2210.03629:v3",
+          "source_hash": "sha256:f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69",
+          "scope": "excerpt",
+          "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+          "page": 3,
+          "start": 0,
+          "end": 1530,
+          "quote": "Published as a conference paper at ICLR 2023\n\n\n\n\nWe conduct empirical evaluations of ReAct and state-of-the-art baselines on four diverse benchmarks:\nquestion answering (HotPotQA, Yang et al., 2018), fact veriﬁcation (Fever, Thorne et al., 2018),\ntext-based game (ALFWorld, Shridhar et al., 2020b), and webpage navigation (WebShop, Yao\net al., 2022). For HotPotQA and Fever, with access to a Wikipedia API that the model can interact\nwith, ReAct outperforms vanilla action generation models while being competitive with chain-of-\nthought reasoning (CoT) (Wei et al., 2022). The best approach overall is a combination of ReAct\nand CoT that allows for the use of both internal knowledge and externally obtained information\nduring reasoning. On ALFWorld and WebShop, two or even one-shot ReAct prompting is able\nto outperform imitation or reinforcement learning methods trained with 103 ∼105 task instances,\nwith an absolute improvement of 34% and 10% in success rates respectively. We also demonstrate\nthe importance of sparse, versatile reasoning in decision making by showing consistent advantages\nover controlled baselines with actions only. Besides general applicability and performance boost,\nthe combination of reasoning and acting also contributes to model interpretability, trustworthiness,\nand diagnosability across all domains, as humans can readily distinguish information from model’s\ninternal knowledge versus external environments, as well as inspect reasoning traces to understand\nthe decision basis of model actions."
+        },
+        {
+          "material_id": "mat-f98fbd73f423776117f60cac36edc90a",
+          "span_id": "span-680cf9eb89733bb45f3d65a0af448ca4",
+          "work_id": "arxiv:2310.11511",
+          "version_id": "arxiv:2310.11511:v1",
+          "source_hash": "sha256:d9eaa1398abac0df67a9d0933a5bf8b6d9d83d2e72da2a486073cd842dd52978",
+          "scope": "excerpt",
+          "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+          "page": 1,
+          "start": 25,
+          "end": 1480,
+          "quote": "Preprint.\n\n\n\n           SELF-RAG: LEARNING TO RETRIEVE, GENERATE, AND\n           CRITIQUE THROUGH SELF-REFLECTION\n\n\n                     Akari Asai†, Zeqiu Wu†, Yizhong Wang†§, Avirup Sil‡, Hannaneh Hajishirzi†§\n                         †University of Washington   §Allen Institute for AI  ‡IBM Research AI\n                  {akari,zeqiuwu,yizhongw,hannaneh}@cs.washington.edu, avi@us.ibm.com\n\n\n                                       ABSTRACT\n\n                               Despite their remarkable capabilities, large language models (LLMs) often produce\n                               responses containing factual inaccuracies due to their sole reliance on the paramet-2023\n                                     ric knowledge they encapsulate. Retrieval-Augmented Generation (RAG), an ad\n                            hoc approach that augments LMs with retrieval of relevant knowledge, decreases\n                              such issues. However, indiscriminately retrieving and incorporating a fixed numberOct                                of retrieved passages, regardless of whether retrieval is necessary, or passages are\n17                 Werelevant,introducediminishesa new frameworkLM versatilitycalledorSelf-Reflectivecan lead to unhelpfulRetrieval-Augmentedresponse generation.Gen-\n                               eration (SELF-RAG) that enhances an LM’s quality and factuality through retrieval\n                           and self-reflection."
+        }
+      ],
+      "axeSerious": 0,
+      "reload": "pass",
+      "recurrence": false
+    },
+    {
+      "name": "390-light",
+      "mode": "learn",
+      "job": "fake-75bd7d8e3bea9ed836c8d2ea0891f56ebf5c69fa",
+      "state": "ready_partial",
+      "citations": [
+        {
+          "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+          "span_id": "span-f6302b12e1703fd9e72c10e91b06a42b",
+          "work_id": "arxiv:2210.03629",
+          "version_id": "arxiv:2210.03629:v3",
+          "source_hash": "sha256:f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69",
+          "scope": "excerpt",
+          "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+          "page": 3,
+          "start": 0,
+          "end": 1530,
+          "quote": "Published as a conference paper at ICLR 2023\n\n\n\n\nWe conduct empirical evaluations of ReAct and state-of-the-art baselines on four diverse benchmarks:\nquestion answering (HotPotQA, Yang et al., 2018), fact veriﬁcation (Fever, Thorne et al., 2018),\ntext-based game (ALFWorld, Shridhar et al., 2020b), and webpage navigation (WebShop, Yao\net al., 2022). For HotPotQA and Fever, with access to a Wikipedia API that the model can interact\nwith, ReAct outperforms vanilla action generation models while being competitive with chain-of-\nthought reasoning (CoT) (Wei et al., 2022). The best approach overall is a combination of ReAct\nand CoT that allows for the use of both internal knowledge and externally obtained information\nduring reasoning. On ALFWorld and WebShop, two or even one-shot ReAct prompting is able\nto outperform imitation or reinforcement learning methods trained with 103 ∼105 task instances,\nwith an absolute improvement of 34% and 10% in success rates respectively. We also demonstrate\nthe importance of sparse, versatile reasoning in decision making by showing consistent advantages\nover controlled baselines with actions only. Besides general applicability and performance boost,\nthe combination of reasoning and acting also contributes to model interpretability, trustworthiness,\nand diagnosability across all domains, as humans can readily distinguish information from model’s\ninternal knowledge versus external environments, as well as inspect reasoning traces to understand\nthe decision basis of model actions."
+        }
+      ],
+      "axeSerious": 0,
+      "reload": "pass",
+      "recurrence": false
+    },
+    {
+      "name": "390-light",
+      "mode": "research",
+      "job": "fake-913cc636b7ffd6b17c34661327bab3173a97f880",
+      "state": "ready_partial",
+      "citations": [
+        {
+          "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+          "span_id": "span-f6302b12e1703fd9e72c10e91b06a42b",
+          "work_id": "arxiv:2210.03629",
+          "version_id": "arxiv:2210.03629:v3",
+          "source_hash": "sha256:f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69",
+          "scope": "excerpt",
+          "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+          "page": 3,
+          "start": 0,
+          "end": 1530,
+          "quote": "Published as a conference paper at ICLR 2023\n\n\n\n\nWe conduct empirical evaluations of ReAct and state-of-the-art baselines on four diverse benchmarks:\nquestion answering (HotPotQA, Yang et al., 2018), fact veriﬁcation (Fever, Thorne et al., 2018),\ntext-based game (ALFWorld, Shridhar et al., 2020b), and webpage navigation (WebShop, Yao\net al., 2022). For HotPotQA and Fever, with access to a Wikipedia API that the model can interact\nwith, ReAct outperforms vanilla action generation models while being competitive with chain-of-\nthought reasoning (CoT) (Wei et al., 2022). The best approach overall is a combination of ReAct\nand CoT that allows for the use of both internal knowledge and externally obtained information\nduring reasoning. On ALFWorld and WebShop, two or even one-shot ReAct prompting is able\nto outperform imitation or reinforcement learning methods trained with 103 ∼105 task instances,\nwith an absolute improvement of 34% and 10% in success rates respectively. We also demonstrate\nthe importance of sparse, versatile reasoning in decision making by showing consistent advantages\nover controlled baselines with actions only. Besides general applicability and performance boost,\nthe combination of reasoning and acting also contributes to model interpretability, trustworthiness,\nand diagnosability across all domains, as humans can readily distinguish information from model’s\ninternal knowledge versus external environments, as well as inspect reasoning traces to understand\nthe decision basis of model actions."
+        },
+        {
+          "material_id": "mat-f98fbd73f423776117f60cac36edc90a",
+          "span_id": "span-680cf9eb89733bb45f3d65a0af448ca4",
+          "work_id": "arxiv:2310.11511",
+          "version_id": "arxiv:2310.11511:v1",
+          "source_hash": "sha256:d9eaa1398abac0df67a9d0933a5bf8b6d9d83d2e72da2a486073cd842dd52978",
+          "scope": "excerpt",
+          "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+          "page": 1,
+          "start": 25,
+          "end": 1480,
+          "quote": "Preprint.\n\n\n\n           SELF-RAG: LEARNING TO RETRIEVE, GENERATE, AND\n           CRITIQUE THROUGH SELF-REFLECTION\n\n\n                     Akari Asai†, Zeqiu Wu†, Yizhong Wang†§, Avirup Sil‡, Hannaneh Hajishirzi†§\n                         †University of Washington   §Allen Institute for AI  ‡IBM Research AI\n                  {akari,zeqiuwu,yizhongw,hannaneh}@cs.washington.edu, avi@us.ibm.com\n\n\n                                       ABSTRACT\n\n                               Despite their remarkable capabilities, large language models (LLMs) often produce\n                               responses containing factual inaccuracies due to their sole reliance on the paramet-2023\n                                     ric knowledge they encapsulate. Retrieval-Augmented Generation (RAG), an ad\n                            hoc approach that augments LMs with retrieval of relevant knowledge, decreases\n                              such issues. However, indiscriminately retrieving and incorporating a fixed numberOct                                of retrieved passages, regardless of whether retrieval is necessary, or passages are\n17                 Werelevant,introducediminishesa new frameworkLM versatilitycalledorSelf-Reflectivecan lead to unhelpfulRetrieval-Augmentedresponse generation.Gen-\n                               eration (SELF-RAG) that enhances an LM’s quality and factuality through retrieval\n                           and self-reflection."
+        }
+      ],
+      "axeSerious": 0,
+      "reload": "pass",
+      "recurrence": false
+    },
+    {
+      "name": "390-dark",
+      "mode": "learn",
+      "job": "fake-75bd7d8e3bea9ed836c8d2ea0891f56ebf5c69fa",
+      "state": "ready_partial",
+      "citations": [
+        {
+          "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+          "span_id": "span-f6302b12e1703fd9e72c10e91b06a42b",
+          "work_id": "arxiv:2210.03629",
+          "version_id": "arxiv:2210.03629:v3",
+          "source_hash": "sha256:f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69",
+          "scope": "excerpt",
+          "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+          "page": 3,
+          "start": 0,
+          "end": 1530,
+          "quote": "Published as a conference paper at ICLR 2023\n\n\n\n\nWe conduct empirical evaluations of ReAct and state-of-the-art baselines on four diverse benchmarks:\nquestion answering (HotPotQA, Yang et al., 2018), fact veriﬁcation (Fever, Thorne et al., 2018),\ntext-based game (ALFWorld, Shridhar et al., 2020b), and webpage navigation (WebShop, Yao\net al., 2022). For HotPotQA and Fever, with access to a Wikipedia API that the model can interact\nwith, ReAct outperforms vanilla action generation models while being competitive with chain-of-\nthought reasoning (CoT) (Wei et al., 2022). The best approach overall is a combination of ReAct\nand CoT that allows for the use of both internal knowledge and externally obtained information\nduring reasoning. On ALFWorld and WebShop, two or even one-shot ReAct prompting is able\nto outperform imitation or reinforcement learning methods trained with 103 ∼105 task instances,\nwith an absolute improvement of 34% and 10% in success rates respectively. We also demonstrate\nthe importance of sparse, versatile reasoning in decision making by showing consistent advantages\nover controlled baselines with actions only. Besides general applicability and performance boost,\nthe combination of reasoning and acting also contributes to model interpretability, trustworthiness,\nand diagnosability across all domains, as humans can readily distinguish information from model’s\ninternal knowledge versus external environments, as well as inspect reasoning traces to understand\nthe decision basis of model actions."
+        }
+      ],
+      "axeSerious": 0,
+      "reload": "pass",
+      "recurrence": false
+    },
+    {
+      "name": "390-dark",
+      "mode": "research",
+      "job": "fake-6a5918d821c61f25de9a00feef7643e7d799699c",
+      "state": "ready_partial",
+      "citations": [
+        {
+          "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+          "span_id": "span-f6302b12e1703fd9e72c10e91b06a42b",
+          "work_id": "arxiv:2210.03629",
+          "version_id": "arxiv:2210.03629:v3",
+          "source_hash": "sha256:f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69",
+          "scope": "excerpt",
+          "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+          "page": 3,
+          "start": 0,
+          "end": 1530,
+          "quote": "Published as a conference paper at ICLR 2023\n\n\n\n\nWe conduct empirical evaluations of ReAct and state-of-the-art baselines on four diverse benchmarks:\nquestion answering (HotPotQA, Yang et al., 2018), fact veriﬁcation (Fever, Thorne et al., 2018),\ntext-based game (ALFWorld, Shridhar et al., 2020b), and webpage navigation (WebShop, Yao\net al., 2022). For HotPotQA and Fever, with access to a Wikipedia API that the model can interact\nwith, ReAct outperforms vanilla action generation models while being competitive with chain-of-\nthought reasoning (CoT) (Wei et al., 2022). The best approach overall is a combination of ReAct\nand CoT that allows for the use of both internal knowledge and externally obtained information\nduring reasoning. On ALFWorld and WebShop, two or even one-shot ReAct prompting is able\nto outperform imitation or reinforcement learning methods trained with 103 ∼105 task instances,\nwith an absolute improvement of 34% and 10% in success rates respectively. We also demonstrate\nthe importance of sparse, versatile reasoning in decision making by showing consistent advantages\nover controlled baselines with actions only. Besides general applicability and performance boost,\nthe combination of reasoning and acting also contributes to model interpretability, trustworthiness,\nand diagnosability across all domains, as humans can readily distinguish information from model’s\ninternal knowledge versus external environments, as well as inspect reasoning traces to understand\nthe decision basis of model actions."
+        },
+        {
+          "material_id": "mat-f98fbd73f423776117f60cac36edc90a",
+          "span_id": "span-680cf9eb89733bb45f3d65a0af448ca4",
+          "work_id": "arxiv:2310.11511",
+          "version_id": "arxiv:2310.11511:v1",
+          "source_hash": "sha256:d9eaa1398abac0df67a9d0933a5bf8b6d9d83d2e72da2a486073cd842dd52978",
+          "scope": "excerpt",
+          "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+          "page": 1,
+          "start": 25,
+          "end": 1480,
+          "quote": "Preprint.\n\n\n\n           SELF-RAG: LEARNING TO RETRIEVE, GENERATE, AND\n           CRITIQUE THROUGH SELF-REFLECTION\n\n\n                     Akari Asai†, Zeqiu Wu†, Yizhong Wang†§, Avirup Sil‡, Hannaneh Hajishirzi†§\n                         †University of Washington   §Allen Institute for AI  ‡IBM Research AI\n                  {akari,zeqiuwu,yizhongw,hannaneh}@cs.washington.edu, avi@us.ibm.com\n\n\n                                       ABSTRACT\n\n                               Despite their remarkable capabilities, large language models (LLMs) often produce\n                               responses containing factual inaccuracies due to their sole reliance on the paramet-2023\n                                     ric knowledge they encapsulate. Retrieval-Augmented Generation (RAG), an ad\n                            hoc approach that augments LMs with retrieval of relevant knowledge, decreases\n                              such issues. However, indiscriminately retrieving and incorporating a fixed numberOct                                of retrieved passages, regardless of whether retrieval is necessary, or passages are\n17                 Werelevant,introducediminishesa new frameworkLM versatilitycalledorSelf-Reflectivecan lead to unhelpfulRetrieval-Augmentedresponse generation.Gen-\n                               eration (SELF-RAG) that enhances an LM’s quality and factuality through retrieval\n                           and self-reflection."
+        }
+      ],
+      "axeSerious": 0,
+      "reload": "pass",
+      "recurrence": false
+    }
+  ],
+  "errors": [],
+  "blocked": [],
+  "contacts": [
+    {
+      "context": "1440-light",
+      "path": "/api/workspace/assistance/preview"
+    },
+    {
+      "context": "1440-light",
+      "path": "/api/workspace/assistance/jobs"
+    },
+    {
+      "context": "1440-light",
+      "path": "/api/workspace/assistance/jobs/fake-75bd7d8e3bea9ed836c8d2ea0891f56ebf5c69fa/advance"
+    },
+    {
+      "context": "1440-light",
+      "path": "/api/workspace/assistance/jobs/fake-75bd7d8e3bea9ed836c8d2ea0891f56ebf5c69fa/advance"
+    },
+    {
+      "context": "1440-light",
+      "path": "/api/workspace/context/reading"
+    },
+    {
+      "context": "1440-light",
+      "path": "/api/workspace/context/reading"
+    },
+    {
+      "context": "1440-light",
+      "path": "/api/workspace/context/entries"
+    },
+    {
+      "context": "1440-light",
+      "path": "/api/workspace/context/threads"
+    },
+    {
+      "context": "1440-light",
+      "path": "/api/workspace/assistance/preview"
+    },
+    {
+      "context": "1440-light",
+      "path": "/api/workspace/assistance/jobs"
+    },
+    {
+      "context": "1440-light",
+      "path": "/api/workspace/assistance/jobs/fake-cf4f1f0b65f56297bcd35698434c053381094053/advance"
+    },
+    {
+      "context": "1440-light",
+      "path": "/api/workspace/assistance/jobs/fake-cf4f1f0b65f56297bcd35698434c053381094053/advance"
+    },
+    {
+      "context": "1440-light",
+      "path": "/api/workspace/context/reading"
+    },
+    {
+      "context": "1440-light",
+      "path": "/api/workspace/context/reading"
+    },
+    {
+      "context": "1440-light",
+      "path": "/api/workspace/context/entries"
+    },
+    {
+      "context": "1440-light",
+      "path": "/api/workspace/context/projects/project-55555555555555555555555555555555/entries"
+    },
+    {
+      "context": "1440-dark",
+      "path": "/api/workspace/assistance/preview"
+    },
+    {
+      "context": "1440-dark",
+      "path": "/api/workspace/assistance/jobs"
+    },
+    {
+      "context": "1440-dark",
+      "path": "/api/workspace/context/reading"
+    },
+    {
+      "context": "1440-dark",
+      "path": "/api/workspace/context/reading"
+    },
+    {
+      "context": "1440-dark",
+      "path": "/api/workspace/context/entries"
+    },
+    {
+      "context": "1440-dark",
+      "path": "/api/workspace/context/threads"
+    },
+    {
+      "context": "1440-dark",
+      "path": "/api/workspace/assistance/preview"
+    },
+    {
+      "context": "1440-dark",
+      "path": "/api/workspace/assistance/jobs"
+    },
+    {
+      "context": "1440-dark",
+      "path": "/api/workspace/assistance/jobs/fake-4c7add85c6e876394fbe8ecb65631c682767726a/advance"
+    },
+    {
+      "context": "1440-dark",
+      "path": "/api/workspace/assistance/jobs/fake-4c7add85c6e876394fbe8ecb65631c682767726a/advance"
+    },
+    {
+      "context": "1440-dark",
+      "path": "/api/workspace/context/reading"
+    },
+    {
+      "context": "1440-dark",
+      "path": "/api/workspace/context/reading"
+    },
+    {
+      "context": "1440-dark",
+      "path": "/api/workspace/context/entries"
+    },
+    {
+      "context": "1440-dark",
+      "path": "/api/workspace/context/projects/project-55555555555555555555555555555555/entries"
+    },
+    {
+      "context": "390-light",
+      "path": "/api/workspace/assistance/preview"
+    },
+    {
+      "context": "390-light",
+      "path": "/api/workspace/assistance/jobs"
+    },
+    {
+      "context": "390-light",
+      "path": "/api/workspace/context/reading"
+    },
+    {
+      "context": "390-light",
+      "path": "/api/workspace/context/reading"
+    },
+    {
+      "context": "390-light",
+      "path": "/api/workspace/context/entries"
+    },
+    {
+      "context": "390-light",
+      "path": "/api/workspace/context/threads"
+    },
+    {
+      "context": "390-light",
+      "path": "/api/workspace/assistance/preview"
+    },
+    {
+      "context": "390-light",
+      "path": "/api/workspace/assistance/jobs"
+    },
+    {
+      "context": "390-light",
+      "path": "/api/workspace/assistance/jobs/fake-913cc636b7ffd6b17c34661327bab3173a97f880/advance"
+    },
+    {
+      "context": "390-light",
+      "path": "/api/workspace/assistance/jobs/fake-913cc636b7ffd6b17c34661327bab3173a97f880/advance"
+    },
+    {
+      "context": "390-light",
+      "path": "/api/workspace/context/reading"
+    },
+    {
+      "context": "390-light",
+      "path": "/api/workspace/context/reading"
+    },
+    {
+      "context": "390-light",
+      "path": "/api/workspace/context/entries"
+    },
+    {
+      "context": "390-light",
+      "path": "/api/workspace/context/projects/project-55555555555555555555555555555555/entries"
+    },
+    {
+      "context": "390-dark",
+      "path": "/api/workspace/assistance/preview"
+    },
+    {
+      "context": "390-dark",
+      "path": "/api/workspace/assistance/jobs"
+    },
+    {
+      "context": "390-dark",
+      "path": "/api/workspace/context/reading"
+    },
+    {
+      "context": "390-dark",
+      "path": "/api/workspace/context/reading"
+    },
+    {
+      "context": "390-dark",
+      "path": "/api/workspace/context/entries"
+    },
+    {
+      "context": "390-dark",
+      "path": "/api/workspace/context/threads"
+    },
+    {
+      "context": "390-dark",
+      "path": "/api/workspace/assistance/preview"
+    },
+    {
+      "context": "390-dark",
+      "path": "/api/workspace/assistance/jobs"
+    },
+    {
+      "context": "390-dark",
+      "path": "/api/workspace/assistance/jobs/fake-6a5918d821c61f25de9a00feef7643e7d799699c/advance"
+    },
+    {
+      "context": "390-dark",
+      "path": "/api/workspace/assistance/jobs/fake-6a5918d821c61f25de9a00feef7643e7d799699c/advance"
+    },
+    {
+      "context": "390-dark",
+      "path": "/api/workspace/context/reading"
+    },
+    {
+      "context": "390-dark",
+      "path": "/api/workspace/context/reading"
+    },
+    {
+      "context": "390-dark",
+      "path": "/api/workspace/context/entries"
+    },
+    {
+      "context": "390-dark",
+      "path": "/api/workspace/context/projects/project-55555555555555555555555555555555/entries"
+    }
+  ],
+  "providerContacts": 0,
+  "sourceContacts": 0,
+  "humanReview": null
+}

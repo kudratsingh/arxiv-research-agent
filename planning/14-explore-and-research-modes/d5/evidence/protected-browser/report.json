@@ -1,0 +1,925 @@
+{
+  "packetDigest": "1e5716df09364be0db9501e9d2bc7ff3184fc65655dbbb77c6cd658a2ae6a76f",
+  "contexts": [
+    {
+      "name": "1440-light",
+      "theme": "light",
+      "width": 1440,
+      "reducedMotion": false,
+      "journeys": [
+        {
+          "case": "learn-method",
+          "job": "gen-a1edbace2b3f53fc2f7742bb958013467e9274dc",
+          "anchor": "abstract:0:1532",
+          "reload": true,
+          "libraryResume": true,
+          "failedSave": true,
+          "axeSerious": 0
+        },
+        {
+          "case": "research-retrieval",
+          "job": "gen-9ad7294cf4131d231a122a8c275297f468793c7f",
+          "anchor": "abstract:0:1545",
+          "reload": true,
+          "libraryResume": true,
+          "failedSave": false,
+          "axeSerious": 0
+        }
+      ]
+    },
+    {
+      "name": "1440-dark",
+      "theme": "dark",
+      "width": 1440,
+      "reducedMotion": true,
+      "journeys": [
+        {
+          "case": "learn-method",
+          "job": "gen-a1edbace2b3f53fc2f7742bb958013467e9274dc",
+          "anchor": "abstract:0:1532",
+          "reload": true,
+          "libraryResume": true,
+          "failedSave": true,
+          "axeSerious": 0
+        },
+        {
+          "case": "research-retrieval",
+          "job": "gen-9ad7294cf4131d231a122a8c275297f468793c7f",
+          "anchor": "abstract:0:1545",
+          "reload": true,
+          "libraryResume": true,
+          "failedSave": false,
+          "axeSerious": 0
+        }
+      ]
+    },
+    {
+      "name": "390-light",
+      "theme": "light",
+      "width": 390,
+      "reducedMotion": false,
+      "journeys": [
+        {
+          "case": "learn-method",
+          "job": "gen-a1edbace2b3f53fc2f7742bb958013467e9274dc",
+          "anchor": "abstract:0:1532",
+          "reload": true,
+          "libraryResume": true,
+          "failedSave": true,
+          "axeSerious": 0
+        },
+        {
+          "case": "research-retrieval",
+          "job": "gen-9ad7294cf4131d231a122a8c275297f468793c7f",
+          "anchor": "abstract:0:1545",
+          "reload": true,
+          "libraryResume": true,
+          "failedSave": false,
+          "axeSerious": 0
+        }
+      ]
+    },
+    {
+      "name": "390-dark",
+      "theme": "dark",
+      "width": 390,
+      "reducedMotion": true,
+      "journeys": [
+        {
+          "case": "learn-method",
+          "job": "gen-a1edbace2b3f53fc2f7742bb958013467e9274dc",
+          "anchor": "abstract:0:1532",
+          "reload": true,
+          "libraryResume": true,
+          "failedSave": true,
+          "axeSerious": 0
+        },
+        {
+          "case": "research-retrieval",
+          "job": "gen-9ad7294cf4131d231a122a8c275297f468793c7f",
+          "anchor": "abstract:0:1545",
+          "reload": true,
+          "libraryResume": true,
+          "failedSave": false,
+          "axeSerious": 0
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "blocked": [],
+  "writes": [
+    {
+      "context": "1440-light",
+      "path": "/api/workspace/context/reading",
+      "body": {
+        "work_id": "arxiv:2610.40927",
+        "revision": 0,
+        "context": {
+          "mode": "learn",
+          "project_id": null,
+          "thread_id": null,
+          "return_to": "/workspace/today?mode=learn&focus=arxiv%3A2610.40927"
+        },
+        "data": {
+          "status": "unread",
+          "anchor": "abstract:0:1532",
+          "version_id": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+          "snoozed_until": null
+        },
+        "request_id": "dffbd46c-582c-41f9-9020-fe6679fd8186"
+      }
+    },
+    {
+      "context": "1440-light",
+      "path": "/api/workspace/context/reading",
+      "body": {
+        "work_id": "arxiv:2610.40927",
+        "revision": 1,
+        "context": {
+          "mode": "learn",
+          "project_id": null,
+          "thread_id": null,
+          "return_to": "/workspace/today?mode=learn&focus=arxiv%3A2610.40927"
+        },
+        "data": {
+          "status": "unread",
+          "anchor": "understand",
+          "version_id": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+          "snoozed_until": null
+        },
+        "request_id": "32790ade-c063-4bdb-a28f-1f311e5d2ec6"
+      }
+    },
+    {
+      "context": "1440-light",
+      "path": "/api/workspace/context/entries",
+      "body": {
+        "id": "qualification-gen-a1edbace2b3f53fc2f7742bb958013467e9274dc",
+        "revision": 0,
+        "request_id": "save-gen-a1edbace2b3f53fc2f7742bb958013467e9274dc",
+        "context": {
+          "mode": "learn",
+          "project_id": null,
+          "thread_id": null,
+          "return_to": "/workspace/today?mode=learn&focus=arxiv%3A2610.40927"
+        },
+        "data": {
+          "work_id": "arxiv:2610.40927",
+          "version_id": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+          "kind": "note",
+          "body": "Offline simulated qualification result · not quality evidence.\n\nc1: Test-time scaling (TTS) improves large language model agents by sampling and selecting among multiple candidate trajectories, but common realizations assume that these trajectories can be executed in parallel.\n\nProposed next action: Proposed manual experiment: state a baseline, variable, metric and stopping condition after checking the original methods. Nothing is executed.\n\nQualification record: gen-a1edbace2b3f53fc2f7742bb958013467e9274dc",
+          "anchor": "abstract:0:1532"
+        }
+      }
+    },
+    {
+      "context": "1440-light",
+      "path": "/api/workspace/context/threads",
+      "body": {
+        "id": "thread-a1edbace2b3f53fc2f7742bb95801346",
+        "revision": 0,
+        "request_id": "thread-gen-a1edbace2b3f53fc2f7742bb958013467e9274dc",
+        "data": {
+          "title": "Experimental guided reading",
+          "goal": "Explain the reported mechanism and prerequisites.",
+          "prerequisite": "Resume quarantined result gen-a1edbace2b3f53fc2f7742bb958013467e9274dc",
+          "status": "active",
+          "origin": {
+            "mode": "learn",
+            "project_id": null,
+            "thread_id": null,
+            "return_to": "/workspace/today?mode=learn&focus=arxiv%3A2610.40927"
+          },
+          "source": {
+            "work_id": "arxiv:2610.40927",
+            "version_id": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+            "anchor": "abstract:0:1532"
+          },
+          "entry": {
+            "entry_id": "qualification-gen-a1edbace2b3f53fc2f7742bb958013467e9274dc",
+            "entry_revision": 1
+          }
+        }
+      }
+    },
+    {
+      "context": "1440-light",
+      "path": "/api/workspace/context/reading",
+      "body": {
+        "work_id": "arxiv:2610.40927",
+        "revision": 2,
+        "context": {
+          "mode": "learn",
+          "project_id": null,
+          "thread_id": null,
+          "return_to": "/workspace/library?mode=learn&view=notes&focus=arxiv%3A2610.40927"
+        },
+        "data": {
+          "status": "unread",
+          "anchor": "notes",
+          "version_id": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+          "snoozed_until": null
+        },
+        "request_id": "3f324fd5-50b4-4765-b64c-db1e012e9fe3"
+      }
+    },
+    {
+      "context": "1440-light",
+      "path": "/api/workspace/context/reading",
+      "body": {
+        "work_id": "arxiv:2610.40966",
+        "revision": 0,
+        "context": {
+          "mode": "research",
+          "project_id": "project-37e7c1c6eb4ddc27b857078580b52dd7",
+          "thread_id": null,
+          "return_to": "/workspace/projects?mode=research&project=project-37e7c1c6eb4ddc27b857078580b52dd7"
+        },
+        "data": {
+          "status": "unread",
+          "anchor": "abstract:0:1545",
+          "version_id": "arxiv:2610.40966:v1:metadata-55c0a56c8750035c",
+          "snoozed_until": null
+        },
+        "request_id": "9e2154eb-276b-496e-8574-18386bb0c0ec"
+      }
+    },
+    {
+      "context": "1440-light",
+      "path": "/api/workspace/context/reading",
+      "body": {
+        "work_id": "arxiv:2610.40966",
+        "revision": 1,
+        "context": {
+          "mode": "research",
+          "project_id": "project-37e7c1c6eb4ddc27b857078580b52dd7",
+          "thread_id": null,
+          "return_to": "/workspace/projects?mode=research&project=project-37e7c1c6eb4ddc27b857078580b52dd7"
+        },
+        "data": {
+          "status": "unread",
+          "anchor": "understand",
+          "version_id": "arxiv:2610.40966:v1:metadata-55c0a56c8750035c",
+          "snoozed_until": null
+        },
+        "request_id": "2562d5f5-81ba-44a0-b297-aff9b8d2d72d"
+      }
+    },
+    {
+      "context": "1440-light",
+      "path": "/api/workspace/context/entries",
+      "body": {
+        "id": "qualification-gen-9ad7294cf4131d231a122a8c275297f468793c7f",
+        "revision": 0,
+        "request_id": "save-gen-9ad7294cf4131d231a122a8c275297f468793c7f",
+        "context": {
+          "mode": "research",
+          "project_id": "project-37e7c1c6eb4ddc27b857078580b52dd7",
+          "thread_id": null,
+          "return_to": "/workspace/projects?mode=research&project=project-37e7c1c6eb4ddc27b857078580b52dd7"
+        },
+        "data": {
+          "work_id": "arxiv:2610.40966",
+          "version_id": "arxiv:2610.40966:v1:metadata-55c0a56c8750035c",
+          "kind": "note",
+          "body": "Offline simulated qualification result · not quality evidence.\n\nc1: Conversational RAG benchmarks such as MTRAG and RETECO evaluate retrieval and generation end to end: each system answers from its own retrieval, so abstention must be scored against whether each retrieved context is sufficient.\n\nc2: Digital agents can now gather and organize information, reason over it, and use tools to complete complex tasks.\n\nProposed next action: Proposed manual experiment: state a baseline, variable, metric and stopping condition after checking the original methods. Nothing is executed.\n\nQualification record: gen-9ad7294cf4131d231a122a8c275297f468793c7f",
+          "anchor": "abstract:0:1545"
+        }
+      }
+    },
+    {
+      "context": "1440-light",
+      "path": "/api/workspace/context/projects/project-37e7c1c6eb4ddc27b857078580b52dd7/entries",
+      "body": {
+        "revision": 1,
+        "request_id": "link-gen-9ad7294cf4131d231a122a8c275297f468793c7f",
+        "entry_id": "qualification-gen-9ad7294cf4131d231a122a8c275297f468793c7f",
+        "entry_revision": 1
+      }
+    },
+    {
+      "context": "1440-light",
+      "path": "/api/workspace/context/reading",
+      "body": {
+        "work_id": "arxiv:2610.40966",
+        "revision": 2,
+        "context": {
+          "mode": "research",
+          "project_id": "project-37e7c1c6eb4ddc27b857078580b52dd7",
+          "thread_id": null,
+          "return_to": "/workspace/library?mode=research&project=project-37e7c1c6eb4ddc27b857078580b52dd7&view=notes&focus=arxiv%3A2610.40966"
+        },
+        "data": {
+          "status": "unread",
+          "anchor": "notes",
+          "version_id": "arxiv:2610.40966:v1:metadata-55c0a56c8750035c",
+          "snoozed_until": null
+        },
+        "request_id": "3a33993c-36a5-47ac-9fed-7049e128f999"
+      }
+    },
+    {
+      "context": "1440-dark",
+      "path": "/api/workspace/context/reading",
+      "body": {
+        "work_id": "arxiv:2610.40927",
+        "revision": 3,
+        "context": {
+          "mode": "learn",
+          "project_id": null,
+          "thread_id": null,
+          "return_to": "/workspace/today?mode=learn&focus=arxiv%3A2610.40927"
+        },
+        "data": {
+          "status": "unread",
+          "anchor": "abstract:0:1532",
+          "version_id": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+          "snoozed_until": null
+        },
+        "request_id": "cf513f8f-bff3-418d-bd0a-4e7a4becd1b3"
+      }
+    },
+    {
+      "context": "1440-dark",
+      "path": "/api/workspace/context/reading",
+      "body": {
+        "work_id": "arxiv:2610.40927",
+        "revision": 4,
+        "context": {
+          "mode": "learn",
+          "project_id": null,
+          "thread_id": null,
+          "return_to": "/workspace/today?mode=learn&focus=arxiv%3A2610.40927"
+        },
+        "data": {
+          "status": "unread",
+          "anchor": "understand",
+          "version_id": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+          "snoozed_until": null
+        },
+        "request_id": "0aa97768-a5f8-4f5d-920d-61d24f4f1f45"
+      }
+    },
+    {
+      "context": "1440-dark",
+      "path": "/api/workspace/context/entries",
+      "body": {
+        "id": "qualification-gen-a1edbace2b3f53fc2f7742bb958013467e9274dc",
+        "revision": 0,
+        "request_id": "save-gen-a1edbace2b3f53fc2f7742bb958013467e9274dc",
+        "context": {
+          "mode": "learn",
+          "project_id": null,
+          "thread_id": null,
+          "return_to": "/workspace/today?mode=learn&focus=arxiv%3A2610.40927"
+        },
+        "data": {
+          "work_id": "arxiv:2610.40927",
+          "version_id": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+          "kind": "note",
+          "body": "Offline simulated qualification result · not quality evidence.\n\nc1: Test-time scaling (TTS) improves large language model agents by sampling and selecting among multiple candidate trajectories, but common realizations assume that these trajectories can be executed in parallel.\n\nProposed next action: Proposed manual experiment: state a baseline, variable, metric and stopping condition after checking the original methods. Nothing is executed.\n\nQualification record: gen-a1edbace2b3f53fc2f7742bb958013467e9274dc",
+          "anchor": "abstract:0:1532"
+        }
+      }
+    },
+    {
+      "context": "1440-dark",
+      "path": "/api/workspace/context/threads",
+      "body": {
+        "id": "thread-a1edbace2b3f53fc2f7742bb95801346",
+        "revision": 0,
+        "request_id": "thread-gen-a1edbace2b3f53fc2f7742bb958013467e9274dc",
+        "data": {
+          "title": "Experimental guided reading",
+          "goal": "Explain the reported mechanism and prerequisites.",
+          "prerequisite": "Resume quarantined result gen-a1edbace2b3f53fc2f7742bb958013467e9274dc",
+          "status": "active",
+          "origin": {
+            "mode": "learn",
+            "project_id": null,
+            "thread_id": null,
+            "return_to": "/workspace/today?mode=learn&focus=arxiv%3A2610.40927"
+          },
+          "source": {
+            "work_id": "arxiv:2610.40927",
+            "version_id": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+            "anchor": "abstract:0:1532"
+          },
+          "entry": {
+            "entry_id": "qualification-gen-a1edbace2b3f53fc2f7742bb958013467e9274dc",
+            "entry_revision": 1
+          }
+        }
+      }
+    },
+    {
+      "context": "1440-dark",
+      "path": "/api/workspace/context/reading",
+      "body": {
+        "work_id": "arxiv:2610.40927",
+        "revision": 5,
+        "context": {
+          "mode": "learn",
+          "project_id": null,
+          "thread_id": null,
+          "return_to": "/workspace/library?mode=learn&view=notes&focus=arxiv%3A2610.40927"
+        },
+        "data": {
+          "status": "unread",
+          "anchor": "notes",
+          "version_id": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+          "snoozed_until": null
+        },
+        "request_id": "eb5ed33c-071a-46db-8c14-4c97ae60a8b4"
+      }
+    },
+    {
+      "context": "1440-dark",
+      "path": "/api/workspace/context/reading",
+      "body": {
+        "work_id": "arxiv:2610.40966",
+        "revision": 3,
+        "context": {
+          "mode": "research",
+          "project_id": "project-37e7c1c6eb4ddc27b857078580b52dd7",
+          "thread_id": null,
+          "return_to": "/workspace/projects?mode=research&project=project-37e7c1c6eb4ddc27b857078580b52dd7"
+        },
+        "data": {
+          "status": "unread",
+          "anchor": "abstract:0:1545",
+          "version_id": "arxiv:2610.40966:v1:metadata-55c0a56c8750035c",
+          "snoozed_until": null
+        },
+        "request_id": "c4f6e88f-5d51-46d5-8da0-56f9f56aaefa"
+      }
+    },
+    {
+      "context": "1440-dark",
+      "path": "/api/workspace/context/reading",
+      "body": {
+        "work_id": "arxiv:2610.40966",
+        "revision": 4,
+        "context": {
+          "mode": "research",
+          "project_id": "project-37e7c1c6eb4ddc27b857078580b52dd7",
+          "thread_id": null,
+          "return_to": "/workspace/projects?mode=research&project=project-37e7c1c6eb4ddc27b857078580b52dd7"
+        },
+        "data": {
+          "status": "unread",
+          "anchor": "understand",
+          "version_id": "arxiv:2610.40966:v1:metadata-55c0a56c8750035c",
+          "snoozed_until": null
+        },
+        "request_id": "1e56c58a-8743-449f-8f51-a62dd00181e0"
+      }
+    },
+    {
+      "context": "1440-dark",
+      "path": "/api/workspace/context/entries",
+      "body": {
+        "id": "qualification-gen-9ad7294cf4131d231a122a8c275297f468793c7f",
+        "revision": 0,
+        "request_id": "save-gen-9ad7294cf4131d231a122a8c275297f468793c7f",
+        "context": {
+          "mode": "research",
+          "project_id": "project-37e7c1c6eb4ddc27b857078580b52dd7",
+          "thread_id": null,
+          "return_to": "/workspace/projects?mode=research&project=project-37e7c1c6eb4ddc27b857078580b52dd7"
+        },
+        "data": {
+          "work_id": "arxiv:2610.40966",
+          "version_id": "arxiv:2610.40966:v1:metadata-55c0a56c8750035c",
+          "kind": "note",
+          "body": "Offline simulated qualification result · not quality evidence.\n\nc1: Conversational RAG benchmarks such as MTRAG and RETECO evaluate retrieval and generation end to end: each system answers from its own retrieval, so abstention must be scored against whether each retrieved context is sufficient.\n\nc2: Digital agents can now gather and organize information, reason over it, and use tools to complete complex tasks.\n\nProposed next action: Proposed manual experiment: state a baseline, variable, metric and stopping condition after checking the original methods. Nothing is executed.\n\nQualification record: gen-9ad7294cf4131d231a122a8c275297f468793c7f",
+          "anchor": "abstract:0:1545"
+        }
+      }
+    },
+    {
+      "context": "1440-dark",
+      "path": "/api/workspace/context/reading",
+      "body": {
+        "work_id": "arxiv:2610.40966",
+        "revision": 5,
+        "context": {
+          "mode": "research",
+          "project_id": "project-37e7c1c6eb4ddc27b857078580b52dd7",
+          "thread_id": null,
+          "return_to": "/workspace/library?mode=research&project=project-37e7c1c6eb4ddc27b857078580b52dd7&view=notes&focus=arxiv%3A2610.40966"
+        },
+        "data": {
+          "status": "unread",
+          "anchor": "notes",
+          "version_id": "arxiv:2610.40966:v1:metadata-55c0a56c8750035c",
+          "snoozed_until": null
+        },
+        "request_id": "f2ec07b5-fb9a-468a-823d-5a39f5003cc4"
+      }
+    },
+    {
+      "context": "390-light",
+      "path": "/api/workspace/context/reading",
+      "body": {
+        "work_id": "arxiv:2610.40927",
+        "revision": 6,
+        "context": {
+          "mode": "learn",
+          "project_id": null,
+          "thread_id": null,
+          "return_to": "/workspace/today?mode=learn&focus=arxiv%3A2610.40927"
+        },
+        "data": {
+          "status": "unread",
+          "anchor": "abstract:0:1532",
+          "version_id": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+          "snoozed_until": null
+        },
+        "request_id": "b2505224-52c5-4d4a-932e-2534d0461f08"
+      }
+    },
+    {
+      "context": "390-light",
+      "path": "/api/workspace/context/reading",
+      "body": {
+        "work_id": "arxiv:2610.40927",
+        "revision": 7,
+        "context": {
+          "mode": "learn",
+          "project_id": null,
+          "thread_id": null,
+          "return_to": "/workspace/today?mode=learn&focus=arxiv%3A2610.40927"
+        },
+        "data": {
+          "status": "unread",
+          "anchor": "understand",
+          "version_id": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+          "snoozed_until": null
+        },
+        "request_id": "f3e19b29-6e06-46c7-bd0d-62d7f48a28b0"
+      }
+    },
+    {
+      "context": "390-light",
+      "path": "/api/workspace/context/entries",
+      "body": {
+        "id": "qualification-gen-a1edbace2b3f53fc2f7742bb958013467e9274dc",
+        "revision": 0,
+        "request_id": "save-gen-a1edbace2b3f53fc2f7742bb958013467e9274dc",
+        "context": {
+          "mode": "learn",
+          "project_id": null,
+          "thread_id": null,
+          "return_to": "/workspace/today?mode=learn&focus=arxiv%3A2610.40927"
+        },
+        "data": {
+          "work_id": "arxiv:2610.40927",
+          "version_id": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+          "kind": "note",
+          "body": "Offline simulated qualification result · not quality evidence.\n\nc1: Test-time scaling (TTS) improves large language model agents by sampling and selecting among multiple candidate trajectories, but common realizations assume that these trajectories can be executed in parallel.\n\nProposed next action: Proposed manual experiment: state a baseline, variable, metric and stopping condition after checking the original methods. Nothing is executed.\n\nQualification record: gen-a1edbace2b3f53fc2f7742bb958013467e9274dc",
+          "anchor": "abstract:0:1532"
+        }
+      }
+    },
+    {
+      "context": "390-light",
+      "path": "/api/workspace/context/threads",
+      "body": {
+        "id": "thread-a1edbace2b3f53fc2f7742bb95801346",
+        "revision": 0,
+        "request_id": "thread-gen-a1edbace2b3f53fc2f7742bb958013467e9274dc",
+        "data": {
+          "title": "Experimental guided reading",
+          "goal": "Explain the reported mechanism and prerequisites.",
+          "prerequisite": "Resume quarantined result gen-a1edbace2b3f53fc2f7742bb958013467e9274dc",
+          "status": "active",
+          "origin": {
+            "mode": "learn",
+            "project_id": null,
+            "thread_id": null,
+            "return_to": "/workspace/today?mode=learn&focus=arxiv%3A2610.40927"
+          },
+          "source": {
+            "work_id": "arxiv:2610.40927",
+            "version_id": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+            "anchor": "abstract:0:1532"
+          },
+          "entry": {
+            "entry_id": "qualification-gen-a1edbace2b3f53fc2f7742bb958013467e9274dc",
+            "entry_revision": 1
+          }
+        }
+      }
+    },
+    {
+      "context": "390-light",
+      "path": "/api/workspace/context/reading",
+      "body": {
+        "work_id": "arxiv:2610.40927",
+        "revision": 8,
+        "context": {
+          "mode": "learn",
+          "project_id": null,
+          "thread_id": null,
+          "return_to": "/workspace/library?mode=learn&view=notes&focus=arxiv%3A2610.40927"
+        },
+        "data": {
+          "status": "unread",
+          "anchor": "notes",
+          "version_id": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+          "snoozed_until": null
+        },
+        "request_id": "a6128750-8268-414b-8f79-cd3ba446630d"
+      }
+    },
+    {
+      "context": "390-light",
+      "path": "/api/workspace/context/reading",
+      "body": {
+        "work_id": "arxiv:2610.40966",
+        "revision": 6,
+        "context": {
+          "mode": "research",
+          "project_id": "project-37e7c1c6eb4ddc27b857078580b52dd7",
+          "thread_id": null,
+          "return_to": "/workspace/projects?mode=research&project=project-37e7c1c6eb4ddc27b857078580b52dd7"
+        },
+        "data": {
+          "status": "unread",
+          "anchor": "abstract:0:1545",
+          "version_id": "arxiv:2610.40966:v1:metadata-55c0a56c8750035c",
+          "snoozed_until": null
+        },
+        "request_id": "4a2f49ef-fb6c-4d4c-b5bb-8d898eaaad81"
+      }
+    },
+    {
+      "context": "390-light",
+      "path": "/api/workspace/context/reading",
+      "body": {
+        "work_id": "arxiv:2610.40966",
+        "revision": 7,
+        "context": {
+          "mode": "research",
+          "project_id": "project-37e7c1c6eb4ddc27b857078580b52dd7",
+          "thread_id": null,
+          "return_to": "/workspace/projects?mode=research&project=project-37e7c1c6eb4ddc27b857078580b52dd7"
+        },
+        "data": {
+          "status": "unread",
+          "anchor": "understand",
+          "version_id": "arxiv:2610.40966:v1:metadata-55c0a56c8750035c",
+          "snoozed_until": null
+        },
+        "request_id": "943f22a6-c074-4a3f-b4e5-f72e7c5963a9"
+      }
+    },
+    {
+      "context": "390-light",
+      "path": "/api/workspace/context/entries",
+      "body": {
+        "id": "qualification-gen-9ad7294cf4131d231a122a8c275297f468793c7f",
+        "revision": 0,
+        "request_id": "save-gen-9ad7294cf4131d231a122a8c275297f468793c7f",
+        "context": {
+          "mode": "research",
+          "project_id": "project-37e7c1c6eb4ddc27b857078580b52dd7",
+          "thread_id": null,
+          "return_to": "/workspace/projects?mode=research&project=project-37e7c1c6eb4ddc27b857078580b52dd7"
+        },
+        "data": {
+          "work_id": "arxiv:2610.40966",
+          "version_id": "arxiv:2610.40966:v1:metadata-55c0a56c8750035c",
+          "kind": "note",
+          "body": "Offline simulated qualification result · not quality evidence.\n\nc1: Conversational RAG benchmarks such as MTRAG and RETECO evaluate retrieval and generation end to end: each system answers from its own retrieval, so abstention must be scored against whether each retrieved context is sufficient.\n\nc2: Digital agents can now gather and organize information, reason over it, and use tools to complete complex tasks.\n\nProposed next action: Proposed manual experiment: state a baseline, variable, metric and stopping condition after checking the original methods. Nothing is executed.\n\nQualification record: gen-9ad7294cf4131d231a122a8c275297f468793c7f",
+          "anchor": "abstract:0:1545"
+        }
+      }
+    },
+    {
+      "context": "390-light",
+      "path": "/api/workspace/context/reading",
+      "body": {
+        "work_id": "arxiv:2610.40966",
+        "revision": 8,
+        "context": {
+          "mode": "research",
+          "project_id": "project-37e7c1c6eb4ddc27b857078580b52dd7",
+          "thread_id": null,
+          "return_to": "/workspace/library?mode=research&project=project-37e7c1c6eb4ddc27b857078580b52dd7&view=notes&focus=arxiv%3A2610.40966"
+        },
+        "data": {
+          "status": "unread",
+          "anchor": "notes",
+          "version_id": "arxiv:2610.40966:v1:metadata-55c0a56c8750035c",
+          "snoozed_until": null
+        },
+        "request_id": "43e87ce7-fd27-452a-b806-205ff3cec8d3"
+      }
+    },
+    {
+      "context": "390-dark",
+      "path": "/api/workspace/context/reading",
+      "body": {
+        "work_id": "arxiv:2610.40927",
+        "revision": 9,
+        "context": {
+          "mode": "learn",
+          "project_id": null,
+          "thread_id": null,
+          "return_to": "/workspace/today?mode=learn&focus=arxiv%3A2610.40927"
+        },
+        "data": {
+          "status": "unread",
+          "anchor": "abstract:0:1532",
+          "version_id": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+          "snoozed_until": null
+        },
+        "request_id": "6ae34ed0-60e9-4e73-a0a0-27dd20af027c"
+      }
+    },
+    {
+      "context": "390-dark",
+      "path": "/api/workspace/context/reading",
+      "body": {
+        "work_id": "arxiv:2610.40927",
+        "revision": 10,
+        "context": {
+          "mode": "learn",
+          "project_id": null,
+          "thread_id": null,
+          "return_to": "/workspace/today?mode=learn&focus=arxiv%3A2610.40927"
+        },
+        "data": {
+          "status": "unread",
+          "anchor": "understand",
+          "version_id": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+          "snoozed_until": null
+        },
+        "request_id": "59fd8ef7-b588-4b4b-a6a1-f28744031019"
+      }
+    },
+    {
+      "context": "390-dark",
+      "path": "/api/workspace/context/entries",
+      "body": {
+        "id": "qualification-gen-a1edbace2b3f53fc2f7742bb958013467e9274dc",
+        "revision": 0,
+        "request_id": "save-gen-a1edbace2b3f53fc2f7742bb958013467e9274dc",
+        "context": {
+          "mode": "learn",
+          "project_id": null,
+          "thread_id": null,
+          "return_to": "/workspace/today?mode=learn&focus=arxiv%3A2610.40927"
+        },
+        "data": {
+          "work_id": "arxiv:2610.40927",
+          "version_id": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+          "kind": "note",
+          "body": "Offline simulated qualification result · not quality evidence.\n\nc1: Test-time scaling (TTS) improves large language model agents by sampling and selecting among multiple candidate trajectories, but common realizations assume that these trajectories can be executed in parallel.\n\nProposed next action: Proposed manual experiment: state a baseline, variable, metric and stopping condition after checking the original methods. Nothing is executed.\n\nQualification record: gen-a1edbace2b3f53fc2f7742bb958013467e9274dc",
+          "anchor": "abstract:0:1532"
+        }
+      }
+    },
+    {
+      "context": "390-dark",
+      "path": "/api/workspace/context/threads",
+      "body": {
+        "id": "thread-a1edbace2b3f53fc2f7742bb95801346",
+        "revision": 0,
+        "request_id": "thread-gen-a1edbace2b3f53fc2f7742bb958013467e9274dc",
+        "data": {
+          "title": "Experimental guided reading",
+          "goal": "Explain the reported mechanism and prerequisites.",
+          "prerequisite": "Resume quarantined result gen-a1edbace2b3f53fc2f7742bb958013467e9274dc",
+          "status": "active",
+          "origin": {
+            "mode": "learn",
+            "project_id": null,
+            "thread_id": null,
+            "return_to": "/workspace/today?mode=learn&focus=arxiv%3A2610.40927"
+          },
+          "source": {
+            "work_id": "arxiv:2610.40927",
+            "version_id": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+            "anchor": "abstract:0:1532"
+          },
+          "entry": {
+            "entry_id": "qualification-gen-a1edbace2b3f53fc2f7742bb958013467e9274dc",
+            "entry_revision": 1
+          }
+        }
+      }
+    },
+    {
+      "context": "390-dark",
+      "path": "/api/workspace/context/reading",
+      "body": {
+        "work_id": "arxiv:2610.40927",
+        "revision": 11,
+        "context": {
+          "mode": "learn",
+          "project_id": null,
+          "thread_id": null,
+          "return_to": "/workspace/library?mode=learn&view=notes&focus=arxiv%3A2610.40927"
+        },
+        "data": {
+          "status": "unread",
+          "anchor": "notes",
+          "version_id": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+          "snoozed_until": null
+        },
+        "request_id": "0f98cfbe-b5ce-4b07-8462-b8ba287e2dbf"
+      }
+    },
+    {
+      "context": "390-dark",
+      "path": "/api/workspace/context/reading",
+      "body": {
+        "work_id": "arxiv:2610.40966",
+        "revision": 9,
+        "context": {
+          "mode": "research",
+          "project_id": "project-37e7c1c6eb4ddc27b857078580b52dd7",
+          "thread_id": null,
+          "return_to": "/workspace/projects?mode=research&project=project-37e7c1c6eb4ddc27b857078580b52dd7"
+        },
+        "data": {
+          "status": "unread",
+          "anchor": "abstract:0:1545",
+          "version_id": "arxiv:2610.40966:v1:metadata-55c0a56c8750035c",
+          "snoozed_until": null
+        },
+        "request_id": "8e357a79-cd9e-4723-bab8-f434ebfccf9c"
+      }
+    },
+    {
+      "context": "390-dark",
+      "path": "/api/workspace/context/reading",
+      "body": {
+        "work_id": "arxiv:2610.40966",
+        "revision": 10,
+        "context": {
+          "mode": "research",
+          "project_id": "project-37e7c1c6eb4ddc27b857078580b52dd7",
+          "thread_id": null,
+          "return_to": "/workspace/projects?mode=research&project=project-37e7c1c6eb4ddc27b857078580b52dd7"
+        },
+        "data": {
+          "status": "unread",
+          "anchor": "understand",
+          "version_id": "arxiv:2610.40966:v1:metadata-55c0a56c8750035c",
+          "snoozed_until": null
+        },
+        "request_id": "c43e6c1b-95a8-444b-b6b3-6cd7fdcb6b53"
+      }
+    },
+    {
+      "context": "390-dark",
+      "path": "/api/workspace/context/entries",
+      "body": {
+        "id": "qualification-gen-9ad7294cf4131d231a122a8c275297f468793c7f",
+        "revision": 0,
+        "request_id": "save-gen-9ad7294cf4131d231a122a8c275297f468793c7f",
+        "context": {
+          "mode": "research",
+          "project_id": "project-37e7c1c6eb4ddc27b857078580b52dd7",
+          "thread_id": null,
+          "return_to": "/workspace/projects?mode=research&project=project-37e7c1c6eb4ddc27b857078580b52dd7"
+        },
+        "data": {
+          "work_id": "arxiv:2610.40966",
+          "version_id": "arxiv:2610.40966:v1:metadata-55c0a56c8750035c",
+          "kind": "note",
+          "body": "Offline simulated qualification result · not quality evidence.\n\nc1: Conversational RAG benchmarks such as MTRAG and RETECO evaluate retrieval and generation end to end: each system answers from its own retrieval, so abstention must be scored against whether each retrieved context is sufficient.\n\nc2: Digital agents can now gather and organize information, reason over it, and use tools to complete complex tasks.\n\nProposed next action: Proposed manual experiment: state a baseline, variable, metric and stopping condition after checking the original methods. Nothing is executed.\n\nQualification record: gen-9ad7294cf4131d231a122a8c275297f468793c7f",
+          "anchor": "abstract:0:1545"
+        }
+      }
+    },
+    {
+      "context": "390-dark",
+      "path": "/api/workspace/context/reading",
+      "body": {
+        "work_id": "arxiv:2610.40966",
+        "revision": 11,
+        "context": {
+          "mode": "research",
+          "project_id": "project-37e7c1c6eb4ddc27b857078580b52dd7",
+          "thread_id": null,
+          "return_to": "/workspace/library?mode=research&project=project-37e7c1c6eb4ddc27b857078580b52dd7&view=notes&focus=arxiv%3A2610.40966"
+        },
+        "data": {
+          "status": "unread",
+          "anchor": "notes",
+          "version_id": "arxiv:2610.40966:v1:metadata-55c0a56c8750035c",
+          "snoozed_until": null
+        },
+        "request_id": "ce6bb5be-6873-4bc3-9f2f-631d2b571e3c"
+      }
+    }
+  ],
+  "providerContacts": 0,
+  "humanLabels": null
+}

@@ -1,0 +1,31 @@
+{
+  "application": "098e4a5dccc529c7aff8222af3c893e2724618bb",
+  "chunks": [
+    "9853.b6aea85cc9a4c3d5.js"
+  ],
+  "beforeRequested": false,
+  "afterRequested": true,
+  "openingDispatches": false,
+  "requests": [
+    {
+      "url": "http://127.0.0.1:3189/_next/static/chunks/9853.b6aea85cc9a4c3d5.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3189/api/workspace/assistance/catalog?work_id=arxiv%3A2210.03629&version_id=arxiv%3A2210.03629%3Av3",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3189/api/workspace/assistance/jobs?work_id=arxiv%3A2210.03629&version_id=arxiv%3A2210.03629%3Av3",
+      "method": "GET"
+    }
+  ],
+  "resources": [
+    {
+      "name": "http://127.0.0.1:3189/_next/static/chunks/9853.b6aea85cc9a4c3d5.js",
+      "transferSize": 7227,
+      "encodedBodySize": 6927,
+      "decodedBodySize": 20244
+    }
+  ]
+}
