@@ -18,6 +18,7 @@ from src.workspace.d5_review_scoring import checker_metrics
 
 ROOT = Path(__file__).resolve().parents[1]
 D5 = ROOT / "planning/14-explore-and-research-modes/d5"
+pytestmark = pytest.mark.unit
 
 
 @pytest.fixture
