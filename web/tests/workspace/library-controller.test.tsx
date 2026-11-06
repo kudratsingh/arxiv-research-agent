@@ -88,15 +88,26 @@ describe("Library controller", () => {
     const notes = await mount(); focused("Gamma"); notes.unmount();
     current.principal_key_id = "owner-b"; await mount(); focused("Beta");
   });
-  it("remembers the source of a different notebook link on activation and restores it on exact notes return", async () => {
+  it("keeps a cross-paper resume destination fixed while preserving the launching Library focus", async () => {
+    sessionStorage.setItem("arxiv.workspace.library-focus.v1:owner-a:notes", ids[1]!);
     const user = userEvent.setup(); const view = await mount(); focused("Beta");
     const article = screen.getByText("Gamma saved question").closest("article");
     if (!article) throw new Error("Gamma note missing");
     const resume = within(article).getByRole("link", { name: "Resume this question →" });
+    const advertised = resume.getAttribute("href")!;
+    const target = new URL(advertised, location.origin);
+    expect(decodeURIComponent(target.pathname)).toBe(`/workspace/items/${ids[2]}`);
+    expect(target.searchParams.get("entry")).toBe("entry-2");
+    expect(target.searchParams.get("version")).toBe(`${ids[2]}:v2`);
+    expect(decodeURIComponent(target.hash)).toBe("#abstract:2:7");
+    expect(target.searchParams.get("return_to")).toBe(`/workspace/library?view=notes&focus=${encodeURIComponent(ids[1]!)}`);
     resume.addEventListener("click", (event) => event.preventDefault());
     await user.click(resume);
+    expect(resume).toHaveAttribute("href", advertised);
+    expect(sessionStorage.getItem("arxiv.workspace.library-focus.v1:owner-a:notes")).toBe(ids[1]);
+    focused("Beta");
     view.unmount(); history.replaceState(null, "", "/workspace/library?view=notes"); await mount();
-    focused("Gamma"); expect(location.search).toBe("?view=notes");
+    focused("Beta"); expect(location.search).toBe("?view=notes");
   });
   it.each(["paper", "question"] as const)("keeps the current Library return view while restoring a %s's saved Research identity", async kind => {
     const project = `project-${"c".repeat(32)}`;

@@ -4,7 +4,7 @@ import { loadContextEditors, loadContextReadouts } from "./contextModules";
 import Link from "next/link";
 import { requestPaperNavigation } from "@/lib/workspace/navigation";
 import { useSearchParams } from "next/navigation";
-import { lazy, Suspense, useState, useSyncExternalStore, type MouseEvent } from "react";
+import { lazy, Suspense, useState, useSyncExternalStore } from "react";
 import { errorMessage, readerHref, workspaceRequest, type WorkItem } from "@/lib/workspace/api";
 import { useWorkspace } from "@/lib/workspace/useWorkspace";
 import { useReadingActions } from "@/lib/workspace/useReadingActions";
@@ -81,12 +81,6 @@ export function LiveLibrary() {
     Array.from(document.querySelectorAll<HTMLElement>(".ws-queue-row[data-work-id]")).find((row) => row.dataset.workId === id)?.scrollIntoView?.({ block: "nearest" });
     closeDrawer();
   }
-  function rememberReader(event: MouseEvent) {
-    const link = event.target instanceof Element ? event.target.closest<HTMLAnchorElement>('a[href^="/workspace/items/"]') : null;
-    if (!link) return;
-    const id = decodeURIComponent(new URL(link.href).pathname.slice("/workspace/items/".length));
-    if (works.some((work) => work.work_id === id)) remember(id);
-  }
   async function undo() {
     if (actionBusy) return;
     const id = actions.undoWorkId;
@@ -102,7 +96,7 @@ export function LiveLibrary() {
     } catch (failure) { setNotice(errorMessage(failure)); }
     finally { setBusy(false); }
   }
-  return <div className="ws-library" onClickCapture={rememberReader}>
+  return <div className="ws-library">
     <StageHeaderSlot position={focused ? { n: position.index + 1, N: position.count } : undefined} />
     <div className="daily-page-meta"><span className="daily-eyebrow">Your library · server-backed</span></div>
     <div className="daily-intro ws-library-intro"><div><h1>Keep the source.<br /><em>Keep your thinking.</em></h1><p>Saved reading, questions and next steps retain their source version.</p></div></div>
