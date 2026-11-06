@@ -680,3 +680,24 @@ def test_wire_capacity_contradiction_refuses_before_inflight_or_transport(store)
     assert saved["state"] == "queued" and saved["usage"]["used_calls"] == 0
     assert saved["usage"]["unknown"] == {"input_tokens": 0, "output_tokens": 0}
     assert not saved["wire_records"]
+
+
+def test_producer_code_binding_preserves_old_output_but_refuses_queued_drift(store, monkeypatch):
+    service, value = setup(store)
+    job = queue(service, value)
+    assert job.request["producer"]["code"] == a.producer_binding()
+    service.action("a", job.id, "advance")
+    service.action("a", job.id, "advance")
+    pending_value = value.model_copy(update={"follow_up": "New explicit task"})
+    pending = queue(service, pending_value, "pending-producer")
+    monkeypatch.setattr(
+        a, "producer_binding", lambda: {"workspace/assistance.py": "sha256:new-producer"}
+    )
+    changed = service.action("a", pending.id, "advance")
+    assert changed["state"] == "stale" and not changed["wire_records"]
+    old = service.get("a", job.id)
+    assert old["result"] and old["request"]["producer"]["code"] != a.producer_binding()
+    with pytest.raises(ValueError, match="producer_code_changed"):
+        service.preview("a", value)
+    monkeypatch.setattr(a, "_LOADED_PRODUCER", a.producer_binding())
+    assert service.preview("a", value).request_digest != job.request_digest
