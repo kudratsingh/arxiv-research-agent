@@ -5,7 +5,24 @@ verified locally. Application **`b261ddc5e0e034438a4dcc90bbbcb0ca42c76de3`**;
 immutable production build **`PwbeWv0RU7h8JGqumje0V`**. Publication and exact-head remote CI are independently visible in the
 [branch workflow record](https://github.com/kudratsingh/arxiv-research-agent/actions/workflows/ci.yml?query=branch%3Acodex%2Fworkspace-modes-d0-d4); the final owner checkpoint identifies the published SHA/run. Owner experience review and D5 paid quality qualification remain pending; the protected D5 implementation/offline checkpoint is recorded below.
 
-## D5 protected qualification checkpoint — November 6
+## D5 human-review import and computed scoring — current checkpoint
+
+Application **`f962ff84fd49c9e6b0db325c8adba3817a177c8b`** implements the review/grading path; test-only commit55287e2 declares its required unit tier. Branch`codex/workspace-d5-grounded-assistance`. The prior published698eaa3 baseline passed **9/9CI jobs** in [run42204597320](https://github.com/kudratsingh/arxiv-research-agent/actions/runs/42204597320). New evaluator publication and exact-head CI are separate gates, reported in the final owner checkpoint.
+
+**Preview: http://localhost:3193/workspace/today?mode=learn** — new isolated API8193/DB`workspace_d5_review_offline`/principal`d5-validation-run`. Frontend buildMh3EAZc3soYDoaWmy__H5 and its source tree are unchanged. Owner3137 and review3178 remain untouched. Provider/count contacts0;new actual spend$0; no paid approval/stage, recurrence, notifications or everyday generation enabled.
+
+- Versioned sidecars bind original packet/run/raw output and case/job/claim/probe/evidence identity, require attributed labels, reject stale/unknown/duplicate/conflicting records, and import append-only with idempotence and explicit adjudication.
+- The actual CLI exports blank worksheets, validates/imports completed copies and recomputes JSON/Markdown/HTML plus an analysis receipt. It never edits raw evidence, financial data or approvals. Provenance is rechecked and cannot be overridden by positive semantic labels.
+- Computed metrics include eligible/reviewed/support/indeterminate counts and coverage, atomicity/qualifications, omissions/comparisons/counterevidence, case completeness/abstention, actual checker agreement/disagreements and conditional error/abstention denominators, accepted-result costs and optional judged retrieval/reference metrics. Missing labels remain null/HOLD; owner usefulness is separate.
+- Active **v3** packet digest **`e1ed94498ce74231621f5c1394ddabd0aee11d3c42b7f88f5983e78d22c6d1da`**. Predecessor seals/results are preserved; no old job is relabelled. Corpus/model/settings/thresholds/minimums/limits/history are unchanged. Approvalfalse. Explicit v2 reanalysis receipts bind the old run to the new scorer.
+- Fresh v3 mock replay:8/8system +2/2development workflows,4checker batches,4count helpers;44syntheticMessages/48syntheticcounts,0realcontacts. Actual independent human reviews0;12fresh facts cannot fill20minimum. The real worksheet remains all-null, and original v2 worksheet bytes are unchanged.
+- The real export→validate→import→idempotent re-import→score sequence is demonstrated in isolated synthetic stores: supplied-label HOLD and unsupported-claim FAIL. Sufficient-sample PASS is a labelled software regression, never human evidence. Qualification remains disabled.
+- Focused review/adapter suite **133passed**,99.46%coverage across the new modules and100%review-scorer coverage; strict typing189sourcefiles passes. The first full gate caught2missing-tier guard failures (6501other tests passed); declaring the correct unit tier passed87targeted grading/harness checks. No guard/floor was weakened. Final local gate passes **6,503tests /54inherited skips /53separate-tier deselections,94.61%total and97%patch**, all package floors; exact-head remoteCI is separately linked in the review index/owner checkpoint.
+- New backend browser journeys:8/8 across1440/390×light/dark;0serious/criticalaxe or console exceptions, exact citations, failed-save retry and Library resume. Separate workflow e2e53/53, mock simulation20/20 at$0 and registry260/0 pass. Existing frontend assertions and budgets are unchanged.
+
+[Review commands](d5/HUMAN-REVIEW-RUNBOOK.md), [synthetic reports/blank worksheet/receipts](d5/evidence/review-grading/README.md), [active identity](d5/d5-packet-identity.json), [unexecuted paid proposal](d5/PAID-VALIDATION-PROPOSAL.md). Historical estimated$0.109967/9Messages/15counts and original0/9diagnostic remain unchanged. Actual provider fit/schema acceptance, independent factual/checker evidence, owner usefulness, partial-PDF reliability and broader draft/history recovery remain limitations. No paid approval will be requested before the implementation/evidence is complete.
+
+## Previous D5 protected qualification checkpoint — preserved v2 cohort
 
 D5 implementation and offline verification are complete at application **`b7240cf34b1ef1331e33fb992870da71528105e2`**, build `Mh3EAZc3soYDoaWmy__H5`, branch `codex/workspace-d5-grounded-assistance`. Publication `57b7181` adds documentation/evidence. A subsequent helper-script lint correction does not change `src/`, `web/` or any sealed request. Exact published-head CI is reported independently in the final owner checkpoint.
 
@@ -79,7 +96,7 @@ in the owner checkpoint, not inferred from local results.
 | D2 persistence | Migration010, ownership/CAS/retry-safe projects/threads, shared source/note links and typed manual records | Real Postgres/API; fresh-browser resume after actual API/Node restart; private dump restored into a new disposable DB, all38 table/sequence fingerprints match |
 | D3 discovery | Frozen `workspace-modes-lexical-v1`, distinct Learn/Research policies, context-bound editions/cursors |46 focused tests; ranking100% statement/branch; same40-work offline pool; proposed labels unjudged and chronology limited |
 | D4 continuity | Explicit investigation, exact-version/passage evidence, prerequisite threads, shared Library resume, failed-save/conflict/draft protections |96/96 new browser cases;16/16 existing live regressions; actual restart, unlink and archive preserve shared data |
-| D5 assistance | Implemented offline; paid/everyday disabled | Protected adapter + frozen executable benchmark + Reader results at b7240cf; independent quality/spending decision pending |
+| D5 assistance | Implemented offline; paid/everyday disabled | Protected adapter, executable benchmark, Reader results and review-import/computed grading at f962ff8; real quality/spending decision pending |
 | Owner usefulness / longitudinal use | Pending | No owner labels filled; mechanical sessions are not five days of owner use |
 
 ## Runnable preview and isolation

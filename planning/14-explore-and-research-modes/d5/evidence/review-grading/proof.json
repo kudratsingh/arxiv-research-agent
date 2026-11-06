@@ -1,0 +1,11 @@
+{
+  "format": "d5-synthetic-review-demo-v1",
+  "packet_digest": "e1ed94498ce74231621f5c1394ddabd0aee11d3c42b7f88f5983e78d22c6d1da",
+  "original_result_sha256": "d67992af721251563438d959110ccdb32e428389133f53bef8328fcbf5c888a3",
+  "raw_results_unchanged": true,
+  "actual_owner_worksheet_blank": true,
+  "synthetic_outcome": "HOLD",
+  "synthetic_negative_outcome": "FAIL",
+  "provider_contacts": 0,
+  "paid_authorization_created": false
+}

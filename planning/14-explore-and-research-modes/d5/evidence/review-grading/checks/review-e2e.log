@@ -1,0 +1,70 @@
+OMP_NUM_THREADS=1 TOKENIZERS_PARALLELISM=false PYTHONHASHSEED=0 USE_MOCK_DATA=true ANTHROPIC_API_KEY=local-preview-disabled \
+	/Users/kudratsingh/Machine-Learning-Projects/arxiv-venv-lock/bin/python -m pytest -m e2e tests/ -v
+============================= test session starts ==============================
+platform darwin -- Python 3.13.7, pytest-9.1.1, pluggy-1.6.0 -- /Users/kudratsingh/Machine-Learning-Projects/arxiv-venv-lock/bin/python
+cachedir: .pytest_cache
+hypothesis profile 'default'
+rootdir: /private/tmp/arxiv-agent-eng-workspace-assistance
+configfile: pyproject.toml
+plugins: cov-7.1.0, anyio-4.14.1, postgresql-8.1.0, timeout-2.4.0, asyncio-1.4.0, langsmith-0.9.7, hypothesis-6.167.1
+timeout: 60.0s
+timeout method: signal
+timeout func_only: False
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 6610 items / 6557 deselected / 53 selected
+
+tests/e2e/test_compute_controller.py::TestOnePairOfGraphsServesBothTiers::test_the_pair_is_compiled_once_and_holds_both_shapes PASSED [  1%]
+tests/e2e/test_compute_controller.py::TestOnePairOfGraphsServesBothTiers::test_a_quiet_query_never_reaches_a_verification PASSED [  3%]
+tests/e2e/test_compute_controller.py::TestOnePairOfGraphsServesBothTiers::test_an_escalated_query_is_verified_before_the_critic PASSED [  5%]
+tests/e2e/test_compute_controller.py::TestOnePairOfGraphsServesBothTiers::test_an_escalated_query_repairs_a_reported_gap PASSED [  7%]
+tests/e2e/test_compute_controller.py::TestOnePairOfGraphsServesBothTiers::test_both_tiers_run_back_to_back_in_one_process PASSED [  9%]
+tests/e2e/test_compute_controller.py::TestOnePairOfGraphsServesBothTiers::test_the_frames_a_client_sees_carry_no_new_key PASSED [ 11%]
+tests/e2e/test_compute_controller.py::TestTheEscalatedRunIsStillFree::test_neither_tier_spends_anything PASSED [ 13%]
+tests/e2e/test_contract_shadow_research.py::TestTheSwitchOffIsInvisible::test_no_contract_module_reaches_the_runners_import_graph PASSED [ 15%]
+tests/e2e/test_contract_shadow_research.py::TestTheSwitchOffIsInvisible::test_the_eval_record_gains_exactly_one_key_and_only_when_on PASSED [ 16%]
+tests/e2e/test_contract_shadow_research.py::TestACannedRunThroughTheRealGraph::test_one_spec_one_manifest_and_the_trajectory_the_e2e_test_pins PASSED [ 18%]
+tests/e2e/test_contract_shadow_research.py::TestACannedRunThroughTheRealGraph::test_the_report_is_addressed_by_digest_and_never_carried PASSED [ 20%]
+tests/e2e/test_contract_shadow_research.py::TestArmIdentityAgainstTheCompiledGraph::test_every_buildable_arm_compiles_to_its_own_manifest PASSED [ 22%]
+tests/e2e/test_contract_shadow_research.py::TestArmIdentityAgainstTheCompiledGraph::test_the_verifier_flag_adds_no_node_to_the_fixed_graph PASSED [ 24%]
+tests/e2e/test_contract_shadow_research.py::TestArmIdentityAgainstTheCompiledGraph::test_the_refiner_changes_the_graph_and_not_the_arm PASSED [ 26%]
+tests/e2e/test_contract_shadow_research.py::TestTheRunnerHooksFireOnARealJob::test_an_http_job_succeeds_and_leaves_a_matching_trajectory PASSED [ 28%]
+tests/e2e/test_guided_session.py::TestGuidedReadSession::test_a_session_pauses_for_every_turn_and_closes_on_recorded_evidence PASSED [ 30%]
+tests/e2e/test_guided_session.py::TestGuidedReadSession::test_a_paused_session_survives_the_process_that_was_serving_it PASSED [ 32%]
+tests/e2e/test_guided_session.py::TestGuidedReadSession::test_a_learner_who_leaves_early_still_gets_an_honest_close PASSED [ 33%]
+tests/e2e/test_hitl_review.py::TestPlanReview::test_a_run_parks_for_review_and_shows_the_reviewer_the_plan PASSED [ 35%]
+tests/e2e/test_hitl_review.py::TestPlanReview::test_a_revised_plan_is_the_plan_the_rest_of_the_run_uses PASSED [ 37%]
+tests/e2e/test_hitl_review.py::TestPlanReview::test_an_approval_resumes_the_run_on_the_plan_it_was_shown PASSED [ 39%]
+tests/e2e/test_hitl_review.py::TestPlanReview::test_a_cancelled_review_ends_the_run_without_a_report PASSED [ 41%]
+tests/e2e/test_hitl_review.py::TestPlanReview::test_a_bypassed_run_never_offers_a_review PASSED [ 43%]
+tests/e2e/test_http_surface.py::TestHttpSurface::test_a_client_submits_streams_fetches_and_exports_one_job PASSED [ 45%]
+tests/e2e/test_http_surface.py::TestHttpSurface::test_a_client_that_attaches_after_the_job_ends_still_learns_the_outcome PASSED [ 47%]
+tests/e2e/test_http_surface.py::TestTheAccessLineOverARealSocket::test_our_structured_line_replaces_uvicorns_prose_one PASSED [ 49%]
+tests/e2e/test_http_surface.py::TestTheAccessLineOverARealSocket::test_the_client_is_handed_the_id_that_is_on_the_log_line PASSED [ 50%]
+tests/e2e/test_http_surface.py::TestTheAccessLineOverARealSocket::test_a_callers_traceparent_is_adopted_rather_than_replaced PASSED [ 52%]
+tests/e2e/test_mock_mode_keyless.py::TestTheKeylessGraph::test_a_query_reaches_a_labelled_briefing_with_no_model_and_no_key PASSED [ 54%]
+tests/e2e/test_mock_mode_keyless.py::TestTheKeylessGraph::test_the_evidence_path_quotes_the_abstract_it_claims_to PASSED [ 56%]
+tests/e2e/test_mock_mode_keyless.py::TestTheKeylessHttpSurface::test_a_job_submitted_without_a_key_succeeds_and_exports PASSED [ 58%]
+tests/e2e/test_mock_mode_keyless.py::TestTheKeylessHttpSurface::test_the_stream_reports_the_same_free_terminal_frame PASSED [ 60%]
+tests/e2e/test_orchestrated_workers.py::TestTheBranchTierTrajectory::test_three_sub_questions_become_three_branches_and_one_briefing PASSED [ 62%]
+tests/e2e/test_orchestrated_workers.py::TestTheBranchTierTrajectory::test_the_merge_deduplicates_and_keeps_every_branchs_provenance PASSED [ 64%]
+tests/e2e/test_orchestrated_workers.py::TestTheBranchTierTrajectory::test_the_same_run_twice_merges_to_the_same_evidence PASSED [ 66%]
+tests/e2e/test_orchestrated_workers.py::TestTheBranchTierTrajectory::test_the_message_trajectory_agrees_with_the_node_trajectory PASSED [ 67%]
+tests/e2e/test_orchestrated_workers.py::TestTheVerificationStageIsArmCUnchanged::test_an_overclaim_is_rewritten_by_the_synthesizer_and_verified_again PASSED [ 69%]
+tests/e2e/test_orchestrated_workers.py::TestTheVerificationStageIsArmCUnchanged::test_a_reported_gap_becomes_a_new_branch_and_keeps_the_old_evidence PASSED [ 71%]
+tests/e2e/test_orchestrated_workers.py::TestTheVerificationStageIsArmCUnchanged::test_a_second_failure_reaches_the_critic_rather_than_a_second_repair PASSED [ 73%]
+tests/e2e/test_orchestrated_workers.py::TestTheVerificationStageIsArmCUnchanged::test_a_critic_asking_for_retrieval_re_enters_the_branch_tier PASSED [ 75%]
+tests/e2e/test_orchestrated_workers.py::TestAFaultInOneBranchStaysThere::test_a_failed_search_costs_one_branch_and_not_the_run PASSED [ 77%]
+tests/e2e/test_orchestrated_workers.py::TestAFaultInOneBranchStaysThere::test_no_surviving_branch_gives_the_existing_not_found_outcome PASSED [ 79%]
+tests/e2e/test_orchestrated_workers.py::TestAFaultInOneBranchStaysThere::test_a_cancelled_job_stops_between_branches PASSED [ 81%]
+tests/e2e/test_orchestrated_workers.py::TestTheProductPathRunsWithoutAHarness::test_mock_mode_alone_drives_the_branch_tier_end_to_end PASSED [ 83%]
+tests/e2e/test_research_workflow.py::TestFullResearchWorkflow::test_a_query_reaches_a_cited_report_through_every_node_in_order PASSED [ 84%]
+tests/e2e/test_research_workflow.py::TestFullResearchWorkflow::test_a_critic_that_never_approves_stops_at_the_iteration_ceiling PASSED [ 86%]
+tests/e2e/test_research_workflow.py::TestFullResearchWorkflow::test_a_checkpointed_run_is_resumable_from_its_own_thread PASSED [ 88%]
+tests/e2e/test_verify_repair.py::TestTheVerifyAndRepairTrajectory::test_a_reported_gap_is_retrieved_read_synthesised_and_verified_again PASSED [ 90%]
+tests/e2e/test_verify_repair.py::TestTheVerifyAndRepairTrajectory::test_an_overclaim_is_rewritten_by_the_synthesizer_and_verified_again PASSED [ 92%]
+tests/e2e/test_verify_repair.py::TestTheVerifyAndRepairTrajectory::test_a_passing_verdict_goes_straight_to_the_critic PASSED [ 94%]
+tests/e2e/test_verify_repair.py::TestTheVerifyAndRepairTrajectory::test_an_abstention_is_not_a_failure_and_repairs_nothing PASSED [ 96%]
+tests/e2e/test_verify_repair.py::TestTheVerifyAndRepairTrajectory::test_a_second_failure_reaches_the_critic_rather_than_a_second_repair PASSED [ 98%]
+tests/e2e/test_verify_repair.py::TestTheVerifyAndRepairTrajectory::test_the_message_trajectory_agrees_with_the_node_trajectory PASSED [100%]
+
+===================== 53 passed, 6557 deselected in 14.01s =====================

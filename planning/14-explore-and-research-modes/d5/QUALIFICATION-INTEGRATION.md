@@ -59,3 +59,7 @@ open exact passages, and explicit saved notes can resume the quarantined result
 through Library or a learning thread. Every output remains experimental; human
 support, factual acceptance and checker qualification are not inferred from a
 successful pipeline or a positive machine opinion.
+
+## Review analysis is separate from execution
+
+`python -m src.workspace.d5_reviews` exports/validates/imports review sidecars and recomputes reports. It has no database/provider/approval writer. Reviews bind original observed packet/run/output/evidence; corrections require explicit versioned adjudication. The current producer/scorer is sealed in v3. Old v2 results remain v2 and receive an explicit new-scorer analysis receipt. No label can override failed mechanical provenance or enable generation. Actual Reader job records retain their original quarantined status; imported labels live only in analysis reports.

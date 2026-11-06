@@ -1,6 +1,18 @@
-# D5 offline quality report
+# D5 review-aware quality checkpoint
 
-Application **b7240cf34b1ef1331e33fb992870da71528105e2**, active system sealv2 **1e5716df09364be0db9501e9d2bc7ff3184fc65655dbbb77c6cd658a2ae6a76f**. All results below are retained-data software tests with injected MockTransport. **No provider/count contact, new paid spend, human judgment or checker qualification occurred.**
+Application **f962ff84fd49c9e6b0db325c8adba3817a177c8b**, packet v3 **e1ed94498ce74231621f5c1394ddabd0aee11d3c42b7f88f5983e78d22c6d1da**. Review import and score recomputation are implemented and exercised offline. No provider/count contact, paid authorization, new spend or actual human judgment occurred.
+
+The [new report/examples](evidence/review-grading/README.md) and [review commands](HUMAN-REVIEW-RUNBOOK.md) supersede the previous hardcoded-unreviewed evaluator. JSON/Markdown/HTML now derive counts, review coverage, factual support, atomicity/qualifications, omissions/comparisons/counterevidence, checker agreement/error rates/abstentions, accepted-result counts, cost and optional judged retrieval metrics from supplied attributed labels. Unknown/empty denominators stay null. Mechanical provenance is recomputed and cannot be overridden by a positive semantic label.
+
+Focused verification: **133 passed**,99.46% new-module coverage,100% review-scorer coverage; strict mypy189sourcefiles pass. The module's required unit-tier marker was caught by the first full gate (6501passed,2harnessfailures,54inheritedskips); the marker was added without changing any guard or floor. The final full-gate result is recorded in the evidence/current owner checkpoint. No source/scorer/schema was changed for that test classification.
+
+The full CLI demonstration exports45blank items, validates/imports45explicitly synthetic labels, proves idempotent re-import, and writes new grading reports. The observed replay still has only12fresh facts, below20, and a fake checker that abstains: a supplied-label grading HOLD is correct. A separate unsupported-claim fixture produces FAIL. Sufficient-sample software fixtures exercise PASS while qualification remains HOLD; they do not fill the actual benchmark's minimums or invent human evidence.
+
+The owner worksheet remains blank. Original v2 worksheet bytes are unchanged. Explicit v2 reanalysis records original packet/run/raw-result digests and the new scorer/review/report policy; it never relabels old jobs as v3. New v3 replay uses a separate disposable DB. Corpus, model/settings, thresholds/minimums, limits and old financial history are identical to v2. Historical real estimate$0.109967 and all failures remain unchanged.
+
+New browser evidence at3193/API8193 uses the same immutable frontend build and new backend:8learning/research journeys across1440/390×light/dark,0serious/criticalaxe findings, exact source/Library resume and failed-save retry. Owner3137 and review3178 remain untouched. The prior evidence below remains its original v2 cohort; no old local or CI result is recast as final-head verification.
+
+## Preserved v2 mechanical/source findings
 
 ## Results and denominators
 
@@ -47,3 +59,5 @@ Original failed script attempts are retained locally: an incorrect Library direc
 Original diagnostic remains **0/9 completed,3failed,6unrun**, q01development; q02/q03 failures and stopped q04 are not replayed. Historical financial checkpoint:USD0.109967 estimate (workflow0.094655/checker0.015312),0pending/unknown,9Messages/15counts. The original-contract/producer cohorts and receipts remain unchanged. D5 synthetic journal contacts are not added to real provider usage. [Accounting](evidence/accounting.json) retains both views and exact checkpoints.
 
 The next quality gate is a separately approved staged experiment plus independent review, not more fixture runs. The [proposal](PAID-VALIDATION-PROPOSAL.md) freezes8 fresh system cases with up to42 potential fact slots across7 answerable cases and20 proposed negative probes. Reaching20 independently reviewed generated facts is feasible, not guaranteed; fewer→HOLD, no extra cases after results. Human worksheet is [blank](evidence/human-review-blank.json.gz). A small trial cannot certify checker reliability, literature recall or everyday usefulness.
+
+Final local full gate: **6,503 passed /54 inherited skips /53 separate-tier deselections,94.61%total and97%patch**, package floors pass; [raw verification](evidence/review-grading/checks/verification.json). Final-head remoteCI remains independently reported.

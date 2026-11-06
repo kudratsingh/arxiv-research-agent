@@ -1,7 +1,7 @@
 # Explore & Learn and Research
 
 Owner-adopted product direction, recorded **2026-11-04 America/Los_Angeles**.
-Status: **D0–D4 verified locally at applicationb261ddc; exact-head CI separately linked; D5 implemented offline at b7240cf; paid quality gate pending**.
+Status: **D0–D4 verified locally at applicationb261ddc; exact-head CI separately linked; D5 review-aware evaluator implemented offline at f962ff8; paid quality gate pending**.
 
 The workspace will have two main modes sharing one Library, Reader, source
 identity system and durable personal records. Explore & Learn supports daily
@@ -49,3 +49,5 @@ no question, discover/read/save something, investigate it in a project, follow
 a prerequisite learning thread, and return to the project's exact passage.
 
 Current D5 milestone: [protected integration and runnable benchmark](d5/README.md), [offline quality/evidence](d5/OFFLINE-QUALITY.md), [separate unexecuted validation proposal](d5/PAID-VALIDATION-PROPOSAL.md). Owner3137/review3178 are preserved; D5 preview3192 uses isolated retained public data and labelled simulations.
+
+Current review path: [export/import/scoring runbook](d5/HUMAN-REVIEW-RUNBOOK.md), [synthetic grading evidence and blank owner worksheet](d5/evidence/review-grading/README.md). Active preview3193; owner3137/review3178 remain unchanged.

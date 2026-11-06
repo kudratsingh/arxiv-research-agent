@@ -99,3 +99,5 @@ One owner controls shared migrations, configuration, API types and mode identity
 Browser verification owns isolated principals and ports, never owner3137. Paid
 qualification remains a separate checkout/storage/authorization lane. No new
 runtime dependency is assumed by this plan.
+
+D5 review completion: f962ff8 adds validated attributed sidecars and computed grading; v3 freezes the new scorer while preserving predecessor raw results and thresholds. See [review commands](d5/HUMAN-REVIEW-RUNBOOK.md). Real human review and any paid stage still require their separate decisions; no authorization is inferred from software tests.

@@ -1,0 +1,407 @@
+{
+  "$defs": {
+    "Adjudication": {
+      "additionalProperties": false,
+      "properties": {
+        "supersedes": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Supersedes",
+          "type": "array"
+        },
+        "reason": {
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "supersedes",
+        "reason"
+      ],
+      "title": "Adjudication",
+      "type": "object"
+    },
+    "Judgments": {
+      "additionalProperties": false,
+      "properties": {
+        "support": {
+          "anyOf": [
+            {
+              "enum": [
+                "supported",
+                "unsupported",
+                "insufficient",
+                "unreviewable"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Support"
+        },
+        "atomic": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Atomic"
+        },
+        "qualifications_retained": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Qualifications Retained"
+        },
+        "complete": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Complete"
+        },
+        "material_omissions": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Material Omissions"
+        },
+        "comparison_compatible": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "const": "not_applicable",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Comparison Compatible"
+        },
+        "counterevidence_handled": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "const": "not_applicable",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Counterevidence Handled"
+        },
+        "appropriate_abstention": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "const": "not_applicable",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Appropriate Abstention"
+        },
+        "prose_support": {
+          "anyOf": [
+            {
+              "enum": [
+                "supported",
+                "unsupported",
+                "insufficient",
+                "unreviewable"
+              ],
+              "type": "string"
+            },
+            {
+              "const": "procedural_only",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Prose Support"
+        },
+        "usefulness": {
+          "anyOf": [
+            {
+              "enum": [
+                "useful",
+                "maybe",
+                "irrelevant"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Usefulness"
+        },
+        "relevance": {
+          "anyOf": [
+            {
+              "enum": [
+                "relevant",
+                "irrelevant",
+                "insufficient",
+                "unreviewable"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Relevance"
+        },
+        "known_reference": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Known Reference"
+        }
+      },
+      "title": "Judgments",
+      "type": "object"
+    },
+    "ReviewItem": {
+      "additionalProperties": false,
+      "properties": {
+        "target": {
+          "title": "Target",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "claim",
+            "probe",
+            "case",
+            "retrieval"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "case_id": {
+          "title": "Case Id",
+          "type": "string"
+        },
+        "job_id": {
+          "title": "Job Id",
+          "type": "string"
+        },
+        "binding": {
+          "title": "Binding",
+          "type": "string"
+        },
+        "observed": {
+          "additionalProperties": true,
+          "title": "Observed",
+          "type": "object"
+        },
+        "judgments": {
+          "$ref": "#/$defs/Judgments"
+        },
+        "reviewer_role": {
+          "anyOf": [
+            {
+              "enum": [
+                "owner",
+                "expert",
+                "synthetic"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reviewer Role"
+        },
+        "reviewer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reviewer"
+        },
+        "reviewed_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reviewed At"
+        },
+        "provenance": {
+          "anyOf": [
+            {
+              "enum": [
+                "independent_human",
+                "machine_assisted_human",
+                "synthetic"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Provenance"
+        },
+        "method": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Method"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reason"
+        }
+      },
+      "required": [
+        "target",
+        "kind",
+        "case_id",
+        "job_id",
+        "binding",
+        "observed"
+      ],
+      "title": "ReviewItem",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": "d5-human-review-v1",
+      "default": "d5-human-review-v1",
+      "title": "Format",
+      "type": "string"
+    },
+    "review_revision": {
+      "default": 1,
+      "minimum": 1,
+      "title": "Review Revision",
+      "type": "integer"
+    },
+    "packet_digest": {
+      "title": "Packet Digest",
+      "type": "string"
+    },
+    "run_id": {
+      "title": "Run Id",
+      "type": "string"
+    },
+    "result_digest": {
+      "title": "Result Digest",
+      "type": "string"
+    },
+    "instructions": {
+      "title": "Instructions",
+      "type": "string"
+    },
+    "items": {
+      "items": {
+        "$ref": "#/$defs/ReviewItem"
+      },
+      "title": "Items",
+      "type": "array"
+    },
+    "adjudication": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Adjudication"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "required": [
+    "packet_digest",
+    "run_id",
+    "result_digest",
+    "instructions",
+    "items"
+  ],
+  "title": "ReviewFile",
+  "type": "object"
+}

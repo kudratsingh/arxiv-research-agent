@@ -1,0 +1,6 @@
+{"packet_digest": "e1ed94498ce74231621f5c1394ddabd0aee11d3c42b7f88f5983e78d22c6d1da", "provider_contacts": 0}
+{"verified": "e1ed94498ce74231621f5c1394ddabd0aee11d3c42b7f88f5983e78d22c6d1da", "provider_contacts": 0}
+{"initialized": true, "fixture": true, "approval_created": false, "provider_contacts": 0}
+{"initialized": true, "fixture": false, "approval_created": false, "provider_contacts": 0}
+{"packet_digest": "e1ed94498ce74231621f5c1394ddabd0aee11d3c42b7f88f5983e78d22c6d1da", "cases": 10, "completed": 10, "report": "outputs/d5/benchmark-review-v3", "acceptance": "HOLD: generated_fact_review_minimum_not_met, adversarial_review_minimum_not_met, checker_false_pass_denominator_missing, required_case_or_claim_reviews_missing (unreviewed)"}
+PASS: new immutable v3, unchanged corpus/model/thresholds/limits/history, fresh mock-only replay and separate unapproved validation DB; provider contacts0

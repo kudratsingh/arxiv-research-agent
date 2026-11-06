@@ -1,0 +1,14 @@
+........................................................................ [ 54%]
+.............................................................            [100%]
+================================ tests coverage ================================
+_______________ coverage: platform darwin, python 3.13.7-final-0 _______________
+
+Name                                 Stmts   Miss Branch BrPart  Cover   Missing
+--------------------------------------------------------------------------------
+src/workspace/d5_review_scoring.py     140      0     56      0   100%
+src/workspace/d5_reviews.py            266      1     90      2    99%   160->exit, 358
+--------------------------------------------------------------------------------
+TOTAL                                  406      1    146      2    99%
+Coverage XML written to file outputs/d5/review-stable-coverage.xml
+Required test coverage of 89.0% reached. Total coverage: 99.46%
+133 passed in 84.85s (0:01:24)

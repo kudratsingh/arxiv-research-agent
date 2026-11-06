@@ -1,0 +1,7 @@
+{"report": "outputs/d5/review-grading-demo-v1/unreviewed", "outcome": "HOLD", "basis": "unreviewed", "provider_contacts": 0}
+{"valid": true, "review_digest": "9671503e3d15e5acd64ed1ae4c649a22a9f3f46f33a709b6aa441fe462ed409e", "labels": 45}
+{"review_digest": "9671503e3d15e5acd64ed1ae4c649a22a9f3f46f33a709b6aa441fe462ed409e", "idempotent": false, "imported": true}
+{"review_digest": "9671503e3d15e5acd64ed1ae4c649a22a9f3f46f33a709b6aa441fe462ed409e", "idempotent": true, "imported": false}
+{"report": "outputs/d5/review-grading-demo-v1/synthetic-graded", "outcome": "HOLD", "basis": "synthetic", "provider_contacts": 0}
+{"review_digest": "67404de57c15e4b72c54964b64b4c6b63235392cd4829fc2747e277849fbe287", "idempotent": false, "imported": true}
+{"report": "outputs/d5/review-grading-demo-v1/synthetic-failed", "outcome": "FAIL", "basis": "synthetic", "provider_contacts": 0}

@@ -1,0 +1,33 @@
+{
+  "format": "d5-analysis-receipt-v1",
+  "packet_digest": "e1ed94498ce74231621f5c1394ddabd0aee11d3c42b7f88f5983e78d22c6d1da",
+  "result_digest": "b84d719ca845971a75300d66961c63c5d89e54ec84f7554ecea8edfa5290e546",
+  "run_id": "d5-run-445a35ea2cc6822f6ae8c5752d7ca3fa",
+  "scorer_version": "d5-reviewed-quality-v1",
+  "runtime_python": "3.13.7",
+  "scorer_code": {
+    "d5_reviews.py": "8d0c642f4026f87c44de3b2c354d8187c3776d2284079cbfe8f6a2290030cab2",
+    "d5_review_scoring.py": "916e175bfb056f3ed8d49fc1cff1018d75dcf1a02a50b4c8bd3d7f509b6b69cb",
+    "d5_scoring.py": "643a7fc3f14985739e99827c630ab1f8dcef52eb78690eaa06a0bd6015925d57",
+    "grounding.py": "05b9cd7e0c1737b36b731996f2ec20132034b3a233acebe5be64d9e43c260bb7",
+    "assistance_contract.py": "aacbf438525841d98f632d1261f2c86ab9bcbecea6ae55481570b90df7300c3c",
+    "material.py": "688cbee37fa7007806dad087331672b381f0d3e094d88dc9dc8a7a889b4d7ba2",
+    "admission.py": "12524a9e192cde7d6988e44d57623d946252d5e4c039c14990076f1ba4ac84ac"
+  },
+  "review_digests": [],
+  "review_set_digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+  "report_version": "d5-reviewed-quality-v1",
+  "scoring_policy": {
+    "completion_required": 8,
+    "fresh_cases": 8,
+    "generated_fact_reviews_min": 20,
+    "adversarial_reviews_min": 20,
+    "false_pass_max": 0,
+    "provenance_required": 1,
+    "human_missing": "HOLD",
+    "minimum_feasibility": "7 potentially answerable fresh cases x 6 claims = 42 slots; 20 not guaranteed. Fewer observed facts means HOLD, no added cases.",
+    "correlation": "Report by case/source; claims are not independent samples"
+  },
+  "accounting_digest": "ad0189251cdeef19276eadb571398edb5fe651415a9d4c4df777fb5a2b80c0ef",
+  "analysis_digest": "169204ee363e32f36ac2e8997bff0dacceaa54db2b77062b665c49525a64f3dc"
+}

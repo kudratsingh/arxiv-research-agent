@@ -1,6 +1,6 @@
 const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict');
 const {chromium,expect}=require('@playwright/test');
-const data=require(path.resolve('outputs/d5/benchmark-final/results.json')),base='http://127.0.0.1:3192',out=path.resolve('outputs/d5/browser-followup');
+const data=require(path.resolve(process.env.D5_BROWSER_REPORT||'outputs/d5/benchmark-review-v3/results.json')),base=process.env.D5_BROWSER_BASE||'http://127.0.0.1:3193',out=path.resolve('outputs/d5/browser-followup');
 function href(j){const a=j.request.assistance,q=new URLSearchParams({mode:a.mode,version:a.version_id,qualification:j.id});if(a.project_id)q.set('project',a.project_id);return base+'/workspace/items/'+encodeURIComponent(a.work_id)+'?'+q+'#understand';}
 (async()=>{await fs.mkdir(out,{recursive:true});const browser=await chromium.launch({headless:true});const results=[];try{for(const width of [1440,390]){
  const ctx=await browser.newContext({viewport:{width,height:width===390?844:1000},deviceScaleFactor:2});const page=await ctx.newPage();const errors=[];page.on('pageerror',e=>errors.push(String(e)));

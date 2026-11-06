@@ -1,7 +1,7 @@
 const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict');
 const {chromium,expect}=require('@playwright/test'),AxeBuilder=require('@axe-core/playwright').default;
-const base='http://127.0.0.1:3192',out=path.resolve(process.env.D5_BROWSER_OUT||'outputs/d5/qualification-browser-replay');
-const data=require(path.resolve(process.env.D5_BROWSER_REPORT||'outputs/d5/benchmark-final/results.json'));
+const base=process.env.D5_BROWSER_BASE||'http://127.0.0.1:3193',out=path.resolve(process.env.D5_BROWSER_OUT||'outputs/d5/qualification-browser-replay');
+const data=require(path.resolve(process.env.D5_BROWSER_REPORT||'outputs/d5/benchmark-review-v3/results.json'));
 const report={packetDigest:data.packet_digest,contexts:[],errors:[],blocked:[],writes:[],providerContacts:0,humanLabels:null};
 function href(job){const a=job.request.assistance;const q=new URLSearchParams({mode:a.mode,version:a.version_id,qualification:job.id,return_to:a.project_id?'/workspace/projects?mode=research&project='+a.project_id:'/workspace/today?mode=learn&focus='+encodeURIComponent(a.work_id)});if(a.project_id)q.set('project',a.project_id);return base+'/workspace/items/'+encodeURIComponent(a.work_id)+'?'+q+'#understand';}
 async function reveal(page,el){await el.scrollIntoViewIfNeeded();await el.evaluate(el=>{const box=el.getBoundingClientRect(),s=document.querySelector('main.ws-stage');if(innerWidth<768)window.scrollBy(0,box.top-100);else if(s)s.scrollTop+=box.top-s.getBoundingClientRect().top-45;});}

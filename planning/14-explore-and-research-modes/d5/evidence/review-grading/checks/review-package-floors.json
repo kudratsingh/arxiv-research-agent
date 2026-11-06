@@ -1,0 +1,22 @@
+{
+  "api": {
+    "actual": "88",
+    "floor": 86,
+    "passed": true
+  },
+  "agents": {
+    "actual": "96",
+    "floor": 92,
+    "passed": true
+  },
+  "security": {
+    "actual": "100",
+    "floor": 97,
+    "passed": true
+  },
+  "eval": {
+    "actual": "95",
+    "floor": 91,
+    "passed": true
+  }
+}

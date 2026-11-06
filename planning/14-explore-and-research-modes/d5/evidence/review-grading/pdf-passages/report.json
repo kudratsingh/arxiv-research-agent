@@ -1,0 +1,70 @@
+[
+  {
+    "width": 1440,
+    "theme": "light",
+    "job": "gen-82b685cacb449f373b1a1ddfa994dd2e996c5ec8",
+    "material": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+    "page": 1,
+    "start": 2443,
+    "end": 3888,
+    "exactText": true,
+    "markBounds": {
+      "x": 469,
+      "y": 23.953125,
+      "width": 853.125,
+      "height": 754.09375
+    },
+    "playerBounds": null
+  },
+  {
+    "width": 1440,
+    "theme": "dark",
+    "job": "gen-82b685cacb449f373b1a1ddfa994dd2e996c5ec8",
+    "material": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+    "page": 1,
+    "start": 2443,
+    "end": 3888,
+    "exactText": true,
+    "markBounds": {
+      "x": 469,
+      "y": 23.953125,
+      "width": 853.125,
+      "height": 754.09375
+    },
+    "playerBounds": null
+  },
+  {
+    "width": 390,
+    "theme": "light",
+    "job": "gen-82b685cacb449f373b1a1ddfa994dd2e996c5ec8",
+    "material": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+    "page": 1,
+    "start": 2443,
+    "end": 3888,
+    "exactText": true,
+    "markBounds": {
+      "x": 33,
+      "y": 0.3125,
+      "width": 324.421875,
+      "height": 1450.53125
+    },
+    "playerBounds": null
+  },
+  {
+    "width": 390,
+    "theme": "dark",
+    "job": "gen-82b685cacb449f373b1a1ddfa994dd2e996c5ec8",
+    "material": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+    "page": 1,
+    "start": 2443,
+    "end": 3888,
+    "exactText": true,
+    "markBounds": {
+      "x": 33,
+      "y": 0.3125,
+      "width": 324.421875,
+      "height": 1450.53125
+    },
+    "playerBounds": null
+  }
+]

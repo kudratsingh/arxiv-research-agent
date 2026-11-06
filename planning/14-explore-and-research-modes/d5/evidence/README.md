@@ -1,4 +1,8 @@
-# D5 evidence and exact attribution
+# Current D5 review/grading evidence
+
+The active evaluator/application is **f962ff8**, packetv3 **e1ed94498ce74231621f5c1394ddabd0aee11d3c42b7f88f5983e78d22c6d1da**. See [the review-grading index](review-grading/README.md) for actual commands, computed reports, blank worksheet and binding receipts. Final publication/CI is reported separately for its exact head. All cohorts below remain their original v2/core evidence; they are not recast as new-scorer results.
+
+## Preserved v2 evidence index
 
 Active application **b7240cf34b1ef1331e33fb992870da71528105e2**, frontend build **Mh3EAZc3soYDoaWmy__H5**, system sealv2 **1e5716df09364be0db9501e9d2bc7ff3184fc65655dbbb77c6cd658a2ae6a76f**. Publication commits after this are documentation/artifacts only unless explicitly stated. Remote CI is independently reported for the final published head, never inferred from local checks.
 

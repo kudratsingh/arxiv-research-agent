@@ -6,11 +6,9 @@ in this implementation batch. Everyday paid generation, notifications and
 recurrence stay disabled. The historical benchmark and failed/stopped cases are
 preserved, not replayed or moved into the new denominator.
 
-The active package is `d5-system-validation-v2.json.gz`, its public/financial replay
-input is `d5-replay-inputs-v1.json.gz`, and exact digests/application bindings are in
-`d5-packet-identity.json`. The first system seal v1 is preserved, superseded by v2 only to keep human-review holds distinct from transport/token measurements; no thresholds, sources, questions or limits changed. No paid D5 output was collected. Earlier `validation-packet-v2` through `v7` files are
-superseded, unexecuted prototype exports. Never use the historical V8 runner with
-D5. The protected commands below are implemented in `src.workspace.d5_benchmark`.
+The active package is `d5-system-validation-v3.json.gz`, digest **e1ed94498ce74231621f5c1394ddabd0aee11d3c42b7f88f5983e78d22c6d1da**, application **f962ff84fd49c9e6b0db325c8adba3817a177c8b**. Exact source/scorer/schema hashes are in [the identity receipt](d5-packet-identity.json). Public/financial replay input remains `d5-replay-inputs-v1.json.gz`. V2 and v1 seals/outputs are preserved; v3 adds the validated review importer and computed evaluator, without changing corpus/model/settings/thresholds/minimums/limits/history. No paid D5 output was inspected, and no prior authorization is renewed. Prototype packets remain inactive.
+
+[Human-review import and scoring](HUMAN-REVIEW-RUNBOOK.md) now work through the actual CLI, with [offline synthetic reports](evidence/review-grading/README.md). Real reviews are blank. Explicit rescoring of an old run retains its original packet/result in an analysis receipt; old jobs are not attached to v3. Structural JSON schema is accompanied by local attribution/applicability/binding validation. No reviewer can override a failed mechanical quote/version/offset/selection check. Synthetic grades cannot qualify the checker.
 
 ## What one approval would enable
 
@@ -129,11 +127,11 @@ packet path and a new report directory; exports never overwrite prior evidence.
 ```sh
 export VENV_PYTHON=/Users/kudratsingh/Machine-Learning-Projects/arxiv-venv-lock/bin/python
 export PYTHONPATH=/private/tmp/arxiv-qualification-schema-deps:$PWD
-export PACKET=planning/14-explore-and-research-modes/d5/d5-system-validation-v2.json.gz
+export PACKET=planning/14-explore-and-research-modes/d5/d5-system-validation-v3.json.gz
 $VENV_PYTHON -m src.workspace.d5_benchmark verify --packet "$PACKET"
 
 # Exporting a template is not approval; approved=false and no contact.
-$VENV_PYTHON -m src.workspace.d5_operator template --packet "$PACKET" --receipt outputs/d5/owner-authorization.json
+$VENV_PYTHON -m src.workspace.d5_operator template --packet "$PACKET" --receipt outputs/d5/owner-authorization-v3.json
 ```
 
 Only after a separate explicit owner approval, an operator supplies its exact approved-by/reference/timestamps, permitted stages and unchanged packet/limit bindings in that receipt, then records it against the **unapproved validation DB**. The default template permits A only. To request A–D together, export with `--stages A,B,C,D`; that broader scope also requires explicit approval.
@@ -143,25 +141,29 @@ Never use the offline fixture DB or copy its synthetic policies into validation.
 # UNEXECUTED; only in the separate approved operator shell, with its configured credential.
 # Do not reuse the offline preview process/environment. Do not print the credential.
 unset WORKSPACE_D5_OFFLINE
-export D5_POSTGRES_URL=postgresql://workspace:workspace-local-only@127.0.0.1:15488/workspace_d5_validation_final
-$VENV_PYTHON -m src.workspace.d5_operator record --packet "$PACKET" --receipt outputs/d5/owner-authorization.json
+export D5_POSTGRES_URL=postgresql://workspace:workspace-local-only@127.0.0.1:15488/workspace_d5_review_validation
+$VENV_PYTHON -m src.workspace.d5_operator record --packet "$PACKET" --receipt outputs/d5/owner-authorization-v3.json
 $VENV_PYTHON -m src.workspace.d5_benchmark run --packet "$PACKET" --stage A --out outputs/d5/paid-A
 # Inspect counts/receipts; no unrelated auth smoke call.
 # If the original approval was A-only, export this false template for owner review:
-$VENV_PYTHON -m src.workspace.d5_operator stage-template --packet "$PACKET" --stages B --receipt outputs/d5/owner-funded-B.json
+$VENV_PYTHON -m src.workspace.d5_operator stage-template --packet "$PACKET" --stages B --receipt outputs/d5/owner-funded-B-v3.json
 # Only AFTER the separate B approval is supplied in that receipt:
-$VENV_PYTHON -m src.workspace.d5_operator grant --packet "$PACKET" --receipt outputs/d5/owner-funded-B.json
+$VENV_PYTHON -m src.workspace.d5_operator grant --packet "$PACKET" --receipt outputs/d5/owner-funded-B-v3.json
 $VENV_PYTHON -m src.workspace.d5_benchmark run --packet "$PACKET" --stage B --out outputs/d5/paid-B
 # Inspect development quality; C/D require their own grant unless already approved.
-$VENV_PYTHON -m src.workspace.d5_operator stage-template --packet "$PACKET" --stages C,D --receipt outputs/d5/owner-funded-CD.json
+$VENV_PYTHON -m src.workspace.d5_operator stage-template --packet "$PACKET" --stages C,D --receipt outputs/d5/owner-funded-CD-v3.json
 # Only AFTER the separate C/D approval is supplied:
-$VENV_PYTHON -m src.workspace.d5_operator grant --packet "$PACKET" --receipt outputs/d5/owner-funded-CD.json
+$VENV_PYTHON -m src.workspace.d5_operator grant --packet "$PACKET" --receipt outputs/d5/owner-funded-CD-v3.json
 $VENV_PYTHON -m src.workspace.d5_benchmark run --packet "$PACKET" --stage C --out outputs/d5/paid-C
 $VENV_PYTHON -m src.workspace.d5_benchmark run --packet "$PACKET" --stage D --out outputs/d5/paid-D
-$VENV_PYTHON -m src.workspace.d5_operator revoke --packet "$PACKET" --receipt outputs/d5/owner-authorization.json
+$VENV_PYTHON -m src.workspace.d5_operator revoke --packet "$PACKET" --receipt outputs/d5/owner-authorization-v3.json
 ```
 
 Do not put a key in the command, chat, artifact, history or screenshot. Provider
 mode reads the configured environment only after explicit invocation and still
 requires valid external admission. No paid command above has been run. Approval
 would enable only these quarantined stages, not everyday generation or recurrence.
+
+## Review and reporting after an approved stage
+
+Export a **new blank** worksheet from that stage's original observed raw result using `python -m src.workspace.d5_reviews export`. Only actually performed reviews may be attributed as independent human. Validate/import into a separate review store, then recompute with `score`; the analysis receipt binds original packet/run/raw result, scorer/code, reviews, policy and accounting. Do not reuse synthetic or predecessor-run labels. Missing/indeterminate reviews and error-rate denominators remain unscored/HOLD. Development facts cannot fill held-out minimums, and proposed negatives are not assumed true. The unchanged20/20 minimums remain feasible but unguaranteed; no added cases after results. Owner usefulness remains optional/separate, not silently inferred from expert support labels.

@@ -1,0 +1,45 @@
+{
+  "application_commit": "f962ff84fd49c9e6b0db325c8adba3817a177c8b",
+  "test_tier_commit": "55287e2",
+  "packet_digest": "e1ed94498ce74231621f5c1394ddabd0aee11d3c42b7f88f5983e78d22c6d1da",
+  "python": {
+    "passed": 6503,
+    "inherited_skips": 54,
+    "separate_e2e_deselections": 53,
+    "coverage": 94.61,
+    "patch_coverage": 97,
+    "changed_lines": 7310,
+    "missing_changed_lines": 183
+  },
+  "focused": {
+    "passed": 133,
+    "new_module_coverage": 99.46,
+    "scorer_coverage": 100
+  },
+  "tier_and_grading": 87,
+  "documentation_checks": 95,
+  "mypy_source_files": 189,
+  "workflow_e2e": 53,
+  "mock_simulation": {
+    "passed": 20,
+    "usd": "0"
+  },
+  "registry": {
+    "objects": 260,
+    "mismatches": 0
+  },
+  "browser": {
+    "journeys": 8,
+    "pdf_exact_text_checks": 4,
+    "serious_critical_axe": 0,
+    "console_exceptions": 0
+  },
+  "frontend_source_unchanged_from": "b7240cf34b1ef1331e33fb992870da71528105e2",
+  "frontend_build": "Mh3EAZc3soYDoaWmy__H5",
+  "provider_contacts": 0,
+  "token_count_contacts": 0,
+  "new_spend_usd": "0",
+  "actual_human_judgments": null,
+  "paid_authorization_created": false,
+  "remote_final_ci": "Separate exact published-head run; not inferred from local checks"
+}
