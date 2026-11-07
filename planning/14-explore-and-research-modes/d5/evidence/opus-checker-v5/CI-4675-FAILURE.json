@@ -1,0 +1,20 @@
+{
+  "published_head": "4675c4f16c48784038d8bea7b559e7ac006f974f",
+  "application_commit": "04945c61454f57b8597255587537db068951b12d",
+  "run_id": 42347008633,
+  "url": "https://github.com/kudratsingh/arxiv-research-agent/actions/runs/42347008633",
+  "job_outcomes": {
+    "success": 8,
+    "failure": 1
+  },
+  "Python": {
+    "failed": 33,
+    "passed": 6635,
+    "skipped": 1,
+    "e2e_deselected": 53,
+    "reason": "New measurement-reuse and Opus modules called preview setup without module-local WORKSPACE_D5_OFFLINE opt-in. Local global shell flag had masked fixture omission."
+  },
+  "correction": "Add two autouse fixtures setting sentinel key and offline-preview flag, confined to disposable test modules. No production gate/source/schema/settings change.43 focused tests pass with shell flag unset. Full local/remote rerun required.",
+  "new_provider_contacts": 0,
+  "new_spend_usd": "0"
+}

@@ -66,5 +66,25 @@
   },
   "frontend_source_changed": false,
   "local_frontend_rerun": false,
-  "remote_CI": "Pending exact publication head; FINAL-PUBLICATION.json will bind completion separately"
+  "remote_CI": "Pending exact publication head; FINAL-PUBLICATION.json will bind completion separately",
+  "first_CI": {
+    "head": "4675c4f16c48784038d8bea7b559e7ac006f974f",
+    "passed_jobs": 8,
+    "failed_jobs": 1,
+    "reason": "33tests lacked module-local mock preview opt-in; see CI-FIXTURE-REPAIR.md"
+  },
+  "CI_fixture_correction": {
+    "production_code_changed": false,
+    "new_module_fixtures": 2,
+    "affected_tests_passed_without_shell_opt_in": 43,
+    "global_WORKSPACE_D5_OFFLINE": "unset",
+    "full_tests_passed": 6615,
+    "full_tests_skipped": 54,
+    "e2e_deselected": 53,
+    "seconds": 664.98,
+    "total_coverage_percent": 94.61,
+    "patch_coverage_percent": 97,
+    "package_floors_passed": true,
+    "docs_passed": 66
+  }
 }

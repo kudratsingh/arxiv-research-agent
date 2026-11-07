@@ -15,3 +15,9 @@ Existing workflow/e2e53passed; research simulation20/20USD0; registry260/0; mypy
 The complete disposable PostgreSQL replay runs the actual ranker, evidence selection, sealed request, programme/scope admission, reservation, production provider adapter over MockTransport, draft/check/repair/recheck, journal/persistence and scoring. It completes all10workflows and4probe batches,44mocked Messages/44mocked counts, reaching21programme jobs only under a separately synthetic amended policy. No additional preliminary A contacts occur. The untouched real ledger stays7programme jobs/10Messages/24counts/USD0.125611, zero pending/unknown and cap20.
 
 Acceptance remainsHOLD: no independent human labels, no Opus real token-fit/schema/quality result. Machine-proposed negatives are not gold. Scope, quote, offset, version and whole-claim checks are retained. The20proposed probe items across four batches/claim opportunities and8/8 completion threshold are unchanged; fewer than20 observed/reviewed facts or decisive probes meansHOLD without adding cases. [Operator boundary and reproducible commands](../../OPUS-CHECKER-v5.md).
+
+Publication follow-up: [first CI failure and explicit mock-fixture correction](CI-FIXTURE-REPAIR.md).
+The initial run had8green jobs/1failed Python job;43affected focused tests pass
+with the global shell opt-in unset. Full rerun6615passed/54skipped,94.61%total/97%patch and all package floors passed. [Output](full-coverage-without-shell-optin.txt). Production source and the packet remain
+unchanged; final exact-head CI is reported separately rather than calling that
+first run green.

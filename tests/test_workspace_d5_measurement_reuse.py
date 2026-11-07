@@ -21,6 +21,13 @@ if hasattr(support, "workspace_pg"):
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 
 
+@pytest.fixture(autouse=True)
+def offline(monkeypatch):
+    """Each disposable module opts into mock preview; never inherit shell state."""
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "local-preview-disabled")
+    monkeypatch.setenv("WORKSPACE_D5_OFFLINE", "1")
+
+
 async def measured(store, count=100):
     inputs = support.setup(store, operation="measurement", stages=["A"])
     transport = support.Transport()

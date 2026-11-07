@@ -353,3 +353,10 @@ require explicit new approval. Proposed B-only2jobs/8Messages/8paired counts/USD
 C8jobs and D4batches separately gated. No provider/key/count contact or spend in this
 batch, no live amendment/scope recorded; original pointer/owner3137/review3178 and
 previews preserved. Everyday generation, recurrence and notifications remain off.
+
+D5 v5 publication follow-up: first CI on4675c4f passed8jobs but failed33new tests
+because two new test modules inherited the local shell's offline-preview opt-in.
+[Recorded correction](d5/evidence/opus-checker-v5/CI-FIXTURE-REPAIR.md) makes each
+module explicitly opt into sentinel/MockTransport fixtures.43affected tests pass
+with the shell flag unset. Full gate with no shell opt-in passed6615tests/54skips,94.61%total/97%patch and all package floors. Final exact-head CI follows publication;
+no production source, packet binding, budget, authorization or quality change.
