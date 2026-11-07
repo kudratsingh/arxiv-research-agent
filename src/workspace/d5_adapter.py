@@ -26,7 +26,13 @@ from src.workspace.admission import (
     _digest,
 )
 from src.workspace.assistance import CANDIDATE_MODEL, Checks, build_wire, producer_binding
-from src.workspace.assistance_contract import REVISION, coherent_units, resolve_draft, schemas
+from src.workspace.assistance_contract import (
+    REVISION,
+    coherent_units,
+    resolve_draft,
+    response_purpose,
+    schemas,
+)
 from src.workspace.context_store import WorkspaceContext
 from src.workspace.d5_scope import D5Admission, guard_scope
 from src.workspace.executor import FakeExecutor
@@ -131,6 +137,7 @@ def prepare_input(
         for s in sealed["sources"]
     ]
     compact["response_schemas_digest"] = _digest(sealed["response_schemas"])
+    compact["response_purpose"] = sealed.get("response_purpose", "research_comparison")
     compact["candidate_initial_wire_digest"] = _digest(sealed["candidate_initial_wire"])
     compact["full_preview_digest"] = _digest(sealed)
     probe_context = None
@@ -316,7 +323,12 @@ class D5Adapter(QualificationAdapter):
             for key, value in sealed["units"].items()
         ):
             raise AdmissionError("d5_selected_evidence_drift")
-        if sealed["response_schemas_digest"] != _digest(schemas(list(sealed["units"]))):
+        if sealed["response_schemas_digest"] != _digest(
+            schemas(
+                list(sealed["units"]),
+                purpose=response_purpose(sealed["assistance"]["mode"], sealed["units"]),
+            )
+        ):
             raise AdmissionError("d5_local_or_wire_schema_drift")
         if sealed["settings"] != {
             "temperature": None,
@@ -326,6 +338,10 @@ class D5Adapter(QualificationAdapter):
             "max_repairs": 1,
         }:
             raise AdmissionError("d5_model_settings_drift")
+        if sealed.get("response_purpose") != response_purpose(
+            sealed["assistance"]["mode"], sealed["units"]
+        ):
+            raise AdmissionError("d5_response_purpose_drift")
         expected_sources = tuple(
             SourceRef(
                 s["work_id"], s["version_id"], s["material_id"], s["content_hash"], s["scope"]
@@ -362,7 +378,10 @@ class D5Adapter(QualificationAdapter):
             "phase": "draft",
             "role": "workflow",
             "sealed_request": compact,
-            "output_schema": schemas(list(sealed["units"]))["wire"],
+            "output_schema": schemas(
+                list(sealed["units"]),
+                purpose=response_purpose(sealed["assistance"]["mode"], sealed["units"]),
+            )["wire"],
         }
 
     def request(self, job_id: str | None = None) -> dict[str, Any]:
@@ -421,7 +440,10 @@ class D5Adapter(QualificationAdapter):
         if phase in {"check", "repair"}:
             workflow = steps[-1]["output"] if phase == "check" else steps[0]["output"]
             draft, claims = resolve_draft(
-                workflow, {k: EvidenceRef(**v) for k, v in sealed["units"].items()}, materials
+                workflow,
+                {k: EvidenceRef(**v) for k, v in sealed["units"].items()},
+                materials,
+                purpose=response_purpose(sealed["assistance"]["mode"], sealed["units"]),
             )
             if phase == "check":
                 value["role"] = "checker"
@@ -437,11 +459,14 @@ class D5Adapter(QualificationAdapter):
                     for k in (
                         "background",
                         "comparison",
+                        "comparison_basis",
                         "assumptions",
                         "gaps",
                         "questions",
                         "proposal",
+                        "abstention",
                     )
+                    if k in workflow
                 }
             else:
                 checked = self._checks(
@@ -509,7 +534,10 @@ class D5Adapter(QualificationAdapter):
         _, materials = self._context()
         sealed = self.inputs.settings["d5_request"]
         draft, claims = resolve_draft(
-            output, {k: EvidenceRef(**v) for k, v in sealed["units"].items()}, materials
+            output,
+            {k: EvidenceRef(**v) for k, v in sealed["units"].items()},
+            materials,
+            purpose=response_purpose(sealed["assistance"]["mode"], sealed["units"]),
         )
         report = validate_claims(claims, materials)
         if any(not item.scope_compatible for item in report.assessments):

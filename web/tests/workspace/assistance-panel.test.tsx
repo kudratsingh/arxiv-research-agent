@@ -189,3 +189,11 @@ it("distinguishes unavailable project context from an empty project selection",a
  render(<AssistancePanel owner="verification" workId="one" versionId="one:v1" returnTo="/workspace/projects" onSource={onSource}/>);
  await screen.findByText(/Research project context is unavailable/);expect(screen.getByRole("button",{name:"Preview assistance request"})).toBeDisabled();expect(mock.request.mock.calls.every(([,b])=>b===undefined)).toBe(true);
 });
+
+it("renders a single-paper explanation without cross-source comparison fields", async () => {
+ current=job("ready"); delete current.assistance_output!.comparison; delete current.assistance_output!.comparison_basis;
+ history.replaceState(null, "", `/workspace/items/one?mode=learn&assistance=${JID}`);
+ render(<AssistancePanel owner="test" workId="one" versionId="one:v1" returnTo="/workspace/today" onSource={onSource} />);
+ expect((await screen.findAllByText(units[0]!.reference.quote)).length).toBeGreaterThan(0);
+ expect(screen.queryByText(/Comparison interpretation/)).not.toBeInTheDocument();
+});

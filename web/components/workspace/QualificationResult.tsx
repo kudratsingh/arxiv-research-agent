@@ -87,7 +87,7 @@ export default function QualificationResult({ workId, versionId, returnTo, onSou
           return <div key={handle}><blockquote>{ref.quote}</blockquote><p>{ref.scope} · exact source version{ref.page ? ` · page ${ref.page}` : ""}</p>{ref.work_id === workId && ref.version_id === versionId ? <button type="button" onClick={() => onSource(anchor)}>Open qualification passage</button> : <Link href={contextHref(readerHref({ work_id: ref.work_id }, ref.version_id, anchor, undefined, returnTo), context)}>Open qualification passage</Link>}<details><summary>Exact citation identity</summary><pre tabIndex={0}>{JSON.stringify(ref, null, 2)}</pre></details></div>;
         })}</article>)}
         <h4>Background · unverified explanation</h4><p>{output.background}</p>
-        {output.comparison && <><h4>Comparison · independently cited basis</h4><p>{output.comparison}</p><p>Basis: {output.comparison_basis.join(", ")}. Compatible conditions and omissions require human review.</p></>}
+        {output.comparison && <><h4>Comparison · independently cited basis</h4><p>{output.comparison}</p><p>Basis: {(output.comparison_basis ?? []).join(", ")}. Compatible conditions and omissions require human review.</p></>}
         <h4>Assumptions and missing evidence</h4><ul>{[...output.assumptions, ...output.gaps].map((text, i) => <li key={i}>{text}</li>)}</ul>
         <h4>Follow-up questions</h4><ul>{output.questions.map(text => <li key={text}>{text}</li>)}</ul>
         <h4>Proposed experiment · not a finding</h4><p>{output.proposal}</p>

@@ -28,7 +28,7 @@ from src.workspace.grounding import (
 )
 from src.workspace.material import SourceMaterial
 
-REVISION = "workspace-assistance-coherent-multicitation-v1"
+REVISION = "workspace-assistance-purpose-specific-v2"
 MAX_UNIT_CHARS = 1600
 MAX_SELECTED_UNITS = 8
 MAX_CLAIMS = 6
@@ -141,20 +141,36 @@ def coherent_units(
     return units
 
 
+ClaimId = Literal["c1", "c2", "c3", "c4", "c5", "c6"]
+ResponsePurpose = Literal["single_paper", "research_comparison"]
+
+
+def response_purpose(mode: str, catalog: dict[str, Any]) -> ResponsePurpose:
+    """Only Research with at least two selected works offers cross-source prose.
+
+    Within-paper contrasts belong in attributed, cited claims in either mode.
+    A second version/passage of the same work is not a second source.
+    """
+    works = {ref["work_id"] if isinstance(ref, dict) else ref.work_id for ref in catalog.values()}
+    return "research_comparison" if mode == "research" and len(works) >= 2 else "single_paper"
+
+
 class AssistanceClaim(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
-    claim_id: Literal["c1", "c2", "c3", "c4", "c5", "c6"]
+    claim_id: ClaimId = Field(description="Unique ID of this emitted claim, c1 through c6.")
     text: str = Field(min_length=1, max_length=360)
-    handles: tuple[str, ...] = Field(min_length=1, max_length=3)
+    handles: tuple[str, ...] = Field(
+        min_length=1,
+        max_length=3,
+        description="Selected evidence handles (u...), never claim IDs. Each passage must support this claim.",
+    )
     required_scope: Literal["abstract", "excerpt", "full_text"] = "abstract"
 
 
-class AssistanceDraft(BaseModel):
+class SinglePaperDraft(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
     claims: tuple[AssistanceClaim, ...] = Field(max_length=MAX_CLAIMS)
     background: str = Field(max_length=360)
-    comparison: str = Field(max_length=360)
-    comparison_basis: tuple[str, ...] = Field(max_length=MAX_CLAIMS)
     assumptions: tuple[str, ...] = Field(max_length=3)
     gaps: tuple[str, ...] = Field(min_length=1, max_length=3)
     questions: tuple[str, ...] = Field(min_length=1, max_length=3)
@@ -162,14 +178,12 @@ class AssistanceDraft(BaseModel):
     abstention: str | None = Field(max_length=180)
 
     @model_validator(mode="after")
-    def bounded(self) -> AssistanceDraft:
+    def bounded(self) -> SinglePaperDraft:
         ids = {c.claim_id for c in self.claims}
-        if len(ids) != len(self.claims) or set(self.comparison_basis) - ids:
+        if len(ids) != len(self.claims):
             raise ValueError("claim_or_comparison_basis_mismatch")
         if not self.claims and not (self.abstention or "").strip():
             raise ValueError("claims_or_abstention_required")
-        if self.comparison and len(self.comparison_basis) < 2:
-            raise ValueError("comparison_requires_separate_evidence_claims")
         if any(not c.text.strip() or len(set(c.handles)) != len(c.handles) for c in self.claims):
             raise ValueError("blank_claim_or_duplicate_handle")
         if any(
@@ -181,12 +195,42 @@ class AssistanceDraft(BaseModel):
         return self
 
 
-def response_model(handles: Sequence[str]) -> type[AssistanceDraft]:
+class AssistanceDraft(SinglePaperDraft):
+    """Cross-source comparison is applicable only to a sealed Research request."""
+
+    comparison: str = Field(
+        max_length=360,
+        description="Cross-source interpretation grounded in comparison_basis, or empty when evidence is insufficient. All factual prose is checked.",
+    )
+    comparison_basis: tuple[ClaimId, ...] = Field(
+        max_length=MAX_CLAIMS,
+        description="IDs (c1...c6) of distinct claims emitted in claims, NOT evidence handles. A comparison needs independently cited claims from at least two selected works; otherwise use an empty comparison and basis.",
+    )
+
+    @model_validator(mode="after")
+    def comparison_references(self) -> AssistanceDraft:
+        ids = {claim.claim_id for claim in self.claims}
+        if set(self.comparison_basis) - ids or len(set(self.comparison_basis)) != len(
+            self.comparison_basis
+        ):
+            raise ValueError("claim_or_comparison_basis_mismatch")
+        if self.comparison.strip() and len(self.comparison_basis) < 2:
+            raise ValueError("comparison_requires_separate_evidence_claims")
+        if not self.comparison.strip() and self.comparison_basis:
+            raise ValueError("comparison_basis_without_comparison")
+        return self
+
+
+def response_model(
+    handles: Sequence[str], *, purpose: ResponsePurpose = "research_comparison"
+) -> type[SinglePaperDraft]:
     # json_schema_extra keeps even a singleton enum after the SDK transform.
     selected = sorted(set(handles))
     if not selected or len(selected) > MAX_SELECTED_UNITS:
         raise ValueError("select_one_to_eight_coherent_units")
-    identity = digest(selected)[7:23]
+    if purpose not in {"single_paper", "research_comparison"}:
+        raise ValueError("invalid_response_purpose")
+    identity = digest([selected, purpose])[7:23]
     factory = cast(Callable[[str, dict[str, str]], type[StrEnum]], StrEnum)
     handle_type = factory(
         "D5Evidence_" + identity, {f"U{i}": key for i, key in enumerate(selected)}
@@ -194,24 +238,37 @@ def response_model(handles: Sequence[str]) -> type[AssistanceDraft]:
     claim = create_model(
         "D5Claim_" + identity,
         __base__=AssistanceClaim,
-        handles=(GenericAlias(tuple, (handle_type, Ellipsis)), Field(min_length=1, max_length=3)),
+        handles=(
+            GenericAlias(tuple, (handle_type, Ellipsis)),
+            Field(
+                min_length=1,
+                max_length=3,
+                description=AssistanceClaim.model_fields["handles"].description,
+            ),
+        ),
     )
     return create_model(
         "D5Draft_" + identity,
-        __base__=AssistanceDraft,
+        __base__=SinglePaperDraft if purpose == "single_paper" else AssistanceDraft,
         claims=(GenericAlias(tuple, (claim, Ellipsis)), Field(max_length=MAX_CLAIMS)),
     )
 
 
-def schemas(handles: Sequence[str]) -> dict[str, Any]:
-    model = response_model(handles)
+def schemas(
+    handles: Sequence[str], *, purpose: ResponsePurpose = "research_comparison"
+) -> dict[str, Any]:
+    model = response_model(handles, purpose=purpose)
     return {"local": model.model_json_schema(), "wire": transform_schema(model)}
 
 
 def resolve_draft(
-    payload: dict[str, Any], catalog: dict[str, EvidenceRef], materials: Sequence[SourceMaterial]
-) -> tuple[AssistanceDraft, tuple[ResearchClaim, ...]]:
-    draft = response_model(list(catalog)).model_validate(payload)
+    payload: dict[str, Any],
+    catalog: dict[str, EvidenceRef],
+    materials: Sequence[SourceMaterial],
+    *,
+    purpose: ResponsePurpose = "research_comparison",
+) -> tuple[SinglePaperDraft, tuple[ResearchClaim, ...]]:
+    draft = response_model(list(catalog), purpose=purpose).model_validate(payload)
     claims = []
     for claim in draft.claims:
         if any(handle not in catalog for handle in claim.handles):
@@ -225,7 +282,7 @@ def resolve_draft(
         if not report.assessments[0].identity_resolved:
             raise ValueError("assistance_evidence_identity_failed")
         claims.append(value)
-    if draft.comparison:
+    if isinstance(draft, AssistanceDraft) and draft.comparison:
         by_id = {claim.claim_id: claim for claim in claims}
         compared_sources = {
             ref.work_id for key in draft.comparison_basis for ref in by_id[key].evidence

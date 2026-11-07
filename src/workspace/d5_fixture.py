@@ -40,6 +40,30 @@ FINANCIAL_TABLES = (
 )
 
 
+def financial_rows(conn: Any, name: str) -> list[dict[str, Any]]:
+    """Preserve numeric scale used by the exact accounting census hash.
+
+    JSON floating-point conversion loses e.g. Decimal('0.40') -> 0.4. PostgreSQL
+    jsonb_populate_record accepts numeric strings without changing that scale.
+    No value, charge, historical binding or admission check is relaxed.
+    """
+    if name not in FINANCIAL_TABLES:
+        raise AdmissionError("d5_financial_table_required")
+    override = (
+        sql.SQL(
+            " || jsonb_build_object('amount',t.amount::text,'workflow',t.workflow::text,'judge',t.judge::text,'unknown',t.unknown::text)"
+        )
+        if name == "workspace_spend_reservations"
+        else sql.SQL("")
+    )
+    return [
+        r[0]
+        for r in conn.execute(
+            sql.SQL("SELECT to_jsonb(t){} FROM {} t").format(override, sql.Identifier(name))
+        )
+    ]
+
+
 def snapshot(
     public: WorkspaceStore, financial: WorkspaceStore, program_id: str, profile_owner: str
 ) -> dict[str, Any]:
@@ -91,12 +115,7 @@ def snapshot(
         for name in FINANCIAL_TABLES:
             # Preserve all old financial rows, including initial count-only jobs.
             # No budget policy is imported; these records grant no new authority.
-            tables[name] = [
-                r[0]
-                for r in conn.execute(
-                    sql.SQL("SELECT to_jsonb(t) FROM {} t").format(sql.Identifier(name))
-                )
-            ]
+            tables[name] = financial_rows(conn, name)
     return {
         "tables": tables,
         "history": history,

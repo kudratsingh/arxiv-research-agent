@@ -67,7 +67,10 @@ def score_case(
     try:
         output = {k: v for k, v in workflows[-1]["output"].items() if k != "grounding"}
         draft, claims = resolve_draft(
-            output, {k: EvidenceRef(**v) for k, v in case["sealed"]["units"].items()}, materials
+            output,
+            {k: EvidenceRef(**v) for k, v in case["sealed"]["units"].items()},
+            materials,
+            purpose=case["sealed"].get("response_purpose", "research_comparison"),
         )
         report = validate_claims(claims, materials)
         result["provenance"] = (

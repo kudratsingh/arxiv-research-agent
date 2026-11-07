@@ -17,7 +17,7 @@ export interface AssistanceInput {
 }
 export interface AssistanceOutput {
   claims: { claim_id: string; text: string; handles: string[]; required_scope: string }[];
-  background: string; comparison: string; comparison_basis: string[];
+  background: string; comparison?: string; comparison_basis?: string[];
   assumptions: string[]; gaps: string[]; questions: string[];
   proposal: string; abstention: string | null;
 }

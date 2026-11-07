@@ -36,8 +36,8 @@ from src.workspace.store import WorkspaceStore
 
 REVISION_BENCHMARK = "d5-system-benchmark-v1"
 CLOCK = "2026-11-05T12:00:00+00:00"
-RUN_OWNER = "d5-validation-run"
-COUNT_OWNER = "d5-validation-measure"
+RUN_OWNER = "d5-v4-validation-run"
+COUNT_OWNER = "d5-v4-validation-measure"
 QUESTIONS = (
     (
         "dev-learn",
@@ -467,9 +467,10 @@ def freeze(
             "material_ids": list(sources),
             "span_ids": list(dict.fromkeys(r["span_id"] for r in units.values())),
         }
-        from src.workspace.assistance_contract import schemas
+        from src.workspace.assistance_contract import response_purpose, schemas
 
-        sealed["response_schemas"] = schemas(list(units))
+        sealed["response_purpose"] = response_purpose(sealed["assistance"]["mode"], units)
+        sealed["response_schemas"] = schemas(list(units), purpose=sealed["response_purpose"])
         claims = []
         for i, c in enumerate(chosen):
             ref = EvidenceRef(**next(iter(c["sealed"]["units"].values())))

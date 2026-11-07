@@ -74,3 +74,11 @@ it("keeps explicit abstention visible and never fabricates an unavailable handle
 it("refuses to save a result without the exact primary source reference",async()=>{
  jobs[0]!.request.units={};const user=userEvent.setup();await mount();await screen.findByRole("region",{name:"Persisted qualification result"});await user.click(screen.getByRole("button",{name:"Save experimental learning thread"}));expect(mock.request.mock.calls.every(([,body])=>body===undefined)).toBe(true);
 });
+
+it("renders purpose-specific learning output without cross-source comparison fields", async () => {
+ delete jobs[0]!.assistance_output!.comparison; delete jobs[0]!.assistance_output!.comparison_basis;
+ await mount(); await screen.findByRole("region", {name: "Persisted qualification result"});
+ expect(screen.getAllByText(ref.quote).length).toBeGreaterThan(0);
+ expect(screen.queryByText("Comparison · independently cited basis")).not.toBeInTheDocument();
+ expect(mock.request.mock.calls.every(([, body]) => body === undefined)).toBe(true);
+});

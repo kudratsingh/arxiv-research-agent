@@ -54,7 +54,10 @@ class QualificationResults:
                     ][-1]
                     output = {k: v for k, v in workflow["output"].items() if k != "grounding"}
                     _, resolved = resolve_draft(
-                        output, {k: EvidenceRef(**v) for k, v in sealed["units"].items()}, materials
+                        output,
+                        {k: EvidenceRef(**v) for k, v in sealed["units"].items()},
+                        materials,
+                        purpose=sealed.get("response_purpose", "research_comparison"),
                     )
                     report = validate_claims(resolved, materials)
                     intact = _digest(inputs) == fingerprint and all(

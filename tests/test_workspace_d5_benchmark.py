@@ -249,8 +249,9 @@ async def test_cli_freeze_verify_report_operator_template_and_explicit_fixture_s
         assert conn.execute("SELECT state FROM workspace_d5_scopes").fetchone()[0] == "revoked"
 
 
+@pytest.mark.parametrize("amount", ["0.40", "0.400000", "1.000000000000000000000"])
 async def test_exact_snapshot_reconstruction_into_second_real_postgres_schema(
-    store, request, monkeypatch, tmp_path
+    store, request, monkeypatch, tmp_path, amount
 ):
     from src.workspace.d5_fixture import prepare_projects
     from tests.test_workspace_store import store as factory
@@ -258,7 +259,20 @@ async def test_exact_snapshot_reconstruction_into_second_real_postgres_schema(
     monkeypatch.setenv("WORKSPACE_D5_OFFLINE", "1")
     monkeypatch.setenv("ANTHROPIC_API_KEY", "local-preview-disabled")
     packet = corpus(store)
+    with store.pool.connection() as conn:
+        conn.execute("UPDATE workspace_spend_reservations SET amount=%s WHERE amount>0", (amount,))
+        packet["history"] = census(conn, "a")
     captured = snapshot(store, store, "evaluation", "profile")
+    assert all(
+        isinstance(r["amount"], str) for r in captured["tables"]["workspace_spend_reservations"]
+    )
+    from src.workspace.d5_fixture import financial_rows
+
+    with (
+        store.pool.connection() as conn,
+        pytest.raises(AdmissionError, match="financial_table_required"),
+    ):
+        financial_rows(conn, "workspace_budget_policies")
     generator = factory.__wrapped__(request)
     other = next(generator)
     try:

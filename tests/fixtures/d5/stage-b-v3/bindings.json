@@ -1,0 +1,12 @@
+{
+  "packet_digest": "e1ed94498ce74231621f5c1394ddabd0aee11d3c42b7f88f5983e78d22c6d1da",
+  "published_head": "5b9e955a7db5781a21fdb76f8f7495f89854df06",
+  "case": "dev-learn",
+  "state": "failed",
+  "content_accepted": false,
+  "basis": "Preserved canonical provider response and exact transmitted request. Not raw HTTP bytes; no human review. Original live result remains failed. Derived corrections in tests are SYNTHETIC, never provider success.",
+  "files": {
+    "dev-learn-provider-response.json": "114301912f07204517a6e78378f58005a4ba105cb88c433346d5479cc6fb0ccf",
+    "dev-learn-initial-request.json": "2308fd1cab39bdce3de55358448d5c631792852feaf3e0e9d64d23b6cb864d03"
+  }
+}

@@ -35,10 +35,47 @@ def offline(monkeypatch):
     monkeypatch.setenv("WORKSPACE_D5_OFFLINE", "1")
 
 
-def setup(store, operation="workflow", stages=None):
+def setup(store, operation="workflow", stages=None, *, mode="learn", comparison=False):
     program(store)
-    service, value = support.setup(store)
+    service, value = support.setup(store, mode)
+    if comparison:
+        from tests.test_workspace_store import ingest
+
+        item = ingest(
+            store,
+            work_id="arxiv:0000.00002",
+            version_id="arxiv:0000.00002:v1",
+            source_record_id="0000.00002",
+            abstract="A second method failed under a different evaluation setting.",
+        )
+        unit = service.catalog("a", item["work_id"], item["version_id"])["units"][0]
+        value = value.model_copy(
+            update={
+                "material_ids": (*value.material_ids, unit["reference"]["material_id"]),
+                "span_ids": (*value.span_ids, unit["reference"]["span_id"]),
+                "unit_ids": (*value.unit_ids, unit["id"]),
+            }
+        )
     preview = service.preview("a", value)
+    if mode == "research":
+        from src.workspace.context_schemas import ProjectData, ProjectWrite
+        from src.workspace.context_store import WorkspaceContext
+
+        project = preview.request["project_context"]
+        WorkspaceContext(store).write_project(
+            "d5-run",
+            ProjectWrite(
+                id=project["id"],
+                revision=0,
+                request_id="synthetic-context",
+                data=ProjectData(
+                    title="Synthetic research context",
+                    question=project["question"],
+                    scope=project["scope"],
+                    constraints=project["constraints"],
+                ),
+            ),
+        )
     inputs = d.prepare_input(
         preview.request,
         scope_id="d5-test",
@@ -620,3 +657,86 @@ async def test_explicit_abstention_still_requires_mandatory_check_and_stays_unsc
         and score["factual_gate"] == "UNSCORED"
         and not score["accepted_result"]
     )
+
+
+@pytest.mark.parametrize(
+    "mode,comparison", [("learn", False), ("research", False), ("research", True)]
+)
+async def test_purpose_specific_four_stage_contract_and_exact_wire(store, mode, comparison):
+    """All outputs are synthetic; the real stopped Stage B identity is never run."""
+    import jsonschema
+
+    from src.workspace.assistance_contract import response_model
+
+    inputs = setup(store, mode=mode, comparison=comparison)
+    normal = Transport("unsupported")
+    stages = []
+
+    async def handler(request):
+        response = await normal(request)
+        if request.url.path.endswith("count_tokens"):
+            return response
+        wire = json.loads(request.content)
+        context = json.loads(wire["messages"][0]["content"])
+        output = json.loads(response.json()["content"][0]["text"])
+        jsonschema.Draft202012Validator(wire["output_config"]["format"]["schema"]).validate(output)
+        if context["phase"] == "check":
+            a.Checks.model_validate(output)
+        else:
+            purpose = "research_comparison" if comparison else "single_paper"
+            response_model(
+                list(inputs.settings["d5_request"]["units"]), purpose=purpose
+            ).model_validate(output)
+            assert ("comparison_basis" in output) is comparison
+        stages.append(context["phase"])
+        return response
+
+    adapter = d.D5Adapter(store, "d5-run", inputs, transport=httpx.MockTransport(handler))
+    job = adapter.start(inputs.settings["d5_request_id"])
+    for _ in range(4):
+        result = await adapter.advance(job["id"])
+    assert stages == ["draft", "check", "repair", "check"]
+    assert result["state"] == "ready" and not result["result"]["everyday_generation"]
+    assert result["result"]["grounding"]["unsupported"] > 0  # Not factual acceptance.
+
+
+@pytest.mark.parametrize(
+    "field",
+    ["background", "assumptions", "gaps", "questions", "proposal", "abstention", "comparison"],
+)
+async def test_unverified_factual_prose_is_sent_to_checker_and_cannot_bypass_it(store, field):
+    inputs = setup(
+        store,
+        mode="research" if field == "comparison" else "learn",
+        comparison=field == "comparison",
+    )
+    normal = Transport()
+    factual = "Unverified: every agent is safe on all hardware without validation."
+    seen = []
+
+    async def handler(request):
+        response = await normal(request)
+        if request.url.path.endswith("count_tokens"):
+            return response
+        raw = response.json()
+        context = json.loads(json.loads(request.content)["messages"][0]["content"])
+        output = json.loads(raw["content"][0]["text"])
+        if "claims" in output:
+            output[field] = [factual] if field in {"assumptions", "gaps", "questions"} else factual
+        else:
+            seen.append(context["unscored_prose"][field])
+            output["prose_review"] = "unscored_factual_content"
+        raw["content"][0]["text"] = json.dumps(output)
+        return httpx.Response(200, json=raw)
+
+    adapter = d.D5Adapter(store, "d5-run", inputs, transport=httpx.MockTransport(handler))
+    job = adapter.start(inputs.settings["d5_request_id"])
+    await adapter.advance(job["id"])
+    with pytest.raises(AdmissionError, match="unscored_factual_prose"):
+        await adapter.advance(job["id"])
+    result = QualificationResults(store).snapshot("d5-run", job["id"])
+    assert (
+        result["state"] == "failed" and result["result"] is None and result["human_review"] is None
+    )
+    assert seen == [[factual] if field in {"assumptions", "gaps", "questions"} else factual]
+    assert len(normal.calls) == 4  # No repair or extra provider work.
