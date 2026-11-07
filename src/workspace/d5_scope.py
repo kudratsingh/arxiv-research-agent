@@ -200,7 +200,15 @@ def guard_scope(
 ) -> dict[str, Any]:
     bound = scope(conn, owner, inputs, policy, datetime.now(UTC))
     # Original programme accounting/holds/history checks remain authoritative.
-    guard_trial(conn, owner, policy, reserve_usd=amount, current_job=job_id, next_endpoint=endpoint)
+    guard_trial(
+        conn,
+        owner,
+        policy,
+        reserve_usd=amount,
+        current_job=job_id,
+        next_endpoint=endpoint,
+        reserve_operation=inputs["settings"]["d5_operation"],
+    )
     history = census(conn, owner, members=bound["members"])
     baseline = bound["baseline"]
     limits = bound["limits"]

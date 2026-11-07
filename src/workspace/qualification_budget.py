@@ -195,7 +195,20 @@ def guard_program(
     reserve_usd: Decimal | None,
     current_job: str | None,
     next_endpoint: str | None,
+    reserve_operation: str = "workflow",
 ) -> dict[str, Any]:
+    if (
+        reserve_operation not in {"workflow", "probe", "measurement"}
+        or (
+            reserve_operation != "workflow"
+            and policy.get("purpose") != "workspace-d5-qualification-only"
+        )
+        or (reserve_operation == "measurement" and reserve_usd not in {None, Decimal("0")})
+    ):
+        raise AdmissionError("program_sealed_operation_capacity_required")
+    message_capacity, count_capacity = {"workflow": (4, 4), "probe": (1, 1), "measurement": (0, 1)}[
+        reserve_operation
+    ]
     program = policy["program_id"]
     conn.execute("SELECT pg_advisory_xact_lock(hashtextextended(%s,0))", ("evaluation:" + program,))
     row = conn.execute(
@@ -250,9 +263,12 @@ def guard_program(
     if reserve_usd is not None:
         if report["uncertain_contacts"] or Decimal(report["unknown_usd"]):
             raise AdmissionError("program_external_completion_uncertain")
-        if report["new_jobs"] >= limits["new_jobs"]:
+        if reserve_usd > 0 and report["new_jobs"] >= limits["new_jobs"]:
             raise AdmissionError("program_job_cap_exceeded")
-        if report["messages"] + 4 > limits["messages"] or report["counts"] + 4 > limits["counts"]:
+        if (
+            report["messages"] + message_capacity > limits["messages"]
+            or report["counts"] + count_capacity > limits["counts"]
+        ):
             raise AdmissionError("program_check_recheck_capacity_required")
     if Decimal(report["known_usd"]) + Decimal(report["pending_usd"]) + (reserve_usd or 0) > Decimal(
         limits["usd"]
@@ -269,6 +285,7 @@ def guard(
     reserve_usd: Decimal | None = None,
     current_job: str | None = None,
     next_endpoint: str | None = None,
+    reserve_operation: str = "workflow",
 ) -> dict[str, Any] | None:
     # Old mock fixtures without a trial remain test-only. Provider dispatch and
     # any explicitly registered mock trial always require the cumulative ledger.
@@ -285,6 +302,7 @@ def guard(
             reserve_usd=reserve_usd,
             current_job=current_job,
             next_endpoint=next_endpoint,
+            reserve_operation=reserve_operation,
         )
     if policy.get("transport_mode") != "provider" and not policy.get("trial_id"):
         return None

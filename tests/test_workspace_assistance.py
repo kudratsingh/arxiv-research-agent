@@ -89,7 +89,7 @@ def wire_payload(refs, **extra):
         "limitation_claims": [],
         "comparison_claims": [],
         "comparison_basis": [],
-        "gaps": ["Selected source only"],
+        "gaps": ["source_scope"],
         "questions": ["What would falsify this?"],
         "proposal": "",
         "abstention": None,
