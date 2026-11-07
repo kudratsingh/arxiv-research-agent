@@ -66,6 +66,25 @@ it("resumes the cited-section contract without adding unscored scientific statem
  expect(screen.queryByText("Unverified simulated background.")).not.toBeInTheDocument();
  expect(mock.request.mock.calls.every(([,body])=>body===undefined)).toBe(true);
 });
+
+it("preserves partial legacy sections and labels missing checker opinions as unmeasured",async()=>{
+ current=job("ready",true);const out=current.assistance_output!;
+ delete out.assumptions;delete out.comparison_basis;current.quality.claim_checks=undefined;
+ await mount(true,true);await screen.findByRole("region",{name:"Simulated assistance result"});
+ expect(screen.getByText("Inspect both sources.")).toBeInTheDocument();
+ expect(screen.queryByText("Check conditions.")).not.toBeInTheDocument();
+ expect(screen.getByText(/Separate evidence basis: \. Agreements/)).toBeInTheDocument();
+ expect(screen.getAllByText("Simulated checker: unscored. Whole-claim support remains unqualified.").length).toBeGreaterThan(0);
+ expect(mock.request.mock.calls.every(([,body])=>body===undefined)).toBe(true);
+});
+
+it("refuses a saved result's missing primary material without borrowing a comparison source",async()=>{
+ current=job("ready",true);current.request.units={u2:units[1]!.reference};
+ const user=userEvent.setup();await mount(true,true);await screen.findByRole("region",{name:"Simulated assistance result"});
+ await user.click(screen.getByRole("button",{name:"Save simulation to project notes"}));
+ expect(mock.request.mock.calls.every(([,body])=>body===undefined)).toBe(true);
+ expect(screen.queryByText(/saved as a shared note and linked/)).not.toBeInTheDocument();
+});
 beforeEach(() => { current = null; failures = new Set(); entries = []; hold = null; resetDraftMemory(); sessionStorage.clear(); mock.request.mockReset().mockImplementation(request); onSource.mockReset(); });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 

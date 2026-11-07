@@ -95,3 +95,29 @@ it("renders new cited sections as links to scored claims without legacy factual 
  expect(screen.queryByText("Unverified guide")).not.toBeInTheDocument();
  expect(mock.request.mock.calls.every(([,body])=>body===undefined)).toBe(true);
 });
+
+it("keeps partial legacy sections inspectable without inventing assumptions or comparison bases",async()=>{
+ const out=jobs[0]!.assistance_output!;delete out.assumptions;delete out.comparison_basis;
+ out.comparison="Inspect the independently cited sources before comparing them.";
+ await mount();await screen.findByRole("region",{name:"Persisted qualification result"});
+ expect(screen.getByText(out.comparison)).toBeInTheDocument();
+ expect(screen.queryByText("Conditions apply")).not.toBeInTheDocument();
+ expect(screen.getByText(/Basis: \. Compatible conditions and omissions require human review/)).toBeInTheDocument();
+ expect(mock.request.mock.calls.every(([,body])=>body===undefined)).toBe(true);
+});
+
+it.each([null,{grounding:undefined},{grounding:{assessments:[]}}])("does not infer a supported verdict from an absent checker assessment",async result=>{
+ jobs[0]!.result=result;await mount();await screen.findByRole("region",{name:"Persisted qualification result"});
+ expect(screen.getByText("Machine checker: unscored. Human support: unmeasured.")).toBeInTheDocument();
+ expect(mock.request.mock.calls.every(([,body])=>body===undefined)).toBe(true);
+});
+
+it("saves a continued result against its sealed origin and exact passage rather than the current route",async()=>{
+ const stored=jobs[0]!.request.assistance;
+ stored.origin={mode:"learn",project_id:null,thread_id:`thread-${"f".repeat(32)}`,return_to:"/workspace/library?mode=learn&view=notes"};stored.follow_up="";
+ const user=userEvent.setup();await mount();await screen.findByRole("region",{name:"Persisted qualification result"});
+ await user.click(screen.getByRole("button",{name:"Save experimental learning thread"}));await screen.findByText(/Experimental result saved with its exact source/);
+ const entry=mock.request.mock.calls.find(([p])=>p==="context/entries")![1];
+ expect(entry.context).toEqual(stored.origin);expect(entry.data).toMatchObject({work_id:"one",version_id:"one:v1",anchor:"abstract:0:37"});
+ expect(mock.request.mock.calls.find(([p])=>p==="context/threads")![1].data).toMatchObject({origin:stored.origin,goal:"Inspect the retained evidence"});
+});
