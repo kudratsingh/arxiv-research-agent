@@ -1,0 +1,4 @@
+api: floor 86%; actual 88; exit 0
+agents: floor 92%; actual 96; exit 0
+security: floor 97%; actual 100; exit 0
+eval: floor 91%; actual 95; exit 0

@@ -1,0 +1,78 @@
+{
+  "packet_digest": "bfd31775ef21b8a998f944e33dc9d30c25f1cac5996b243efb2cdbc0790dc6b1",
+  "audit": {
+    "measure-1": {
+      "original_job": "gen-851991b06fbb1a0f27824b39bffe360f22624cdb",
+      "original_packet": "f21f4b66e1eb99ab75c7c242a9bfa46acb78ccabc13fb885477e8160425fd95a",
+      "original_receipt_digest": "baaf578ef4981a42d9707f54a9a7b8fb8bcced4466754ebbcfd8f75c354c60be",
+      "original_input_tokens": 2568,
+      "old_count_body_digest": "e3c3f6a1a4d75d3084a6e7579c8a691f105f057f81b8cfa2d0669ccb87820d1b",
+      "new_count_body_digest": "e37ac03c9a81a07d1ba5b1320b4eee20e173dbd06a51ddd21fb5a73bebc2a9e7",
+      "reusable": false,
+      "same_model": true,
+      "changed_top_level_fields": [
+        "messages",
+        "output_config",
+        "system"
+      ],
+      "fresh_count_required": true,
+      "measured_allowance": 16000,
+      "new_provider_measurement": null
+    },
+    "measure-2": {
+      "original_job": "gen-67617f529186d6472ea5f07462ca3b28df8594f6",
+      "original_packet": "f21f4b66e1eb99ab75c7c242a9bfa46acb78ccabc13fb885477e8160425fd95a",
+      "original_receipt_digest": "220b69cbc02d3028bd8203d73e28fdd9b1dbfaba303c26d2ad0d8f2de74d7a9c",
+      "original_input_tokens": 3753,
+      "old_count_body_digest": "95aafbd0b81c6efb2251c10127183e8d63f83156283bf810dd854f1f2905e497",
+      "new_count_body_digest": "d73d6972775b3bbc8fd02271cd7f2c766b9cd19d59d342f3a21b003b6823d59f",
+      "reusable": false,
+      "same_model": true,
+      "changed_top_level_fields": [
+        "messages",
+        "output_config",
+        "system"
+      ],
+      "fresh_count_required": true,
+      "measured_allowance": 16000,
+      "new_provider_measurement": null
+    },
+    "measure-3": {
+      "original_job": "gen-9f76d047e060eda8e8caed7a119fd78d67d832d1",
+      "original_packet": "f21f4b66e1eb99ab75c7c242a9bfa46acb78ccabc13fb885477e8160425fd95a",
+      "original_receipt_digest": "9ec8825a2659bc9acc12b2a269f2dd1420c78727b355b0ae59c351973c907546",
+      "original_input_tokens": 3718,
+      "old_count_body_digest": "e2e3f651ce7484a14fd2de755511d4c83b330726a45f8f719594ebe1661a2f49",
+      "new_count_body_digest": "7a75943a1aa64600247fa26a5e00615954fa0c60b2459ca8710ede46080470d9",
+      "reusable": false,
+      "same_model": true,
+      "changed_top_level_fields": [
+        "messages",
+        "output_config",
+        "system"
+      ],
+      "fresh_count_required": true,
+      "measured_allowance": 16000,
+      "new_provider_measurement": null
+    },
+    "measure-4": {
+      "original_job": "gen-7187c1ef62b567113806c01509f15742ec635be6",
+      "original_packet": "f21f4b66e1eb99ab75c7c242a9bfa46acb78ccabc13fb885477e8160425fd95a",
+      "original_receipt_digest": "c34d174b91fd30fe4276abeb5ca16249cc7055f945122994d5ed3ee25386aacb",
+      "original_input_tokens": 3364,
+      "old_count_body_digest": "b81353c47fe4bed827b636b3c4144ffabc1c18e42198aefa8a3a6f8722163bb9",
+      "new_count_body_digest": "929b382bedd955af74feda8a8162b2e3c62ab0d94ff2b7c82d61c8eafeb3f805",
+      "reusable": false,
+      "same_model": true,
+      "changed_top_level_fields": [
+        "messages",
+        "output_config",
+        "system"
+      ],
+      "fresh_count_required": true,
+      "measured_allowance": 16000,
+      "new_provider_measurement": null
+    }
+  },
+  "actual_provider_contacts": 0
+}

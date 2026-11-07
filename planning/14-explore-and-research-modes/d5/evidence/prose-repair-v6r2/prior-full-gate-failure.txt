@@ -1,0 +1,339 @@
+OMP_NUM_THREADS=1 TOKENIZERS_PARALLELISM=false PYTHONHASHSEED=0 ANTHROPIC_API_KEY=local-preview-disabled /Users/kudratsingh/Machine-Learning-Projects/arxiv-venv-lock/bin/python -m pytest -m "not e2e" tests/ \
+		--cov=src --cov-report=xml:build/coverage.xml -q
+.........................................s.....s........................ [  1%]
+........................................................................ [  2%]
+........................................................................ [  3%]
+........................................................................ [  4%]
+........................................................................ [  5%]
+........................................................................ [  6%]
+..............................................................ssssssssss [  7%]
+sss...s................................................................. [  8%]
+........................................................................ [  9%]
+........................................................................ [ 10%]
+........................................................................ [ 11%]
+........................................................................ [ 12%]
+........................................................................ [ 13%]
+........................................................................ [ 15%]
+........................................................................ [ 16%]
+........................................................................ [ 17%]
+........................................................................ [ 18%]
+........................................................................ [ 19%]
+........................................................................ [ 20%]
+........................................................................ [ 21%]
+........................................................................ [ 22%]
+........................................................................ [ 23%]
+........................................................................ [ 24%]
+........................................................................ [ 25%]
+........................................................................ [ 26%]
+........................................................................ [ 27%]
+........................................................................ [ 28%]
+........................................................................ [ 30%]
+........................................................................ [ 31%]
+........................................................................ [ 32%]
+........................................................................ [ 33%]
+........................................................................ [ 34%]
+........................................................................ [ 35%]
+........................................................................ [ 36%]
+........................................................................ [ 37%]
+........................................................................ [ 38%]
+....................................ssssss.............................. [ 39%]
+........................................................................ [ 40%]
+........................................................................ [ 41%]
+........................................................................ [ 42%]
+........................................................................ [ 43%]
+........................................................................ [ 45%]
+........................................................................ [ 46%]
+........................................................................ [ 47%]
+........................................................................ [ 48%]
+........................................................................ [ 49%]
+........................................................................ [ 50%]
+.....................................sssssssssss........................ [ 51%]
+........................................................................ [ 52%]
+........................................................................ [ 53%]
+........................................................................ [ 54%]
+........................................................................ [ 55%]
+........................................................................ [ 56%]
+........................................................................ [ 57%]
+........................................................................ [ 58%]
+........................................................................ [ 60%]
+........................................................................ [ 61%]
+........................................................................ [ 62%]
+..................................................................ssssss [ 63%]
+.....s.................................................................. [ 64%]
+........................................................................ [ 65%]
+..ssssssssssssss........................................................ [ 66%]
+........................................................................ [ 67%]
+........................................................................ [ 68%]
+........................................................................ [ 69%]
+........................................................................ [ 70%]
+........................................................................ [ 71%]
+........................................................................ [ 72%]
+........................................................................ [ 73%]
+........................................................................ [ 75%]
+........................................................................ [ 76%]
+........................................................................ [ 77%]
+........................................................................ [ 78%]
+........................................................................ [ 79%]
+........................................................................ [ 80%]
+........................................................................ [ 81%]
+........................................................................ [ 82%]
+........................................................................ [ 83%]
+........................................................................ [ 84%]
+........................................................................ [ 85%]
+........................................................................ [ 86%]
+........................................................................ [ 87%]
+........................................................................ [ 88%]
+.........................................FFFFF......FFF.....F........... [ 90%]
+....F................................................................... [ 91%]
+........................................................................ [ 92%]
+........................................................................ [ 93%]
+........................................................................ [ 94%]
+........................................................................ [ 95%]
+........................................................................ [ 96%]
+........................................................................ [ 97%]
+........................................................................ [ 98%]
+........................................................................ [ 99%]
+....................                                                     [100%]
+=================================== FAILURES ===================================
+______ test_blank_partial_and_reproducible_scoring_do_not_mutate_evidence ______
+
+data = ({'revision': 'd5-system-benchmark-v1', 'application_commit': 'b7240cf34b1ef1331e33fb992870da71528105e2', 'checker_sch...ounding': {'checked': 0, 'decided': 0, 'abstained': 5, 'supported': 0, ...}, 'proposed_negative_items': 5, ...}], ...})
+
+    def test_blank_partial_and_reproducible_scoring_do_not_mutate_evidence(data):
+        p, r = data
+        before = _digest(r)
+        blank = d.worksheet(p, r)
+        report = d.recompute(p, r, {}, [])
+>       assert report["quality"]["outcome"] == "HOLD"
+E       AssertionError: assert 'FAIL' == 'HOLD'
+E         
+E         - HOLD
+E         + FAIL
+
+tests/test_workspace_d5_reviews.py:122: AssertionError
+_______ test_complete_synthetic_labels_can_pass_logic_but_never_qualify ________
+
+data = ({'revision': 'd5-system-benchmark-v1', 'application_commit': 'b7240cf34b1ef1331e33fb992870da71528105e2', 'checker_sch...ounding': {'checked': 0, 'decided': 0, 'abstained': 5, 'supported': 0, ...}, 'proposed_negative_items': 5, ...}], ...})
+
+    def test_complete_synthetic_labels_can_pass_logic_but_never_qualify(data):
+        p, original = data
+        r = enough(p, original)
+        value = labels(d.worksheet(p, r, retrieval=True))
+        report = d.recompute(p, r, record_map(p, r, value), ["synthetic"])
+>       assert report["quality"]["outcome"] == "PASS", report["quality"]["reasons"]
+E       AssertionError: []
+E       assert 'FAIL' == 'PASS'
+E         
+E         - PASS
+E         + FAIL
+
+tests/test_workspace_d5_reviews.py:146: AssertionError
+______ test_claim_failures_fail_despite_valid_quote[support-unsupported] _______
+
+data = ({'revision': 'd5-system-benchmark-v1', 'application_commit': 'b7240cf34b1ef1331e33fb992870da71528105e2', 'checker_sch...ounding': {'checked': 0, 'decided': 0, 'abstained': 5, 'supported': 0, ...}, 'proposed_negative_items': 5, ...}], ...})
+field = 'support', value = 'unsupported'
+
+    @pytest.mark.parametrize(
+        "field,value",
+        [("support", "unsupported"), ("atomic", False), ("qualifications_retained", False)],
+    )
+    def test_claim_failures_fail_despite_valid_quote(data, field, value):
+        p, raw = data
+        r = enough(p, raw)
+        review = labels(d.worksheet(p, r))
+        item = next(
+            i for i in review["items"] if i["kind"] == "claim" and i["case_id"] == "learn-method"
+        )
+        item["judgments"][field] = value
+        result = d.recompute(p, r, record_map(p, r, review), [])
+        assert result["quality"]["outcome"] == "FAIL"
+        case = next(c for c in result["cases"] if c["id"] == "learn-method")
+>       assert case["provenance"] is True and case["factual_gate"] == "FAIL"
+E       assert (False is True)
+
+tests/test_workspace_d5_reviews.py:179: AssertionError
+__________ test_claim_failures_fail_despite_valid_quote[atomic-False] __________
+
+data = ({'revision': 'd5-system-benchmark-v1', 'application_commit': 'b7240cf34b1ef1331e33fb992870da71528105e2', 'checker_sch...ounding': {'checked': 0, 'decided': 0, 'abstained': 5, 'supported': 0, ...}, 'proposed_negative_items': 5, ...}], ...})
+field = 'atomic', value = False
+
+    @pytest.mark.parametrize(
+        "field,value",
+        [("support", "unsupported"), ("atomic", False), ("qualifications_retained", False)],
+    )
+    def test_claim_failures_fail_despite_valid_quote(data, field, value):
+        p, raw = data
+        r = enough(p, raw)
+        review = labels(d.worksheet(p, r))
+        item = next(
+            i for i in review["items"] if i["kind"] == "claim" and i["case_id"] == "learn-method"
+        )
+        item["judgments"][field] = value
+        result = d.recompute(p, r, record_map(p, r, review), [])
+        assert result["quality"]["outcome"] == "FAIL"
+        case = next(c for c in result["cases"] if c["id"] == "learn-method")
+>       assert case["provenance"] is True and case["factual_gate"] == "FAIL"
+E       assert (False is True)
+
+tests/test_workspace_d5_reviews.py:179: AssertionError
+_ test_claim_failures_fail_despite_valid_quote[qualifications_retained-False] __
+
+data = ({'revision': 'd5-system-benchmark-v1', 'application_commit': 'b7240cf34b1ef1331e33fb992870da71528105e2', 'checker_sch...ounding': {'checked': 0, 'decided': 0, 'abstained': 5, 'supported': 0, ...}, 'proposed_negative_items': 5, ...}], ...})
+field = 'qualifications_retained', value = False
+
+    @pytest.mark.parametrize(
+        "field,value",
+        [("support", "unsupported"), ("atomic", False), ("qualifications_retained", False)],
+    )
+    def test_claim_failures_fail_despite_valid_quote(data, field, value):
+        p, raw = data
+        r = enough(p, raw)
+        review = labels(d.worksheet(p, r))
+        item = next(
+            i for i in review["items"] if i["kind"] == "claim" and i["case_id"] == "learn-method"
+        )
+        item["judgments"][field] = value
+        result = d.recompute(p, r, record_map(p, r, review), [])
+        assert result["quality"]["outcome"] == "FAIL"
+        case = next(c for c in result["cases"] if c["id"] == "learn-method")
+>       assert case["provenance"] is True and case["factual_gate"] == "FAIL"
+E       assert (False is True)
+
+tests/test_workspace_d5_reviews.py:179: AssertionError
+_______ test_indeterminate_labels_and_missing_denominators[insufficient] _______
+
+data = ({'revision': 'd5-system-benchmark-v1', 'application_commit': 'b7240cf34b1ef1331e33fb992870da71528105e2', 'checker_sch...ounding': {'checked': 0, 'decided': 0, 'abstained': 5, 'supported': 0, ...}, 'proposed_negative_items': 5, ...}], ...})
+support = 'insufficient'
+
+    @pytest.mark.parametrize("support", ["insufficient", "unreviewable", None])
+    def test_indeterminate_labels_and_missing_denominators(data, support):
+        p, r = data
+        review = labels(d.worksheet(p, r), only={"claim"})
+        for i in review["items"]:
+            if i["kind"] == "claim":
+                i["judgments"]["support"] = support
+        report = d.recompute(p, r, record_map(p, r, review), [])
+        counts = report["quality"]["claims_by_cohort"]["fresh_system"]
+        assert counts["factual_support"] is None
+        assert counts["reviewed"] == (12 if support else 0)
+>       assert report["quality"]["outcome"] == "HOLD"
+E       AssertionError: assert 'FAIL' == 'HOLD'
+E         
+E         - HOLD
+E         + FAIL
+
+tests/test_workspace_d5_reviews.py:216: AssertionError
+_______ test_indeterminate_labels_and_missing_denominators[unreviewable] _______
+
+data = ({'revision': 'd5-system-benchmark-v1', 'application_commit': 'b7240cf34b1ef1331e33fb992870da71528105e2', 'checker_sch...ounding': {'checked': 0, 'decided': 0, 'abstained': 5, 'supported': 0, ...}, 'proposed_negative_items': 5, ...}], ...})
+support = 'unreviewable'
+
+    @pytest.mark.parametrize("support", ["insufficient", "unreviewable", None])
+    def test_indeterminate_labels_and_missing_denominators(data, support):
+        p, r = data
+        review = labels(d.worksheet(p, r), only={"claim"})
+        for i in review["items"]:
+            if i["kind"] == "claim":
+                i["judgments"]["support"] = support
+        report = d.recompute(p, r, record_map(p, r, review), [])
+        counts = report["quality"]["claims_by_cohort"]["fresh_system"]
+        assert counts["factual_support"] is None
+        assert counts["reviewed"] == (12 if support else 0)
+>       assert report["quality"]["outcome"] == "HOLD"
+E       AssertionError: assert 'FAIL' == 'HOLD'
+E         
+E         - HOLD
+E         + FAIL
+
+tests/test_workspace_d5_reviews.py:216: AssertionError
+___________ test_indeterminate_labels_and_missing_denominators[None] ___________
+
+data = ({'revision': 'd5-system-benchmark-v1', 'application_commit': 'b7240cf34b1ef1331e33fb992870da71528105e2', 'checker_sch...ounding': {'checked': 0, 'decided': 0, 'abstained': 5, 'supported': 0, ...}, 'proposed_negative_items': 5, ...}], ...})
+support = None
+
+    @pytest.mark.parametrize("support", ["insufficient", "unreviewable", None])
+    def test_indeterminate_labels_and_missing_denominators(data, support):
+        p, r = data
+        review = labels(d.worksheet(p, r), only={"claim"})
+        for i in review["items"]:
+            if i["kind"] == "claim":
+                i["judgments"]["support"] = support
+        report = d.recompute(p, r, record_map(p, r, review), [])
+        counts = report["quality"]["claims_by_cohort"]["fresh_system"]
+        assert counts["factual_support"] is None
+        assert counts["reviewed"] == (12 if support else 0)
+>       assert report["quality"]["outcome"] == "HOLD"
+E       AssertionError: assert 'FAIL' == 'HOLD'
+E         
+E         - HOLD
+E         + FAIL
+
+tests/test_workspace_d5_reviews.py:216: AssertionError
+______ test_development_and_exact_duplicates_do_not_fill_heldout_minimum _______
+
+data = ({'revision': 'd5-system-benchmark-v1', 'application_commit': 'b7240cf34b1ef1331e33fb992870da71528105e2', 'checker_sch...ounding': {'checked': 0, 'decided': 0, 'abstained': 5, 'supported': 0, ...}, 'proposed_negative_items': 5, ...}], ...})
+
+    def test_development_and_exact_duplicates_do_not_fill_heldout_minimum(data):
+        p, r = data
+        review = labels(d.worksheet(p, r))
+        review["items"] = [i for i in review["items"] if i["case_id"].startswith("dev-")]
+        report = d.recompute(p, r, record_map(p, r, review), [])
+        assert report["denominators"]["generated_fact_reviews_for_minimum"] == 0
+        assert report["quality"]["claims_by_cohort"]["development"]["reviewed"] == 3
+        r = enough(p, r)
+        for case in p["cases"]:
+            if case["cohort"] != "fresh_system":
+                continue
+            step = [
+                s for s in r["raw_results"][case["id"]]["steps"] if s["stage"] in {"draft", "repair"}
+            ][-1]
+            for claim in step["output"]["claims"]:
+                claim["text"] = "Same synthetic fact."
+                claim["handles"] = step["output"]["claims"][0]["handles"]
+        result = d.recompute(p, r, record_map(p, r, labels(d.worksheet(p, r))), [])
+        assert result["denominators"]["generated_fact_reviews_for_minimum"] == 7
+>       assert result["quality"]["outcome"] == "HOLD"
+E       AssertionError: assert 'FAIL' == 'HOLD'
+E         
+E         - HOLD
+E         + FAIL
+
+tests/test_workspace_d5_reviews.py:290: AssertionError
+____ test_cost_per_accepted_result_requires_known_nonnegative_costs[0.0000] ____
+
+data = ({'revision': 'd5-system-benchmark-v1', 'application_commit': 'b7240cf34b1ef1331e33fb992870da71528105e2', 'checker_sch...ounding': {'checked': 0, 'decided': 0, 'abstained': 5, 'supported': 0, ...}, 'proposed_negative_items': 5, ...}], ...})
+unknown = '0.0000'
+
+    @pytest.mark.parametrize("unknown", ["0.0000", "0.10", None, "NaN", "invalid", "-1"])
+    def test_cost_per_accepted_result_requires_known_nonnegative_costs(data, unknown):
+        p, raw = data
+        r = enough(p, raw)
+        for case in p["cases"]:
+            r["raw_results"][case["id"]].update(
+                workflow_usd="0.10", checker_usd="0.02", unknown_usd=unknown
+            )
+        result = d.recompute(p, r, record_map(p, r, labels(d.worksheet(p, r))), [])
+>       assert result["denominators"]["cost_per_accepted_result"] == (
+            "0.12" if unknown == "0.0000" else None
+        )
+E       AssertionError: assert None == '0.12'
+
+tests/test_workspace_d5_reviews.py:453: AssertionError
+================================ tests coverage ================================
+_______________ coverage: platform darwin, python 3.13.7-final-0 _______________
+
+Coverage XML written to file build/coverage.xml
+Required test coverage of 89.0% reached. Total coverage: 94.60%
+=========================== short test summary info ============================
+FAILED tests/test_workspace_d5_reviews.py::test_blank_partial_and_reproducible_scoring_do_not_mutate_evidence
+FAILED tests/test_workspace_d5_reviews.py::test_complete_synthetic_labels_can_pass_logic_but_never_qualify
+FAILED tests/test_workspace_d5_reviews.py::test_claim_failures_fail_despite_valid_quote[support-unsupported]
+FAILED tests/test_workspace_d5_reviews.py::test_claim_failures_fail_despite_valid_quote[atomic-False]
+FAILED tests/test_workspace_d5_reviews.py::test_claim_failures_fail_despite_valid_quote[qualifications_retained-False]
+FAILED tests/test_workspace_d5_reviews.py::test_indeterminate_labels_and_missing_denominators[insufficient]
+FAILED tests/test_workspace_d5_reviews.py::test_indeterminate_labels_and_missing_denominators[unreviewable]
+FAILED tests/test_workspace_d5_reviews.py::test_indeterminate_labels_and_missing_denominators[None]
+FAILED tests/test_workspace_d5_reviews.py::test_development_and_exact_duplicates_do_not_fill_heldout_minimum
+FAILED tests/test_workspace_d5_reviews.py::test_cost_per_accepted_result_requires_known_nonnegative_costs[0.0000]
+10 failed, 6652 passed, 54 skipped, 53 deselected in 775.97s (0:12:55)
+make: *** [test-cov-diff] Error 1

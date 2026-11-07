@@ -1,0 +1,86 @@
+
+> arxiv-research-agent-web@0.1.0 budgets
+> npm run build && node scripts/route-budgets.mjs
+
+
+> arxiv-research-agent-web@0.1.0 build
+> next build --webpack
+
+▲ Next.js 16.4.4 (webpack)
+✓ Running next.config.mjs took 12ms
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead.
+
+  To migrate automatically, run:
+  npx @next/codemod@canary middleware-to-proxy .
+
+  Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+✓ Compiled successfully in 3.8s
+  Running TypeScript ...
+  Finished TypeScript in 3.2s ...
+  Collecting page data using 7 workers ...
+  Generating static pages using 7 workers (0/9) ...
+  Generating static pages using 7 workers (2/9) 
+  Generating static pages using 7 workers (4/9) 
+  Generating static pages using 7 workers (6/9) 
+✓ Generating static pages using 7 workers (9/9) in 245ms
+  Finalizing page optimization ...
+  Collecting build traces ...
+
+Route (app)
+┌ ƒ /
+├ ƒ /_not-found
+├ ƒ /api/[...path]
+├ ƒ /c/[id]
+├ ○ /icon.svg
+├ ƒ /interests
+├ ƒ /learn
+├ ƒ /learn/paths/[id]
+├ ƒ /learn/progress
+├ ƒ /learn/sessions/[id]
+├ ƒ /library
+├ ƒ /library/items/[id]
+├ ƒ /today
+├ ƒ /workspace/interests
+├ ƒ /workspace/items/[id]
+├ ƒ /workspace/library
+├ ƒ /workspace/operations
+├ ƒ /workspace/projects
+├ ƒ /workspace/radar
+├ ƒ /workspace/review
+├ ƒ /workspace/threads/[id]
+└ ƒ /workspace/today
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+PASS      `/` first-load JS, excl. polyfill — 166,295 B (162.4 KiB) against 166,912 B (163.0 KiB)
+PASS      `/c/[id]` first-load JS, excl. polyfill — 192,363 B (187.9 KiB) against 192,512 B (188.0 KiB)
+PASS      `/learn` first-load JS, excl. polyfill — 165,010 B (161.1 KiB) against 166,912 B (163.0 KiB)
+PASS      `/learn/paths/[id]` first-load JS, excl. polyfill — 165,947 B (162.1 KiB) against 169,984 B (166.0 KiB)
+PASS      `/learn/sessions/[id]` first-load JS, excl. polyfill — 186,821 B (182.4 KiB) against 188,416 B (184.0 KiB)
+PASS      `/learn/progress` first-load JS, excl. polyfill — 168,346 B (164.4 KiB) against 169,984 B (166.0 KiB)
+PASS      Shared framework/runtime chunk — 133,949 B (130.8 KiB) against 139,264 B (136.0 KiB)
+PASS      All emitted CSS — 24,868 B (24.3 KiB) against 25,600 B (25.0 KiB)
+PASS      All self-hosted font files (woff2, latin subset) — 103,476 B (101.1 KiB) against 109,568 B (107.0 KiB)
+EXTERNAL  Total transferred JS on a settled report route, incl. lazy chunks — not measured here against 245,760 B (240.0 KiB)
+REPORTED  Derived: total first-load transfer for `/c/[id]`, cold cache — 320,707 B (313.2 KiB) against 327,680 B (320.0 KiB)
+PASS      `/today` first-load JS, excl. polyfill — 153,531 B (149.9 KiB) against 163,840 B (160.0 KiB)
+PASS      `/interests` first-load JS, excl. polyfill — 152,952 B (149.4 KiB) against 163,840 B (160.0 KiB)
+PASS      `/library` first-load JS, excl. polyfill — 152,471 B (148.9 KiB) against 163,840 B (160.0 KiB)
+PASS      `/library/items/[id]` first-load JS, excl. polyfill — 156,181 B (152.5 KiB) against 163,840 B (160.0 KiB)
+PASS      `/workspace/today` first-load JS, excl. polyfill — 169,844 B (165.9 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/radar` first-load JS, excl. polyfill — 169,362 B (165.4 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/interests` first-load JS, excl. polyfill — 167,260 B (163.3 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/library` first-load JS, excl. polyfill — 168,973 B (165.0 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/items/[id]` first-load JS, excl. polyfill — 165,924 B (162.0 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/operations` first-load JS, excl. polyfill — 163,792 B (160.0 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/review` first-load JS, excl. polyfill — 166,045 B (162.2 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/projects` first-load JS, excl. polyfill — 169,111 B (165.1 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/threads/[id]` first-load JS, excl. polyfill — 165,330 B (161.5 KiB) against 169,984 B (166.0 KiB)
+
+Report written to /private/tmp/arxiv-agent-eng-workspace-assistance/web/budget-report.md

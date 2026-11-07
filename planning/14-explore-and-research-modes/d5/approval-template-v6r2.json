@@ -1,0 +1,28 @@
+{
+  "approved": false,
+  "approved_by": null,
+  "approved_at": null,
+  "expires_at": null,
+  "authorization_kind": "owner",
+  "transport_mode": "provider",
+  "packet_digest": "7e21713caee474fbafa31d197a754e232a66fac670143e5ddbae5b0ccb90389f",
+  "scope_id": "d5-7e21713caee474fbafa31d19",
+  "limits": {
+    "jobs": 14,
+    "messages": 44,
+    "counts": 48,
+    "usd": "10",
+    "concurrency": 1,
+    "workflow_usd": "0.45",
+    "probe_usd": "0.15",
+    "headroom_usd": "1.00"
+  },
+  "members": [
+    "d5-v6-validation-measure",
+    "d5-v6-validation-run"
+  ],
+  "case_bindings_digest": "df3ac4156a35b98ccb94694867e1e71a815be6c19b2ff23e2dbcbcea497de174",
+  "stages": [
+    "A"
+  ]
+}

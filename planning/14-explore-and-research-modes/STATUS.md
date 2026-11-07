@@ -1,6 +1,20 @@
 # Two-mode implementation status
 
-## Current D5 v4 contract repair — offline repair and publication gate
+## Current D5 v6r2 repair — offline review candidate
+
+Application **58f7608921c58beba70a9a3dd2199701f2130709**, with first repair commit eada0f03da84225234b62bf8954846a174085bac. Candidate packet **7e21713caee474fbafa31d197a754e232a66fac670143e5ddbae5b0ccb90389f**. [Repair report](d5/RESPONSE-REPAIR-v6.md), [runbook](d5/RUNBOOK.md), [unexecuted proposal](d5/PAID-VALIDATION-PROPOSAL.md), [source/request bindings](d5/d5-packet-identity-v6r2.json), [evidence](d5/evidence/prose-repair-v6r2/README.md).
+
+Both dev-learn and dev-compare remain planned: the observed prose repair and independently cited cross-source path test different behavior. The separate **21→22** proposal **9de13a8698295f7cf8bc6c47879f8b99f6f2fccc13786c574772a31802d56f4c** remains approved=false. Original approved20→21 receipt04602dc5 is preserved; its expiry is Nov13 23:24:01 PST. No live migration, amendment activation, approval, handoff, provider/count contact or spending occurred. Actual ledger still **8 funded jobs /12 Messages /26 counts /estimated USD0.196359**, pending/unknown0, cap21. Failed v3/v5 identities and receipts remain consumed.
+
+Scientific sections now reference cited/scored claims; procedural questions may not presuppose findings. The checker must locate residual factual prose by field/index, and the same blocking gate remains. Synthetic c5 preserves “perhaps” and removes overspecified CoT-SC attribution. Scored failures retain one repair/recheck. Historical coherent-multicitation-v1 review reading remains explicit; positive labels cannot rescue invalid provenance. Scored-section navigation now survives claim-link reload and browser history in Understand. The original failed response, red browser check and initial v6 freeze remain preserved.
+
+Complete production-adapter mock replay: **2 development +8 fresh workflows +4 probe batches**,44 mocked Messages/48 mocked counts including4 initial counts. Candidate cap22 admits the full schedule; existing21 refuses job22. Separate Learn-only alternative completes1+8+4 under21. Human labels remain blank;12 eligible fresh claims are below the unchanged20-fact review minimum, so quality staysHOLD and checker_qualified=false. All four historical A requests differ; **measure-1–4 need fresh explicit count approval**. No old measurement establishes new request fit.
+
+Final frontend checks: **4,270 passed /220 files**, no skips;98.17% statements,94.28% branches,94.14% functions,99.52% lines. Lint/typecheck/production build and22/22 budgets pass; CSS24,868/25,600B, Today169,844/169,984B, Reader165,924/169,984B. Globalruff and strictmypy193files pass;53 workflowe2e,20/20 zero-spend simulation and registry260/0 passed. Final Python gate:6,662 passed,54 inherited skips,53 separate-tier deselections;94.59%total/97%patch. Package floors pass:API88≥86,agents96≥92,security100≥97,eval95≥91. Documentation95/95 and final focused153/153 pass. Exact-head remote CI is recorded separately in `outputs/d5/prose-repair-v6/FINAL-PUBLICATION.json`; local success is not a remote CI result. Earlier failed gates remain evidence.
+
+Isolated preview **http://localhost:3195/workspace/today?mode=learn**, API8195, disposable DBworkspace_d5_prose_v6r2_offline, principal d5-v6-validation-run. Final browser suite covers desktop1440/mobile390, both themes/reduced motion, result/passage navigation, failed save/retry, reload and Library resume; screenshots/recordings and actual pass counts are in the evidence index. Owner3137/review3178 are untouched. Broader draft-history reliability and two partial PDF samples remain limitations. Everyday generation, recurrence and notifications stay disabled; unmerged/undeployed.
+
+## Preserved D5 v4 contract repair — offline repair and publication gate
 
 Application **9bd25a82d313070e810038c8de42c0dc3d9cb8b1**. Prospective packet **f21f4b66e1eb99ab75c7c242a9bfa46acb78ccabc13fb885477e8160425fd95a**, approved=false. [Repair runbook](d5/CONTRACT-REPAIR-v4.md), [new proposal](d5/PAID-VALIDATION-PROPOSAL.md), [identity](d5/d5-packet-identity.json), [quota receipt](d5/d5-quota-v4.json).
 

@@ -1,0 +1,8 @@
+benchmark parity report (live modules vs registry tree)
+  research suite   research-policy-v1@1.0.0 sha256:ba3ad4e20f2df9278751638ba1d0e4ee34c30cc9dc77a07c280d748d24e732a8
+  learning suite   guided-learning-v1@1.0.0 sha256:875d2ef058eb439e6d0ba7ff8cf165c82508a0f86facb8a217b079d52fa9242f
+  research cases   20 (research-benchmark@20:1d15ae819776)
+  learning cases   15 (learning-benchmark@15:cf1b790b942b)
+  objects checked  260
+  mismatches       0
+  every id, order, field and score semantic matches.

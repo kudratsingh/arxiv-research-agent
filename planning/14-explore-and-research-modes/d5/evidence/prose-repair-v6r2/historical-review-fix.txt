@@ -1,0 +1,15 @@
+..................................................                       [100%]
+50 passed in 27.31s
+Exception ignored in atexit callback <function cleanup_subprocesses at 0x109a1bd80>:
+Traceback (most recent call last):
+  File "/Users/kudratsingh/Machine-Learning-Projects/arxiv-venv-lock/lib/python3.13/site-packages/mirakuru/base.py", line 78, in cleanup_subprocesses
+    pids = processes_with_env(ENV_UUID, str(os.getpid()))
+  File "/Users/kudratsingh/Machine-Learning-Projects/arxiv-venv-lock/lib/python3.13/site-packages/mirakuru/base_env.py", line 52, in processes_with_env_psutil
+    for proc in psutil.process_iter():
+  File "/Users/kudratsingh/Machine-Learning-Projects/arxiv-venv-lock/lib/python3.13/site-packages/psutil/__init__.py", line 1541, in process_iter
+    a = set(pids())
+  File "/Users/kudratsingh/Machine-Learning-Projects/arxiv-venv-lock/lib/python3.13/site-packages/psutil/__init__.py", line 1485, in pids
+    ret = sorted(_psplatform.pids())
+  File "/Users/kudratsingh/Machine-Learning-Projects/arxiv-venv-lock/lib/python3.13/site-packages/psutil/_psosx.py", line 320, in pids
+    ls = cext.pids()
+PermissionError: [Errno 1] Operation not permitted (originated from sysctl() malloc 1/3)

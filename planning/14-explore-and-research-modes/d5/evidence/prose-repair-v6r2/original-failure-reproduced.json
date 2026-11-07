@@ -1,0 +1,17 @@
+{
+  "application": "d5bb831",
+  "packet": "85afa214bd4634ca27e668470257b9ecb53b2dfe87fa018ec17856e46729b35b",
+  "transport": "MockTransport over production D5Adapter",
+  "original_request_bodies_exact": true,
+  "original_responses_unchanged": true,
+  "mock_contacts": [
+    "messages/count_tokens",
+    "messages",
+    "messages/count_tokens",
+    "messages"
+  ],
+  "failure": "d5_unscored_factual_prose",
+  "actual_provider_contacts": 0,
+  "new_spend": "0",
+  "original_failed_result_unmodified": true
+}

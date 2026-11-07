@@ -1,0 +1,42 @@
+{
+  "application_commit": "58f7608921c58beba70a9a3dd2199701f2130709",
+  "packet_digest": "7e21713caee474fbafa31d197a754e232a66fac670143e5ddbae5b0ccb90389f",
+  "successor_proposal_digest": "9de13a8698295f7cf8bc6c47879f8b99f6f2fccc13786c574772a31802d56f4c",
+  "successor_approved": false,
+  "local_python": {
+    "passed": 6662,
+    "skipped": 54,
+    "separate_e2e_deselected": 53,
+    "total_coverage": 94.59,
+    "patch_coverage": 97
+  },
+  "frontend_tests": 4270,
+  "frontend_files": 220,
+  "frontend_statements": 98.17,
+  "budgets_passed": 22,
+  "workflow_e2e": 53,
+  "simulation_successes": 20,
+  "registry_objects": 260,
+  "registry_mismatches": 0,
+  "focused_tests": 153,
+  "documentation_tests": 95,
+  "browser_journeys": 8,
+  "axe_serious_critical": 0,
+  "page_errors": 0,
+  "actual_new_messages": 0,
+  "actual_new_counts": 0,
+  "new_spend_usd": "0",
+  "real_census": {
+    "funded_programme_jobs": 8,
+    "messages": 12,
+    "counts": 26,
+    "known_estimated_usd": "0.196359",
+    "pending_usd": "0",
+    "unknown_usd": "0",
+    "effective_job_cap": 21
+  },
+  "remote_ci": "Not yet run; exact published head reported independently",
+  "human_labels": "blank",
+  "quality": "HOLD",
+  "checker_qualified": false
+}

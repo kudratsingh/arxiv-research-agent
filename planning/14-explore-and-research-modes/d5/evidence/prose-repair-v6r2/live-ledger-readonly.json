@@ -1,0 +1,24 @@
+{
+  "history_digest": "e240662a311ff21a020e9d049808a901ea7570ed4506f53ab78d7c94a5ca3b2e",
+  "snapshot_history_matches": true,
+  "funded_programme_jobs": 8,
+  "messages": 12,
+  "counts": 26,
+  "estimated_usd": "0.196359",
+  "pending_usd": "0",
+  "unknown_usd": "0",
+  "effective_limits": {
+    "usd": "10",
+    "counts": 80,
+    "messages": 80,
+    "new_jobs": 21,
+    "concurrency": 1
+  },
+  "original_amendment_authorization_digest": "04602dc5dce3e465435df5a1a5e4190548f18a1ab309602c5e233f570c47007d",
+  "original_receipt_digest_matches": true,
+  "predecessor_expiry": "2026-11-14T07:24:01+00:00",
+  "successor_table_on_live_ledger": null,
+  "new_contacts": 0,
+  "new_spend_usd": "0",
+  "read_only": true
+}
