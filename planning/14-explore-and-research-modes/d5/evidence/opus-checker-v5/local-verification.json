@@ -1,0 +1,70 @@
+{
+  "application_commit": "04945c61454f57b8597255587537db068951b12d",
+  "provider_contacts": 0,
+  "new_spend_usd": "0",
+  "commands": {
+    "make test-cov-diff": {
+      "passed": 6615,
+      "skipped": 54,
+      "e2e_deselected": 53,
+      "seconds": 649.23,
+      "total_coverage_percent": 94.61,
+      "patch_coverage_percent": 97,
+      "project_floor": 89,
+      "patch_floor": 90
+    },
+    "package_floors": {
+      "api": {
+        "actual": 88,
+        "floor": 86
+      },
+      "agents": {
+        "actual": 96,
+        "floor": 92
+      },
+      "security": {
+        "actual": 100,
+        "floor": 97
+      },
+      "eval": {
+        "actual": 95,
+        "floor": 91
+      }
+    },
+    "focused": {
+      "passed": 174,
+      "seconds": 110.83,
+      "new_modules_coverage": 96.49,
+      "operation_routes_coverage": 100,
+      "measurement_reuse_coverage": 95,
+      "programme_amendment_coverage": 96
+    },
+    "make test-e2e": {
+      "passed": 53,
+      "seconds": 15.54
+    },
+    "make simulate-research": {
+      "succeeded": 20,
+      "errored": 0,
+      "new_usd": "0.0000"
+    },
+    "registry_parity": {
+      "objects": 260,
+      "mismatches": 0
+    },
+    "mypy src": {
+      "source_files": 192,
+      "errors": 0
+    },
+    "ruff": {
+      "status": "passed"
+    },
+    "documented_claims_and_repo_hygiene": {
+      "passed": 66,
+      "seconds": 11.68
+    }
+  },
+  "frontend_source_changed": false,
+  "local_frontend_rerun": false,
+  "remote_CI": "Pending exact publication head; FINAL-PUBLICATION.json will bind completion separately"
+}

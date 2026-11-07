@@ -1,0 +1,22 @@
+{
+  "verified_read_only": true,
+  "active_database": "workspace_d5_contract_v4_validation",
+  "programme_jobs": 7,
+  "Messages": 10,
+  "counts": 24,
+  "known_usd": "0.125611",
+  "unknown_usd": "0",
+  "pending_usd": "0",
+  "active_limits": {
+    "usd": "10",
+    "counts": 80,
+    "messages": 80,
+    "new_jobs": 20,
+    "concurrency": 1
+  },
+  "history_digest": "e76cada076af77ab6d7a9691d3c1a81be55949c4dc28248157b94a44d6645892",
+  "amendment_table_exists": false,
+  "failed_v3_identity_and_contact_checkpoints_preserved": true,
+  "source_unchanged": true,
+  "new_provider_contacts": 0
+}

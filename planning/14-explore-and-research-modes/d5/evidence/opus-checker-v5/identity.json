@@ -1,0 +1,16 @@
+{
+  "packet_digest": "85afa214bd4634ca27e668470257b9ecb53b2dfe87fa018ec17856e46729b35b",
+  "application_commit": "04945c61454f57b8597255587537db068951b12d",
+  "amendment_proposal_digest": "ef06dd6b87a565a205e722bfcf0062a102f345ead435095aaff2a3f65684943b",
+  "amendment_active_in_real_ledger": false,
+  "reused": [
+    "measure-1",
+    "measure-2",
+    "measure-3",
+    "measure-4"
+  ],
+  "fresh_counts_required": [],
+  "actual_new_Messages": 0,
+  "actual_new_counts": 0,
+  "actual_new_spend_usd": "0"
+}

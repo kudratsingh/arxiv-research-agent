@@ -1,0 +1,321 @@
+{
+  "packet_digest": "85afa214bd4634ca27e668470257b9ecb53b2dfe87fa018ec17856e46729b35b",
+  "requests": [
+    {
+      "id": "measure-1",
+      "source_case": "dev-learn",
+      "model": "claude-sonnet-5-5",
+      "thinking": {
+        "type": "between_tools"
+      },
+      "effort": "medium",
+      "historical_count": 2568,
+      "measured_allowance": 16000,
+      "old_packet_digest": "f21f4b66e1eb99ab75c7c242a9bfa46acb78ccabc13fb885477e8160425fd95a",
+      "old_authorization_digest": "4cf27095e8ca36a5b3b1fb893ac4b16ee8d00a1370b0fc5f203747269620f32a",
+      "old_job_id": "gen-851991b06fbb1a0f27824b39bffe360f22624cdb",
+      "old_count_request_digest": "e3c3f6a1a4d75d3084a6e7579c8a691f105f057f81b8cfa2d0669ccb87820d1b",
+      "successor_count_request_digest": "e3c3f6a1a4d75d3084a6e7579c8a691f105f057f81b8cfa2d0669ccb87820d1b",
+      "old_generation_request_digest": "adc64697af3f8dc666a073acf756e5ddd488d018991ea56f990aa0c5fd8d8db6",
+      "successor_generation_request_digest": "adc64697af3f8dc666a073acf756e5ddd488d018991ea56f990aa0c5fd8d8db6",
+      "old_receipt_digest": "baaf578ef4981a42d9707f54a9a7b8fb8bcced4466754ebbcfd8f75c354c60be",
+      "binding": {
+        "model": "claude-sonnet-5-5",
+        "prompt_revision": "workspace-d5-qualification-v1",
+        "candidate_wire_digest": "adc64697af3f8dc666a073acf756e5ddd488d018991ea56f990aa0c5fd8d8db6",
+        "settings": {
+          "input_tokens": 20000,
+          "output_tokens": 4000,
+          "timeout_seconds": 30,
+          "response_bytes": 131072,
+          "max_calls": 1,
+          "max_repairs": 0,
+          "price_estimate_usd_per_million": {
+            "input": "2",
+            "output": "10",
+            "verified_at": "2026-11-06"
+          },
+          "selection": {
+            "span_ids": [
+              "span-b615625987cdbfe74682109ab6dc0e19"
+            ],
+            "material_ids": [
+              "mat-2b7a38f3cfa1449f7728f044688ca2c2"
+            ]
+          }
+        },
+        "sealed_settings": {
+          "effort": "medium",
+          "thinking": {
+            "type": "between_tools"
+          },
+          "max_repairs": 1,
+          "temperature": null,
+          "structured_outputs": true
+        },
+        "sources": [
+          {
+            "scope": "excerpt",
+            "work_id": "arxiv:2210.03629",
+            "version_id": "arxiv:2210.03629:v3",
+            "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+            "content_hash": "sha256:196be15c138fb6e551d2641473fee7b175fca7f4dcb0d0f5a171ee103ba57e16"
+          }
+        ],
+        "units_digest": "ee49a9ac7999f4a9691b0886591718a545311b0ff51534413df4d7d0f86dd5c4",
+        "version_hashes": {
+          "arxiv:2210.03629:v3": "d816508359f2e74c2e4d1cf5b724d241a9e9f4f229e383627edd0d39fd03f88f"
+        },
+        "schema_digest": "cc4e6b9901b3403fa94bf6d73a7e589e7e2346391f57c4915e5ec31549818f25"
+      },
+      "exact_body_equal": true,
+      "exact_model_settings_schema_source_selection_equal": true,
+      "new_count_contacts": 0
+    },
+    {
+      "id": "measure-2",
+      "source_case": "dev-compare",
+      "model": "claude-sonnet-5-5",
+      "thinking": {
+        "type": "between_tools"
+      },
+      "effort": "medium",
+      "historical_count": 3753,
+      "measured_allowance": 16000,
+      "old_packet_digest": "f21f4b66e1eb99ab75c7c242a9bfa46acb78ccabc13fb885477e8160425fd95a",
+      "old_authorization_digest": "4cf27095e8ca36a5b3b1fb893ac4b16ee8d00a1370b0fc5f203747269620f32a",
+      "old_job_id": "gen-67617f529186d6472ea5f07462ca3b28df8594f6",
+      "old_count_request_digest": "95aafbd0b81c6efb2251c10127183e8d63f83156283bf810dd854f1f2905e497",
+      "successor_count_request_digest": "95aafbd0b81c6efb2251c10127183e8d63f83156283bf810dd854f1f2905e497",
+      "old_generation_request_digest": "d540b44b7bceb3566101bfda6f800c06dd3a496eacc6b49613466a30a3d4e331",
+      "successor_generation_request_digest": "d540b44b7bceb3566101bfda6f800c06dd3a496eacc6b49613466a30a3d4e331",
+      "old_receipt_digest": "220b69cbc02d3028bd8203d73e28fdd9b1dbfaba303c26d2ad0d8f2de74d7a9c",
+      "binding": {
+        "model": "claude-sonnet-5-5",
+        "prompt_revision": "workspace-d5-qualification-v1",
+        "candidate_wire_digest": "d540b44b7bceb3566101bfda6f800c06dd3a496eacc6b49613466a30a3d4e331",
+        "settings": {
+          "input_tokens": 20000,
+          "output_tokens": 4000,
+          "timeout_seconds": 30,
+          "response_bytes": 131072,
+          "max_calls": 1,
+          "max_repairs": 0,
+          "price_estimate_usd_per_million": {
+            "input": "2",
+            "output": "10",
+            "verified_at": "2026-11-06"
+          },
+          "selection": {
+            "span_ids": [
+              "span-55b2971cd5f40c431b738813c7ef10cd",
+              "span-f021c711415ab7488317517d7cbe41d5"
+            ],
+            "material_ids": [
+              "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+              "mat-f98fbd73f423776117f60cac36edc90a"
+            ]
+          }
+        },
+        "sealed_settings": {
+          "effort": "medium",
+          "thinking": {
+            "type": "between_tools"
+          },
+          "max_repairs": 1,
+          "temperature": null,
+          "structured_outputs": true
+        },
+        "sources": [
+          {
+            "scope": "excerpt",
+            "work_id": "arxiv:2210.03629",
+            "version_id": "arxiv:2210.03629:v3",
+            "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+            "content_hash": "sha256:196be15c138fb6e551d2641473fee7b175fca7f4dcb0d0f5a171ee103ba57e16"
+          },
+          {
+            "scope": "excerpt",
+            "work_id": "arxiv:2310.11511",
+            "version_id": "arxiv:2310.11511:v1",
+            "material_id": "mat-f98fbd73f423776117f60cac36edc90a",
+            "content_hash": "sha256:99202ba231c19f02bb313bccfd65015534e23b9202611b09a16ba6b2b0590310"
+          }
+        ],
+        "units_digest": "2b8dc28f99c584ee7800a9d5efd7a30766a27cda9ba2a082d6b96093a698c38d",
+        "version_hashes": {
+          "arxiv:2210.03629:v3": "d816508359f2e74c2e4d1cf5b724d241a9e9f4f229e383627edd0d39fd03f88f",
+          "arxiv:2310.11511:v1": "2abdf85aaa8a79285bb62cb626c09065da880b8da7efc449be8a9022e5de8b9d"
+        },
+        "schema_digest": "90ad3ef22214efc6db025747ffff9e84701a20dff49f9b4401c04edc8ed85396"
+      },
+      "exact_body_equal": true,
+      "exact_model_settings_schema_source_selection_equal": true,
+      "new_count_contacts": 0
+    },
+    {
+      "id": "measure-3",
+      "source_case": "research-retrieval",
+      "model": "claude-sonnet-5-5",
+      "thinking": {
+        "type": "between_tools"
+      },
+      "effort": "medium",
+      "historical_count": 3718,
+      "measured_allowance": 16000,
+      "old_packet_digest": "f21f4b66e1eb99ab75c7c242a9bfa46acb78ccabc13fb885477e8160425fd95a",
+      "old_authorization_digest": "4cf27095e8ca36a5b3b1fb893ac4b16ee8d00a1370b0fc5f203747269620f32a",
+      "old_job_id": "gen-9f76d047e060eda8e8caed7a119fd78d67d832d1",
+      "old_count_request_digest": "e2e3f651ce7484a14fd2de755511d4c83b330726a45f8f719594ebe1661a2f49",
+      "successor_count_request_digest": "e2e3f651ce7484a14fd2de755511d4c83b330726a45f8f719594ebe1661a2f49",
+      "old_generation_request_digest": "bdd2a1415f08cc4ad1cca9b95008e64242effb348a97c87924bbda472ea09292",
+      "successor_generation_request_digest": "bdd2a1415f08cc4ad1cca9b95008e64242effb348a97c87924bbda472ea09292",
+      "old_receipt_digest": "9ec8825a2659bc9acc12b2a269f2dd1420c78727b355b0ae59c351973c907546",
+      "binding": {
+        "model": "claude-sonnet-5-5",
+        "prompt_revision": "workspace-d5-qualification-v1",
+        "candidate_wire_digest": "bdd2a1415f08cc4ad1cca9b95008e64242effb348a97c87924bbda472ea09292",
+        "settings": {
+          "input_tokens": 20000,
+          "output_tokens": 4000,
+          "timeout_seconds": 30,
+          "response_bytes": 131072,
+          "max_calls": 1,
+          "max_repairs": 0,
+          "price_estimate_usd_per_million": {
+            "input": "2",
+            "output": "10",
+            "verified_at": "2026-11-06"
+          },
+          "selection": {
+            "span_ids": [
+              "span-0bb2e4eacf688b11bbeee4fd8fc02305",
+              "span-6e05d19768ccb5f09cbbbbd979e4bd9e"
+            ],
+            "material_ids": [
+              "mat-3d7daff77ffce12e7f3ebd3ca37934de",
+              "mat-a722330404855072b6b7fb9b13004998"
+            ]
+          }
+        },
+        "sealed_settings": {
+          "effort": "medium",
+          "thinking": {
+            "type": "between_tools"
+          },
+          "max_repairs": 1,
+          "temperature": null,
+          "structured_outputs": true
+        },
+        "sources": [
+          {
+            "scope": "abstract",
+            "work_id": "arxiv:2610.40940",
+            "version_id": "arxiv:2610.40940:v1:metadata-21d8200059afcd01",
+            "material_id": "mat-3d7daff77ffce12e7f3ebd3ca37934de",
+            "content_hash": "sha256:acafda3ce7de85f593c3732ae1bebf389717c5e8eea9d18facbed1390c48040e"
+          },
+          {
+            "scope": "abstract",
+            "work_id": "arxiv:2610.40966",
+            "version_id": "arxiv:2610.40966:v1:metadata-55c0a56c8750035c",
+            "material_id": "mat-a722330404855072b6b7fb9b13004998",
+            "content_hash": "sha256:b929d3b9734f6365c048fe572adf30c3c13dd66b61f742e2086cd6ca04ccad27"
+          }
+        ],
+        "units_digest": "e4abb3ca960e73ed8cde0728dd96a55489e922322796a9f5830fe784a38f879c",
+        "version_hashes": {
+          "arxiv:2610.40940:v1:metadata-21d8200059afcd01": "0042d5a7f98d8b306efccbb4d8d87541db6f0a1bdad84cb9485cabfb88f02843",
+          "arxiv:2610.40966:v1:metadata-55c0a56c8750035c": "4e506c536aa07891f80b304de68f55105805de7d1dfb4ecc89431dd1fa7d09ab"
+        },
+        "schema_digest": "e5c05f0e607aa7e0292f545ea5ea53bd2173ebf44e4b063323f5b28b4b705ef9"
+      },
+      "exact_body_equal": true,
+      "exact_model_settings_schema_source_selection_equal": true,
+      "new_count_contacts": 0
+    },
+    {
+      "id": "measure-4",
+      "source_case": "research-insufficient",
+      "model": "claude-sonnet-5-5",
+      "thinking": {
+        "type": "between_tools"
+      },
+      "effort": "medium",
+      "historical_count": 3364,
+      "measured_allowance": 16000,
+      "old_packet_digest": "f21f4b66e1eb99ab75c7c242a9bfa46acb78ccabc13fb885477e8160425fd95a",
+      "old_authorization_digest": "4cf27095e8ca36a5b3b1fb893ac4b16ee8d00a1370b0fc5f203747269620f32a",
+      "old_job_id": "gen-7187c1ef62b567113806c01509f15742ec635be6",
+      "old_count_request_digest": "b81353c47fe4bed827b636b3c4144ffabc1c18e42198aefa8a3a6f8722163bb9",
+      "successor_count_request_digest": "b81353c47fe4bed827b636b3c4144ffabc1c18e42198aefa8a3a6f8722163bb9",
+      "old_generation_request_digest": "1d626503c832b67d015b859653bb59fa2d2629958bb1147417eed6f539bd6ec2",
+      "successor_generation_request_digest": "1d626503c832b67d015b859653bb59fa2d2629958bb1147417eed6f539bd6ec2",
+      "old_receipt_digest": "c34d174b91fd30fe4276abeb5ca16249cc7055f945122994d5ed3ee25386aacb",
+      "binding": {
+        "model": "claude-sonnet-5-5",
+        "prompt_revision": "workspace-d5-qualification-v1",
+        "candidate_wire_digest": "1d626503c832b67d015b859653bb59fa2d2629958bb1147417eed6f539bd6ec2",
+        "settings": {
+          "input_tokens": 20000,
+          "output_tokens": 4000,
+          "timeout_seconds": 30,
+          "response_bytes": 131072,
+          "max_calls": 1,
+          "max_repairs": 0,
+          "price_estimate_usd_per_million": {
+            "input": "2",
+            "output": "10",
+            "verified_at": "2026-11-06"
+          },
+          "selection": {
+            "span_ids": [
+              "span-3fd278aadaa92873179ed21c075ab368",
+              "span-d851104d65a3eee8be5928bc37e9dd7b"
+            ],
+            "material_ids": [
+              "mat-54f2f6e0645f499458d5030d06e35a59",
+              "mat-57a15743d7b145d492ea35b8ba375944"
+            ]
+          }
+        },
+        "sealed_settings": {
+          "effort": "medium",
+          "thinking": {
+            "type": "between_tools"
+          },
+          "max_repairs": 1,
+          "temperature": null,
+          "structured_outputs": true
+        },
+        "sources": [
+          {
+            "scope": "abstract",
+            "work_id": "arxiv:2610.41482",
+            "version_id": "arxiv:2610.41482:v1:metadata-e5c832a06d88973f",
+            "material_id": "mat-54f2f6e0645f499458d5030d06e35a59",
+            "content_hash": "sha256:a1e2d03e8e9d1c84b615b075c16a309c69499e3fa466b8502a8ae63cc36aca32"
+          },
+          {
+            "scope": "abstract",
+            "work_id": "arxiv:2610.41022",
+            "version_id": "arxiv:2610.41022:v1:metadata-1d7490e908ceb729",
+            "material_id": "mat-57a15743d7b145d492ea35b8ba375944",
+            "content_hash": "sha256:5dd9405d86d7288126973545bb42e14f411b25d70cc7bfedd62c2b19c9361a58"
+          }
+        ],
+        "units_digest": "ee69f4856defaadd8321e735d9e782fd08d74f3254f0ef851a4674c30ed3fd30",
+        "version_hashes": {
+          "arxiv:2610.41022:v1:metadata-1d7490e908ceb729": "4e54f4d95a63a5762dfc88e8bd41734495118ffa8b15a046f64ad4b6dded0092",
+          "arxiv:2610.41482:v1:metadata-e5c832a06d88973f": "bb49d5025b5fb9fa73de33326d928985b353d44178a8476ebada305f3edd242f"
+        },
+        "schema_digest": "422b61c658ce393d2e7b43acf52dbc2e735928c16f696c7e3730a45cb6183e36"
+      },
+      "exact_body_equal": true,
+      "exact_model_settings_schema_source_selection_equal": true,
+      "new_count_contacts": 0
+    }
+  ],
+  "fresh_counts_required": [],
+  "opus_fit": "UNMEASURED; every actual Opus check/recheck/probe requires its own paired count"
+}

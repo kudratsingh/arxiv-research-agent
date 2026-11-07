@@ -326,3 +326,30 @@ Paid dispatch, including counts, is stopped. Historical estimate$0.109967,
 9Messages/15counts/6jobs,unknown0; closed approval; q01 development, q02–q04
 failed, q05–q10 unrun. Everyday generation and recurrence remain disabled.
 Stable local full gate:6536passed/54inherited skips, 96.06%overall,97%patch; all package floors passed. [Evidence index](d5/evidence/contract-repair-v4/README.md). Remote exact-head CI is recorded in outputs/d5/contract-repair-v4/FINAL-PUBLICATION.json.
+
+## D5 v5 Opus High candidate — offline, 2026-11-06 Pacific
+
+Application `04945c61454f57b8597255587537db068951b12d`, based on published1e7dd0c/v4A.
+[Candidate packet](d5/d5-system-validation-v5.json.gz) `85afa214bd4634ca27e668470257b9ecb53b2dfe87fa018ec17856e46729b35b`.
+Sonnet5.5 between_tools/medium draft/repair; Opus5.5 adaptive/high3200output for
+check/recheck/all D probes. Exact four v4 Sonnet A request/receipt bindings reuse
+2568/3753/3718/3364 estimates, no fresh preliminary counts. Opus fit/quality remains
+unmeasured. [Evidence](d5/evidence/opus-checker-v5/README.md), [proposal](d5/PAID-VALIDATION-PROPOSAL.md).
+
+174focused tests passed; new operation routing100%, measurement reuse95%, programme
+amendment96% coverage. Existing workflow/e2e53pass, research simulation20/20USD0,
+registry260/0, mypy192files and ruffpass. Full local gate6615passed/54skipped,94.61%total/97%patch;
+all package floors passed; documentation66/66. Exact published-head CI follows
+separately in the evidence receipt. Entire14-job schedule replays in disposable
+Postgres/MockTransport with44mocked Messages/44mocked paired counts; qualityHOLD,
+human labels blank, checker_qualified=false. No browser/source/UI contract changes.
+
+Versioned20→21 amendment is a **separate unapproved decision**, original programme
+cap remains20. Active real ledger read-only verified7programme jobs/10Messages/
+24counts/estimatedUSD0.125611, pending/unknown0; stopped v3 job/receipts retained.
+Full proposed usage boundUSD5.056, reservationUSD5.10; with history+USD1buffer,
+USD6.225611 reserved ceiling belowUSD10. Prospective per-jobUSD0.45 and probeUSD0.15
+require explicit new approval. Proposed B-only2jobs/8Messages/8paired counts/USD0.90;
+C8jobs and D4batches separately gated. No provider/key/count contact or spend in this
+batch, no live amendment/scope recorded; original pointer/owner3137/review3178 and
+previews preserved. Everyday generation, recurrence and notifications remain off.

@@ -1,0 +1,79 @@
+{
+  "packet_digest": "85afa214bd4634ca27e668470257b9ecb53b2dfe87fa018ec17856e46729b35b",
+  "application_commit": "04945c61454f57b8597255587537db068951b12d",
+  "simulated_workflows_completed": 10,
+  "probe_batches": 4,
+  "mock_Messages": 44,
+  "mock_counts": 44,
+  "programme_jobs_after_mock_schedule": 21,
+  "actual_provider_contacts": 0,
+  "new_spend_usd": "0",
+  "acceptance": "HOLD: generated_fact_review_minimum_not_met, adversarial_review_minimum_not_met, checker_false_pass_denominator_missing, required_case_or_claim_reviews_missing (unreviewed)",
+  "human_labels": null,
+  "checker_qualified": false,
+  "active_amendment": false,
+  "baseline": {
+    "database": "workspace_d5_contract_v4_validation",
+    "programme_jobs": 7,
+    "programme_job_cap": 20,
+    "Messages": 10,
+    "counts": 24,
+    "estimated_usd": "0.125611",
+    "pending_usd": "0",
+    "unknown_usd": "0"
+  },
+  "unchanged_limits": {
+    "cumulative_usd": "10",
+    "Messages": 80,
+    "counts": 80,
+    "concurrency": 1
+  },
+  "rates": {
+    "revision": "d5-sonnet-opus-high-v1",
+    "draft_repair": {
+      "model": "claude-sonnet-5-5",
+      "thinking": {
+        "type": "between_tools"
+      },
+      "effort": "medium",
+      "input_tokens": 20000,
+      "output_tokens": 4000,
+      "prices": {
+        "input": "2",
+        "output": "10",
+        "verified_at": "2026-11-06"
+      }
+    },
+    "check_recheck_probe": {
+      "model": "claude-opus-5-5",
+      "thinking": {
+        "type": "adaptive"
+      },
+      "effort": "high",
+      "input_tokens": 20000,
+      "output_tokens": 3200,
+      "prices": {
+        "input": "4",
+        "output": "20",
+        "verified_at": "2026-11-06"
+      }
+    }
+  },
+  "budget": {
+    "Sonnet_call_usd": "0.080",
+    "Opus_call_usd": "0.144",
+    "complete_workflow_usd": "0.448",
+    "workflow_reservation_usd": "0.45",
+    "probe_reservation_usd": "0.15",
+    "B_usage_bound_usd": "0.896",
+    "B_reservation_usd": "0.90",
+    "C_usage_bound_usd": "3.584",
+    "C_reservation_usd": "3.60",
+    "D_usage_bound_usd": "0.576",
+    "D_reservation_usd": "0.60",
+    "BD_usage_bound_usd": "5.056",
+    "BD_reservation_usd": "5.10",
+    "with_history_and_buffer_usage_usd": "6.181611",
+    "with_history_and_buffer_reservation_usd": "6.225611"
+  }
+}
