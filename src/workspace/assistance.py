@@ -23,9 +23,12 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from src.llm import RequestProfile, _build_request_kwargs
 from src.workspace.assistance_contract import (
+    CITED_REVISION,
     MAX_DRAFT_BYTES,
+    RESEARCH_REVISION,
     REVISION,
     coherent_units,
+    contract_revision,
     digest,
     resolve_draft,
     response_purpose,
@@ -136,6 +139,16 @@ class ProseFinding(BaseModel):
 
 
 class Checks(BaseModel):
+    """Local semantic limits remain mandatory: at most 8000 UTF-8 response
+    bytes; each claim input digest and ID must exactly match the supplied
+    claim_inputs, with no missing/duplicate/unknown verdicts. Prose locations
+    must exist and be nonblank. List fields use an existing index 0..2;
+    scalars require null. No duplicate locations. procedural_only requires
+    no findings; unscored_factual_content/abstain require located findings.
+    Reasons are 1..240 Unicode characters; at most six claim verdicts and
+    ten prose findings. Identity and quotes alone are never semantic support.
+    """
+
     model_config = ConfigDict(extra="forbid", frozen=True)
     checks: tuple[Verdict, ...] = Field(max_length=6)
     prose_review: Literal["procedural_only", "unscored_factual_content", "abstain"]
@@ -289,7 +302,7 @@ class AssistanceExecutor(FakeExecutor):
                 raise ValueError("follow_up_requires_completed_owned_assistance")
         request = preview.request.copy()
         request.update(
-            schema_revision=REVISION,
+            schema_revision=contract_revision(response_purpose(selection.mode, chosen)),
             producer={"contract": REVISION, "code": producer_binding()},
             assistance=selection.model_dump(mode="json"),
             project_context={
@@ -510,6 +523,8 @@ class LocalAssistanceTransport(FakeProvider):
                 if claims
                 else "No sufficiently short complete claim is available in the selected units.",
             }
+            if research:
+                payload["gaps"] = ["full_text", "source_scope"]
             if not research:
                 payload.pop("comparison_claims")
                 payload.pop("comparison_basis")
@@ -733,7 +748,7 @@ class AssistanceService:
 
     def get(self, owner: str, job_id: str) -> dict[str, Any]:
         job = self.executor.get(owner, job_id)
-        if job.request.get("schema_revision") != REVISION:
+        if job.request.get("schema_revision") not in {REVISION, RESEARCH_REVISION, CITED_REVISION}:
             raise ValueError("assistance_job_unavailable")
         with self.store.pool.connection() as conn:
             rows = conn.execute(
@@ -803,8 +818,8 @@ class AssistanceService:
         self.executor._owner(owner)
         with self.store.pool.connection() as conn:
             rows = conn.execute(
-                "SELECT id FROM workspace_fake_generation_jobs WHERE owner=%s AND request->>'schema_revision'=%s AND request->'assistance'->>'work_id'=%s AND request->'assistance'->>'version_id'=%s ORDER BY created_at DESC LIMIT 20",
-                (owner, REVISION, work, version),
+                "SELECT id FROM workspace_fake_generation_jobs WHERE owner=%s AND request->>'schema_revision'=ANY(%s) AND request->'assistance'->>'work_id'=%s AND request->'assistance'->>'version_id'=%s ORDER BY created_at DESC LIMIT 20",
+                (owner, [REVISION, RESEARCH_REVISION, CITED_REVISION], work, version),
             ).fetchall()
         return [self.get(owner, row[0]) for row in rows]
 

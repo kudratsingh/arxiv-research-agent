@@ -27,8 +27,9 @@ from src.workspace.admission import (
 )
 from src.workspace.assistance import CANDIDATE_MODEL, Checks, build_wire, producer_binding
 from src.workspace.assistance_contract import (
-    REVISION,
     coherent_units,
+    contract_revision,
+    render_gaps,
     resolve_draft,
     response_purpose,
     schemas,
@@ -321,7 +322,8 @@ class D5Adapter(QualificationAdapter):
                 if probe_route
                 else {"input": "2", "output": "10", "verified_at": "2026-11-06"}
             )
-            or sealed.get("schema_revision") != REVISION
+            or sealed.get("schema_revision")
+            != contract_revision(response_purpose(sealed["assistance"]["mode"], sealed["units"]))
             or sealed.get("producer", {}).get("code") != producer_binding()
         ):
             raise AdmissionError("d5_settings_schema_or_producer_drift")
@@ -509,6 +511,7 @@ class D5Adapter(QualificationAdapter):
                     )
                     if k in workflow
                 }
+                value["unscored_prose"]["gaps"] = render_gaps(workflow["gaps"])
             else:
                 checked = self._checks(
                     {
@@ -634,7 +637,7 @@ class D5Adapter(QualificationAdapter):
                 else [],
                 "questions": list(draft.questions),
                 "proposed_actions": [draft.proposal] if draft.proposal else [],
-                "limitations": list(draft.gaps),
+                "limitations": render_gaps(draft.gaps),
             }
         )
 

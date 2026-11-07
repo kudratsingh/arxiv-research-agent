@@ -197,6 +197,14 @@ async def run(
                             continue
                         if not row or row[0] != "ready":
                             raise AdmissionError("d5_previous_stage_not_complete")
+                        if previous == "B" and packet.get("require_supported_development"):
+                            assessments = (row[1] or {}).get("grounding", {}).get("assessments", [])
+                            if not assessments or any(
+                                item.get("decision") != "supported"
+                                or item.get("identity_resolved") is not True
+                                for item in assessments
+                            ):
+                                raise AdmissionError("d5_successful_development_evidence_required")
                         if previous == "A" and (
                             not isinstance(row[1].get("input_tokens"), int)
                             or row[1]["input_tokens"] > 16000

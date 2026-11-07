@@ -15,7 +15,7 @@ from src.workspace.assistance import build_wire
 OPUS_LIMITS: dict[str, Any] = {
     "jobs": 14,
     "messages": 44,
-    "counts": 48,
+    "counts": 45,
     "usd": "10",
     "concurrency": 1,
     "workflow_usd": "0.45",

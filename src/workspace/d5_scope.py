@@ -84,6 +84,32 @@ def stage_authorizations(
     return allowed
 
 
+def require_development(conn: Any, scope_id: str, cases: dict[str, Any]) -> None:
+    """Machine development success is a prerequisite, never human qualification."""
+    required = {key: value for key, value in cases.items() if value["stage"] == "B"}
+    if not required:
+        raise AdmissionError("d5_successful_development_evidence_required")
+    for key, entry in required.items():
+        row = conn.execute(
+            "SELECT j.state,j.data->'result',r.input_digest FROM workspace_d5_case_runs r JOIN workspace_generation_jobs j ON j.id=r.job_id WHERE r.scope_id=%s AND r.case_id=%s",
+            (scope_id, key),
+        ).fetchone()
+        assessments = (row[1] or {}).get("grounding", {}).get("assessments", []) if row else []
+        if (
+            not row
+            or row[0] != "ready"
+            or row[2] != entry["input_digest"]
+            or not assessments
+            or any(
+                a.get("decision") != "supported"
+                or a.get("identity_resolved") is not True
+                or a.get("scope_compatible") is not True
+                for a in assessments
+            )
+        ):
+            raise AdmissionError("d5_successful_development_evidence_required")
+
+
 def scope(
     conn: Any, owner: str, inputs: dict[str, Any], policy: dict[str, Any], now: datetime
 ) -> dict[str, Any]:
@@ -151,6 +177,8 @@ def scope(
         raise AdmissionError("d5_case_not_externally_authorized")
     if case.get("stage") not in allowed:
         raise AdmissionError("d5_stage_not_authorized")
+    if case.get("stage") == "C":
+        require_development(conn, scope_id, cases)
     return {
         **data,
         "id": scope_id,

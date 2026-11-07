@@ -159,6 +159,10 @@ def install(store: WorkspaceStore, captured: dict[str, Any], *, fixture: bool) -
                         {
                             "synthetic_authorization_only": True,
                             "snapshot_history_digest": captured["history"]["history_digest"],
+                            "historical_successor_authorizations": [
+                                r["authorization_digest"]
+                                for r in captured.get("recorded_successor_amendments", [])
+                            ],
                             "historical_amendment_authorizations": [
                                 r["authorization_digest"]
                                 for r in captured.get("recorded_amendments", [])
@@ -176,6 +180,18 @@ def install(store: WorkspaceStore, captured: dict[str, Any], *, fixture: bool) -
                 "INSERT INTO workspace_programme_amendments SELECT * FROM jsonb_populate_record(NULL::workspace_programme_amendments,%s)",
                 (Jsonb(amendment),),
             )
+        for name, key in (
+            ("workspace_programme_successor_amendments", "recorded_successor_amendments"),
+            ("workspace_d5_scopes", "historical_scopes"),
+            ("workspace_d5_stage_authorizations", "historical_stage_grants"),
+        ):
+            for receipt in captured.get(key, []):
+                conn.execute(
+                    sql.SQL(
+                        "INSERT INTO {} SELECT * FROM jsonb_populate_record(NULL::{},%s)"
+                    ).format(sql.Identifier(name), sql.Identifier(name)),
+                    (Jsonb(receipt),),
+                )
         for owner in (RUN_OWNER, COUNT_OWNER):
             conn.execute(
                 "INSERT INTO workspace_profiles VALUES(%s,1,%s)",

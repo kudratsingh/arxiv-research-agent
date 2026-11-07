@@ -32,3 +32,11 @@ describe("scored section references", () => {
     history.replaceState(null,"",location.pathname);
   });
 });
+
+// Evidence-request codes are rendered locally; historical prose stays verbatim.
+it("renders prospective evidence requests and preserves historical gap text", () => {
+  render(<ScoredSections output={{ ...output, gaps: ["evaluation", "ablations", "Historical retained gap"] }} prefix="job" />);
+  expect(screen.getByText("Request evaluation sections, benchmarks, baselines and metrics from each selected source.")).toBeInTheDocument();
+  expect(screen.getByText("Request ablations and controlled comparisons from each selected source.")).toBeInTheDocument();
+  expect(screen.getByText("Historical retained gap")).toBeInTheDocument();
+});

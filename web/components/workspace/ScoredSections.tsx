@@ -3,6 +3,15 @@ import { useEffect } from "react";
 import { settleReaderTarget } from "@/lib/workspace/navigation";
 
 /** Sections reference the same scored claim and citation; never new factual prose. */
+const evidenceRequests: Record<string, string> = {
+  methods: "Request the original methods and implementation details.",
+  evaluation: "Request evaluation sections, benchmarks, baselines and metrics from each selected source.",
+  ablations: "Request ablations and controlled comparisons from each selected source.",
+  full_text: "Request the relevant full-text sections before drawing further conclusions.",
+  counterevidence: "Search for and inspect evidence that could challenge the interpretation.",
+  source_scope: "Inspect source access scope and unavailable passages before making broader claims.",
+};
+
 export function ScoredSections({ output, prefix }: { output: AssistanceOutput; prefix: string }) {
   useEffect(() => {
     const target = location.hash.slice(1);
@@ -19,5 +28,5 @@ export function ScoredSections({ output, prefix }: { output: AssistanceOutput; p
   return <>{sections.map(([label, ids]) => ids && ids.length > 0 && <section key={label} aria-label={`${label} claim references`}>
     <h4>{label} · scored claims</h4>
     <ul>{ids.map(id => { const claim = output.claims.find(c => c.claim_id === id); return <li key={id}><a href={`#${prefix}-${id}`}>{id}: {claim?.text ?? "Claim unavailable; inspect the stored result."}</a></li>; })}</ul>
-  </section>)}<h4>Missing evidence · next checks</h4><ul>{output.gaps.map((text, i) => <li key={i}>{text}</li>)}</ul></>;
+  </section>)}<h4>Missing evidence · next checks</h4><ul>{output.gaps.map((text, i) => <li key={i}>{evidenceRequests[text] ?? text}</li>)}</ul></>;
 }

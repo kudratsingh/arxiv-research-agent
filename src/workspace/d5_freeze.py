@@ -36,8 +36,8 @@ from src.workspace.store import WorkspaceStore
 
 REVISION_BENCHMARK = "d5-system-benchmark-v1"
 CLOCK = "2026-11-05T12:00:00+00:00"
-RUN_OWNER = "d5-v6-validation-run"
-COUNT_OWNER = "d5-v6-validation-measure"
+RUN_OWNER = "d5-v7-validation-run"
+COUNT_OWNER = "d5-v7-validation-measure"
 QUESTIONS = (
     (
         "dev-learn",
@@ -94,10 +94,14 @@ def code_bindings() -> dict[str, str]:
         "d5_operations.py",
         "programme_amendments.py",
         "programme_successors.py",
+        "programme_third_amendment.py",
+        "migrations/016_programme_third_amendments.sql",
         "migrations/015_programme_successor_amendments.sql",
         "d5_measurements.py",
         "migrations/014_programme_amendments.sql",
         "d5_benchmark.py",
+        "d5_scope.py",
+        "d5_authorization.py",
         "d5_scoring.py",
         "d5_reviews.py",
         "d5_review_scoring.py",
@@ -124,6 +128,7 @@ def code_bindings() -> dict[str, str]:
         root / "web/components/workspace/AssistancePanel.tsx",
         root / "planning/14-explore-and-research-modes/d5/tools/prepare-opus-v5.py",
         root / "planning/14-explore-and-research-modes/d5/tools/prepare-prose-v6.py",
+        root / "planning/14-explore-and-research-modes/d5/tools/prepare-gap-v7.py",
     ]
     paths += [
         root / name
@@ -500,9 +505,10 @@ def freeze(
             "material_ids": list(sources),
             "span_ids": list(dict.fromkeys(r["span_id"] for r in units.values())),
         }
-        from src.workspace.assistance_contract import response_purpose, schemas
+        from src.workspace.assistance_contract import contract_revision, response_purpose, schemas
 
         sealed["response_purpose"] = response_purpose(sealed["assistance"]["mode"], units)
+        sealed["schema_revision"] = contract_revision(sealed["response_purpose"])
         sealed["response_schemas"] = schemas(list(units), purpose=sealed["response_purpose"])
         claims = []
         for i, c in enumerate(chosen):

@@ -29,7 +29,9 @@ from src.workspace.grounding import (
 from src.workspace.material import SourceMaterial
 
 LEGACY_REVISION = "workspace-assistance-purpose-specific-v2"
-REVISION = "workspace-assistance-cited-sections-v3"
+CITED_REVISION = "workspace-assistance-cited-sections-v3"
+REVISION = "workspace-assistance-visible-bounds-v5"
+RESEARCH_REVISION = "workspace-assistance-evidence-request-codes-v4"
 MAX_UNIT_CHARS = 1600
 MAX_SELECTED_UNITS = 8
 MAX_CLAIMS = 6
@@ -300,21 +302,94 @@ class CitedAssistanceDraft(CitedSinglePaperDraft):
         return self
 
 
+# Research uses bounded codes; Learn retains prose with visible local bounds.
+# Both prospective schemas change; completed v6 evidence stays historical.
+EvidenceRequest = Literal[
+    "methods", "evaluation", "ablations", "full_text", "counterevidence", "source_scope"
+]
+EVIDENCE_REQUESTS = {
+    "methods": "Request the original methods and implementation details.",
+    "evaluation": "Request evaluation sections, benchmarks, baselines and metrics from each selected source.",
+    "ablations": "Request ablations and controlled comparisons from each selected source.",
+    "full_text": "Request the relevant full-text sections before drawing further conclusions.",
+    "counterevidence": "Search for and inspect evidence that could challenge the interpretation.",
+    "source_scope": "Inspect source access scope and unavailable passages before making broader claims.",
+}
+
+
+def render_gaps(gaps: Sequence[str]) -> list[str]:
+    """Render known procedural codes locally; preserve historical prose verbatim."""
+    return [EVIDENCE_REQUESTS.get(value, value) for value in gaps]
+
+
+class VisibleSinglePaperDraft(CitedSinglePaperDraft):
+    """All local semantic limits: unique claim IDs, unique section references,
+    nonblank claim texts and unique selected handles; claims or a nonblank
+    abstention; entire response at most 8000 UTF-8 bytes, including JSON whitespace; normalized JSON also at most 8000 bytes. Each gap/question is
+    nonblank and at most 180 Unicode characters. Every substantive statement
+    must be a cited scored claim; procedural prose is checked too.
+    """
+
+    gaps: tuple[str, ...] = Field(
+        min_length=1,
+        max_length=3,
+        description="One to three nonblank procedural evidence requests, each at most 180 Unicode characters. No scientific findings or presupposed results.",
+    )
+    questions: tuple[str, ...] = Field(
+        min_length=1,
+        max_length=3,
+        description="One to three nonblank neutral questions, each at most 180 Unicode characters. No presupposed findings.",
+    )
+
+
+class EvidenceRequestDraft(CitedAssistanceDraft):
+    """Research-only successor; no free text for procedural evidence requests.
+
+    Local-only semantic constraints: unique c1-c6 IDs and section references;
+    nonblank claims, unique selected handles; independently cited sources for
+    comparison; claims or nonblank abstention; entire response at most 8000 UTF-8 bytes including whitespace; normalized JSON also at most 8000 bytes.
+    Questions must be nonblank, at most 180 Unicode characters each. All prose
+    is checked for hidden factual assertions. No code bypasses factual review.
+    """
+
+    gaps: tuple[EvidenceRequest, ...] = Field(
+        min_length=1,
+        max_length=3,
+        description="One to three evidence-request codes, rendered locally as procedural requests. Use evaluation for missing benchmarks/baselines/metrics; ablations for missing controlled comparisons. Never emit prose here.",
+    )
+    questions: tuple[str, ...] = Field(
+        min_length=1,
+        max_length=3,
+        description="One to three neutral, nonblank questions, each at most 180 Unicode characters. No presupposed findings; all substantive prose is checked.",
+    )
+
+
+def contract_revision(purpose: ResponsePurpose) -> str:
+    return RESEARCH_REVISION if purpose == "research_comparison" else REVISION
+
+
 def response_model(
     handles: Sequence[str],
     *,
     purpose: ResponsePurpose = "research_comparison",
-    revision: str = REVISION,
+    revision: str | None = None,
 ) -> type[SinglePaperDraft] | type[CitedSinglePaperDraft]:
+    revision = revision or contract_revision(purpose)
     # json_schema_extra keeps even a singleton enum after the SDK transform.
     selected = sorted(set(handles))
     if not selected or len(selected) > MAX_SELECTED_UNITS:
         raise ValueError("select_one_to_eight_coherent_units")
     if purpose not in {"single_paper", "research_comparison"}:
         raise ValueError("invalid_response_purpose")
-    if revision not in {REVISION, LEGACY_REVISION, "workspace-assistance-coherent-multicitation-v1"}:
+    if revision not in {
+        REVISION,
+        CITED_REVISION,
+        RESEARCH_REVISION,
+        LEGACY_REVISION,
+        "workspace-assistance-coherent-multicitation-v1",
+    }:
         raise ValueError("unsupported_assistance_contract_revision")
-    legacy = revision != REVISION
+    legacy = revision not in {REVISION, CITED_REVISION, RESEARCH_REVISION}
     identity = digest([selected, purpose] if legacy else [selected, purpose, revision])[7:23]
     factory = cast(Callable[[str, dict[str, str]], type[StrEnum]], StrEnum)
     handle_type = factory(
@@ -334,9 +409,24 @@ def response_model(
     )
     return create_model(
         "D5Draft_" + identity,
+        __doc__=(
+            VisibleSinglePaperDraft.__doc__
+            if purpose == "single_paper"
+            else EvidenceRequestDraft.__doc__
+        )
+        if revision in {REVISION, RESEARCH_REVISION}
+        else None,
         __base__=(SinglePaperDraft if purpose == "single_paper" else AssistanceDraft)
         if legacy
-        else (CitedSinglePaperDraft if purpose == "single_paper" else CitedAssistanceDraft),
+        else (
+            VisibleSinglePaperDraft
+            if purpose == "single_paper" and revision == REVISION
+            else CitedSinglePaperDraft
+            if purpose == "single_paper"
+            else EvidenceRequestDraft
+            if revision == RESEARCH_REVISION
+            else CitedAssistanceDraft
+        ),
         claims=(GenericAlias(tuple, (claim, Ellipsis)), Field(max_length=MAX_CLAIMS)),
     )
 
@@ -345,7 +435,7 @@ def schemas(
     handles: Sequence[str],
     *,
     purpose: ResponsePurpose = "research_comparison",
-    revision: str = REVISION,
+    revision: str | None = None,
 ) -> dict[str, Any]:
     model = response_model(handles, purpose=purpose, revision=revision)
     return {"local": model.model_json_schema(), "wire": transform_schema(model)}
@@ -357,7 +447,7 @@ def resolve_draft(
     materials: Sequence[SourceMaterial],
     *,
     purpose: ResponsePurpose = "research_comparison",
-    revision: str = REVISION,
+    revision: str | None = None,
 ) -> tuple[SinglePaperDraft | CitedSinglePaperDraft, tuple[ResearchClaim, ...]]:
     draft = response_model(list(catalog), purpose=purpose, revision=revision).model_validate(
         payload

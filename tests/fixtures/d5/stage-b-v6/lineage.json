@@ -1,0 +1,15 @@
+{
+  "packet_digest": "7e21713caee474fbafa31d197a754e232a66fac670143e5ddbae5b0ccb90389f",
+  "application_commit": "58f7608921c58beba70a9a3dd2199701f2130709",
+  "published_head": "b54c9fc6a2c3e0ab36b1faf877bf727e8875832e",
+  "original_failed_compare_job_id": "gen-448eff85475394def77c8d0b203b42f4bfe53a3f",
+  "completed_learn_job_id": "gen-6f7631b6a95b2e9ac9746a6cf3c0b4ef0a796c47",
+  "files": {
+    "dev-compare.draft.provider-text.json": "21332bcee8d42a405f7d1f9612077906a4e3ea047f1d41f717e16bf3c200a582",
+    "dev-learn.repair.provider-text.json": "c34f7f9b707421370f7eeb66cc21761c1e94de8680d4774aac69c5bd53e9da34"
+  },
+  "compare_gap": "Request the ReAct and Self-RAG evaluation sections (benchmarks, baselines, metrics, ablations) since the retained excerpts contain only an abstract/introduction snippet and a related-work passage.",
+  "failure": "invalid_bounded_explanation",
+  "compare_raw_response_digest": "93a9f7c7e29aff583081d4122fdb8998ead666d40e415ffbb24c9c8b4566c718",
+  "human_labels": null
+}
