@@ -1,0 +1,77 @@
+{
+  "packet_digest": "cf6b9e4c1e49d0192467bd28d0bae00eb1d05cf85bb850f904902840937fc871",
+  "application_commit": "f430f2d3e7a3a7ae78cacdf92855b8b3294d3c12",
+  "baseline": {
+    "programme_jobs": 10,
+    "Messages": 17,
+    "counts": 35,
+    "estimated_usd": "0.351961",
+    "pending_usd": "0",
+    "unknown_usd": "0"
+  },
+  "actual_provider_contacts": 0,
+  "new_spend_usd": "0",
+  "Stage_A_receipts": {
+    "measure-1": {
+      "original_case": "dev-learn",
+      "old_actual_count": 3069,
+      "historical_job_id": "gen-2836658dfc2d3d1287a90e8fdcece3ad09404dbd",
+      "historical_contact_receipt_digest": "e2a24b1b0383dd360282b6729c1b90cdbd17b8f36037aa98bf97a16d72d3359a",
+      "old_count_body_digest": "e37ac03c9a81a07d1ba5b1320b4eee20e173dbd06a51ddd21fb5a73bebc2a9e7",
+      "new_count_body_digest": "2abd3f266b7b55948efdc47e20423e822f281385513acbc6cca53538189dd79a",
+      "body_matches": false,
+      "reuse_permitted": false,
+      "new_preliminary_contact": false
+    },
+    "measure-2": {
+      "original_case": "dev-compare",
+      "old_actual_count": 4234,
+      "historical_job_id": "gen-9d97fc3fa512695baa130bbf1abe5cb09da9694a",
+      "historical_contact_receipt_digest": "dea090d68e30e874de4b79b0fcfd1ea6f62de2d737a30eddd7c3e2417c70f873",
+      "old_count_body_digest": "d73d6972775b3bbc8fd02271cd7f2c766b9cd19d59d342f3a21b003b6823d59f",
+      "new_count_body_digest": "769f89a172d32289cebfc7645bfabf3e3233f7dad9f4e4c7b34f2da69ef8dfe5",
+      "body_matches": false,
+      "reuse_permitted": false,
+      "new_preliminary_contact": true
+    },
+    "measure-3": {
+      "original_case": "research-retrieval",
+      "old_actual_count": 4234,
+      "historical_job_id": "gen-3ee85c3cd28648a631f434ed4d098882ce8be768",
+      "historical_contact_receipt_digest": "5006f182c413362589b431bb14bcb8f6d7570a6fef2612296b10f11649366a64",
+      "old_count_body_digest": "7a75943a1aa64600247fa26a5e00615954fa0c60b2459ca8710ede46080470d9",
+      "new_count_body_digest": "32a264d5e4dc1e493bb6c498bb13fb7212c749a0b32eac88a3ffe61c58a18422",
+      "body_matches": false,
+      "reuse_permitted": false,
+      "new_preliminary_contact": false
+    },
+    "measure-4": {
+      "original_case": "research-insufficient",
+      "old_actual_count": 3880,
+      "historical_job_id": "gen-7bc1c41bdbfabfb3dd2d36e16d1d7c2a3812cf37",
+      "historical_contact_receipt_digest": "2acef87609d6803e805a92905bf55a7a8f34e81ac46ab668826d9e340aee65bd",
+      "old_count_body_digest": "929b382bedd955af74feda8a8162b2e3c62ab0d94ff2b7c82d61c8eafeb3f805",
+      "new_count_body_digest": "1d9c381098d5f8330a7d957dbf2be48fc7b9f2f47e4579451f44b9fd89a979cd",
+      "body_matches": false,
+      "reuse_permitted": false,
+      "new_preliminary_contact": false
+    }
+  },
+  "Learn": {
+    "old_completed_job_id": "gen-6f7631b6a95b2e9ac9746a6cf3c0b4ef0a796c47",
+    "selected_materials_and_settings_identical": true,
+    "local_schema_digest_before": "38dbbe6075de2fd8c6dac8fa080abbfe73e0e62cd74f5bab557f0219624ab7c2",
+    "local_schema_digest_after": "7b3f0577d3bb9177f41b54dd178bac96279fe0aa33da9cd6e9bcae9c1f5b37e2",
+    "wire_schema_digest_before": "e6628143ffdd8943b349905d5b3a5d0e4a0bff5ee3ea6169adef1a155e09e240",
+    "wire_schema_digest_after": "732767a31335656797ff0380bf390510b67dd68e46dfa3f62e3f3fd907bf1200",
+    "checker_schema_digest_before": "02eeece66617eeed8103d7ec3ea72164801787c2459c2a833d1e3b9fc4716058",
+    "checker_schema_digest_after": "10a476c5486b9d33a79e695132aeeec38a8d72139e48a1d4f83a62a284032623",
+    "new_live_development_required": true
+  },
+  "programme_cap_active": 22,
+  "programme_cap_proposed": 24,
+  "new_A_contacts": 1,
+  "new_paired_contacts_max": 44,
+  "cumulative_counts_max": 80,
+  "historical_failures_preserved": true
+}

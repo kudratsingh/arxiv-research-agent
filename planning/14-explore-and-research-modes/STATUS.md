@@ -1,6 +1,22 @@
 # Two-mode implementation status
 
-## Current D5 v6r2 repair — offline review candidate
+## Current D5 v7r2 — offline contract successor, no live approval
+
+Application **f430f2d3e7a3a7ae78cacdf92855b8b3294d3c12**, primary contract commit4a99ffa22e498ee98751d5eed06c3ad29beab5a9. Packet **cf6b9e4c1e49d0192467bd28d0bae00eb1d05cf85bb850f904902840937fc871**. [Repair/audit](d5/RESPONSE-REPAIR-v7.md), [packet](d5/d5-system-validation-v7r2.json.gz), [bindings](d5/d5-packet-identity-v7r2.json), [runbook](d5/RUNBOOK.md), [separate unapproved proposal](d5/PAID-VALIDATION-PROPOSAL.md), [evidence](d5/evidence/gap-repair-v7r2/README.md).
+
+Real completed v6 Learn, rejected196-character Compare draft, every original result/contact prefix, scope/grant and cap receipt compare unchanged. Current live baseline **10 funded programme jobs /17 Messages /35 counts /USD0.351961 estimated**, pending/unknown0, cap22. No live migration, approval, contact, key read, handoff or spend occurred. The v6 scope remains stopped. Owner3137/review3178 and standalone review previews are preserved; everyday generation, recurrence and notifications remain disabled.
+
+Research uses wire-enforced procedural evidence-request codes rendered locally. Learn and checker schemas disclose previously hidden local bounds, so their requests change too: the old Learn success is historical, not matching new development evidence. Both development cases therefore remain planned. The separate **22→24** proposal **b4436db725310d1d17113c601398e7ad20a79776c38f8877b1e405d2b3fe9e94** stays approved=false and cannot extend **2026-11-14T07:24:01Z (Nov13,23:24:01 PST)**. The conditional Compare-only22→23 option was not sealed because its unchanged-Learn prerequisite failed the schema audit.
+
+All8 C workflows/4 D batches and quality thresholds remain. One preliminary Compare count plus44 exact paired counts fits the cumulative80-count ceiling exactly;4 preliminary counts would reach83 and are not proposed. No old A body matches. The complete schedule needs14 new jobs,44 Messages,45 counts; reservationsUSD5.10 + historyUSD0.351961 + bufferUSD1 = **USD6.451961**. Typed operation capacity corrects the old four-contact reservation for one-call probes; workflows still reserve draft/check/repair/recheck. Initial v7 candidate9cc9bb09 and its refusal remain preserved, followed by the tested v7r2 producer.
+
+Production-adapter MockTransport replay completes2 development +8 fresh workflows +4 probe batches, with44 mocked Messages/45 mocked counts. C without its own grant refuses; ready-but-abstaining development is refused. Original histories remain unchanged. Counts100 and synthetic positive development verdicts are fixtures, not token measurements or quality evidence.12 fresh eligible claims/0 reviewed/0 accepted,0 human probe labels: **qualityHOLD**, checker_qualified=false.20 fact/20 probe review minimums remain unchanged.
+
+Local verification: **6,723 Python passed,54 skipped,53 separate-tier deselected;94.58% total/97% patch**, all package floors pass (API88≥86,agents96≥92,security100≥97,eval95≥91). Focused programme/provenance71pass; new contract/amendment53pass. Frontend4,278pass/220files,94.37%branches≥94; lint/typecheck/build and unchanged route budgets pass. Existing workflowe2e53pass, research simulation20/20USD0, registry260/0. Final standalone95doc checks pass with process permission; the earlier sandbox cleanup warning remains retained. Globalruff and strictmypy194-source files pass. Earlier interrupted/failed logs remain evidence. Exact-head remote CI is pending publication and recorded separately in outputs/d5/gap-repair-v7/FINAL-PUBLICATION.json; local success is not remote green.
+
+Stop for owner review after publication. Next choices: separate cap amendment, then one-count A, then separately approved two-job B; C/D remain separately approved. No previous paid grant is renewed.
+
+## Preserved D5 v6r2 repair checkpoint — superseded after its Stage B stop
 
 Application **58f7608921c58beba70a9a3dd2199701f2130709**, with first repair commit eada0f03da84225234b62bf8954846a174085bac. Candidate packet **7e21713caee474fbafa31d197a754e232a66fac670143e5ddbae5b0ccb90389f**. [Repair report](d5/RESPONSE-REPAIR-v6.md), [runbook](d5/RUNBOOK.md), [unexecuted proposal](d5/PAID-VALIDATION-PROPOSAL.md), [source/request bindings](d5/d5-packet-identity-v6r2.json), [evidence](d5/evidence/prose-repair-v6r2/README.md).
 

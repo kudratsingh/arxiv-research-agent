@@ -1,0 +1,60 @@
+{
+  "application_commit": "f430f2d3e7a3a7ae78cacdf92855b8b3294d3c12",
+  "python_full": {
+    "passed": 6723,
+    "skipped": 54,
+    "separate_e2e_deselected": 53,
+    "coverage_percent": "94.58",
+    "patch_percent": 97,
+    "exit_code": 0
+  },
+  "package_floors": {
+    "api": [
+      88,
+      86
+    ],
+    "agents": [
+      96,
+      92
+    ],
+    "security": [
+      100,
+      97
+    ],
+    "eval": [
+      95,
+      91
+    ]
+  },
+  "focused_programme_and_provenance": {
+    "passed": 71
+  },
+  "contract_and_amendment": {
+    "passed": 53
+  },
+  "frontend": {
+    "passed": 4278,
+    "files": 220,
+    "branch_coverage": "94.37",
+    "branch_floor": 94,
+    "web_tree_unchanged_since": "4a99ffa22e498ee98751d5eed06c3ad29beab5a9",
+    "lint_typecheck_build_budgets": true
+  },
+  "workflow_e2e_passed": 53,
+  "research_simulation": {
+    "passed": 20,
+    "errors": 0,
+    "spend_usd": "0"
+  },
+  "registry": {
+    "objects": 260,
+    "mismatches": 0
+  },
+  "provider_contacts": 0,
+  "token_count_contacts": 0,
+  "new_spend_usd": "0",
+  "remote_CI": "pending exact publication; recorded separately in outputs/d5/gap-repair-v7/FINAL-PUBLICATION.json",
+  "global_mypy_source_files": 194,
+  "global_ruff": true,
+  "final_documentation_passed": 95
+}

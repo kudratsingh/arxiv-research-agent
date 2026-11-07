@@ -1,0 +1,36 @@
+{
+  "actual_new_provider_contacts": 0,
+  "actual_new_spend_usd": "0",
+  "proofs": {
+    "live": {
+      "database": "workspace_d5_prose_v6_validation",
+      "historical_census_unchanged": true,
+      "original_Learn_result_unchanged": true,
+      "original_Compare_failure_unchanged": true,
+      "all_old_scopes_grants_and_cap_receipts_unchanged": true,
+      "v6_scope": "stopped",
+      "effective_job_cap": 22,
+      "programme_jobs": 10,
+      "Messages": 17,
+      "counts": 35,
+      "estimated_usd": "0.351961",
+      "pending_usd": "0",
+      "unknown_usd": "0"
+    },
+    "offline_replay": {
+      "database": "workspace_d5_gap_v7_replay_f430",
+      "historical_census_unchanged": true,
+      "original_Learn_result_unchanged": true,
+      "original_Compare_failure_unchanged": true,
+      "all_old_scopes_grants_and_cap_receipts_unchanged": true,
+      "v6_scope": "stopped",
+      "effective_job_cap": 24,
+      "programme_jobs": 24,
+      "Messages": 61,
+      "counts": 80,
+      "estimated_usd": "0.351961",
+      "pending_usd": "0",
+      "unknown_usd": "0"
+    }
+  }
+}

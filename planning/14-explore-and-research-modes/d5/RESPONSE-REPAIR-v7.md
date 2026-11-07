@@ -1,5 +1,7 @@
 # D5 v7 prospective contract successor — offline only
 
+Current tested candidate: **v7r2**, packet `cf6b9e4c1e49d0192467bd28d0bae00eb1d05cf85bb850f904902840937fc871`, application `f430f2d3e7a3a7ae78cacdf92855b8b3294d3c12`. [Sealed packet](d5-system-validation-v7r2.json.gz), [source identity](d5-packet-identity-v7r2.json), [offline evidence](evidence/gap-repair-v7r2/SYNTHETIC-REPORT.md). The first v7 candidate `9cc9bb09c425ea3214a154491966c7714f07503ffc204bae11e76acdeb33daff` remains retained and unapproved; its complete-path replay revealed the generic probe-capacity overreservation described below.
+
 This successor starts at published `b54c9fc6a2c3e0ab36b1faf877bf727e8875832e`. It does not renew an approval, reopen the stopped v6 scope, replay an old development identity or permit any provider contact. The real baseline is **10 funded programme jobs, 17 Messages, 35 counts, USD0.351961 estimated**, pending/unknown zero. The active cap remains **22**; the proposed amendment is unapproved.
 
 ## Preserved failure and completed development evidence
@@ -57,3 +59,11 @@ Latest possible amendment expiry remains **2026-11-14T07:24:01Z — November13,2
 C requires completed, input-bound development results with resolved provenance and supported machine verdicts **and** its own separate stage approval. Ready state alone does not satisfy development success; unsupported or abstained required claims block progression. Machine development success does not qualify a checker or replace human review. The predeclared20-fact and20-probe human evidence minimums, cohorts, thresholds and HOLD behavior remain unchanged. Development facts never fill held-out minimums.
 
 All offline approvals are explicitly synthetic and confined to permanently provider-disabled disposable storage. Owner3137/review3178, private notes/preferences/history and existing previews remain untouched. Everyday generation, recurrence and notifications remain disabled.
+
+## Full-schedule capacity correction and evidence
+
+The original generic programme guard required four future contacts even for a one-call D probe. With the tight remaining count envelope, it refused the last probe batches. The v7r2 producer now derives capacity from the sealed D5 operation: workflow4 Messages/4 counts, probe1/1, measurement0/1. Legacy workflow policies cannot request the one-call shortcut, and a measurement operation cannot reserve funded spend. Actual contact ceilings remain80/80, workflow checks/repair/recheck stay mandatory, and count-only helpers still consume zero funded identities. The new monetary implementation and migration are included in the producer binding.
+
+The complete production-adapter MockTransport replay now finishes **14 new synthetic jobs,44 mocked Messages,45 mocked counts**, reaching24 jobs/61 Messages/80 counts in its disposable copy only. C without its separate grant refuses. Default abstaining dev results remain refused by the development-success gate; explicitly synthetic positive rechecks exercise the remaining path. Original real results, old financial/contact checkpoints, scope/grant rows and cap receipts compare unchanged. The active live ledger stays10 jobs/17 Messages/35 counts/USD0.351961, pending/unknown0 and cap22. No live migration, authority, contact or spending occurred.
+
+Mock completion8/8 fresh cases and exact mechanical provenance do not establish quality. Only12 eligible fresh claims were emitted,0 human reviewed,0 accepted;20 fact reviews and20 decisive probe labels remain unmet. Quality isHOLD and checker_qualified=false. See the [compact synthetic scorecard](evidence/gap-repair-v7r2/SYNTHETIC-REPORT.md) and raw binding/preservation receipts. Failed/interrupted local gates, the first unapproved v7 candidate and refused mock replays remain preserved; local verification and exact-head CI are recorded separately in the status/evidence index.
