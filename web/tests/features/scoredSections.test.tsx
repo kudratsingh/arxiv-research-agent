@@ -1,7 +1,9 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { ScoredSections } from "@/components/workspace/ScoredSections";
 import type { AssistanceOutput } from "@/lib/workspace/assistanceTypes";
+import { settleReaderTarget } from "@/lib/workspace/navigation";
+vi.mock("@/lib/workspace/navigation", () => ({ settleReaderTarget: vi.fn() }));
 const output: AssistanceOutput = { claims: [{ claim_id: "c1", text: "The source tentatively suggests a trade-off.", handles: ["u1"], required_scope: "excerpt" }], background_claims: ["c1"], assumption_claims: ["c1"], limitation_claims: ["c1"], comparison_claims: ["c1"], gaps: ["Inspect additional evidence before comparing performance."], questions: ["Does evidence establish a difference?"], proposal: "Inspect the methods.", abstention: null };
 describe("scored section references", () => {
   it("links every displayed statement to its scored claim and existing citations", () => {
@@ -18,5 +20,15 @@ describe("scored section references", () => {
     render(<ScoredSections output={{ ...output, claims: [], background_claims: [], assumption_claims: undefined, limitation_claims: [], comparison_claims: undefined }} prefix="job" />);
     expect(screen.queryAllByRole("link")).toHaveLength(0);
     expect(screen.getByText("Inspect additional evidence before comparing performance.")).toBeVisible();
+  });
+  it("restores only the selected result's existing claim after asynchronous result loading", () => {
+    vi.mocked(settleReaderTarget).mockClear();
+    history.replaceState(null, "", "#job-c1");
+    const view=render(<><article id="job-c1">Scored claim with its original citations</article><ScoredSections output={output} prefix="job" /></>);
+    expect(settleReaderTarget).toHaveBeenCalledWith(document.getElementById("job-c1"));
+    view.unmount();vi.mocked(settleReaderTarget).mockClear();
+    render(<ScoredSections output={output} prefix="job" />);
+    expect(settleReaderTarget).not.toHaveBeenCalled();
+    history.replaceState(null,"",location.pathname);
   });
 });

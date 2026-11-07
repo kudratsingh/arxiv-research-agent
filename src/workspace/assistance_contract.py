@@ -312,7 +312,7 @@ def response_model(
         raise ValueError("select_one_to_eight_coherent_units")
     if purpose not in {"single_paper", "research_comparison"}:
         raise ValueError("invalid_response_purpose")
-    if revision not in {REVISION, LEGACY_REVISION, "workspace-assistance-v1"}:
+    if revision not in {REVISION, LEGACY_REVISION, "workspace-assistance-coherent-multicitation-v1"}:
         raise ValueError("unsupported_assistance_contract_revision")
     legacy = revision != REVISION
     identity = digest([selected, purpose] if legacy else [selected, purpose, revision])[7:23]

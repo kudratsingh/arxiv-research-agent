@@ -120,8 +120,8 @@ export default function ReaderContent({
   const [active, setActive] = useState(
     initial.entryId
       ? "notes"
-      : initial.fragment === "notes" || initial.fragment === "understand"
-        ? initial.fragment
+      : initial.fragment === "notes" || initial.fragment === "understand" || /^gen-[a-f0-9]{40}-c[1-6]$/.test(initial.fragment)
+        ? initial.fragment === "notes" ? "notes" : "understand"
         : "source",
   );
   const [workbenchOpened, setWorkbenchOpened] = useState(initial.fragment === "understand");
@@ -237,7 +237,9 @@ export default function ReaderContent({
       const entryPriority = !event && observedFragment === undefined && initial.entryId && fragment === initial.fragment;
       observedFragment = fragment;
       if (entryPriority) return;
-      if (["source", "notes", "understand"].includes(fragment)) {
+      if (/^gen-[a-f0-9]{40}-c[1-6]$/.test(fragment)) {
+        setActive("understand");
+      } else if (["source", "notes", "understand"].includes(fragment)) {
         setActive(fragment);
         if (fragment === "understand") setWorkbenchOpened(true);
       } else if (/^(abstract|excerpt|full_text):\d+(?::\d+)?$/.test(fragment) || parseMaterialAnchor(fragment)) {

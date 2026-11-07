@@ -1,7 +1,15 @@
 import type { AssistanceOutput } from "@/lib/workspace/assistanceTypes";
+import { useEffect } from "react";
+import { settleReaderTarget } from "@/lib/workspace/navigation";
 
 /** Sections reference the same scored claim and citation; never new factual prose. */
 export function ScoredSections({ output, prefix }: { output: AssistanceOutput; prefix: string }) {
+  useEffect(() => {
+    const target = location.hash.slice(1);
+    if (!output.claims.some(c => `${prefix}-${c.claim_id}` === target)) return;
+    const element = document.getElementById(target);
+    if (element) settleReaderTarget(element);
+  }, [output, prefix]);
   const sections = [
     ["Background", output.background_claims],
     ["Assumptions", output.assumption_claims],
