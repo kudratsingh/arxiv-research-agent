@@ -1,5 +1,7 @@
 "use client";
 
+import { ScoredSections } from "./ScoredSections";
+
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { contextHref, resumeContext, useProductContext } from "@/lib/workspace/productContext";
@@ -81,14 +83,16 @@ export default function QualificationResult({ workId, versionId, returnTo, onSou
       {!output && <p>No completed content is available. Failed, cancelled or uncertain work is not an accepted summary and cannot be replayed from Reader.</p>}
       {output && <>
         {output.abstention && <p>Abstention: {output.abstention}</p>}
-        {output.claims.map(claim => <article key={claim.claim_id}><h4>Claim {claim.claim_id}</h4><p>{claim.text}</p><p>Machine checker: {job.result?.grounding?.assessments.find(c => c.claim_id === claim.claim_id)?.decision ?? "unscored"}. Human support: unmeasured.</p>{claim.handles.map(handle => {
+        {output.claims.map(claim => <article key={claim.claim_id} id={`${job.id}-${claim.claim_id}`}><h4>Claim {claim.claim_id}</h4><p>{claim.text}</p><p>Machine checker: {job.result?.grounding?.assessments.find(c => c.claim_id === claim.claim_id)?.decision ?? "unscored"}. Human support: unmeasured.</p>{claim.handles.map(handle => {
           const ref = job.request.units[handle]; if (!ref) return null;
           const anchor = passageAnchor(ref);
           return <div key={handle}><blockquote>{ref.quote}</blockquote><p>{ref.scope} · exact source version{ref.page ? ` · page ${ref.page}` : ""}</p>{ref.work_id === workId && ref.version_id === versionId ? <button type="button" onClick={() => onSource(anchor)}>Open qualification passage</button> : <Link href={contextHref(readerHref({ work_id: ref.work_id }, ref.version_id, anchor, undefined, returnTo), context)}>Open qualification passage</Link>}<details><summary>Exact citation identity</summary><pre tabIndex={0}>{JSON.stringify(ref, null, 2)}</pre></details></div>;
         })}</article>)}
+        {output.background_claims ? <ScoredSections output={output} prefix={job.id} /> : <>
         <h4>Background · unverified explanation</h4><p>{output.background}</p>
         {output.comparison && <><h4>Comparison · independently cited basis</h4><p>{output.comparison}</p><p>Basis: {(output.comparison_basis ?? []).join(", ")}. Compatible conditions and omissions require human review.</p></>}
-        <h4>Assumptions and missing evidence</h4><ul>{[...output.assumptions, ...output.gaps].map((text, i) => <li key={i}>{text}</li>)}</ul>
+        <h4>Assumptions and missing evidence</h4><ul>{[...(output.assumptions ?? []), ...output.gaps].map((text, i) => <li key={i}>{text}</li>)}</ul>
+        </>}
         <h4>Follow-up questions</h4><ul>{output.questions.map(text => <li key={text}>{text}</li>)}</ul>
         <h4>Proposed experiment · not a finding</h4><p>{output.proposal}</p>
         <button type="button" disabled={busy} onClick={() => void save("thread")}>Save experimental learning thread</button>

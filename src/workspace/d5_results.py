@@ -58,6 +58,7 @@ class QualificationResults:
                         {k: EvidenceRef(**v) for k, v in sealed["units"].items()},
                         materials,
                         purpose=sealed.get("response_purpose", "research_comparison"),
+                        revision=sealed["schema_revision"],
                     )
                     report = validate_claims(resolved, materials)
                     intact = _digest(inputs) == fingerprint and all(

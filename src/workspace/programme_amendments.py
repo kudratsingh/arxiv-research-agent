@@ -127,7 +127,11 @@ def _receipt(
         )
     except (KeyError, ValueError, TypeError):
         valid_time = False
-    fixture = bool(conn.execute("SELECT 1 FROM workspace_d5_fixture_marker").fetchone())
+    marker = conn.execute("SELECT data FROM workspace_d5_fixture_marker").fetchone()
+    fixture = bool(marker)
+    historical_mirror = bool(
+        marker and _digest(receipt) in marker[0].get("historical_amendment_authorizations", [])
+    )
     if (
         receipt.get("approved") is not True
         or not isinstance(receipt.get("approved_by"), str)
@@ -136,8 +140,10 @@ def _receipt(
         or not receipt["authorization_reference"].strip()
         or receipt.get("proposal_digest") != _digest(core)
         or not valid_time
-        or receipt.get("authorization_kind") != ("offline_fixture" if fixture else "owner")
-        or receipt.get("transport_mode") != ("mock" if fixture else "provider")
+        or receipt.get("authorization_kind")
+        != ("offline_fixture" if fixture and not historical_mirror else "owner")
+        or receipt.get("transport_mode")
+        != ("mock" if fixture and not historical_mirror else "provider")
     ):
         raise AdmissionError("amendment_external_authorization_required")
     return core
@@ -230,8 +236,6 @@ def effective_limits(
         _digest(receipt) != auth_digest
         or receipt["proposal_digest"] != proposal_digest
         or datetime.fromisoformat(receipt["expires_at"]) != expiry
-        or required_proposal_digest
-        and required_proposal_digest != proposal_digest
         or conn.execute(
             "SELECT 1 FROM workspace_programme_amendment_revocations WHERE amendment_id=%s",
             (core["amendment_id"],),
@@ -246,7 +250,11 @@ def effective_limits(
         != core["basis"]
     ):
         raise AdmissionError("programme_amendment_historical_receipts_changed")
-    return dict(core["amended_limits"])
+    from src.workspace.programme_successors import effective
+
+    return effective(
+        conn, program_id, dict(core["amended_limits"]), proposal_digest, required_proposal_digest
+    )
 
 
 def revoke(store: WorkspaceStore, amendment_id: str, *, actor: str) -> None:

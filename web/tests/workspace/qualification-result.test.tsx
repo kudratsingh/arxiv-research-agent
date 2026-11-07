@@ -82,3 +82,16 @@ it("renders purpose-specific learning output without cross-source comparison fie
  expect(screen.queryByText("Comparison · independently cited basis")).not.toBeInTheDocument();
  expect(mock.request.mock.calls.every(([, body]) => body === undefined)).toBe(true);
 });
+
+it("renders new cited sections as links to scored claims without legacy factual prose", async () => {
+ const out=jobs[0]!.assistance_output!;
+ delete out.background; delete out.assumptions; delete out.comparison;
+ out.background_claims=["c1"];out.assumption_claims=[];out.limitation_claims=["c1"];
+ await mount();await screen.findByRole("region",{name:"Persisted qualification result"});
+ const links=screen.getAllByRole("link",{name:`c1: ${ref.quote}`});
+ expect(links).toHaveLength(2);
+ for(const link of links)expect(link).toHaveAttribute("href",`#${JID}-c1`);
+ expect(document.getElementById(`${JID}-c1`)).toHaveTextContent(ref.quote);
+ expect(screen.queryByText("Unverified guide")).not.toBeInTheDocument();
+ expect(mock.request.mock.calls.every(([,body])=>body===undefined)).toBe(true);
+});

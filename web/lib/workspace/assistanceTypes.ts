@@ -17,8 +17,9 @@ export interface AssistanceInput {
 }
 export interface AssistanceOutput {
   claims: { claim_id: string; text: string; handles: string[]; required_scope: string }[];
-  background: string; comparison?: string; comparison_basis?: string[];
-  assumptions: string[]; gaps: string[]; questions: string[];
+  background?: string; comparison?: string; comparison_basis?: string[];
+  background_claims?: string[]; assumption_claims?: string[]; limitation_claims?: string[]; comparison_claims?: string[];
+  assumptions?: string[]; gaps: string[]; questions: string[];
   proposal: string; abstention: string | null;
 }
 export type AssistanceJob = Omit<FakeJob, "request"> & {

@@ -71,6 +71,7 @@ def score_case(
             {k: EvidenceRef(**v) for k, v in case["sealed"]["units"].items()},
             materials,
             purpose=case["sealed"].get("response_purpose", "research_comparison"),
+            revision=case["sealed"]["schema_revision"],
         )
         report = validate_claims(claims, materials)
         result["provenance"] = (

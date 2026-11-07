@@ -18,6 +18,18 @@ pytestmark = pytest.mark.unit
 FIXTURES = Path(__file__).parent / "fixtures/d5/stage-b-v3"
 
 
+def legacy_schemas(*args, **kwargs):
+    return c.schemas(*args, **kwargs, revision=c.LEGACY_REVISION)
+
+
+def legacy_model(*args, **kwargs):
+    return c.response_model(*args, **kwargs, revision=c.LEGACY_REVISION)
+
+
+def legacy_resolve(*args, **kwargs):
+    return c.resolve_draft(*args, **kwargs, revision=c.LEGACY_REVISION)
+
+
 def payload(catalog, *, comparison=False):
     """SYNTHETIC fixture, not a correction of an accepted provider output."""
     value = {
@@ -66,9 +78,9 @@ def evidence():
 
 
 def validate_both(value, catalog, purpose):
-    for schema in c.schemas(list(catalog), purpose=purpose).values():
+    for schema in legacy_schemas(list(catalog), purpose=purpose).values():
         jsonschema.Draft202012Validator(schema).validate(value)
-    return c.response_model(list(catalog), purpose=purpose).model_validate(value)
+    return legacy_model(list(catalog), purpose=purpose).model_validate(value)
 
 
 def test_original_failed_response_is_unchanged_and_rejected_by_new_wire_and_local_contract():
@@ -84,16 +96,16 @@ def test_original_failed_response_is_unchanged_and_rejected_by_new_wire_and_loca
     jsonschema.Draft202012Validator(request["output_config"]["format"]["schema"]).validate(original)
     assert original["comparison_basis"] == original["claims"][0]["handles"]
     for purpose in ("single_paper", "research_comparison"):
-        for schema in c.schemas(list(selected), purpose=purpose).values():
+        for schema in legacy_schemas(list(selected), purpose=purpose).values():
             with pytest.raises(jsonschema.ValidationError):
                 jsonschema.Draft202012Validator(schema).validate(original)
         with pytest.raises(ValueError):
-            c.response_model(list(selected), purpose=purpose).model_validate(original)
+            legacy_model(list(selected), purpose=purpose).model_validate(original)
     assert bindings["content_accepted"] is False and bindings["state"] == "failed"
 
 
 def test_shared_claim_id_enum_and_handle_descriptions_survive_sdk_transform():
-    for schema in c.schemas(["u-selected"]).values():
+    for schema in legacy_schemas(["u-selected"]).values():
         text = json.dumps(schema)
         basis = schema["properties"]["comparison_basis"]
         assert basis["items"]["enum"] == ["c1", "c2", "c3", "c4", "c5", "c6"]
@@ -130,10 +142,10 @@ def test_single_paper_and_attributed_within_paper_contrast_validate_both(evidenc
         "The selected abstract attributes an accuracy improvement to Method A only with external tools on a small benchmark, and notes repeated actions."
     )
     assert "comparison" not in validate_both(value, catalog, "single_paper").model_dump()
-    _, claims = c.resolve_draft(value, catalog, materials, purpose="single_paper")
+    _, claims = legacy_resolve(value, catalog, materials, purpose="single_paper")
     report = validate_claims(claims, materials)
     assert report.assessments[0].identity_resolved and report.support_ratio is None
-    for schema in c.schemas(list(catalog), purpose="single_paper").values():
+    for schema in legacy_schemas(list(catalog), purpose="single_paper").values():
         assert (
             "comparison" not in schema["properties"]
             and "comparison_basis" not in schema["properties"]
@@ -145,7 +157,7 @@ def test_two_source_research_comparison_requires_independent_citations(evidence)
     materials, catalog = evidence
     value = payload(catalog, comparison=True)
     validate_both(value, catalog, "research_comparison")
-    draft, claims = c.resolve_draft(value, catalog, materials, purpose="research_comparison")
+    draft, claims = legacy_resolve(value, catalog, materials, purpose="research_comparison")
     assert (
         isinstance(draft, c.AssistanceDraft)
         and len({r.work_id for claim in claims for r in claim.evidence}) == 2
@@ -154,7 +166,7 @@ def test_two_source_research_comparison_requires_independent_citations(evidence)
     h = next(iter(catalog))
     value["claims"][1]["handles"] = [h]
     with pytest.raises(ValueError, match="two_separately_cited"):
-        c.resolve_draft(value, catalog, materials)
+        legacy_resolve(value, catalog, materials)
 
 
 @pytest.mark.parametrize(
@@ -190,10 +202,10 @@ def test_research_basis_refuses_invalid_missing_or_duplicate_references(evidence
     else:
         value["comparison_basis"] = ["c1"]
     with pytest.raises(ValueError):
-        c.response_model(list(catalog)).model_validate(value)
+        legacy_model(list(catalog)).model_validate(value)
     if change in {"handle", "unknown_id", "missing_basis"}:
         with pytest.raises(jsonschema.ValidationError):
-            jsonschema.Draft202012Validator(c.schemas(list(catalog))["wire"]).validate(value)
+            jsonschema.Draft202012Validator(legacy_schemas(list(catalog))["wire"]).validate(value)
 
 
 @pytest.mark.parametrize("purpose", ["single_paper", "research_comparison"])
@@ -207,11 +219,11 @@ def test_insufficient_evidence_can_abstain_without_fabricated_comparison(evidenc
     if purpose == "research_comparison":
         value.update(comparison="", comparison_basis=[])
     validate_both(value, catalog, purpose)
-    _, claims = c.resolve_draft(value, catalog, materials, purpose=purpose)
+    _, claims = legacy_resolve(value, catalog, materials, purpose=purpose)
     assert claims == ()
     value["abstention"] = None
     with pytest.raises(ValueError, match="claims_or_abstention"):
-        c.response_model(list(catalog), purpose=purpose).model_validate(value)
+        legacy_model(list(catalog), purpose=purpose).model_validate(value)
 
 
 def test_synthetic_manual_correction_is_not_provider_success():
@@ -228,4 +240,4 @@ def test_synthetic_manual_correction_is_not_provider_success():
 
 def test_invalid_purpose_is_refused():
     with pytest.raises(ValueError, match="invalid_response_purpose"):
-        c.response_model(["u1"], purpose="unchecked")
+        legacy_model(["u1"], purpose="unchecked")

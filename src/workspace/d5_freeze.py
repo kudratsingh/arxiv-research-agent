@@ -36,8 +36,8 @@ from src.workspace.store import WorkspaceStore
 
 REVISION_BENCHMARK = "d5-system-benchmark-v1"
 CLOCK = "2026-11-05T12:00:00+00:00"
-RUN_OWNER = "d5-v5-validation-run"
-COUNT_OWNER = "d5-v5-validation-measure"
+RUN_OWNER = "d5-v6-validation-run"
+COUNT_OWNER = "d5-v6-validation-measure"
 QUESTIONS = (
     (
         "dev-learn",
@@ -93,6 +93,8 @@ def code_bindings() -> dict[str, str]:
         "d5_freeze.py",
         "d5_operations.py",
         "programme_amendments.py",
+        "programme_successors.py",
+        "migrations/015_programme_successor_amendments.sql",
         "d5_measurements.py",
         "migrations/014_programme_amendments.sql",
         "d5_benchmark.py",
@@ -118,7 +120,10 @@ def code_bindings() -> dict[str, str]:
     paths = [root / "src/workspace" / name for name in names]
     paths += [
         root / "web/components/workspace/QualificationResult.tsx",
+        root / "web/components/workspace/ScoredSections.tsx",
+        root / "web/components/workspace/AssistancePanel.tsx",
         root / "planning/14-explore-and-research-modes/d5/tools/prepare-opus-v5.py",
+        root / "planning/14-explore-and-research-modes/d5/tools/prepare-prose-v6.py",
     ]
     paths += [
         root / name
@@ -150,6 +155,11 @@ def verify(packet: dict[str, Any]) -> None:
             case["sealed"]["candidate_initial_wire"]
         ):
             raise AdmissionError("d5_wire_digest_changed")
+    if packet.get("planned_development_cases", ["dev-learn", "dev-compare"]) not in (
+        ["dev-learn"],
+        ["dev-learn", "dev-compare"],
+    ):
+        raise AdmissionError("d5_declared_development_scope_required")
     verify_discovery(packet)
 
 
@@ -246,6 +256,10 @@ def compile_inputs(packet: dict[str, Any]) -> dict[str, dict[str, Any]]:
         if not case.get("sealed"):
             continue  # An upstream failure is visible, not replaced with references.
         key = case["id"]
+        if case["cohort"] == "development" and key not in packet.get(
+            "planned_development_cases", ["dev-learn", "dev-compare"]
+        ):
+            continue
         compiled[key] = {
             "owner": RUN_OWNER,
             "stage": "B" if case["cohort"] == "development" else "C",

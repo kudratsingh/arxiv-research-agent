@@ -1,0 +1,12 @@
+{
+  "original_packet": "85afa214bd4634ca27e668470257b9ecb53b2dfe87fa018ec17856e46729b35b",
+  "original_job": "gen-26dc8be29ba9c0a74d1e02ae2c1d57c005d66f74",
+  "original_failed": true,
+  "original_cost": "0.070748",
+  "cumulative_cost": "0.196359",
+  "source_response_digests": [
+    "66eb856c9d127d1c0fa71cad87a931d8282d8ee55dc8ce44f34c83b308ae19f7",
+    "ce478f138a8a28b014aa39027022acda789197f425f0a9c185388b60da7287b9"
+  ],
+  "labels": "Preserved provider payloads; replay is offline regression evidence, never a new provider success"
+}

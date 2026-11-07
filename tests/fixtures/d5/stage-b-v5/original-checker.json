@@ -1,0 +1,41 @@
+{
+  "checks": [
+    {
+      "claim_id": "c1",
+      "input_digest": "sha256:b8bbe6ac186f26592f540377c2204961f96eee6cee120f81435ae30e04710303",
+      "decision": "supported",
+      "reason": "The passage states that interleaving improves groundedness and trustworthiness, and that this structural constraint reduces flexibility in formulating reasoning steps."
+    },
+    {
+      "claim_id": "c2",
+      "input_digest": "sha256:7c3cf26f28e4e294de41da6de6dc37beae4614ca5613c2e5e7911f2d67c5a835",
+      "decision": "supported",
+      "reason": "The passage says the reduced flexibility leads to a higher reasoning error rate than CoT."
+    },
+    {
+      "claim_id": "c3",
+      "input_digest": "sha256:1d72cb27570cc182e42b1603e22500c4347fda9a4ed5ec914b0924e71c126f56",
+      "decision": "supported",
+      "reason": "The passage describes the ReAct-specific repetitive loop error and says it is categorized as a reasoning error."
+    },
+    {
+      "claim_id": "c4",
+      "input_digest": "sha256:cf7c6f9d1d977e41e3f97705e4f4535cb64f5fc48401304af60300962b404915",
+      "decision": "supported",
+      "reason": "The passage states that informative search is critical, that non-informative search accounts for 23% of error cases, and that it derails reasoning and hinders recovery."
+    },
+    {
+      "claim_id": "c5",
+      "input_digest": "sha256:0ce7c6d0260e5e78d96616f6aff33acfc061849569987b5e81dbcd32a1bb388d",
+      "decision": "abstain",
+      "reason": "The passage hedges the trade-off with 'perhaps' and only says it motivates 'combining two methods'. It does not name CoT-SC in that sentence, so the claim drops the qualifier and over-specifies."
+    },
+    {
+      "claim_id": "c6",
+      "input_digest": "sha256:c3636b8030a35b4f75ca5022cf00c774d5c0efc2fc775ac7f37c54e7d792cc62",
+      "decision": "supported",
+      "reason": "The passage states that, as shown in Table 1, the best methods are ReAct→CoT-SC on HotpotQA and CoT-SC→ReAct on Fever."
+    }
+  ],
+  "prose_review": "unscored_factual_content"
+}

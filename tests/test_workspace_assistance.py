@@ -84,10 +84,11 @@ def wire_payload(refs, **extra):
                 "required_scope": "abstract",
             }
         ],
-        "background": "",
-        "comparison": "",
+        "background_claims": [],
+        "assumption_claims": [],
+        "limitation_claims": [],
+        "comparison_claims": [],
         "comparison_basis": [],
-        "assumptions": [],
         "gaps": ["Selected source only"],
         "questions": ["What would falsify this?"],
         "proposal": "",
@@ -576,7 +577,7 @@ def test_multiple_sources_required_for_comparison_and_mutated_spans_refuse():
     comparison = wire_payload(
         [handle],
         claims=[claim, {**claim, "claim_id": "c2"}],
-        comparison="A comparison",
+        comparison_claims=["c1", "c2"],
         comparison_basis=["c1", "c2"],
     )
     with pytest.raises(ValueError, match="two_separately"):

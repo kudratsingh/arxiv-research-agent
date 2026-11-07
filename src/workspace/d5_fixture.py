@@ -159,9 +159,22 @@ def install(store: WorkspaceStore, captured: dict[str, Any], *, fixture: bool) -
                         {
                             "synthetic_authorization_only": True,
                             "snapshot_history_digest": captured["history"]["history_digest"],
+                            "historical_amendment_authorizations": [
+                                r["authorization_digest"]
+                                for r in captured.get("recorded_amendments", [])
+                            ],
                         }
                     ),
                 ),
+            )
+        # Restore already-recorded policy metadata, never create a new approval.
+        # A fixture can read these mirrored hashes but can never dispatch live.
+        for amendment in captured.get("recorded_amendments", []):
+            if _digest(amendment["record"]) != amendment["authorization_digest"]:
+                raise AdmissionError("d5_historical_amendment_digest_changed")
+            conn.execute(
+                "INSERT INTO workspace_programme_amendments SELECT * FROM jsonb_populate_record(NULL::workspace_programme_amendments,%s)",
+                (Jsonb(amendment),),
             )
         for owner in (RUN_OWNER, COUNT_OWNER):
             conn.execute(

@@ -53,6 +53,19 @@ async function select(user: ReturnType<typeof userEvent.setup>, both = false) {
 }
 async function preview(user: ReturnType<typeof userEvent.setup>) { await user.click(screen.getByRole("button", { name: "Preview assistance request" })); await screen.findByRole("region", { name: "Sealed assistance request" }); }
 async function run(user: ReturnType<typeof userEvent.setup>) { await user.click(screen.getByRole("button", { name: "Run local assistance simulation · $0" })); await screen.findByRole("region", { name: "Simulated assistance result" }); }
+
+it("resumes the cited-section contract without adding unscored scientific statements",async()=>{
+ current=job("ready",true);const out=current.assistance_output!;
+ delete out.background;delete out.assumptions;delete out.comparison;
+ out.background_claims=["c1"];out.assumption_claims=["c1"];out.limitation_claims=[];out.comparison_claims=["c1","c2"];
+ await mount(true,true);await screen.findByRole("region",{name:"Simulated assistance result"});
+ const source=screen.getByRole("region",{name:"Comparison claim references"});
+ expect(within(source).getByRole("link",{name:/^c1:/})).toHaveAttribute("href",`#${JID}-c1`);
+ expect(within(source).getByRole("link",{name:/^c2:/})).toHaveAttribute("href",`#${JID}-c2`);
+ expect(document.getElementById(`${JID}-c2`)).toHaveTextContent(out.claims[1]!.text);
+ expect(screen.queryByText("Unverified simulated background.")).not.toBeInTheDocument();
+ expect(mock.request.mock.calls.every(([,body])=>body===undefined)).toBe(true);
+});
 beforeEach(() => { current = null; failures = new Set(); entries = []; hold = null; resetDraftMemory(); sessionStorage.clear(); mock.request.mockReset().mockImplementation(request); onSource.mockReset(); });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 

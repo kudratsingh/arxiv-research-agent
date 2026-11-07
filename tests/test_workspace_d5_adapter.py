@@ -35,9 +35,18 @@ def offline(monkeypatch):
     monkeypatch.setenv("WORKSPACE_D5_OFFLINE", "1")
 
 
-def setup(store, operation="workflow", stages=None, *, mode="learn", comparison=False, routes=None):
+def setup(
+    store,
+    operation="workflow",
+    stages=None,
+    *,
+    mode="learn",
+    comparison=False,
+    routes=None,
+    source_setup=None,
+):
     program(store)
-    service, value = support.setup(store, mode)
+    service, value = source_setup(store) if source_setup else support.setup(store, mode)
     if comparison:
         from tests.test_workspace_store import ingest
 
@@ -631,6 +640,9 @@ async def test_explicit_abstention_still_requires_mandatory_check_and_stays_unsc
         if "claims" in out:
             out.update(
                 claims=[],
+                background_claims=[],
+                assumption_claims=[],
+                limitation_claims=[],
                 abstention="The retained abstract does not establish the requested deployment conditions.",
             )
         else:
@@ -729,11 +741,23 @@ async def test_unverified_factual_prose_is_sent_to_checker_and_cannot_bypass_it(
         else:
             seen.append(context["unscored_prose"][field])
             output["prose_review"] = "unscored_factual_content"
+            output["prose_findings"] = [
+                {
+                    "field": field,
+                    "index": 0 if field in {"gaps", "questions"} else None,
+                    "reason": "Synthetic hidden assertion",
+                }
+            ]
         raw["content"][0]["text"] = json.dumps(output)
         return httpx.Response(200, json=raw)
 
     adapter = d.D5Adapter(store, "d5-run", inputs, transport=httpx.MockTransport(handler))
     job = adapter.start(inputs.settings["d5_request_id"])
+    if field in {"background", "assumptions", "comparison"}:
+        with pytest.raises(ValueError):
+            await adapter.advance(job["id"])
+        assert seen == [] and len(normal.calls) == 2
+        return
     await adapter.advance(job["id"])
     with pytest.raises(AdmissionError, match="unscored_factual_prose"):
         await adapter.advance(job["id"])

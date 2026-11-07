@@ -121,7 +121,7 @@ def case_outcome(
         value = labels.get(field)
         required = (
             field == "comparison_compatible"
-            and bool(output.get("comparison"))
+            and bool(output.get("comparison") or output.get("comparison_claims"))
             or field == "appropriate_abstention"
             and bool(output.get("abstention"))
         )

@@ -60,6 +60,8 @@ def qualification_producer() -> dict[str, Any]:
         "workspace/d5_adapter.py",
         "workspace/d5_operations.py",
         "workspace/programme_amendments.py",
+        "workspace/programme_successors.py",
+        "workspace/migrations/015_programme_successor_amendments.sql",
         "workspace/d5_measurements.py",
         "workspace/migrations/014_programme_amendments.sql",
         "workspace/d5_scope.py",
@@ -509,7 +511,10 @@ class D5Adapter(QualificationAdapter):
                 }
             else:
                 checked = self._checks(
-                    {k: steps[-1]["output"][k] for k in ("checks", "prose_review")}
+                    {
+                        k: steps[-1]["output"][k]
+                        for k in ("checks", "prose_review", "prose_findings")
+                    }
                 )
                 # Digest/provenance checks happen before this repair is counted.
                 from src.workspace.grounding import SupportCheck
@@ -684,7 +689,12 @@ class D5Adapter(QualificationAdapter):
                 def invalid(value: str) -> Any:
                     raise AdmissionError("d5_nonfinite_json")
 
-                json.loads(text, object_pairs_hook=unique, parse_constant=invalid)
+                parsed = json.loads(text, object_pairs_hook=unique, parse_constant=invalid)
+                if last["stage"] == "check":
+                    context = json.loads(last["body"]["messages"][0]["content"])
+                    Checks.model_validate(parsed).validate_locations(
+                        context.get("unscored_prose", {})
+                    )
                 if len(text.encode()) > 8000:
                     raise AdmissionError("d5_compact_output_exceeded")
             response_id = last["response"].get("id")

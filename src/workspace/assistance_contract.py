@@ -28,7 +28,8 @@ from src.workspace.grounding import (
 )
 from src.workspace.material import SourceMaterial
 
-REVISION = "workspace-assistance-purpose-specific-v2"
+LEGACY_REVISION = "workspace-assistance-purpose-specific-v2"
+REVISION = "workspace-assistance-cited-sections-v3"
 MAX_UNIT_CHARS = 1600
 MAX_SELECTED_UNITS = 8
 MAX_CLAIMS = 6
@@ -221,16 +222,100 @@ class AssistanceDraft(SinglePaperDraft):
         return self
 
 
+class CitedSinglePaperDraft(BaseModel):
+    """All explanatory statements are scored claims; sections only point to IDs."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+    claims: tuple[AssistanceClaim, ...] = Field(max_length=MAX_CLAIMS)
+    background_claims: tuple[ClaimId, ...] = Field(
+        max_length=MAX_CLAIMS,
+        description="IDs of emitted, cited claims to display as background. No free factual prose.",
+    )
+    assumption_claims: tuple[ClaimId, ...] = Field(
+        max_length=MAX_CLAIMS,
+        description="IDs of emitted, cited claims describing source assumptions. Empty if unavailable.",
+    )
+    limitation_claims: tuple[ClaimId, ...] = Field(
+        max_length=MAX_CLAIMS,
+        description="IDs of emitted, cited claims describing substantive limitations.",
+    )
+    gaps: tuple[str, ...] = Field(
+        min_length=1,
+        max_length=3,
+        description="Procedural requests for missing evidence, not scientific findings or assumptions.",
+    )
+    questions: tuple[str, ...] = Field(
+        min_length=1,
+        max_length=3,
+        description="Neutral questions. Do not presuppose gains, causes or findings. Ask whether evidence establishes them.",
+    )
+    proposal: str = Field(
+        max_length=360,
+        description="Procedural proposed next action, never a finding. Avoid presupposed results.",
+    )
+    abstention: str | None = Field(
+        max_length=180,
+        description="Evidence insufficiency, not an unsupported scientific explanation.",
+    )
+
+    @model_validator(mode="after")
+    def bounded(self) -> CitedSinglePaperDraft:
+        ids = {c.claim_id for c in self.claims}
+        refs = (self.background_claims, self.assumption_claims, self.limitation_claims)
+        if len(ids) != len(self.claims) or any(set(r) - ids or len(set(r)) != len(r) for r in refs):
+            raise ValueError("claim_or_section_reference_mismatch")
+        if not self.claims and not (self.abstention or "").strip():
+            raise ValueError("claims_or_abstention_required")
+        if any(not c.text.strip() or len(set(c.handles)) != len(c.handles) for c in self.claims):
+            raise ValueError("blank_claim_or_duplicate_handle")
+        if any(not x.strip() or len(x) > 180 for x in (*self.gaps, *self.questions)):
+            raise ValueError("invalid_bounded_explanation")
+        if len(self.model_dump_json().encode()) > MAX_DRAFT_BYTES:
+            raise ValueError("assistance_response_too_large")
+        return self
+
+
+class CitedAssistanceDraft(CitedSinglePaperDraft):
+    comparison_claims: tuple[ClaimId, ...] = Field(
+        max_length=MAX_CLAIMS,
+        description="IDs of scored comparison claims. State any agreement, difference or compatibility in claims with separate evidence citations.",
+    )
+    comparison_basis: tuple[ClaimId, ...] = Field(
+        max_length=MAX_CLAIMS,
+        description="Distinct emitted claim IDs providing independent source bases from at least two works. Never evidence handles. Empty with no comparison.",
+    )
+
+    @model_validator(mode="after")
+    def comparison_references(self) -> CitedAssistanceDraft:
+        ids = {c.claim_id for c in self.claims}
+        if any(
+            set(r) - ids or len(set(r)) != len(r)
+            for r in (self.comparison_claims, self.comparison_basis)
+        ):
+            raise ValueError("claim_or_comparison_basis_mismatch")
+        if self.comparison_claims and len(self.comparison_basis) < 2:
+            raise ValueError("comparison_requires_separate_evidence_claims")
+        if not self.comparison_claims and self.comparison_basis:
+            raise ValueError("comparison_basis_without_comparison")
+        return self
+
+
 def response_model(
-    handles: Sequence[str], *, purpose: ResponsePurpose = "research_comparison"
-) -> type[SinglePaperDraft]:
+    handles: Sequence[str],
+    *,
+    purpose: ResponsePurpose = "research_comparison",
+    revision: str = REVISION,
+) -> type[SinglePaperDraft] | type[CitedSinglePaperDraft]:
     # json_schema_extra keeps even a singleton enum after the SDK transform.
     selected = sorted(set(handles))
     if not selected or len(selected) > MAX_SELECTED_UNITS:
         raise ValueError("select_one_to_eight_coherent_units")
     if purpose not in {"single_paper", "research_comparison"}:
         raise ValueError("invalid_response_purpose")
-    identity = digest([selected, purpose])[7:23]
+    if revision not in {REVISION, LEGACY_REVISION, "workspace-assistance-v1"}:
+        raise ValueError("unsupported_assistance_contract_revision")
+    legacy = revision != REVISION
+    identity = digest([selected, purpose] if legacy else [selected, purpose, revision])[7:23]
     factory = cast(Callable[[str, dict[str, str]], type[StrEnum]], StrEnum)
     handle_type = factory(
         "D5Evidence_" + identity, {f"U{i}": key for i, key in enumerate(selected)}
@@ -249,15 +334,20 @@ def response_model(
     )
     return create_model(
         "D5Draft_" + identity,
-        __base__=SinglePaperDraft if purpose == "single_paper" else AssistanceDraft,
+        __base__=(SinglePaperDraft if purpose == "single_paper" else AssistanceDraft)
+        if legacy
+        else (CitedSinglePaperDraft if purpose == "single_paper" else CitedAssistanceDraft),
         claims=(GenericAlias(tuple, (claim, Ellipsis)), Field(max_length=MAX_CLAIMS)),
     )
 
 
 def schemas(
-    handles: Sequence[str], *, purpose: ResponsePurpose = "research_comparison"
+    handles: Sequence[str],
+    *,
+    purpose: ResponsePurpose = "research_comparison",
+    revision: str = REVISION,
 ) -> dict[str, Any]:
-    model = response_model(handles, purpose=purpose)
+    model = response_model(handles, purpose=purpose, revision=revision)
     return {"local": model.model_json_schema(), "wire": transform_schema(model)}
 
 
@@ -267,8 +357,11 @@ def resolve_draft(
     materials: Sequence[SourceMaterial],
     *,
     purpose: ResponsePurpose = "research_comparison",
-) -> tuple[SinglePaperDraft, tuple[ResearchClaim, ...]]:
-    draft = response_model(list(catalog), purpose=purpose).model_validate(payload)
+    revision: str = REVISION,
+) -> tuple[SinglePaperDraft | CitedSinglePaperDraft, tuple[ResearchClaim, ...]]:
+    draft = response_model(list(catalog), purpose=purpose, revision=revision).model_validate(
+        payload
+    )
     claims = []
     for claim in draft.claims:
         if any(handle not in catalog for handle in claim.handles):
@@ -282,7 +375,10 @@ def resolve_draft(
         if not report.assessments[0].identity_resolved:
             raise ValueError("assistance_evidence_identity_failed")
         claims.append(value)
-    if isinstance(draft, AssistanceDraft) and draft.comparison:
+    comparison = (isinstance(draft, AssistanceDraft) and bool(draft.comparison)) or (
+        isinstance(draft, CitedAssistanceDraft) and bool(draft.comparison_claims)
+    )
+    if comparison and isinstance(draft, (AssistanceDraft, CitedAssistanceDraft)):
         by_id = {claim.claim_id: claim for claim in claims}
         compared_sources = {
             ref.work_id for key in draft.comparison_basis for ref in by_id[key].evidence
