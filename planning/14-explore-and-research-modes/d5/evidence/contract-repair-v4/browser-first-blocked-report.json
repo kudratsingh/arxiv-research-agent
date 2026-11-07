@@ -1,0 +1,188 @@
+{
+  "packet": "f21f4b66e1eb99ab75c7c242a9bfa46acb78ccabc13fb885477e8160425fd95a",
+  "application": "9bd25a82d313070e810038c8de42c0dc3d9cb8b1",
+  "basis": "Read-only browser of mocked qualification results; no human quality evidence",
+  "contexts": [
+    {
+      "name": "1440-light",
+      "width": 1440,
+      "theme": "light",
+      "reducedMotion": false,
+      "cases": [
+        {
+          "case": "dev-learn",
+          "job": "gen-7fae34d42d60088ccde3cce8727149afc9f4e590",
+          "purpose": "single_paper",
+          "anchor": "material:mat-2b7a38f3cfa1449f7728f044688ca2c2:page:6:2005:3379",
+          "reload": true,
+          "exactPassage": true,
+          "axeSerious": 0,
+          "humanLabels": null
+        },
+        {
+          "case": "dev-compare",
+          "job": "gen-91a3a921ba266d5c5d226bcc718d184b96d0fe60",
+          "purpose": "research_comparison",
+          "anchor": "material:mat-2b7a38f3cfa1449f7728f044688ca2c2:page:1:2443:3888",
+          "reload": true,
+          "exactPassage": true,
+          "axeSerious": 0,
+          "humanLabels": null
+        }
+      ]
+    },
+    {
+      "name": "1440-dark",
+      "width": 1440,
+      "theme": "dark",
+      "reducedMotion": true,
+      "cases": [
+        {
+          "case": "dev-learn",
+          "job": "gen-7fae34d42d60088ccde3cce8727149afc9f4e590",
+          "purpose": "single_paper",
+          "anchor": "material:mat-2b7a38f3cfa1449f7728f044688ca2c2:page:6:2005:3379",
+          "reload": true,
+          "exactPassage": true,
+          "axeSerious": 0,
+          "humanLabels": null
+        },
+        {
+          "case": "dev-compare",
+          "job": "gen-91a3a921ba266d5c5d226bcc718d184b96d0fe60",
+          "purpose": "research_comparison",
+          "anchor": "material:mat-2b7a38f3cfa1449f7728f044688ca2c2:page:1:2443:3888",
+          "reload": true,
+          "exactPassage": true,
+          "axeSerious": 0,
+          "humanLabels": null
+        }
+      ]
+    },
+    {
+      "name": "390-light",
+      "width": 390,
+      "theme": "light",
+      "reducedMotion": false,
+      "cases": [
+        {
+          "case": "dev-learn",
+          "job": "gen-7fae34d42d60088ccde3cce8727149afc9f4e590",
+          "purpose": "single_paper",
+          "anchor": "material:mat-2b7a38f3cfa1449f7728f044688ca2c2:page:6:2005:3379",
+          "reload": true,
+          "exactPassage": true,
+          "axeSerious": 0,
+          "humanLabels": null
+        },
+        {
+          "case": "dev-compare",
+          "job": "gen-91a3a921ba266d5c5d226bcc718d184b96d0fe60",
+          "purpose": "research_comparison",
+          "anchor": "material:mat-2b7a38f3cfa1449f7728f044688ca2c2:page:1:2443:3888",
+          "reload": true,
+          "exactPassage": true,
+          "axeSerious": 0,
+          "humanLabels": null
+        }
+      ]
+    },
+    {
+      "name": "390-dark",
+      "width": 390,
+      "theme": "dark",
+      "reducedMotion": true,
+      "cases": [
+        {
+          "case": "dev-learn",
+          "job": "gen-7fae34d42d60088ccde3cce8727149afc9f4e590",
+          "purpose": "single_paper",
+          "anchor": "material:mat-2b7a38f3cfa1449f7728f044688ca2c2:page:6:2005:3379",
+          "reload": true,
+          "exactPassage": true,
+          "axeSerious": 0,
+          "humanLabels": null
+        },
+        {
+          "case": "dev-compare",
+          "job": "gen-91a3a921ba266d5c5d226bcc718d184b96d0fe60",
+          "purpose": "research_comparison",
+          "anchor": "material:mat-2b7a38f3cfa1449f7728f044688ca2c2:page:1:2443:3888",
+          "reload": true,
+          "exactPassage": true,
+          "axeSerious": 0,
+          "humanLabels": null
+        }
+      ]
+    }
+  ],
+  "pageErrors": [],
+  "blocked": [
+    {
+      "url": "/api/workspace/context/reading",
+      "method": "POST"
+    },
+    {
+      "url": "/api/workspace/context/reading",
+      "method": "POST"
+    },
+    {
+      "url": "/api/workspace/context/reading",
+      "method": "POST"
+    },
+    {
+      "url": "/api/workspace/context/reading",
+      "method": "POST"
+    },
+    {
+      "url": "/api/workspace/context/reading",
+      "method": "POST"
+    },
+    {
+      "url": "/api/workspace/context/reading",
+      "method": "POST"
+    },
+    {
+      "url": "/api/workspace/context/reading",
+      "method": "POST"
+    },
+    {
+      "url": "/api/workspace/context/reading",
+      "method": "POST"
+    },
+    {
+      "url": "/api/workspace/context/reading",
+      "method": "POST"
+    },
+    {
+      "url": "/api/workspace/context/reading",
+      "method": "POST"
+    },
+    {
+      "url": "/api/workspace/context/reading",
+      "method": "POST"
+    },
+    {
+      "url": "/api/workspace/context/reading",
+      "method": "POST"
+    },
+    {
+      "url": "/api/workspace/context/reading",
+      "method": "POST"
+    },
+    {
+      "url": "/api/workspace/context/reading",
+      "method": "POST"
+    },
+    {
+      "url": "/api/workspace/context/reading",
+      "method": "POST"
+    },
+    {
+      "url": "/api/workspace/context/reading",
+      "method": "POST"
+    }
+  ],
+  "writes": [],
+  "providerContacts": 0
+}

@@ -1,0 +1,314 @@
+{
+  "local": {
+    "$defs": {
+      "D5Claim_f9cfe495c7d2fd09": {
+        "additionalProperties": false,
+        "properties": {
+          "claim_id": {
+            "description": "Unique ID of this emitted claim, c1 through c6.",
+            "enum": [
+              "c1",
+              "c2",
+              "c3",
+              "c4",
+              "c5",
+              "c6"
+            ],
+            "title": "Claim Id",
+            "type": "string"
+          },
+          "text": {
+            "maxLength": 360,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          },
+          "handles": {
+            "description": "Selected evidence handles (u...), never claim IDs. Each passage must support this claim.",
+            "items": {
+              "$ref": "#/$defs/D5Evidence_f9cfe495c7d2fd09"
+            },
+            "maxItems": 3,
+            "minItems": 1,
+            "title": "Handles",
+            "type": "array"
+          },
+          "required_scope": {
+            "default": "abstract",
+            "enum": [
+              "abstract",
+              "excerpt",
+              "full_text"
+            ],
+            "title": "Required Scope",
+            "type": "string"
+          }
+        },
+        "required": [
+          "claim_id",
+          "text",
+          "handles"
+        ],
+        "title": "D5Claim_f9cfe495c7d2fd09",
+        "type": "object"
+      },
+      "D5Evidence_f9cfe495c7d2fd09": {
+        "enum": [
+          "u423a5ed5c10153d66367",
+          "uf800ed16cb52eb251690"
+        ],
+        "title": "D5Evidence_f9cfe495c7d2fd09",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "claims": {
+        "items": {
+          "$ref": "#/$defs/D5Claim_f9cfe495c7d2fd09"
+        },
+        "maxItems": 6,
+        "title": "Claims",
+        "type": "array"
+      },
+      "background": {
+        "maxLength": 360,
+        "title": "Background",
+        "type": "string"
+      },
+      "assumptions": {
+        "items": {
+          "type": "string"
+        },
+        "maxItems": 3,
+        "title": "Assumptions",
+        "type": "array"
+      },
+      "gaps": {
+        "items": {
+          "type": "string"
+        },
+        "maxItems": 3,
+        "minItems": 1,
+        "title": "Gaps",
+        "type": "array"
+      },
+      "questions": {
+        "items": {
+          "type": "string"
+        },
+        "maxItems": 3,
+        "minItems": 1,
+        "title": "Questions",
+        "type": "array"
+      },
+      "proposal": {
+        "maxLength": 360,
+        "title": "Proposal",
+        "type": "string"
+      },
+      "abstention": {
+        "anyOf": [
+          {
+            "maxLength": 180,
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Abstention"
+      },
+      "comparison": {
+        "description": "Cross-source interpretation grounded in comparison_basis, or empty when evidence is insufficient. All factual prose is checked.",
+        "maxLength": 360,
+        "title": "Comparison",
+        "type": "string"
+      },
+      "comparison_basis": {
+        "description": "IDs (c1...c6) of distinct claims emitted in claims, NOT evidence handles. A comparison needs independently cited claims from at least two selected works; otherwise use an empty comparison and basis.",
+        "items": {
+          "enum": [
+            "c1",
+            "c2",
+            "c3",
+            "c4",
+            "c5",
+            "c6"
+          ],
+          "type": "string"
+        },
+        "maxItems": 6,
+        "title": "Comparison Basis",
+        "type": "array"
+      }
+    },
+    "required": [
+      "claims",
+      "background",
+      "assumptions",
+      "gaps",
+      "questions",
+      "proposal",
+      "abstention",
+      "comparison",
+      "comparison_basis"
+    ],
+    "title": "D5Draft_f9cfe495c7d2fd09",
+    "type": "object"
+  },
+  "wire": {
+    "$defs": {
+      "D5Claim_f9cfe495c7d2fd09": {
+        "type": "object",
+        "title": "D5Claim_f9cfe495c7d2fd09",
+        "properties": {
+          "claim_id": {
+            "type": "string",
+            "enum": [
+              "c1",
+              "c2",
+              "c3",
+              "c4",
+              "c5",
+              "c6"
+            ],
+            "description": "Unique ID of this emitted claim, c1 through c6.",
+            "title": "Claim Id"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text",
+            "description": "{maxLength: 360, minLength: 1}"
+          },
+          "handles": {
+            "type": "array",
+            "description": "Selected evidence handles (u...), never claim IDs. Each passage must support this claim.\n\n{maxItems: 3}",
+            "title": "Handles",
+            "items": {
+              "$ref": "#/$defs/D5Evidence_f9cfe495c7d2fd09"
+            },
+            "minItems": 1
+          },
+          "required_scope": {
+            "type": "string",
+            "enum": [
+              "abstract",
+              "excerpt",
+              "full_text"
+            ],
+            "title": "Required Scope",
+            "description": "{default: abstract}"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "claim_id",
+          "text",
+          "handles"
+        ]
+      },
+      "D5Evidence_f9cfe495c7d2fd09": {
+        "type": "string",
+        "enum": [
+          "u423a5ed5c10153d66367",
+          "uf800ed16cb52eb251690"
+        ],
+        "title": "D5Evidence_f9cfe495c7d2fd09"
+      }
+    },
+    "type": "object",
+    "title": "D5Draft_f9cfe495c7d2fd09",
+    "properties": {
+      "claims": {
+        "type": "array",
+        "title": "Claims",
+        "items": {
+          "$ref": "#/$defs/D5Claim_f9cfe495c7d2fd09"
+        },
+        "description": "{maxItems: 6}"
+      },
+      "background": {
+        "type": "string",
+        "title": "Background",
+        "description": "{maxLength: 360}"
+      },
+      "assumptions": {
+        "type": "array",
+        "title": "Assumptions",
+        "items": {
+          "type": "string"
+        },
+        "description": "{maxItems: 3}"
+      },
+      "gaps": {
+        "type": "array",
+        "title": "Gaps",
+        "items": {
+          "type": "string"
+        },
+        "minItems": 1,
+        "description": "{maxItems: 3}"
+      },
+      "questions": {
+        "type": "array",
+        "title": "Questions",
+        "items": {
+          "type": "string"
+        },
+        "minItems": 1,
+        "description": "{maxItems: 3}"
+      },
+      "proposal": {
+        "type": "string",
+        "title": "Proposal",
+        "description": "{maxLength: 360}"
+      },
+      "abstention": {
+        "anyOf": [
+          {
+            "type": "string",
+            "description": "{maxLength: 180}"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Abstention"
+      },
+      "comparison": {
+        "type": "string",
+        "description": "Cross-source interpretation grounded in comparison_basis, or empty when evidence is insufficient. All factual prose is checked.\n\n{maxLength: 360}",
+        "title": "Comparison"
+      },
+      "comparison_basis": {
+        "type": "array",
+        "description": "IDs (c1...c6) of distinct claims emitted in claims, NOT evidence handles. A comparison needs independently cited claims from at least two selected works; otherwise use an empty comparison and basis.\n\n{maxItems: 6}",
+        "title": "Comparison Basis",
+        "items": {
+          "type": "string",
+          "enum": [
+            "c1",
+            "c2",
+            "c3",
+            "c4",
+            "c5",
+            "c6"
+          ]
+        }
+      }
+    },
+    "additionalProperties": false,
+    "required": [
+      "claims",
+      "background",
+      "assumptions",
+      "gaps",
+      "questions",
+      "proposal",
+      "abstention",
+      "comparison",
+      "comparison_basis"
+    ]
+  }
+}

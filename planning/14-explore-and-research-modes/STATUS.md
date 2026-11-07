@@ -1,5 +1,21 @@
 # Two-mode implementation status
 
+## Current D5 v4 contract repair — offline repair and publication gate
+
+Application **9bd25a82d313070e810038c8de42c0dc3d9cb8b1**. Prospective packet **f21f4b66e1eb99ab75c7c242a9bfa46acb78ccabc13fb885477e8160425fd95a**, approved=false. [Repair runbook](d5/CONTRACT-REPAIR-v4.md), [new proposal](d5/PAID-VALIDATION-PROPOSAL.md), [identity](d5/d5-packet-identity.json), [quota receipt](d5/d5-quota-v4.json).
+
+Real v3 Stage B remains stopped: one failed dev-learn draft, dev-compare unrun; no check/repair/recheck. Current active ledger stays10Messages/20counts/estimatedUSD0.125611, pending/unknown0. New contacts in this repair batch: **0 provider /0 token count**. No paid approval renewed or recorded. Old v3 measurements are historical, not evidence that changed requests fit.
+
+Delivered: shared claim-ID enum for Research basis references; single-paper Learn/one-source Research schemas without cross-source comparison fields; exact protected stage schema/purpose binding; optional prose (including abstention reasons) remains checked even if labelled unverified. Original failed response/request remain byte-pinned regression fixtures. Exact financial snapshot export now preserves decimal scale, rather than weakening historical hash checks.
+
+Actual local results so far:218focused Python tests;37affected Reader tests;4263frontend tests/219files/0skips,98.15%statement coverage; globalruff,189-source mypy, frontendlint/typecheck, productionbuild and22route budgets pass.53workflowe2e,20/20zero-spendresearch,registry260/0 pass. The stable full Python gate passed6536tests/54inherited skips/53separate-tier deselections, 96.06%overall and97%patch; all package floors pass. Final exact-head CI is recorded in outputs/d5/contract-repair-v4/FINAL-PUBLICATION.json.
+
+Protected prospective A/B replay completed in a newly fixture-marked DB with mock transport, not real token measurements or quality validation. Human labels remain blank and thresholds unchanged. The prospective validation DB is unmarked and has zero policies/scopes/grants.13fundedprogramme jobs remain; after two proposed fresh development jobs only11 would remain against12 in the original C/D schedule. No C/D dispatch is proposed, no ceiling/minimum changed.
+
+Isolated v4 simulation preview: **http://localhost:3194/workspace/today?mode=learn**, API8194, DBworkspace_d5_contract_v4_offline, principald5-v4-validation-run. Owner3137/review3178 unchanged; everyday generation/recurrence/notifications disabled. Unmerged/undeployed. Broader unsaved-draft browser-history reliability remains unresolved; two PDF samples remain partial.
+
+## Preserved previous implementation checkpoints
+
 Updated **2026-11-06 UTC / November 5 Pacific**. D0–D4 are implemented and
 verified locally. Application **`b261ddc5e0e034438a4dcc90bbbcb0ca42c76de3`**;
 immutable production build **`PwbeWv0RU7h8JGqumje0V`**. Publication and exact-head remote CI are independently visible in the
@@ -309,3 +325,4 @@ owner3137 untouched. New projects/threads remain under implementation.
 Paid dispatch, including counts, is stopped. Historical estimate$0.109967,
 9Messages/15counts/6jobs,unknown0; closed approval; q01 development, q02–q04
 failed, q05–q10 unrun. Everyday generation and recurrence remain disabled.
+Stable local full gate:6536passed/54inherited skips, 96.06%overall,97%patch; all package floors passed. [Evidence index](d5/evidence/contract-repair-v4/README.md). Remote exact-head CI is recorded in outputs/d5/contract-repair-v4/FINAL-PUBLICATION.json.

@@ -1,169 +1,76 @@
-# D5 paid validation proposal — NOT authorized or executed
+# D5 v4 fresh measurement/development proposal — UNAPPROVED
 
-This is a new scoped proposal, not renewed permission from the historical USD10
-ceiling or a configured key. No provider API or token-count contact is authorized
-in this implementation batch. Everyday paid generation, notifications and
-recurrence stay disabled. The historical benchmark and failed/stopped cases are
-preserved, not replayed or moved into the new denominator.
+No provider or token-count call is authorized by this document. The v3 Stage B scope remains stopped. Do not renew/replay it, reuse its authorization, run held-out cases, or infer permission from a key or remaining money. Everyday generation, recurrence and notifications remain disabled.
 
-The active package is `d5-system-validation-v3.json.gz`, digest **e1ed94498ce74231621f5c1394ddabd0aee11d3c42b7f88f5983e78d22c6d1da**, application **f962ff84fd49c9e6b0db325c8adba3817a177c8b**. Exact source/scorer/schema hashes are in [the identity receipt](d5-packet-identity.json). Public/financial replay input remains `d5-replay-inputs-v1.json.gz`. V2 and v1 seals/outputs are preserved; v3 adds the validated review importer and computed evaluator, without changing corpus/model/settings/thresholds/minimums/limits/history. No paid D5 output was inspected, and no prior authorization is renewed. Prototype packets remain inactive.
+Packet: **`d5-system-validation-v4.json.gz`**, digest **`f21f4b66e1eb99ab75c7c242a9bfa46acb78ccabc13fb885477e8160425fd95a`**. Application **`9bd25a82d313070e810038c8de42c0dc3d9cb8b1`**. [Identity/bindings](d5-packet-identity.json), [exact requests and schemas](evidence/contract-repair-v4/prospective-requests.json), [failure lineage and quotas](d5-quota-v4.json). Predecessor v3 **e1ed94498ce74231621f5c1394ddabd0aee11d3c42b7f88f5983e78d22c6d1da** and its stopped result/authorization remain historical. The v3 proposal is [preserved separately](PAID-VALIDATION-PROPOSAL-v3.md).
 
-[Human-review import and scoring](HUMAN-REVIEW-RUNBOOK.md) now work through the actual CLI, with [offline synthetic reports](evidence/review-grading/README.md). Real reviews are blank. Explicit rescoring of an old run retains its original packet/result in an analysis receipt; old jobs are not attached to v3. Structural JSON schema is accompanied by local attribution/applicability/binding validation. No reviewer can override a failed mechanical quote/version/offset/selection check. Synthetic grades cannot qualify the checker.
+## Smallest runnable stages under the existing runner
 
-## What one approval would enable
+| Stage | Exact operations | New funded jobs max | Messages max | Count contacts max | New spend cap |
+|---|---|---:|---:|---:|---:|
+| A, fresh measurement only | measure-1/dev-learn; measure-2/dev-compare; measure-3/research-retrieval; measure-4/research-insufficient |0|0|4|$0|
+| B, fresh development only, requires separate explicit permission or an approval expressly including A+B | dev-learn, then dev-compare, each under the changed v4 request identity |2|8|8 paired|$0.80 total, $0.40 all-in per job|
+| Proposed A+B envelope | No other named case/stage |**2**|**8**|**12**|**$0.80**|
 
-Only the named A–D stages, cases, contexts and limits in this packet, against the
-isolated qualification database and principals. The operator records a separately
-supplied exact authorization. The runner cannot create its own approval. Approving only Stage A permits four count contacts and forbids Messages. Later funded stages require a separate owner-approved, append-only grant, bound to the original authorization, unchanged packet/limits and current accounting digest. It cannot renew the original expiry, erase contacts or revive a stopped scope. Alternatively, one explicit approval may name A–D, with separate stage invocations and inspection. The smallest first decision is A only.
+A is four requests because the protected runner requires all four initial named measurements before B. Counts are for the changed exact wires. Old v3 counts do not prove v4 token fit. Measurement is not a workflow job or Messages-schema acceptance. Draft/check/repair/recheck each require their own actual paired count before dispatch; checker/repair wires are derived only from the actual preceding output. Their future exact digests cannot be known before those outputs exist.
 
-The D5 workflows are proposed deep-dive/explanation jobs at the new disclosed USD0.40 per-job ceiling. This does not raise or reuse an old summary approval; historical USD0.25 summary/USD0.40 study receipts remain closed and unchanged.
+No C or D permission is proposed. Development remains outside the held-out denominator. dev-learn v4 would be a **new explicitly approved attempt related to failed v3 dev-learn**, never a retry of its stopped identity. dev-compare v3 was unrun, not a success. Current frozen system cases are retained as definitions, not silently funded or scored.
 
-Model `claude-sonnet-5-5`, standard/global Claude API for workflow and checker.
-Thinking `between_tools`, effort `medium`, no sampling parameters, cache, tools,
-search, model fallback or source expansion. Manual background is empty. Selected
-public evidence and explicit machine-authored project questions are disclosed.
-Private notes, owner question text, drafts, history and pinned-note IDs are not
-part of the outbound context. Ranking uses the frozen actual saved-interest
-snapshot; its authority and omitted-question hashes are retained.
+## Request and contract bindings
 
-| Stage | Named operations | Funded jobs | Messages max | Counts max |
-|---|---|---:|---:|---:|
-| A | `measure-1`…`measure-4`: dev-learn, dev-compare, research-retrieval, research-insufficient draft wires | 0 | 0 | 4 |
-| B | `dev-learn`, `dev-compare` | 2 | 8 | 8 |
-| C | learn-method, learn-assumptions, learn-build, learn-results, research-memory, research-retrieval, research-evaluation, research-insufficient | 8 | 32 | 32 |
-| D | probe-1…probe-4, five separately cited negative claims each | 4 | 4 | 4 |
-| Total | 18 named ledger operations, including 4 count-only helpers | **14** | **44** | **48** |
+Model **claude-sonnet-5-5** for workflow and mandatory checker, thinking **between_tools**, effort **medium**, no temperature, cache, batch, external tools, search, model fallback or source expansion. Workflow output<=4000 tokens; checker<=1800; raw input<=20000, paired measured count<=16000 (1.25 margin), four Messages maximum per workflow, at most one repair and one recheck. One job/call at a time; no automatic HTTP retry. Producer, profile/question, source/version/material/parser/hash/Unicode offsets, selected units, settings, local and transformed wire schemas and prompt hashes are sealed. Strict wrong-version/quote/offset/unselected-evidence checks remain.
 
-Stage B requires all four initial measurements to fit. Later stages require the
-preceding stage's completed identities. Provider mode disallows an automatic
-`--stage all`. Only one job and one call run at a time. Every actual workflow or
-checker stage gets a paired token count before Messages dispatch. A count-only
-approval forbids Messages, not merely generation UI actions.
+Single-paper Learn and one-source Research omit cross-source comparison fields. Within-paper contrasts remain attributed cited claims. Applicable Research comparison_basis uses distinct emitted c1–c6 claim IDs, with independent source bases. Optional factual prose is still checked; an unverified label is no exemption. Human support, atomicity, qualifications, omissions, comparison compatibility and counterevidence remain independent review fields.
 
-Draft/repair output ≤4000 tokens; check/recheck ≤1800. Input allowance 20000 raw
-usage tokens, with an actual measured count ≤16000 before Messages (1.25× margin).
-At most six claims of 360 characters, each with 1–3 distinct selected handles.
-At most one repair/recheck; no automatic HTTP retry. Maximum output envelope is
-123200 tokens, maximum raw input usage envelope 880000 tokens. These maxima are
-reservations, not observed token measurements. Real count/schema acceptance and
-response completion remain unmeasured.
+Only the selected retained public evidence and frozen machine-authored questions are sent. Private notes, owner question text, preferences, reading history and drafts stay excluded. The same40 public works/42 materials and two bounded PDF samples are replayed; this is neither fresh intake nor complete-paper acquisition. Review [initial public request bodies](evidence/contract-repair-v4/requests/).
 
-## Corpus, freeze and evaluation
+## Cumulative budget and feasibility — no reset
 
-Forty retained public works and 42 versioned materials are replayed, including two
-bounded PDF samples with original acquisition/extraction receipts. This establishes
-neither fresh intake nor reliable whole-paper extraction. Scientific unit selection
-retains complete bounded sentence groups and qualifications, excludes recognised
-front matter and flags known page failures. Original text/Unicode offsets remain
-unchanged. Unavailable/poor evidence stays an upstream failure.
+Current ledger: **10 Messages,20 counts, estimatedUSD0.125611**, workflowUSD0.110299/checkerUSD0.015312, pending/unknown0. Original historicalUSD0.109967 plus rejected Stage B USD0.015644 are preserved. Eight cumulative funded identities include the original parent qualification; **7/20 programme jobs are consumed**, including the failed new attempt. Remaining programme capacity: **13 funded jobs,70 Messages,60 counts,USD9.874389**. Preserving the existingUSD1 uncertainty headroom leavesUSD8.874389 available for admission, not permission.
 
-Eight fresh system cases use production mode-specific ranking and the actual
-selected queue/context. They never substitute handpicked reference passages.
-Two development cases and four fixed-evidence checker batches are separate.
-Chronological/declared-term diagnostics use the same pool/filters/clock, with unknown
-dates explicitly missing. Proposed references and negative labels are machine
-annotations, not human gold or personal usefulness judgments.
+The proposed A+B worst limits yield18 cumulative Messages/32 counts,9/20 programme jobs consumed,11 remaining funded slots, and cumulative spend at mostUSD0.925611. Conservative reservationsUSD0.80 + preserved headroomUSD1 + currentUSD0.125611 =USD1.925611, below the unchangedUSD10 ceiling. The complete metered two-workflow envelope is at mostUSD0.552 at sealed rates:8×20000 input +4×4000 workflow output +4×1800 checker output. An illustrative no-repair shape (5000/700 workflow +2000/75 checker per job) isUSD0.0435 total; this is an assumption, not measured token fit or a forecast. Count requests are pricedUSD0 in the sealed contract; verify current documented access/pricing before any future execution.
 
-Before any future paid output is inspected, the packet binds corpus/profile,
-questions, clock, ranking/selection, source versions/material/parser/offsets,
-prompts, local and transformed wire schemas, model/settings, stage limits, code,
-scorer, rubric, cohorts and stop rules. Checks/repairs depend on actual preceding
-outputs; their exact request digests are recorded then under the frozen templates.
+The original unrun C/D schedule requires12 funded jobs (8 system +4 checker batches). After two fresh development jobs only11 slots remain. **The full original schedule cannot then fit.** Do not increase the20-job ceiling, remove a failed job, assume probe negatives, lower the20-fact/20-probe minimum, add cases or run a partial schedule and call it qualified. A later reviewable plan must address this before any C/D approval. This A/B-only proposal establishes development readiness at most, not qualification.
 
-Predeclared acceptance: 8/8 fresh completions (the 90% target rounds up for eight),
-perfect required provenance, at least 20 independently reviewed generated facts
-and 20 reviewed negative probe items, zero observed false passes and no accepted
-unsupported factual claim. Missing human labels or empty denominators remain
-UNSCORED/HOLD. Optional prose cannot bypass factual review. Atomicity, whole-claim
-support, qualifications, compatible comparisons, counterevidence and omissions
-are reviewed separately. A valid citation is not whole-claim support.
+Rates remain the sealed **estimates** ofUSD2/input million andUSD10/output million, verified in the prior packet on November6UTC; this offline batch did not refresh them or contact a provider. [Official pricing](https://platform.claude.com/docs/en/about-claude/pricing) and [model/settings documentation](https://platform.claude.com/docs/en/models/sonnet-5-5/overview) are the future preflight references. Invoice reconciliation, real token fit of changed requests, remote schema acceptance and response quality remain unmeasured. Any pricing/settings/model/source/schema/code drift requires stop and a new binding; never substitute silently.
 
-Seven potentially answerable system cases ×6 claim slots =42 possible generated
-facts; roughly three facts per answerable case could supply21. This is feasible,
-not guaranteed. Correct abstention or fewer facts can leave fewer than20: HOLD;
-no extra cases or thresholds are added after inspecting results. Development
-facts do not fill the held-out minimum. The20 proposed negative probes count only
-when independently labelled. Review every observed fact/probe and case-level
-omissions; owner usefulness fields remain blank. Correlated claims/sources are not
-independent samples. This small trial cannot statistically certify checker
-reliability, literature-wide recall, learning/comprehension or longitudinal use.
+## Concrete commands — future paid commands NOT RUN
 
-## Accounting and conservative cost envelope
-
-Preserved historical estimated usage: **USD0.109967**, workflow0.094655,
-checker0.015312; pending/unknown liability0 at the bound checkpoint. Historical
-contacts9Messages/15counts and7 funded ledger identities remain unchanged: one
-initial qualification plus6 jobs in the subsequent programme. Four older count-only
-ledger rows are separate. This proposal adds at most14 funded jobs:21 cumulative
-funded identities including the original,20 new-programme jobs after its parent.
-Contacts become at most53Messages/63counts, within the existing80/80 programme caps.
-No ledger is reset when changing models, stages, principals, packet or request IDs.
-
-Official standard/global Sonnet5.5 rates rechecked November6UTC:
-USD2/input million tokens, USD10/output million. These are estimates, not invoices;
-no caching/batch discount is assumed. [Official pricing](https://platform.claude.com/docs/en/about-claude/pricing),
-[model/settings](https://platform.claude.com/docs/en/models/sonnet-5-5/overview).
-Any price/model/settings drift requires a new reviewable binding before execution.
-
-| View | New USD | Basis |
-|---|---:|---|
-| Illustrative expected shape | 0.454 | 20 workflow contacts at5000in/700out;24 checker contacts at2000in/75out; unmeasured assumption, not a forecast |
-| Maximum metered envelope | 2.992 | 44×20000 input;20×4000 workflow output;24×1800 checker output |
-| Conservative per-job reservations | 4.32 | 10×0.40 workflows +4×0.08 checker batches; all mandatory stages reserved before draft |
-| Additional uncertainty headroom | 1.00 | Remains unavailable for extra cases |
-| Historical + reservations + headroom | **5.429967** | Below cumulative USD10 ceiling; unused money authorizes nothing |
-
-Failed/uncertain contacts consume their applicable contact/job limits. Unknown
-completion retains its conservative hold and stops further dispatch. Completed
-metered invalid content is charged and stays failed; money and content acceptance
-are reconciled separately. No blind replay, alternate request ID or cache bypass.
-
-## Runnable commands — paid commands remain unexecuted
-
-Run from this worktree root. The locked interpreter must resolve `src` here.
-The runbook supplies isolated database setup and the offline command. Use the exact
-packet path and a new report directory; exports never overwrite prior evidence.
+Run from the worktree root. The prospective unmarked DB `workspace_d5_contract_v4_validation` has the exact latest public/financial snapshot but **no budget policy, scope authorization or grant**. It is not the active ledger. The active stopped ledger remains `workspace_d5_review_validation`, named by outputs/d5/ACTIVE-QUALIFICATION-LEDGER.json. Before any future grant, compare their full census hashes and the current programme; if they differ, stop rather than use a stale copy. A separately approved handoff must update the active ledger pointer before dispatch; do not run ledgers concurrently. The old scope remains stopped.
 
 ```sh
 export VENV_PYTHON=/Users/kudratsingh/Machine-Learning-Projects/arxiv-venv-lock/bin/python
 export PYTHONPATH=/private/tmp/arxiv-qualification-schema-deps:$PWD
-export PACKET=planning/14-explore-and-research-modes/d5/d5-system-validation-v3.json.gz
-$VENV_PYTHON -m src.workspace.d5_benchmark verify --packet "$PACKET"
-
-# Exporting a template is not approval; approved=false and no contact.
-$VENV_PYTHON -m src.workspace.d5_operator template --packet "$PACKET" --receipt outputs/d5/owner-authorization-v3.json
+export PACKET=planning/14-explore-and-research-modes/d5/d5-system-validation-v4.json.gz
+# Offline, no permission or contact:
+ANTHROPIC_API_KEY=local-preview-disabled $VENV_PYTHON -m src.workspace.d5_benchmark verify --packet "$PACKET"
+# Exports approved=false; does not enable dispatch:
+ANTHROPIC_API_KEY=local-preview-disabled $VENV_PYTHON -m src.workspace.d5_operator template --packet "$PACKET" --stages A --receipt outputs/d5/owner-authorization-v4.json
 ```
 
-Only after a separate explicit owner approval, an operator supplies its exact approved-by/reference/timestamps, permitted stages and unchanged packet/limit bindings in that receipt, then records it against the **unapproved validation DB**. The default template permits A only. To request A–D together, export with `--stages A,B,C,D`; that broader scope also requires explicit approval.
-Never use the offline fixture DB or copy its synthetic policies into validation.
+Only **after new explicit approval** and a verified cumulative-ledger handoff, an operator may fill that exact receipt from the owner's instruction, with an expiry and unchanged exact limits. Never copy fixture permission. The two named prospective principals (`d5-v4-validation-measure`, `d5-v4-validation-run`) remain members of the same immutable programme. Their historical baseline includes the failed v3 identity; new names cannot reset capacity or evade a stopped attempt.
 
 ```sh
-# UNEXECUTED; only in the separate approved operator shell, with its configured credential.
-# Do not reuse the offline preview process/environment. Do not print the credential.
+# UNEXECUTED. Requires separate explicit A-only approval and matching receipt.
+export D5_POSTGRES_URL=postgresql://workspace:workspace-local-only@127.0.0.1:15488/workspace_d5_contract_v4_validation
 unset WORKSPACE_D5_OFFLINE
-export D5_POSTGRES_URL=postgresql://workspace:workspace-local-only@127.0.0.1:15488/workspace_d5_review_validation
-$VENV_PYTHON -m src.workspace.d5_operator record --packet "$PACKET" --receipt outputs/d5/owner-authorization-v3.json
-$VENV_PYTHON -m src.workspace.d5_benchmark run --packet "$PACKET" --stage A --out outputs/d5/paid-A
-# Inspect counts/receipts; no unrelated auth smoke call.
-# If the original approval was A-only, export this false template for owner review:
-$VENV_PYTHON -m src.workspace.d5_operator stage-template --packet "$PACKET" --stages B --receipt outputs/d5/owner-funded-B-v3.json
-# Only AFTER the separate B approval is supplied in that receipt:
-$VENV_PYTHON -m src.workspace.d5_operator grant --packet "$PACKET" --receipt outputs/d5/owner-funded-B-v3.json
-$VENV_PYTHON -m src.workspace.d5_benchmark run --packet "$PACKET" --stage B --out outputs/d5/paid-B
-# Inspect development quality; C/D require their own grant unless already approved.
-$VENV_PYTHON -m src.workspace.d5_operator stage-template --packet "$PACKET" --stages C,D --receipt outputs/d5/owner-funded-CD-v3.json
-# Only AFTER the separate C/D approval is supplied:
-$VENV_PYTHON -m src.workspace.d5_operator grant --packet "$PACKET" --receipt outputs/d5/owner-funded-CD-v3.json
-$VENV_PYTHON -m src.workspace.d5_benchmark run --packet "$PACKET" --stage C --out outputs/d5/paid-C
-$VENV_PYTHON -m src.workspace.d5_benchmark run --packet "$PACKET" --stage D --out outputs/d5/paid-D
-$VENV_PYTHON -m src.workspace.d5_operator revoke --packet "$PACKET" --receipt outputs/d5/owner-authorization-v3.json
+# Configure credential only in the separate approved operator shell; never print it.
+$VENV_PYTHON -m src.workspace.d5_operator record --packet "$PACKET" --receipt outputs/d5/owner-authorization-v4.json
+$VENV_PYTHON -m src.workspace.d5_benchmark run --packet "$PACKET" --stage A --out outputs/d5/paid-v4-A
+# STOP for measurement review unless that same new approval expressly permits A+B.
+# A later new B approval uses an append-only grant preserving parent expiry:
+$VENV_PYTHON -m src.workspace.d5_operator stage-template --packet "$PACKET" --stages B --receipt outputs/d5/owner-B-v4.json
+# After independently supplied explicit B approval only:
+$VENV_PYTHON -m src.workspace.d5_operator grant --packet "$PACKET" --receipt outputs/d5/owner-B-v4.json
+$VENV_PYTHON -m src.workspace.d5_benchmark run --packet "$PACKET" --stage B --out outputs/d5/paid-v4-B
+# Revocation (no provider call):
+$VENV_PYTHON -m src.workspace.d5_operator revoke --packet "$PACKET" --receipt outputs/d5/owner-authorization-v4.json
 ```
 
-Do not put a key in the command, chat, artifact, history or screenshot. Provider
-mode reads the configured environment only after explicit invocation and still
-requires valid external admission. No paid command above has been run. Approval
-would enable only these quarantined stages, not everyday generation or recurrence.
+Stop at the first contract/provider/admission/accounting failure, drift, cancellation, timeout, revocation, expiry or uncertain completion. Failed/uncertain contacts consume limits. Preserve complete-response usage and unknown holds; invalid content never becomes ready to release money. Do not replay under an alternate ID, automatically repair invalid responses, renew expiry or broaden permission. An authorized bounded repair is possible only after a valid draft and checker outcome under the sealed workflow.
 
-## Review and reporting after an approved stage
+## Acceptance and review
 
-Export a **new blank** worksheet from that stage's original observed raw result using `python -m src.workspace.d5_reviews export`. Only actually performed reviews may be attributed as independent human. Validate/import into a separate review store, then recompute with `score`; the analysis receipt binds original packet/run/raw result, scorer/code, reviews, policy and accounting. Do not reuse synthetic or predecessor-run labels. Missing/indeterminate reviews and error-rate denominators remain unscored/HOLD. Development facts cannot fill held-out minimums, and proposed negatives are not assumed true. The unchanged20/20 minimums remain feasible but unguaranteed; no added cases after results. Owner usefulness remains optional/separate, not silently inferred from expert support labels.
+For development only: each admitted result must complete its declared path with exact provenance and no hidden unscored factual prose; review every actual claim, qualification, comparison, counterevidence/omission and abstention. Blank labels remain missing. Agreement is not human support. A small two-job trial cannot establish checker reliability or everyday usefulness; development facts never fill held-out20-fact minimums. The predeclared fresh-system 8/8 completion,20 reviewed generated facts,20 decisive reviewed probe items and zero false-pass rules remain unchanged and HOLD while unfulfilled. No actual human or owner usefulness judgments are supplied.
+
+[Offline repair/verification runbook](CONTRACT-REPAIR-v4.md), [original review import/scoring workflow](HUMAN-REVIEW-RUNBOOK.md). Any new reviews bind the original v4 paid outputs, not the synthetic replay or v3 attempt. This document grants nothing.

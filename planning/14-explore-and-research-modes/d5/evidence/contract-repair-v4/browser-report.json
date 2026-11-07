@@ -1,0 +1,460 @@
+{
+  "packet": "f21f4b66e1eb99ab75c7c242a9bfa46acb78ccabc13fb885477e8160425fd95a",
+  "application": "9bd25a82d313070e810038c8de42c0dc3d9cb8b1",
+  "basis": "Read-only browser of mocked qualification results; no human quality evidence",
+  "contexts": [
+    {
+      "name": "1440-light",
+      "width": 1440,
+      "theme": "light",
+      "reducedMotion": false,
+      "cases": [
+        {
+          "case": "dev-learn",
+          "job": "gen-7fae34d42d60088ccde3cce8727149afc9f4e590",
+          "purpose": "single_paper",
+          "anchor": "material:mat-2b7a38f3cfa1449f7728f044688ca2c2:page:6:2005:3379",
+          "reload": true,
+          "exactPassage": true,
+          "axeSerious": 0,
+          "humanLabels": null
+        },
+        {
+          "case": "dev-compare",
+          "job": "gen-91a3a921ba266d5c5d226bcc718d184b96d0fe60",
+          "purpose": "research_comparison",
+          "anchor": "material:mat-2b7a38f3cfa1449f7728f044688ca2c2:page:1:2443:3888",
+          "reload": true,
+          "exactPassage": true,
+          "axeSerious": 0,
+          "humanLabels": null
+        }
+      ]
+    },
+    {
+      "name": "1440-dark",
+      "width": 1440,
+      "theme": "dark",
+      "reducedMotion": true,
+      "cases": [
+        {
+          "case": "dev-learn",
+          "job": "gen-7fae34d42d60088ccde3cce8727149afc9f4e590",
+          "purpose": "single_paper",
+          "anchor": "material:mat-2b7a38f3cfa1449f7728f044688ca2c2:page:6:2005:3379",
+          "reload": true,
+          "exactPassage": true,
+          "axeSerious": 0,
+          "humanLabels": null
+        },
+        {
+          "case": "dev-compare",
+          "job": "gen-91a3a921ba266d5c5d226bcc718d184b96d0fe60",
+          "purpose": "research_comparison",
+          "anchor": "material:mat-2b7a38f3cfa1449f7728f044688ca2c2:page:1:2443:3888",
+          "reload": true,
+          "exactPassage": true,
+          "axeSerious": 0,
+          "humanLabels": null
+        }
+      ]
+    },
+    {
+      "name": "390-light",
+      "width": 390,
+      "theme": "light",
+      "reducedMotion": false,
+      "cases": [
+        {
+          "case": "dev-learn",
+          "job": "gen-7fae34d42d60088ccde3cce8727149afc9f4e590",
+          "purpose": "single_paper",
+          "anchor": "material:mat-2b7a38f3cfa1449f7728f044688ca2c2:page:6:2005:3379",
+          "reload": true,
+          "exactPassage": true,
+          "axeSerious": 0,
+          "humanLabels": null
+        },
+        {
+          "case": "dev-compare",
+          "job": "gen-91a3a921ba266d5c5d226bcc718d184b96d0fe60",
+          "purpose": "research_comparison",
+          "anchor": "material:mat-2b7a38f3cfa1449f7728f044688ca2c2:page:1:2443:3888",
+          "reload": true,
+          "exactPassage": true,
+          "axeSerious": 0,
+          "humanLabels": null
+        }
+      ]
+    },
+    {
+      "name": "390-dark",
+      "width": 390,
+      "theme": "dark",
+      "reducedMotion": true,
+      "cases": [
+        {
+          "case": "dev-learn",
+          "job": "gen-7fae34d42d60088ccde3cce8727149afc9f4e590",
+          "purpose": "single_paper",
+          "anchor": "material:mat-2b7a38f3cfa1449f7728f044688ca2c2:page:6:2005:3379",
+          "reload": true,
+          "exactPassage": true,
+          "axeSerious": 0,
+          "humanLabels": null
+        },
+        {
+          "case": "dev-compare",
+          "job": "gen-91a3a921ba266d5c5d226bcc718d184b96d0fe60",
+          "purpose": "research_comparison",
+          "anchor": "material:mat-2b7a38f3cfa1449f7728f044688ca2c2:page:1:2443:3888",
+          "reload": true,
+          "exactPassage": true,
+          "axeSerious": 0,
+          "humanLabels": null
+        }
+      ]
+    }
+  ],
+  "pageErrors": [],
+  "blocked": [],
+  "writes": [
+    {
+      "path": "/api/workspace/context/reading",
+      "body": {
+        "work_id": "arxiv:2210.03629",
+        "revision": 0,
+        "context": {
+          "mode": "learn",
+          "project_id": null,
+          "thread_id": null,
+          "return_to": "/workspace/today?mode=learn"
+        },
+        "data": {
+          "status": "unread",
+          "anchor": "material:mat-2b7a38f3cfa1449f7728f044688ca2c2:page:6:2005:3379",
+          "version_id": "arxiv:2210.03629:v3",
+          "snoozed_until": null
+        },
+        "request_id": "a953ab50-a9b1-46bb-bbfa-0e2bc55b0562"
+      },
+      "scope": "Isolated automatic Reader reading anchor only"
+    },
+    {
+      "path": "/api/workspace/context/reading",
+      "body": {
+        "work_id": "arxiv:2210.03629",
+        "revision": 1,
+        "context": {
+          "mode": "learn",
+          "project_id": null,
+          "thread_id": null,
+          "return_to": "/workspace/today?mode=learn"
+        },
+        "data": {
+          "status": "unread",
+          "anchor": "material:mat-2b7a38f3cfa1449f7728f044688ca2c2:page:6:2005:3379",
+          "version_id": "arxiv:2210.03629:v3",
+          "snoozed_until": null
+        },
+        "request_id": "12c7e4da-61f0-487b-ae63-fe4fc28e5dde"
+      },
+      "scope": "Isolated automatic Reader reading anchor only"
+    },
+    {
+      "path": "/api/workspace/context/reading",
+      "body": {
+        "work_id": "arxiv:2210.03629",
+        "revision": 2,
+        "context": {
+          "mode": "research",
+          "project_id": "project-d323fc7f292539ea490d65421aa0ea75",
+          "thread_id": null,
+          "return_to": "/workspace/today?mode=research&project=project-d323fc7f292539ea490d65421aa0ea75"
+        },
+        "data": {
+          "status": "unread",
+          "anchor": "material:mat-2b7a38f3cfa1449f7728f044688ca2c2:page:1:2443:3888",
+          "version_id": "arxiv:2210.03629:v3",
+          "snoozed_until": null
+        },
+        "request_id": "fd8461f3-4547-458d-80ba-d38380889313"
+      },
+      "scope": "Isolated automatic Reader reading anchor only"
+    },
+    {
+      "path": "/api/workspace/context/reading",
+      "body": {
+        "work_id": "arxiv:2210.03629",
+        "revision": 3,
+        "context": {
+          "mode": "research",
+          "project_id": "project-d323fc7f292539ea490d65421aa0ea75",
+          "thread_id": null,
+          "return_to": "/workspace/today?mode=research&project=project-d323fc7f292539ea490d65421aa0ea75"
+        },
+        "data": {
+          "status": "unread",
+          "anchor": "material:mat-2b7a38f3cfa1449f7728f044688ca2c2:page:1:2443:3888",
+          "version_id": "arxiv:2210.03629:v3",
+          "snoozed_until": null
+        },
+        "request_id": "5e2194cc-0158-47c2-b11c-dcd30c7bc341"
+      },
+      "scope": "Isolated automatic Reader reading anchor only"
+    },
+    {
+      "path": "/api/workspace/context/reading",
+      "body": {
+        "work_id": "arxiv:2210.03629",
+        "revision": 4,
+        "context": {
+          "mode": "learn",
+          "project_id": null,
+          "thread_id": null,
+          "return_to": "/workspace/today?mode=learn"
+        },
+        "data": {
+          "status": "unread",
+          "anchor": "material:mat-2b7a38f3cfa1449f7728f044688ca2c2:page:6:2005:3379",
+          "version_id": "arxiv:2210.03629:v3",
+          "snoozed_until": null
+        },
+        "request_id": "7b68adb7-31cd-4a92-8e24-d356c6920874"
+      },
+      "scope": "Isolated automatic Reader reading anchor only"
+    },
+    {
+      "path": "/api/workspace/context/reading",
+      "body": {
+        "work_id": "arxiv:2210.03629",
+        "revision": 5,
+        "context": {
+          "mode": "learn",
+          "project_id": null,
+          "thread_id": null,
+          "return_to": "/workspace/today?mode=learn"
+        },
+        "data": {
+          "status": "unread",
+          "anchor": "material:mat-2b7a38f3cfa1449f7728f044688ca2c2:page:6:2005:3379",
+          "version_id": "arxiv:2210.03629:v3",
+          "snoozed_until": null
+        },
+        "request_id": "909d678e-85d2-4ff2-bdf6-d89f5aca3163"
+      },
+      "scope": "Isolated automatic Reader reading anchor only"
+    },
+    {
+      "path": "/api/workspace/context/reading",
+      "body": {
+        "work_id": "arxiv:2210.03629",
+        "revision": 6,
+        "context": {
+          "mode": "research",
+          "project_id": "project-d323fc7f292539ea490d65421aa0ea75",
+          "thread_id": null,
+          "return_to": "/workspace/today?mode=research&project=project-d323fc7f292539ea490d65421aa0ea75"
+        },
+        "data": {
+          "status": "unread",
+          "anchor": "material:mat-2b7a38f3cfa1449f7728f044688ca2c2:page:1:2443:3888",
+          "version_id": "arxiv:2210.03629:v3",
+          "snoozed_until": null
+        },
+        "request_id": "61896018-e4b8-43ce-875a-61368729ccd1"
+      },
+      "scope": "Isolated automatic Reader reading anchor only"
+    },
+    {
+      "path": "/api/workspace/context/reading",
+      "body": {
+        "work_id": "arxiv:2210.03629",
+        "revision": 7,
+        "context": {
+          "mode": "research",
+          "project_id": "project-d323fc7f292539ea490d65421aa0ea75",
+          "thread_id": null,
+          "return_to": "/workspace/today?mode=research&project=project-d323fc7f292539ea490d65421aa0ea75"
+        },
+        "data": {
+          "status": "unread",
+          "anchor": "material:mat-2b7a38f3cfa1449f7728f044688ca2c2:page:1:2443:3888",
+          "version_id": "arxiv:2210.03629:v3",
+          "snoozed_until": null
+        },
+        "request_id": "66cf7269-7fa1-45fb-a29d-b1cd6fe84e0e"
+      },
+      "scope": "Isolated automatic Reader reading anchor only"
+    },
+    {
+      "path": "/api/workspace/context/reading",
+      "body": {
+        "work_id": "arxiv:2210.03629",
+        "revision": 8,
+        "context": {
+          "mode": "learn",
+          "project_id": null,
+          "thread_id": null,
+          "return_to": "/workspace/today?mode=learn"
+        },
+        "data": {
+          "status": "unread",
+          "anchor": "material:mat-2b7a38f3cfa1449f7728f044688ca2c2:page:6:2005:3379",
+          "version_id": "arxiv:2210.03629:v3",
+          "snoozed_until": null
+        },
+        "request_id": "b138f88b-dec1-4750-aefa-c8bc0e42ed10"
+      },
+      "scope": "Isolated automatic Reader reading anchor only"
+    },
+    {
+      "path": "/api/workspace/context/reading",
+      "body": {
+        "work_id": "arxiv:2210.03629",
+        "revision": 9,
+        "context": {
+          "mode": "learn",
+          "project_id": null,
+          "thread_id": null,
+          "return_to": "/workspace/today?mode=learn"
+        },
+        "data": {
+          "status": "unread",
+          "anchor": "material:mat-2b7a38f3cfa1449f7728f044688ca2c2:page:6:2005:3379",
+          "version_id": "arxiv:2210.03629:v3",
+          "snoozed_until": null
+        },
+        "request_id": "f536723c-a9c3-4e36-91df-e16831dcb6e8"
+      },
+      "scope": "Isolated automatic Reader reading anchor only"
+    },
+    {
+      "path": "/api/workspace/context/reading",
+      "body": {
+        "work_id": "arxiv:2210.03629",
+        "revision": 10,
+        "context": {
+          "mode": "research",
+          "project_id": "project-d323fc7f292539ea490d65421aa0ea75",
+          "thread_id": null,
+          "return_to": "/workspace/today?mode=research&project=project-d323fc7f292539ea490d65421aa0ea75"
+        },
+        "data": {
+          "status": "unread",
+          "anchor": "material:mat-2b7a38f3cfa1449f7728f044688ca2c2:page:1:2443:3888",
+          "version_id": "arxiv:2210.03629:v3",
+          "snoozed_until": null
+        },
+        "request_id": "e0e5f5f4-07f7-4ca3-873e-cda2a7cb6c66"
+      },
+      "scope": "Isolated automatic Reader reading anchor only"
+    },
+    {
+      "path": "/api/workspace/context/reading",
+      "body": {
+        "work_id": "arxiv:2210.03629",
+        "revision": 11,
+        "context": {
+          "mode": "research",
+          "project_id": "project-d323fc7f292539ea490d65421aa0ea75",
+          "thread_id": null,
+          "return_to": "/workspace/today?mode=research&project=project-d323fc7f292539ea490d65421aa0ea75"
+        },
+        "data": {
+          "status": "unread",
+          "anchor": "material:mat-2b7a38f3cfa1449f7728f044688ca2c2:page:1:2443:3888",
+          "version_id": "arxiv:2210.03629:v3",
+          "snoozed_until": null
+        },
+        "request_id": "e7e738e1-16d7-4264-9846-f1047f68fd09"
+      },
+      "scope": "Isolated automatic Reader reading anchor only"
+    },
+    {
+      "path": "/api/workspace/context/reading",
+      "body": {
+        "work_id": "arxiv:2210.03629",
+        "revision": 12,
+        "context": {
+          "mode": "learn",
+          "project_id": null,
+          "thread_id": null,
+          "return_to": "/workspace/today?mode=learn"
+        },
+        "data": {
+          "status": "unread",
+          "anchor": "material:mat-2b7a38f3cfa1449f7728f044688ca2c2:page:6:2005:3379",
+          "version_id": "arxiv:2210.03629:v3",
+          "snoozed_until": null
+        },
+        "request_id": "5cdc9a12-7877-474e-8227-3d0e42040ff8"
+      },
+      "scope": "Isolated automatic Reader reading anchor only"
+    },
+    {
+      "path": "/api/workspace/context/reading",
+      "body": {
+        "work_id": "arxiv:2210.03629",
+        "revision": 13,
+        "context": {
+          "mode": "learn",
+          "project_id": null,
+          "thread_id": null,
+          "return_to": "/workspace/today?mode=learn"
+        },
+        "data": {
+          "status": "unread",
+          "anchor": "material:mat-2b7a38f3cfa1449f7728f044688ca2c2:page:6:2005:3379",
+          "version_id": "arxiv:2210.03629:v3",
+          "snoozed_until": null
+        },
+        "request_id": "7e447404-b5af-4beb-bbcf-e275aae09100"
+      },
+      "scope": "Isolated automatic Reader reading anchor only"
+    },
+    {
+      "path": "/api/workspace/context/reading",
+      "body": {
+        "work_id": "arxiv:2210.03629",
+        "revision": 14,
+        "context": {
+          "mode": "research",
+          "project_id": "project-d323fc7f292539ea490d65421aa0ea75",
+          "thread_id": null,
+          "return_to": "/workspace/today?mode=research&project=project-d323fc7f292539ea490d65421aa0ea75"
+        },
+        "data": {
+          "status": "unread",
+          "anchor": "material:mat-2b7a38f3cfa1449f7728f044688ca2c2:page:1:2443:3888",
+          "version_id": "arxiv:2210.03629:v3",
+          "snoozed_until": null
+        },
+        "request_id": "aa002d1c-16eb-44d9-8c33-3dec861834d9"
+      },
+      "scope": "Isolated automatic Reader reading anchor only"
+    },
+    {
+      "path": "/api/workspace/context/reading",
+      "body": {
+        "work_id": "arxiv:2210.03629",
+        "revision": 15,
+        "context": {
+          "mode": "research",
+          "project_id": "project-d323fc7f292539ea490d65421aa0ea75",
+          "thread_id": null,
+          "return_to": "/workspace/today?mode=research&project=project-d323fc7f292539ea490d65421aa0ea75"
+        },
+        "data": {
+          "status": "unread",
+          "anchor": "material:mat-2b7a38f3cfa1449f7728f044688ca2c2:page:1:2443:3888",
+          "version_id": "arxiv:2210.03629:v3",
+          "snoozed_until": null
+        },
+        "request_id": "2edc9aec-2f6f-49a6-9c8f-1e0ae24baef7"
+      },
+      "scope": "Isolated automatic Reader reading anchor only"
+    }
+  ],
+  "providerContacts": 0
+}

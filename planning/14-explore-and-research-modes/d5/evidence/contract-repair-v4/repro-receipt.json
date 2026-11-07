@@ -1,0 +1,13 @@
+{
+  "packet_digest": "f21f4b66e1eb99ab75c7c242a9bfa46acb78ccabc13fb885477e8160425fd95a",
+  "application": "9bd25a82d313070e810038c8de42c0dc3d9cb8b1",
+  "tool_sha256": "3ceab1a8ebe5638bb4c7f6b9826faf86f1a7e8dee19c5ff87d37561b7bc28a94",
+  "stages": [
+    "A",
+    "B"
+  ],
+  "provider_contacts": 0,
+  "measured_tokens": null,
+  "human_labels": null,
+  "paid_authorization": false
+}

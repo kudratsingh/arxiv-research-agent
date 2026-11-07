@@ -1,0 +1,120 @@
+{
+  "dev-learn": {
+    "stage": "B",
+    "owner": "d5-v4-validation-run",
+    "request_id": "d5-f21f4b66e1eb99ab75c7c242-dev-learn",
+    "input_digest": "2bfe47ba894e4b93aae3716530eb783340edc202b146e48395594eb4d4460b51",
+    "wire_digest": "adc64697af3f8dc666a073acf756e5ddd488d018991ea56f990aa0c5fd8d8db6",
+    "count_digest": "e3c3f6a1a4d75d3084a6e7579c8a691f105f057f81b8cfa2d0669ccb87820d1b",
+    "source_versions": [
+      "arxiv:2210.03629:v3"
+    ],
+    "purpose": "single_paper",
+    "local_schema_digest": "adc178b561de2093d904e63e4173a208e58518e9790168d9ed151aab73acb12d",
+    "wire_schema_digest": "e510c3bf30d4a829208df821300ab931d7cf0d666b4c3e227513d894f8fe4cb7",
+    "measured_tokens": null,
+    "paid_authorization": false,
+    "exact_count_body_file": "requests/dev-learn-count-request.json.gz",
+    "initial_candidate_wire_file": "requests/dev-learn.json.gz",
+    "messages_forbidden_in_measurement": false
+  },
+  "dev-compare": {
+    "stage": "B",
+    "owner": "d5-v4-validation-run",
+    "request_id": "d5-f21f4b66e1eb99ab75c7c242-dev-compare",
+    "input_digest": "d7d375ef2ac5960013fa991735e60e0d2e4a3f701789317fe17d5b49d78ba06a",
+    "wire_digest": "d540b44b7bceb3566101bfda6f800c06dd3a496eacc6b49613466a30a3d4e331",
+    "count_digest": "95aafbd0b81c6efb2251c10127183e8d63f83156283bf810dd854f1f2905e497",
+    "source_versions": [
+      "arxiv:2210.03629:v3",
+      "arxiv:2310.11511:v1"
+    ],
+    "purpose": "research_comparison",
+    "local_schema_digest": "ba4f31b442eba5cb482aa9b99475ecd5c7b34eb3b1419d7d36523b89adb61c91",
+    "wire_schema_digest": "aa5880870673f39e0a84c9435acb737d3e49e8dd1271c0deb02cdaa69ddd8e39",
+    "measured_tokens": null,
+    "paid_authorization": false,
+    "exact_count_body_file": "requests/dev-compare-count-request.json.gz",
+    "initial_candidate_wire_file": "requests/dev-compare.json.gz",
+    "messages_forbidden_in_measurement": false
+  },
+  "measure-1": {
+    "stage": "A",
+    "owner": "d5-v4-validation-measure",
+    "request_id": "d5-f21f4b66e1eb99ab75c7c242-measure-1",
+    "input_digest": "bf431fff4caf90aef5871c7d38324ed2ba1c440950acaddd67765bf1d1d13821",
+    "wire_digest": "adc64697af3f8dc666a073acf756e5ddd488d018991ea56f990aa0c5fd8d8db6",
+    "count_digest": "e3c3f6a1a4d75d3084a6e7579c8a691f105f057f81b8cfa2d0669ccb87820d1b",
+    "source_versions": [
+      "arxiv:2210.03629:v3"
+    ],
+    "purpose": "single_paper",
+    "local_schema_digest": "adc178b561de2093d904e63e4173a208e58518e9790168d9ed151aab73acb12d",
+    "wire_schema_digest": "e510c3bf30d4a829208df821300ab931d7cf0d666b4c3e227513d894f8fe4cb7",
+    "measured_tokens": null,
+    "paid_authorization": false,
+    "exact_count_body_file": "requests/measure-1-count-request.json.gz",
+    "initial_candidate_wire_file": "requests/measure-1.json.gz",
+    "messages_forbidden_in_measurement": true
+  },
+  "measure-2": {
+    "stage": "A",
+    "owner": "d5-v4-validation-measure",
+    "request_id": "d5-f21f4b66e1eb99ab75c7c242-measure-2",
+    "input_digest": "7bdd57d9bd88389551050a4877cffa2232070fe45d745afb6a2df77525b1848d",
+    "wire_digest": "d540b44b7bceb3566101bfda6f800c06dd3a496eacc6b49613466a30a3d4e331",
+    "count_digest": "95aafbd0b81c6efb2251c10127183e8d63f83156283bf810dd854f1f2905e497",
+    "source_versions": [
+      "arxiv:2210.03629:v3",
+      "arxiv:2310.11511:v1"
+    ],
+    "purpose": "research_comparison",
+    "local_schema_digest": "ba4f31b442eba5cb482aa9b99475ecd5c7b34eb3b1419d7d36523b89adb61c91",
+    "wire_schema_digest": "aa5880870673f39e0a84c9435acb737d3e49e8dd1271c0deb02cdaa69ddd8e39",
+    "measured_tokens": null,
+    "paid_authorization": false,
+    "exact_count_body_file": "requests/measure-2-count-request.json.gz",
+    "initial_candidate_wire_file": "requests/measure-2.json.gz",
+    "messages_forbidden_in_measurement": true
+  },
+  "measure-3": {
+    "stage": "A",
+    "owner": "d5-v4-validation-measure",
+    "request_id": "d5-f21f4b66e1eb99ab75c7c242-measure-3",
+    "input_digest": "7a0f49c345074bd439d7728a52129d4a45487bdd7ff7e0f214fdfe43af401104",
+    "wire_digest": "bdd2a1415f08cc4ad1cca9b95008e64242effb348a97c87924bbda472ea09292",
+    "count_digest": "e2e3f651ce7484a14fd2de755511d4c83b330726a45f8f719594ebe1661a2f49",
+    "source_versions": [
+      "arxiv:2610.40940:v1:metadata-21d8200059afcd01",
+      "arxiv:2610.40966:v1:metadata-55c0a56c8750035c"
+    ],
+    "purpose": "research_comparison",
+    "local_schema_digest": "945c6a00cca0a236b1bbdfc8acb38cc329bfa191e091bf85c290a4aa5dbd5625",
+    "wire_schema_digest": "540b996cf72e116865216673386ec10a1bbe2d05ed6e8e26ad6ba0a1e84a9106",
+    "measured_tokens": null,
+    "paid_authorization": false,
+    "exact_count_body_file": "requests/measure-3-count-request.json.gz",
+    "initial_candidate_wire_file": "requests/measure-3.json.gz",
+    "messages_forbidden_in_measurement": true
+  },
+  "measure-4": {
+    "stage": "A",
+    "owner": "d5-v4-validation-measure",
+    "request_id": "d5-f21f4b66e1eb99ab75c7c242-measure-4",
+    "input_digest": "3a1f90bdaffaaefa651dfa493c7e8966cbb88e92f7b61de95182f8ec1ec8144c",
+    "wire_digest": "1d626503c832b67d015b859653bb59fa2d2629958bb1147417eed6f539bd6ec2",
+    "count_digest": "b81353c47fe4bed827b636b3c4144ffabc1c18e42198aefa8a3a6f8722163bb9",
+    "source_versions": [
+      "arxiv:2610.41482:v1:metadata-e5c832a06d88973f",
+      "arxiv:2610.41022:v1:metadata-1d7490e908ceb729"
+    ],
+    "purpose": "research_comparison",
+    "local_schema_digest": "6245e0c4d48213183ac46690fc7fa96062b33d87872942e8e450dade5e78bfdd",
+    "wire_schema_digest": "02868fd1896ca730e16a7b334e610c8bfdb91ded6777480d765b3e16b3204d92",
+    "measured_tokens": null,
+    "paid_authorization": false,
+    "exact_count_body_file": "requests/measure-4-count-request.json.gz",
+    "initial_candidate_wire_file": "requests/measure-4.json.gz",
+    "messages_forbidden_in_measurement": true
+  }
+}

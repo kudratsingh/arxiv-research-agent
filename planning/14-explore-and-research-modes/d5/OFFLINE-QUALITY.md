@@ -1,3 +1,25 @@
+# D5 v4 offline contract repair and quality limits
+
+## Real v3 Stage B failure retained
+
+The paid dev-learn draft ended normally and passed the original wire JSON schema, but supplied an evidence handle in `comparison_basis`. Local semantics require emitted claim IDs, at least two basis claims and two independently cited works for cross-source comparison. Its single selected ReAct v3 excerpt cannot satisfy that cross-source structure. It remains failed; no checker, repair or dev-compare dispatch occurred. The original response/request are byte-pinned in the regression fixtures, with the original v3 packet identity. No corrected example receives provider-success credit.
+
+Metered real usage:2532input/1058output, estimatedUSD0.015644. PriorUSD0.109967 remains included; currentUSD0.125611,10Messages/20counts, pending/unknown0. The unusedUSD0.384356 reservation was released without accepting content. See the versioned [quota receipt](d5-quota-v4.json). A new packet cannot reset the consumed funded identity.
+
+## Offline repair
+
+Single-paper schemas omit comparison and basis. Research comparisons use the same c1–c6 type as claim IDs; evidence handles remain the selected u... enum. Semantic references, unique IDs/bases, exact source/version/hash/quote/offsets, selected spans and independently cited works remain checked. Within-paper contrasts can be attributed claims. Explicit abstention remains useful with insufficient evidence.
+
+Every actual draft/check/repair/recheck fixture is validated against its transmitted schema and local contract. Optional background, assumptions, comparison, questions, gaps, proposals and abstention reasons enter checker review. A machine verdict declaring substantive prose unscored stops the workflow, even if all cited claims appear supported. A synthetic checker test is not evidence of real checker accuracy.
+
+Preserved human review thresholds and denominators remain unchanged. No real human labels, qualification or owner usefulness are supplied by this batch. Positive synthetic fixtures establish neither whole-claim support nor remote token fit. The frozen corpus is replayed, not freshly acquired; the two PDF samples remain partial.
+
+## Verification
+
+Exact commands, logs, source/packet bindings and observed results are in [the repair runbook](CONTRACT-REPAIR-v4.md). Prior implementation evidence below remains its original cohort.
+
+## Preserved v3 quality report
+
 # D5 review-aware quality checkpoint
 
 Application **f962ff84fd49c9e6b0db325c8adba3817a177c8b**, packet v3 **e1ed94498ce74231621f5c1394ddabd0aee11d3c42b7f88f5983e78d22c6d1da**. Review import and score recomputation are implemented and exercised offline. No provider/count contact, paid authorization, new spend or actual human judgment occurred.

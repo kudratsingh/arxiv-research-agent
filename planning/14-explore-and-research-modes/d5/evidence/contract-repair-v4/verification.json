@@ -1,0 +1,87 @@
+{
+  "application": "9bd25a82d313070e810038c8de42c0dc3d9cb8b1",
+  "packet_digest": "f21f4b66e1eb99ab75c7c242a9bfa46acb78ccabc13fb885477e8160425fd95a",
+  "local_python": {
+    "passed": 6536,
+    "skipped": 54,
+    "separate_e2e_deselected": 53,
+    "overall_line_coverage": 96.06,
+    "patch_coverage_percent": 97,
+    "patch_lines": 7338,
+    "patch_missing": 184,
+    "package_coverage": {
+      "api": 88,
+      "agents": 96,
+      "security": 100,
+      "eval": 95
+    }
+  },
+  "focused_python": 218,
+  "web": {
+    "passed": 4263,
+    "files": 219,
+    "skips": 0,
+    "statement_coverage": 98.15,
+    "branch_coverage": 94.34,
+    "function_coverage": 94.13,
+    "line_coverage": 99.52,
+    "affected_panel_tests": 37,
+    "lint": true,
+    "typecheck": true,
+    "build": true,
+    "budget_checks": 22,
+    "css_bytes": 24868,
+    "css_cap": 25600,
+    "today_js_bytes": 169849,
+    "today_js_cap": 169984,
+    "reader_js_bytes": 165929,
+    "reader_js_cap": 169984,
+    "build_id": "dDDwWUpP-YEwj-6HZ9KRo"
+  },
+  "mypy_source_files": 189,
+  "global_ruff": true,
+  "workflow_e2e": 53,
+  "mock_research": {
+    "passed": 20,
+    "total": 20,
+    "usd": "0"
+  },
+  "registry": {
+    "objects": 260,
+    "mismatches": 0
+  },
+  "browser": {
+    "journeys": 8,
+    "contexts": 4,
+    "widths": [
+      1440,
+      390
+    ],
+    "themes": [
+      "light",
+      "dark"
+    ],
+    "reduced_motion": true,
+    "serious_critical_axe": 0,
+    "console_page_errors": 0,
+    "source_provider_calls": 0,
+    "writes": "Automatic reading anchors only in isolated offline principal for selected work/version pairs"
+  },
+  "provider_contacts": 0,
+  "token_count_contacts": 0,
+  "intermediate_failures": [
+    "new Research fixture initially lacked owned project context (corrected, original checks preserved)",
+    "new frontend fixtures initially used wrong component props and ambiguous quote locator (corrected)",
+    "sandbox denied loopback test servers (rerun elevated)",
+    "exact Decimal scale lost by snapshot export (fixed with string transport, original hash checks preserved)",
+    "obsolete full coverage run interrupted after confirmed snapshot fix; final stable full gate passed",
+    "first browser harness blocked expected automatic isolated reading anchors; final harness permits only exact selected pairs and blocks all other writes/nonloopback"
+  ],
+  "remote_ci": {
+    "receipt": "outputs/d5/contract-repair-v4/FINAL-PUBLICATION.json",
+    "required": "all nine checks successful on exact published head",
+    "local_results_are_not_remote_ci": true
+  },
+  "human_labels": null,
+  "documentation_hygiene_tests": 95
+}

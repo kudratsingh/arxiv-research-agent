@@ -1,22 +1,20 @@
 {
-  "active_packet": "d5-system-validation-v3.json.gz",
-  "packet_digest": "e1ed94498ce74231621f5c1394ddabd0aee11d3c42b7f88f5983e78d22c6d1da",
-  "packet_file_sha256": "4f5fee413912a54222b77ceecd77552c302db585ca0a5e6bae698dc309267fc5",
-  "application_commit": "f962ff84fd49c9e6b0db325c8adba3817a177c8b",
-  "application_src_tree": "8c56084c33027cad10fc1dae2a5873b9ee1c31e9",
-  "application_web_tree": "661ea39be6465f01ef1fee24abda7de524cc6b88",
+  "active_packet": "d5-system-validation-v4.json.gz",
+  "packet_digest": "f21f4b66e1eb99ab75c7c242a9bfa46acb78ccabc13fb885477e8160425fd95a",
+  "packet_file_sha256": "116527c1b235f26e8e1b8e1c865d8011e7000875b9dae13214abb725be87f64f",
+  "application_commit": "9bd25a82d313070e810038c8de42c0dc3d9cb8b1",
   "approved": false,
-  "replay_input": "d5-replay-inputs-v1.json.gz",
-  "snapshot_digest": "69966d4b4eb2f2a281527c78d3c194af735449c5e73541465e3c913a8afcc198",
-  "snapshot_file_sha256": "6efd11606dae5219c11cdb5ece7e80ef85dd50815ca82ac84f2d79a2d3d80786",
+  "replay_input": "d5-replay-inputs-v2.json.gz",
+  "snapshot_digest": "421ee2534d55ac03cd74f41fd4d1a6eef61d054c36e1ceefdeb8f2d0eba33d82",
+  "snapshot_file_sha256": "89bfca854e4551701dcbf6e669c73fd48189a01bb39c170e4a4e3ee679748171",
   "code": {
-    "src/workspace/d5_freeze.py": "sha256:87110565939eda646202d74e3b905748ac1b0dd470a7c6885711f0742a0dbc55",
+    "src/workspace/d5_freeze.py": "sha256:20271c97aba4defa66b450423f7c9d51c42f85553558c64a4ccc6aa02ec86673",
     "src/workspace/d5_benchmark.py": "sha256:f165ef7485dd5e15e688ce0ea0245348766430b1e11331ea41f44d11e9c77454",
-    "src/workspace/d5_scoring.py": "sha256:643a7fc3f14985739e99827c630ab1f8dcef52eb78690eaa06a0bd6015925d57",
+    "src/workspace/d5_scoring.py": "sha256:dfe19944de2612897e27cb030a755ffa35dc13eb708cb4555fa5799996a61ba3",
     "src/workspace/d5_reviews.py": "sha256:8d0c642f4026f87c44de3b2c354d8187c3776d2284079cbfe8f6a2290030cab2",
     "src/workspace/d5_review_scoring.py": "sha256:916e175bfb056f3ed8d49fc1cff1018d75dcf1a02a50b4c8bd3d7f509b6b69cb",
-    "src/workspace/d5_fixture.py": "sha256:517b4eada6cab03fe92ec6072ee676a74a8423c95719e359eb547867489401a0",
-    "src/workspace/d5_results.py": "sha256:40bb05d9cb859bceb9d4f479441196c819122c22244d69e7451227eedaa99c87",
+    "src/workspace/d5_fixture.py": "sha256:a4aca275265197ed267afb83dd52c0a58603f88d177bafeda9233575d194652d",
+    "src/workspace/d5_results.py": "sha256:bad011d558cf23439ec86764f27c4059a532db789d657260db001f1b9c00343f",
     "src/workspace/d5_routes.py": "sha256:0bc7c7803b7f9f9d18f7fc4c605b5a7bbfc93b053cb5caf7e996622e3e7f3523",
     "src/workspace/d5_operator.py": "sha256:0d73c7fb1a100432e41ea3b0e4c215e6f3132fc2564dd2c15b6ef18dd215b2ca",
     "src/workspace/d5_evidence.py": "sha256:c110b023b415b72faac0e9dd88b3876bf67e5e84db44472a6ba089a87cd53e42",
@@ -24,23 +22,23 @@
     "src/workspace/ranking.py": "sha256:e0313d315cbd2d6684e40d1ab5277c2d56fa48fd6a5a97c41177c6d08417226d",
     "src/workspace/grounding.py": "sha256:05b9cd7e0c1737b36b731996f2ec20132034b3a233acebe5be64d9e43c260bb7",
     "src/workspace/material.py": "sha256:688cbee37fa7007806dad087331672b381f0d3e094d88dc9dc8a7a889b4d7ba2",
-    "src/workspace/assistance.py": "sha256:a020d58879fb7c905337d32063851bdae67ede9a8606de15da59ee414cc4cb39",
-    "src/workspace/assistance_contract.py": "sha256:aacbf438525841d98f632d1261f2c86ab9bcbecea6ae55481570b90df7300c3c",
+    "src/workspace/assistance.py": "sha256:cd5d9b95f4c98527a45514f5c122a0417ac459da14dc1273845ecc89b7528ad2",
+    "src/workspace/assistance_contract.py": "sha256:20174b836d92efb0aeccdec34b1b68b44ec29c60e25897b9e5e75af14f27ff93",
     "src/workspace/executor.py": "sha256:75ddf32188e5897decc12993caee3883dd667ca8ad4b8756a3dfa2eb5b46ac28",
     "src/workspace/context_store.py": "sha256:0054c6247b5620eb723d727b740cb2c6cc05a2c22f834ea129955c72498a982c",
     "src/workspace/migrations/012_d5_qualification_scope.sql": "sha256:35b58928738e143daa2e592ea9f81bf93d14b521f3af771337daecef2369eeb3",
     "src/workspace/migrations/013_d5_stage_authorizations.sql": "sha256:805ccdc0e518679471e2a12da4bc2a94d37fd28475e1fa96fc6e686c562869ea",
-    "web/components/workspace/QualificationResult.tsx": "sha256:c1d46e80e77abf3e9495cee5c4d0ee50d00e80e420b29771d672089f8b224ace",
+    "web/components/workspace/QualificationResult.tsx": "sha256:9ccbeeff039926490f200ee83bce0905cfde87609f4d36522fcd54e9ceb6c379",
     "web/components/workspace/ReaderContent.tsx": "sha256:dcfaec2396f41278de7be5ef1308528af69e53dd97df31be839112a6b5b80b19",
     "web/components/workspace/LearningThread.tsx": "sha256:4eed510674f83180a8e89946ba62f3913e031cefc4823ea174d3775373831d85",
-    "web/lib/workspace/assistanceTypes.ts": "sha256:83482c208a5b0b5986f1c0029ef5728d32f8e321c0454d32929accfb47c609cf",
+    "web/lib/workspace/assistanceTypes.ts": "sha256:2030a28f99a75e2a93aca556b74e0398182ffd957ee9e15e33f64cd9571c05dc",
     "web/lib/workspace/assistanceLinks.ts": "sha256:30eb243ed4653d8808f048f50ffa23d11d6fd3f34f5974b180158e20d5829f22",
     "web/contract/openapi.json": "sha256:fa1df108175094689302530d254dc7c9b0dacaa588e36a2a764e2653b5747529",
     "src/api/app.py": "sha256:1d08f09e87d12f90f5d49d7e9d22a8715c3e59b20a249d4d543fae63400e2b38"
   },
   "adapter": {
     "code": {
-      "workspace/d5_adapter.py": "sha256:9019f08fc6e5dce15ea294e0b947441e5a258307c95adc41a4e6b16f603ab7ad",
+      "workspace/d5_adapter.py": "sha256:ab23bf4b1d3033101e3081434f8b11a05ba389b57036f9a6bd2839cfe0197599",
       "workspace/d5_scope.py": "sha256:f554e15d7b0a110ed5c2f71371aaf2b394a2ea6837bdf7e2fd745cef8d272d1c",
       "workspace/d5_authorization.py": "sha256:c9bd32dcaf2071d9d138897a50be9a247ef1a2fb1e40151f52905005d17991ec",
       "workspace/provider_adapter.py": "sha256:b87e2c08b66011ab1369ec08832d8d56ae792f1a510a47fdc8842797e18248d7",
@@ -48,13 +46,13 @@
       "workspace/admission.py": "sha256:12524a9e192cde7d6988e44d57623d946252d5e4c039c14990076f1ba4ac84ac",
       "workspace/qualification_budget.py": "sha256:2652068a2e9fdb86a0230be826618f020ca8b483a4127acbb32bdcd593fa7b0a",
       "workspace/qualification_accounting.py": "sha256:cbc5528c8e3bfb7fc7adec67257d66587a572e8c11f9440bda2f8ce7a13e93ee",
-      "workspace/d5_freeze.py": "sha256:87110565939eda646202d74e3b905748ac1b0dd470a7c6885711f0742a0dbc55",
+      "workspace/d5_freeze.py": "sha256:20271c97aba4defa66b450423f7c9d51c42f85553558c64a4ccc6aa02ec86673",
       "workspace/d5_benchmark.py": "sha256:f165ef7485dd5e15e688ce0ea0245348766430b1e11331ea41f44d11e9c77454",
-      "workspace/d5_scoring.py": "sha256:643a7fc3f14985739e99827c630ab1f8dcef52eb78690eaa06a0bd6015925d57",
+      "workspace/d5_scoring.py": "sha256:dfe19944de2612897e27cb030a755ffa35dc13eb708cb4555fa5799996a61ba3",
       "workspace/d5_reviews.py": "sha256:8d0c642f4026f87c44de3b2c354d8187c3776d2284079cbfe8f6a2290030cab2",
       "workspace/d5_review_scoring.py": "sha256:916e175bfb056f3ed8d49fc1cff1018d75dcf1a02a50b4c8bd3d7f509b6b69cb",
-      "workspace/d5_fixture.py": "sha256:517b4eada6cab03fe92ec6072ee676a74a8423c95719e359eb547867489401a0",
-      "workspace/d5_results.py": "sha256:40bb05d9cb859bceb9d4f479441196c819122c22244d69e7451227eedaa99c87",
+      "workspace/d5_fixture.py": "sha256:a4aca275265197ed267afb83dd52c0a58603f88d177bafeda9233575d194652d",
+      "workspace/d5_results.py": "sha256:bad011d558cf23439ec86764f27c4059a532db789d657260db001f1b9c00343f",
       "workspace/d5_operator.py": "sha256:0d73c7fb1a100432e41ea3b0e4c215e6f3132fc2564dd2c15b6ef18dd215b2ca",
       "workspace/migrations/012_d5_qualification_scope.sql": "sha256:35b58928738e143daa2e592ea9f81bf93d14b521f3af771337daecef2369eeb3",
       "workspace/migrations/013_d5_stage_authorizations.sql": "sha256:805ccdc0e518679471e2a12da4bc2a94d37fd28475e1fa96fc6e686c562869ea",
@@ -67,108 +65,223 @@
       "pydantic": "2.13.4"
     }
   },
-  "limits": {
-    "jobs": 14,
-    "messages": 44,
-    "counts": 48,
-    "usd": "10",
-    "concurrency": 1,
-    "workflow_usd": "0.40",
-    "probe_usd": "0.08",
-    "headroom_usd": "1.00"
+  "execution": {
+    "model": "claude-sonnet-5-5",
+    "thinking": {
+      "type": "between_tools"
+    },
+    "effort": "medium",
+    "temperature": null,
+    "input_tokens_raw_max": 20000,
+    "input_tokens_measured_max": 16000,
+    "workflow_output_tokens": 4000,
+    "checker_output_tokens": 1800,
+    "max_stages": 4,
+    "max_repairs": 1,
+    "pricing_estimate_usd_per_million": {
+      "input": "2",
+      "output": "10",
+      "verified_at": "2026-11-06"
+    }
   },
-  "historical": {
-    "messages": 9,
-    "counts": 15,
-    "known_usd": "0.109967",
-    "pending_usd": "0",
-    "active_jobs": [],
-    "uncertain_contacts": false,
-    "unknown_usd": "0",
-    "generation_job_ids": [
-      "gen-1ae5d8a9cd5808e8b5bca05f95f363fbd3782772",
-      "gen-40911bfbdb66e3aa6d05a0ddbe0e2c823887fb43",
-      "gen-59a784e9e2548c7448ef9e1c6e726feb4f6edd18",
-      "gen-6b0167f1654114cce615297572ab0bb5ddb62d52",
-      "gen-7d39f01ef595dc04a764c3783a42a57d4a8d5903",
-      "gen-82c609340b161fa70538e80dbc87b3bdd4479933",
-      "gen-ba107fcfecc532337aee5cbd543259e045ae6c78"
-    ],
-    "models": [
-      "claude-sonnet-4-6",
-      "claude-sonnet-5-5"
-    ],
-    "contact_checkpoints": {
-      "gen-168ffaa4899d154c0162c615df5b31a91eb9c5aa": {
-        "length": 1,
-        "digest": "2aa8f576ca9546ed3ca4bc06573ee9ea2d471e23bf4b0bfa2b3a08a65c979243"
+  "predecessor_identity": {
+    "active_packet": "d5-system-validation-v3.json.gz",
+    "packet_digest": "e1ed94498ce74231621f5c1394ddabd0aee11d3c42b7f88f5983e78d22c6d1da",
+    "packet_file_sha256": "4f5fee413912a54222b77ceecd77552c302db585ca0a5e6bae698dc309267fc5",
+    "application_commit": "f962ff84fd49c9e6b0db325c8adba3817a177c8b",
+    "application_src_tree": "8c56084c33027cad10fc1dae2a5873b9ee1c31e9",
+    "application_web_tree": "661ea39be6465f01ef1fee24abda7de524cc6b88",
+    "approved": false,
+    "replay_input": "d5-replay-inputs-v1.json.gz",
+    "snapshot_digest": "69966d4b4eb2f2a281527c78d3c194af735449c5e73541465e3c913a8afcc198",
+    "snapshot_file_sha256": "6efd11606dae5219c11cdb5ece7e80ef85dd50815ca82ac84f2d79a2d3d80786",
+    "code": {
+      "src/workspace/d5_freeze.py": "sha256:87110565939eda646202d74e3b905748ac1b0dd470a7c6885711f0742a0dbc55",
+      "src/workspace/d5_benchmark.py": "sha256:f165ef7485dd5e15e688ce0ea0245348766430b1e11331ea41f44d11e9c77454",
+      "src/workspace/d5_scoring.py": "sha256:643a7fc3f14985739e99827c630ab1f8dcef52eb78690eaa06a0bd6015925d57",
+      "src/workspace/d5_reviews.py": "sha256:8d0c642f4026f87c44de3b2c354d8187c3776d2284079cbfe8f6a2290030cab2",
+      "src/workspace/d5_review_scoring.py": "sha256:916e175bfb056f3ed8d49fc1cff1018d75dcf1a02a50b4c8bd3d7f509b6b69cb",
+      "src/workspace/d5_fixture.py": "sha256:517b4eada6cab03fe92ec6072ee676a74a8423c95719e359eb547867489401a0",
+      "src/workspace/d5_results.py": "sha256:40bb05d9cb859bceb9d4f479441196c819122c22244d69e7451227eedaa99c87",
+      "src/workspace/d5_routes.py": "sha256:0bc7c7803b7f9f9d18f7fc4c605b5a7bbfc93b053cb5caf7e996622e3e7f3523",
+      "src/workspace/d5_operator.py": "sha256:0d73c7fb1a100432e41ea3b0e4c215e6f3132fc2564dd2c15b6ef18dd215b2ca",
+      "src/workspace/d5_evidence.py": "sha256:c110b023b415b72faac0e9dd88b3876bf67e5e84db44472a6ba089a87cd53e42",
+      "src/workspace/mode_ranking.py": "sha256:07a911a3c99c5cf3f1de694279187a813bde98c7c316e316b16547d536cbe3e4",
+      "src/workspace/ranking.py": "sha256:e0313d315cbd2d6684e40d1ab5277c2d56fa48fd6a5a97c41177c6d08417226d",
+      "src/workspace/grounding.py": "sha256:05b9cd7e0c1737b36b731996f2ec20132034b3a233acebe5be64d9e43c260bb7",
+      "src/workspace/material.py": "sha256:688cbee37fa7007806dad087331672b381f0d3e094d88dc9dc8a7a889b4d7ba2",
+      "src/workspace/assistance.py": "sha256:a020d58879fb7c905337d32063851bdae67ede9a8606de15da59ee414cc4cb39",
+      "src/workspace/assistance_contract.py": "sha256:aacbf438525841d98f632d1261f2c86ab9bcbecea6ae55481570b90df7300c3c",
+      "src/workspace/executor.py": "sha256:75ddf32188e5897decc12993caee3883dd667ca8ad4b8756a3dfa2eb5b46ac28",
+      "src/workspace/context_store.py": "sha256:0054c6247b5620eb723d727b740cb2c6cc05a2c22f834ea129955c72498a982c",
+      "src/workspace/migrations/012_d5_qualification_scope.sql": "sha256:35b58928738e143daa2e592ea9f81bf93d14b521f3af771337daecef2369eeb3",
+      "src/workspace/migrations/013_d5_stage_authorizations.sql": "sha256:805ccdc0e518679471e2a12da4bc2a94d37fd28475e1fa96fc6e686c562869ea",
+      "web/components/workspace/QualificationResult.tsx": "sha256:c1d46e80e77abf3e9495cee5c4d0ee50d00e80e420b29771d672089f8b224ace",
+      "web/components/workspace/ReaderContent.tsx": "sha256:dcfaec2396f41278de7be5ef1308528af69e53dd97df31be839112a6b5b80b19",
+      "web/components/workspace/LearningThread.tsx": "sha256:4eed510674f83180a8e89946ba62f3913e031cefc4823ea174d3775373831d85",
+      "web/lib/workspace/assistanceTypes.ts": "sha256:83482c208a5b0b5986f1c0029ef5728d32f8e321c0454d32929accfb47c609cf",
+      "web/lib/workspace/assistanceLinks.ts": "sha256:30eb243ed4653d8808f048f50ffa23d11d6fd3f34f5974b180158e20d5829f22",
+      "web/contract/openapi.json": "sha256:fa1df108175094689302530d254dc7c9b0dacaa588e36a2a764e2653b5747529",
+      "src/api/app.py": "sha256:1d08f09e87d12f90f5d49d7e9d22a8715c3e59b20a249d4d543fae63400e2b38"
+    },
+    "adapter": {
+      "code": {
+        "workspace/d5_adapter.py": "sha256:9019f08fc6e5dce15ea294e0b947441e5a258307c95adc41a4e6b16f603ab7ad",
+        "workspace/d5_scope.py": "sha256:f554e15d7b0a110ed5c2f71371aaf2b394a2ea6837bdf7e2fd745cef8d272d1c",
+        "workspace/d5_authorization.py": "sha256:c9bd32dcaf2071d9d138897a50be9a247ef1a2fb1e40151f52905005d17991ec",
+        "workspace/provider_adapter.py": "sha256:b87e2c08b66011ab1369ec08832d8d56ae792f1a510a47fdc8842797e18248d7",
+        "workspace/measurement.py": "sha256:797c13428a924f51e186942a709c6807010083acad60a19ff5baf251f34652ab",
+        "workspace/admission.py": "sha256:12524a9e192cde7d6988e44d57623d946252d5e4c039c14990076f1ba4ac84ac",
+        "workspace/qualification_budget.py": "sha256:2652068a2e9fdb86a0230be826618f020ca8b483a4127acbb32bdcd593fa7b0a",
+        "workspace/qualification_accounting.py": "sha256:cbc5528c8e3bfb7fc7adec67257d66587a572e8c11f9440bda2f8ce7a13e93ee",
+        "workspace/d5_freeze.py": "sha256:87110565939eda646202d74e3b905748ac1b0dd470a7c6885711f0742a0dbc55",
+        "workspace/d5_benchmark.py": "sha256:f165ef7485dd5e15e688ce0ea0245348766430b1e11331ea41f44d11e9c77454",
+        "workspace/d5_scoring.py": "sha256:643a7fc3f14985739e99827c630ab1f8dcef52eb78690eaa06a0bd6015925d57",
+        "workspace/d5_reviews.py": "sha256:8d0c642f4026f87c44de3b2c354d8187c3776d2284079cbfe8f6a2290030cab2",
+        "workspace/d5_review_scoring.py": "sha256:916e175bfb056f3ed8d49fc1cff1018d75dcf1a02a50b4c8bd3d7f509b6b69cb",
+        "workspace/d5_fixture.py": "sha256:517b4eada6cab03fe92ec6072ee676a74a8423c95719e359eb547867489401a0",
+        "workspace/d5_results.py": "sha256:40bb05d9cb859bceb9d4f479441196c819122c22244d69e7451227eedaa99c87",
+        "workspace/d5_operator.py": "sha256:0d73c7fb1a100432e41ea3b0e4c215e6f3132fc2564dd2c15b6ef18dd215b2ca",
+        "workspace/migrations/012_d5_qualification_scope.sql": "sha256:35b58928738e143daa2e592ea9f81bf93d14b521f3af771337daecef2369eeb3",
+        "workspace/migrations/013_d5_stage_authorizations.sql": "sha256:805ccdc0e518679471e2a12da4bc2a94d37fd28475e1fa96fc6e686c562869ea",
+        "llm.py": "sha256:07dc89e847340e65215cb2a9d287f48fa0040273726e4751fa30853d3a098bb4",
+        "llm_models.py": "sha256:610662404098f8e4d5d934db9fdf768014af80cc1eb4e326debfdc20dc01bdad"
       },
-      "gen-1ae5d8a9cd5808e8b5bca05f95f363fbd3782772": {
-        "length": 2,
-        "digest": "dd15b181fd6c94884db460da593321fd55fc1f960aff521d2606d234cf0b753b"
-      },
-      "gen-40911bfbdb66e3aa6d05a0ddbe0e2c823887fb43": {
-        "length": 3,
-        "digest": "4fea58d87001e3f79e0cb2daec11780c3c8f6980798a2dcdedd3cd3ccd52c485"
-      },
-      "gen-59a784e9e2548c7448ef9e1c6e726feb4f6edd18": {
-        "length": 2,
-        "digest": "291e134246ff408fb09d87248d7a0c7c4d9ad498a6fa5f4db8281488a6931b68"
-      },
-      "gen-6b0167f1654114cce615297572ab0bb5ddb62d52": {
-        "length": 4,
-        "digest": "14ccfd643d38681f28f61e0a994209f22833c8dcb428c58d36605716f62f2e1c"
-      },
-      "gen-7d39f01ef595dc04a764c3783a42a57d4a8d5903": {
-        "length": 2,
-        "digest": "c07f677b3d90ee09bfd5cf611bf0a6670b34f7f7582b3818690cf7f7af3a6bc1"
-      },
-      "gen-804e573d60d8f1c4a755c7084395c2ab5f5984eb": {
-        "length": 1,
-        "digest": "bef8f251d6183432dd38e2598ec85c275f1aba34b99587957ec66961a4a26a79"
-      },
-      "gen-81caf070f44eb27bd0572ddf0ee18d4a61ae9e28": {
-        "length": 1,
-        "digest": "66c64ec25538c87dd71e375bef628d38c369fe9997d53201a9b3fbca04b882ca"
-      },
-      "gen-82c609340b161fa70538e80dbc87b3bdd4479933": {
-        "length": 5,
-        "digest": "61d4886104c3c6faa56a69b5c57b75c0ff293e7d041167de6648bd98c4cf50f2"
-      },
-      "gen-98c11075af7601190e1dc54cf368e07127d97b17": {
-        "length": 1,
-        "digest": "7ee23c7395b5f602ba1586937fb85ae40e83df46f7d00951945c606b84a34abe"
-      },
-      "gen-ba107fcfecc532337aee5cbd543259e045ae6c78": {
-        "length": 2,
-        "digest": "35adece8143c629d78aacfbdb9448f21743ff4a3f8160d3b4acf2098b7dfa4d2"
+      "dependencies": {
+        "anthropic": "1.4.0",
+        "httpx": "0.28.1",
+        "pydantic": "2.13.4"
       }
     },
-    "history_digest": "11afb945528e842e4af88b990d873185749b100ee8947a1a8ead20e1776448a8"
+    "limits": {
+      "jobs": 14,
+      "messages": 44,
+      "counts": 48,
+      "usd": "10",
+      "concurrency": 1,
+      "workflow_usd": "0.40",
+      "probe_usd": "0.08",
+      "headroom_usd": "1.00"
+    },
+    "historical": {
+      "messages": 9,
+      "counts": 15,
+      "known_usd": "0.109967",
+      "pending_usd": "0",
+      "active_jobs": [],
+      "uncertain_contacts": false,
+      "unknown_usd": "0",
+      "generation_job_ids": [
+        "gen-1ae5d8a9cd5808e8b5bca05f95f363fbd3782772",
+        "gen-40911bfbdb66e3aa6d05a0ddbe0e2c823887fb43",
+        "gen-59a784e9e2548c7448ef9e1c6e726feb4f6edd18",
+        "gen-6b0167f1654114cce615297572ab0bb5ddb62d52",
+        "gen-7d39f01ef595dc04a764c3783a42a57d4a8d5903",
+        "gen-82c609340b161fa70538e80dbc87b3bdd4479933",
+        "gen-ba107fcfecc532337aee5cbd543259e045ae6c78"
+      ],
+      "models": [
+        "claude-sonnet-4-6",
+        "claude-sonnet-5-5"
+      ],
+      "contact_checkpoints": {
+        "gen-168ffaa4899d154c0162c615df5b31a91eb9c5aa": {
+          "length": 1,
+          "digest": "2aa8f576ca9546ed3ca4bc06573ee9ea2d471e23bf4b0bfa2b3a08a65c979243"
+        },
+        "gen-1ae5d8a9cd5808e8b5bca05f95f363fbd3782772": {
+          "length": 2,
+          "digest": "dd15b181fd6c94884db460da593321fd55fc1f960aff521d2606d234cf0b753b"
+        },
+        "gen-40911bfbdb66e3aa6d05a0ddbe0e2c823887fb43": {
+          "length": 3,
+          "digest": "4fea58d87001e3f79e0cb2daec11780c3c8f6980798a2dcdedd3cd3ccd52c485"
+        },
+        "gen-59a784e9e2548c7448ef9e1c6e726feb4f6edd18": {
+          "length": 2,
+          "digest": "291e134246ff408fb09d87248d7a0c7c4d9ad498a6fa5f4db8281488a6931b68"
+        },
+        "gen-6b0167f1654114cce615297572ab0bb5ddb62d52": {
+          "length": 4,
+          "digest": "14ccfd643d38681f28f61e0a994209f22833c8dcb428c58d36605716f62f2e1c"
+        },
+        "gen-7d39f01ef595dc04a764c3783a42a57d4a8d5903": {
+          "length": 2,
+          "digest": "c07f677b3d90ee09bfd5cf611bf0a6670b34f7f7582b3818690cf7f7af3a6bc1"
+        },
+        "gen-804e573d60d8f1c4a755c7084395c2ab5f5984eb": {
+          "length": 1,
+          "digest": "bef8f251d6183432dd38e2598ec85c275f1aba34b99587957ec66961a4a26a79"
+        },
+        "gen-81caf070f44eb27bd0572ddf0ee18d4a61ae9e28": {
+          "length": 1,
+          "digest": "66c64ec25538c87dd71e375bef628d38c369fe9997d53201a9b3fbca04b882ca"
+        },
+        "gen-82c609340b161fa70538e80dbc87b3bdd4479933": {
+          "length": 5,
+          "digest": "61d4886104c3c6faa56a69b5c57b75c0ff293e7d041167de6648bd98c4cf50f2"
+        },
+        "gen-98c11075af7601190e1dc54cf368e07127d97b17": {
+          "length": 1,
+          "digest": "7ee23c7395b5f602ba1586937fb85ae40e83df46f7d00951945c606b84a34abe"
+        },
+        "gen-ba107fcfecc532337aee5cbd543259e045ae6c78": {
+          "length": 2,
+          "digest": "35adece8143c629d78aacfbdb9448f21743ff4a3f8160d3b4acf2098b7dfa4d2"
+        }
+      },
+      "history_digest": "11afb945528e842e4af88b990d873185749b100ee8947a1a8ead20e1776448a8"
+    },
+    "superseded_system_seal": {
+      "file": "d5-system-validation-v1.json.gz",
+      "digest": "181662d37f2bd6d8786bfa851e327980457a1ba3ec73d3656d41ab1a9ea4bc36",
+      "application_commit": "111f2def9f71bef3bbb386a6f076683ea4f02027",
+      "reason": "Reporting-only correction: human-quality HOLD no longer implies absent provider measurements after a future real run. No evidence/questions/limits/thresholds changed; no paid D5 output inspected."
+    },
+    "review_format": "d5-human-review-v1",
+    "review_schema_file": "d5-human-review-schema-v1.json",
+    "review_schema_digest": "9709fe882e1ba78c4b125fede0702f9266408800799b032b9326be54866a6719",
+    "scorer_version": "d5-reviewed-quality-v1",
+    "scorer_code": {
+      "d5_reviews.py": "8d0c642f4026f87c44de3b2c354d8187c3776d2284079cbfe8f6a2290030cab2",
+      "d5_review_scoring.py": "916e175bfb056f3ed8d49fc1cff1018d75dcf1a02a50b4c8bd3d7f509b6b69cb",
+      "d5_scoring.py": "643a7fc3f14985739e99827c630ab1f8dcef52eb78690eaa06a0bd6015925d57",
+      "grounding.py": "05b9cd7e0c1737b36b731996f2ec20132034b3a233acebe5be64d9e43c260bb7",
+      "assistance_contract.py": "aacbf438525841d98f632d1261f2c86ab9bcbecea6ae55481570b90df7300c3c",
+      "material.py": "688cbee37fa7007806dad087331672b381f0d3e094d88dc9dc8a7a889b4d7ba2",
+      "admission.py": "12524a9e192cde7d6988e44d57623d946252d5e4c039c14990076f1ba4ac84ac"
+    },
+    "predecessor": {
+      "file": "d5-system-validation-v2.json.gz",
+      "digest": "1e5716df09364be0db9501e9d2bc7ff3184fc65655dbbb77c6cd658a2ae6a76f",
+      "identity": "d5-packet-identity-v2.json",
+      "reason": "Implement validated external review import and computed quality grading; no paid output inspected, no thresholds/corpus/model/limits changed and no approval renewed"
+    }
   },
-  "superseded_system_seal": {
-    "file": "d5-system-validation-v1.json.gz",
-    "digest": "181662d37f2bd6d8786bfa851e327980457a1ba3ec73d3656d41ab1a9ea4bc36",
-    "application_commit": "111f2def9f71bef3bbb386a6f076683ea4f02027",
-    "reason": "Reporting-only correction: human-quality HOLD no longer implies absent provider measurements after a future real run. No evidence/questions/limits/thresholds changed; no paid D5 output inspected."
+  "continuation": {
+    "predecessor_packet_digest": "e1ed94498ce74231621f5c1394ddabd0aee11d3c42b7f88f5983e78d22c6d1da",
+    "predecessor_scope_id": "d5-e1ed94498ce74231621f5c13",
+    "predecessor_scope_state": "stopped",
+    "failed_case": "dev-learn",
+    "failed_job_id": "gen-af7b921f6a2353e0aef9e3961557b71a8a609c85",
+    "failed_response_digest": "05c1a3347abeb8f1809cd6648019a9add10989d79e5ac0e365ca327260604ed9",
+    "failed_request_digest": "350697b5e2e109cf7bae259ee0fb8abc8fa19e678a9443157b8623b58fea79e4",
+    "history_digest": "8ad7581dca85929343a0b3b28bc9555cfae7e0229b09752a9375fccc6a49824f",
+    "captured_at": "2026-11-07T03:18:56.259454+00:00",
+    "basis": "Same frozen public corpus/profile. Latest real financial rows preserved; scopes, operative approvals/policies and human labels excluded. No provider calls. New identities are prospective, explicitly disclosed, require separate approval, and cannot revive or conceal the stopped v3 job."
   },
-  "review_format": "d5-human-review-v1",
-  "review_schema_file": "d5-human-review-schema-v1.json",
-  "review_schema_digest": "9709fe882e1ba78c4b125fede0702f9266408800799b032b9326be54866a6719",
-  "scorer_version": "d5-reviewed-quality-v1",
-  "scorer_code": {
-    "d5_reviews.py": "8d0c642f4026f87c44de3b2c354d8187c3776d2284079cbfe8f6a2290030cab2",
-    "d5_review_scoring.py": "916e175bfb056f3ed8d49fc1cff1018d75dcf1a02a50b4c8bd3d7f509b6b69cb",
-    "d5_scoring.py": "643a7fc3f14985739e99827c630ab1f8dcef52eb78690eaa06a0bd6015925d57",
-    "grounding.py": "05b9cd7e0c1737b36b731996f2ec20132034b3a233acebe5be64d9e43c260bb7",
-    "assistance_contract.py": "aacbf438525841d98f632d1261f2c86ab9bcbecea6ae55481570b90df7300c3c",
-    "material.py": "688cbee37fa7007806dad087331672b381f0d3e094d88dc9dc8a7a889b4d7ba2",
-    "admission.py": "12524a9e192cde7d6988e44d57623d946252d5e4c039c14990076f1ba4ac84ac"
+  "quota_digest": "16c3e7d1330662abb8605bb6346882055308559301876bee04574b39e1261ede",
+  "current_ledger": {
+    "messages": 10,
+    "counts": 20,
+    "known_usd": "0.125611",
+    "pending_usd": "0",
+    "unknown_usd": "0"
   },
-  "predecessor": {
-    "file": "d5-system-validation-v2.json.gz",
-    "digest": "1e5716df09364be0db9501e9d2bc7ff3184fc65655dbbb77c6cd658a2ae6a76f",
-    "identity": "d5-packet-identity-v2.json",
-    "reason": "Implement validated external review import and computed quality grading; no paid output inspected, no thresholds/corpus/model/limits changed and no approval renewed"
-  }
+  "proposed_stages": [
+    "A",
+    "B"
+  ],
+  "old_measurements_are_current_fit_evidence": false,
+  "human_labels": null
 }

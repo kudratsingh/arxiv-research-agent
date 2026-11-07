@@ -1,0 +1,142 @@
+{
+  "local": {
+    "$defs": {
+      "SupportDecision": {
+        "enum": [
+          "supported",
+          "unsupported",
+          "abstain"
+        ],
+        "title": "SupportDecision",
+        "type": "string"
+      },
+      "Verdict": {
+        "additionalProperties": false,
+        "properties": {
+          "claim_id": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Claim Id",
+            "type": "string"
+          },
+          "input_digest": {
+            "title": "Input Digest",
+            "type": "string"
+          },
+          "decision": {
+            "$ref": "#/$defs/SupportDecision"
+          },
+          "reason": {
+            "maxLength": 240,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "claim_id",
+          "input_digest",
+          "decision",
+          "reason"
+        ],
+        "title": "Verdict",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "checks": {
+        "items": {
+          "$ref": "#/$defs/Verdict"
+        },
+        "maxItems": 6,
+        "title": "Checks",
+        "type": "array"
+      },
+      "prose_review": {
+        "enum": [
+          "procedural_only",
+          "unscored_factual_content",
+          "abstain"
+        ],
+        "title": "Prose Review",
+        "type": "string"
+      }
+    },
+    "required": [
+      "checks",
+      "prose_review"
+    ],
+    "title": "Checks",
+    "type": "object"
+  },
+  "wire": {
+    "$defs": {
+      "SupportDecision": {
+        "type": "string",
+        "enum": [
+          "supported",
+          "unsupported",
+          "abstain"
+        ],
+        "title": "SupportDecision"
+      },
+      "Verdict": {
+        "type": "object",
+        "title": "Verdict",
+        "properties": {
+          "claim_id": {
+            "type": "string",
+            "title": "Claim Id",
+            "description": "{maxLength: 120, minLength: 1}"
+          },
+          "input_digest": {
+            "type": "string",
+            "title": "Input Digest"
+          },
+          "decision": {
+            "$ref": "#/$defs/SupportDecision"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason",
+            "description": "{maxLength: 240, minLength: 1}"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "claim_id",
+          "input_digest",
+          "decision",
+          "reason"
+        ]
+      }
+    },
+    "type": "object",
+    "title": "Checks",
+    "properties": {
+      "checks": {
+        "type": "array",
+        "title": "Checks",
+        "items": {
+          "$ref": "#/$defs/Verdict"
+        },
+        "description": "{maxItems: 6}"
+      },
+      "prose_review": {
+        "type": "string",
+        "enum": [
+          "procedural_only",
+          "unscored_factual_content",
+          "abstain"
+        ],
+        "title": "Prose Review"
+      }
+    },
+    "additionalProperties": false,
+    "required": [
+      "checks",
+      "prose_review"
+    ]
+  }
+}

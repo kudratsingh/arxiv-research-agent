@@ -1,0 +1,33 @@
+{
+  "checked_at": "2026-11-07T03:28:11.771579+00:00",
+  "application": "9bd25a82d313070e810038c8de42c0dc3d9cb8b1",
+  "packet_digest": "f21f4b66e1eb99ab75c7c242a9bfa46acb78ccabc13fb885477e8160425fd95a",
+  "predecessor_packet_digest": "e1ed94498ce74231621f5c1394ddabd0aee11d3c42b7f88f5983e78d22c6d1da",
+  "stopped_real_history_digest": "8ad7581dca85929343a0b3b28bc9555cfae7e0229b09752a9375fccc6a49824f",
+  "active_ledger_unchanged": true,
+  "active_ledger_database": "workspace_d5_review_validation",
+  "prospective_validation_database": "workspace_d5_contract_v4_validation",
+  "prospective_validation_rows": {
+    "workspace_budget_policies": 0,
+    "workspace_d5_scopes": 0,
+    "workspace_d5_stage_authorizations": 0,
+    "workspace_d5_fixture_marker": 0
+  },
+  "current_real_messages": 10,
+  "current_real_counts": 20,
+  "current_real_known_usd": "0.125611",
+  "pending_usd": "0",
+  "unknown_usd": "0",
+  "new_provider_contacts": 0,
+  "new_count_contacts": 0,
+  "human_worksheet_sha256": "76cf51055bda29c51e586f3c5dd6a99378d569e9374e69f22f8703f32dd227ac",
+  "human_worksheet_all_blank": true,
+  "proposed_stages": [
+    "A",
+    "B"
+  ],
+  "paid_authorization_created": false,
+  "everyday_generation": false,
+  "recurrence": false,
+  "notifications": false
+}

@@ -1,33 +1,17 @@
-# D5 grounded assistance, qualification and reviewed quality
+# D5 response-contract repair — prospective v4
 
-Current application **`f962ff84fd49c9e6b0db325c8adba3817a177c8b`** adds validated external review import and computed grading to the protected D5 pipeline. The prior published checkpoint698eaa3 passed9/9CI jobs; final publication/CI for this evaluator is a separate exact-head gate reported in the owner checkpoint. Runtime frontend build `Mh3EAZc3soYDoaWmy__H5` is unchanged.
+Stage B v3 remains stopped. The real dev-learn response failed local comparison semantics; dev-compare was not dispatched. Current programme accounting is **10 Messages / 20 counts / estimated USD0.125611**, pending/unknown0. This repair batch makes **zero provider or count contacts** and records no paid authorization. Owner3137/review3178 remain unchanged; everyday generation, recurrence and notifications stay disabled.
 
-**Preview: http://localhost:3193/workspace/today?mode=learn**. New isolated API8193/database`workspace_d5_review_offline`/principal`d5-validation-run`. Owner3137 and completed3178 are unchanged. Provider/count contacts0, new actual spend$0. Everyday generation, recurrence and notifications remain disabled. Unmerged/undeployed.
+The purpose-specific contract uses shared claim IDs for Research comparison references. Single-paper Learn and one-source Research schemas omit cross-source comparison fields. Within-paper contrasts remain attributed, cited claims. Whole-claim, provenance, selected-span and optional-prose checking remain mandatory. Describing an assertion as unverified is no exemption.
 
-## Review this milestone
+- [Preserved failure and regression evidence](../../../tests/fixtures/d5/stage-b-v3/README.md).
+- [Repair runbook](CONTRACT-REPAIR-v4.md).
+- [Current cumulative quotas](d5-quota-v4.json).
+- [Unexecuted fresh-measurement/development proposal](PAID-VALIDATION-PROPOSAL.md).
+- [Historical v3 implementation overview](README-v3.md), [packet](d5-system-validation-v3.json.gz), and [original human review runbook](HUMAN-REVIEW-RUNBOOK.md).
 
-- [Review export, validation/import, adjudication and scoring commands](HUMAN-REVIEW-RUNBOOK.md).
-- [Synthetic grading reports, unchanged blank worksheet and binding receipts](evidence/review-grading/README.md).
-- [Executable benchmark and Reader walkthrough](RUNBOOK.md).
-- [Offline quality findings and limits](OFFLINE-QUALITY.md).
-- [Protected qualification adapter and permission contract](QUALIFICATION-INTEGRATION.md).
-- [Separate unexecuted paid proposal](PAID-VALIDATION-PROPOSAL.md).
-- [Exact active packet/scorer/schema/application identity](d5-packet-identity.json).
+The new v4 packet is prospective and unapproved. It retains the same corpus/profile/questions/ranking/quality thresholds, adds explicit failure lineage, and carries the latest real financial history. Historical measurements cannot establish token fit for changed wires. The exact final identities and verification evidence will be recorded after the freeze and gates.
 
-Active immutable packet **`d5-system-validation-v3.json.gz`**, digest **`e1ed94498ce74231621f5c1394ddabd0aee11d3c42b7f88f5983e78d22c6d1da`**. The v2 predecessor and its results/blank worksheet remain preserved. V3 binds the new evaluator and review policy; corpus, sources, model/settings, thresholds, minimums, contact/cost limits and historical accounting are unchanged. Approval remains false. No old job is relabelled v3; explicit historical reanalysis retains its original packet/result and names the new scorer in an analysis receipt.
+Development attempts remain outside the held-out denominator. Human labels remain blank. Synthetic corrected fixtures demonstrate software behavior only. The remaining programme has13 funded job slots,70 Messages and60 counts; a proposed two-job development stage leaves11 slots, insufficient for the original12-job C/D schedule. No ceiling or quality minimum is raised/reduced to hide this constraint.
 
-## What works
-
-The protected runner uses the existing production provider adapter/admission, complete reservations, cumulative ledger and contact journal. Injected MockTransport uses those same controls. The Reader reads quarantined outputs and preserves exact source/version/passage, saved learning threads/project notes and Library resume; it has no paid-dispatch or approval endpoint.
-
-The new review CLI exports observed assertions/prose/probes, validates attributed versioned sidecars, rejects stale/cross-case/conflicting records, imports append-only with idempotence and explicit adjudication, and recomputes JSON/Markdown/HTML reports. It rechecks mechanical provenance, calculates actual label/coverage/support/checker/error-rate/acceptance/retrieval metrics, and never edits raw outputs, source material, financial rows or approvals. Missing/indeterminate judgments remain missing; synthetic grading cannot become independent human evidence.
-
-The fresh v3 mock replay completed8/8 system and2/2 development workflows plus4checker batches and4measurement helpers, with44syntheticMessages/48syntheticcounts and0realcontacts. It contains12fresh generated claims, below20; independent human reviews0. The unreviewed outcome is HOLD. The actual owner worksheet is all-null; scripted labels use different files/stores. [Reports and focused checks](evidence/review-grading/README.md) distinguish grading logic from scientific quality.
-
-## Remaining boundary
-
-Actual provider token fit, remote schema acceptance, completion, whole-claim support, checker reliability and owner usefulness remain unmeasured. The proposal recommends only the four named StageA count requests first; funded stages need their own explicit approval or append-only grant. No paid authorization or stage was executed. Historical usage remains estimated$0.109967, pending/unknown0,9Messages/15counts; original q01development/q02–q04 failures/stops and0/9aggregate are unchanged.
-
-Only two inherited, manually pinned PDF samples have excerpts; extraction/reading-order/equation/table reliability remains limited. Broader unsaved-draft browser-history recovery remains unresolved. A small reviewed trial cannot statistically certify a checker or enable everyday use. Earlier `*-v2.md`, system sealsv1/v2 and prototype packets are historical, unexecuted/predecessor evidence, not the active paid instructions.
-
-Final local full gate: **6,503 passed /54 inherited skips /53 separate-tier deselections,94.61%total and97%patch**, package floors pass; [raw verification](evidence/review-grading/checks/verification.json). Final-head remoteCI remains independently reported.
+Prospective packet **`f21f4b66e1eb99ab75c7c242a9bfa46acb78ccabc13fb885477e8160425fd95a`**, application **`9bd25a82d313070e810038c8de42c0dc3d9cb8b1`**; approved=false. [Full identity receipt](d5-packet-identity.json).
