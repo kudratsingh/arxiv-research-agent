@@ -147,7 +147,6 @@ def results(store: WorkspaceStore, packet: dict[str, Any]) -> dict[str, Any]:
     return grade_report(packet, report)
 
 
-
 async def run(
     store: WorkspaceStore, packet: dict[str, Any], stage: str, *, offline: bool
 ) -> dict[str, Any]:
@@ -163,6 +162,7 @@ async def run(
     stages = ["A", "B", "C", "D"] if stage == "all" and offline else [stage]
     if any(s not in {"A", "B", "C", "D"} for s in stages):
         raise AdmissionError("d5_named_stage_required")
+    measurement_proofs = {}
     for current in stages:
         # Later stages cannot bypass the declared progression.
         previous = {"B": "A", "C": "B", "D": "C"}.get(current)
@@ -180,6 +180,21 @@ async def run(
                             "SELECT state,data->'result' FROM workspace_generation_jobs WHERE owner=%s AND id=%s",
                             (entry["owner"], jid),
                         ).fetchone()
+                        if (
+                            (not row or row[0] != "ready")
+                            and previous == "A"
+                            and _key in packet.get("measurement_reuse", {})
+                        ):
+                            from src.workspace.d5_measurements import verify_reuse
+
+                            measurement_proofs[_key] = verify_reuse(
+                                store,
+                                packet["measurement_reuse"][_key],
+                                entry["owner"],
+                                restore_input(entry["input"]),
+                                offline=offline,
+                            )
+                            continue
                         if not row or row[0] != "ready":
                             raise AdmissionError("d5_previous_stage_not_complete")
                         if previous == "A" and (
@@ -191,6 +206,17 @@ async def run(
             if entry["stage"] != current:
                 continue
             inputs = restore_input(entry["input"])
+            if current == "A" and key in packet.get("measurement_reuse", {}):
+                from src.workspace.d5_measurements import verify_reuse
+
+                measurement_proofs[key] = verify_reuse(
+                    store,
+                    packet["measurement_reuse"][key],
+                    entry["owner"],
+                    inputs,
+                    offline=offline,
+                )
+                continue
             operation = inputs.settings["d5_operation"]
             kind = (
                 D5MeasurementAdapter
@@ -214,6 +240,14 @@ async def run(
             adapter = kind(store, entry["owner"], inputs, **kwargs)
             started = time.monotonic()
             job = adapter.start(inputs.settings["d5_request_id"])
+            if measurement_proofs:
+                from psycopg.types.json import Jsonb
+
+                with store.pool.connection() as conn:
+                    conn.execute(
+                        "UPDATE workspace_generation_jobs SET data=jsonb_set(data,'{d5_measurement_basis}',%s) WHERE id=%s AND NOT(data ? 'd5_measurement_basis')",
+                        (Jsonb(list(measurement_proofs.values())), job["id"]),
+                    )
             # A completed identity may be inspected; failed/uncertain identities
             # cannot be silently replaced, repaired or dispatched again.
             if job["state"] not in {"running", "ready"}:

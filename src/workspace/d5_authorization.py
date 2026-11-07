@@ -14,7 +14,7 @@ from typing import Any
 from psycopg.types.json import Jsonb
 
 from src.workspace.admission import AdmissionError, _digest
-from src.workspace.d5_scope import LIMITS, stage_authorizations
+from src.workspace.d5_scope import limits_for, stage_authorizations
 from src.workspace.qualification_budget import census
 from src.workspace.store import WorkspaceStore
 
@@ -47,6 +47,10 @@ def record_external(
     exporting a template are separate from this permission-changing operation.
     """
     bindings = case_bindings(compiled)
+    policies = [limits_for(e["input"]["settings"]) for e in compiled.values()]
+    # Measurement helpers keep their unchanged Sonnet body; funded operations
+    # determine the prospective scope ceiling. No legacy authorization is edited.
+    limits = max(policies, key=lambda p: Decimal(p["workflow_usd"]))
     members = sorted({entry["owner"] for entry in compiled.values()})
     try:
         approved_at = datetime.fromisoformat(receipt["approved_at"])
@@ -59,7 +63,7 @@ def record_external(
         or not receipt["approved_by"].strip()
         or receipt.get("packet_digest") != packet_digest
         or receipt.get("scope_id") != scope_id
-        or receipt.get("limits") != LIMITS
+        or receipt.get("limits") != limits
         or receipt.get("members") != members
         or receipt.get("case_bindings_digest") != _digest(bindings)
         or receipt.get("transport_mode") not in {"mock", "provider"}
@@ -143,8 +147,20 @@ def record_external(
             for member in members
         ):
             raise AdmissionError("d5_new_members_must_have_empty_financial_ledgers")
+        amendment_digests = {
+            entry["input"]["settings"].get("program_amendment_proposal_digest")
+            for entry in compiled.values()
+        }
+        if len(amendment_digests) != 1:
+            raise AdmissionError("d5_programme_amendment_binding_drift")
+        amendment_digest = next(iter(amendment_digests))
+        if amendment_digest:
+            from src.workspace.programme_amendments import effective_limits
+
+            effective_limits(conn, program_id, required_proposal_digest=amendment_digest)
         data = {
-            "limits": LIMITS,
+            "program_amendment_proposal_digest": amendment_digest,
+            "limits": limits,
             "members": members,
             "stages": receipt["stages"],
             "cases": bindings,
@@ -170,9 +186,10 @@ def record_external(
                 )
             policy = {
                 "approved": True,
-                "model_ids": ["claude-sonnet-5-5"],
+                "program_amendment_proposal_digest": amendment_digest,
+                "model_ids": sorted({e["input"]["model_id"] for e in compiled.values()}),
                 "source_scopes": ["abstract", "excerpt"],
-                "per_job_usd": "0.40",
+                "per_job_usd": limits["workflow_usd"],
                 "day_usd": "10",
                 "month_usd": "10",
                 "valid_from": approved_at.isoformat(),
@@ -235,7 +252,7 @@ def stage_template(store: WorkspaceStore, scope_id: str, stages: list[str]) -> d
         "scope_id": scope_id,
         "packet_digest": row[0],
         "parent_authorization_digest": row[1],
-        "limits": LIMITS,
+        "limits": row[2]["limits"],
         "members": row[2]["members"],
         "case_bindings_digest": _digest(row[2]["cases"]),
         "basis_history_digest": history["history_digest"],
@@ -296,7 +313,7 @@ def grant_external(store: WorkspaceStore, scope_id: str, receipt: dict[str, Any]
         if (
             receipt.get("packet_digest") != row[0]
             or receipt.get("parent_authorization_digest") != row[1]
-            or receipt.get("limits") != LIMITS
+            or receipt.get("limits") != data["limits"]
             or receipt.get("members") != data["members"]
             or receipt.get("case_bindings_digest") != _digest(data["cases"])
             or receipt.get("transport_mode") != data["authorization_record"]["transport_mode"]

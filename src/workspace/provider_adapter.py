@@ -281,6 +281,13 @@ class QualificationAdapter:
     def _complete_http_body(self, job_id: str, ordinal: int, status: int, body: bytes) -> None:
         """Optional receipt for a complete body before envelope decoding."""
 
+    def _response_output(self, response: dict[str, Any], body: dict[str, Any]) -> dict[str, Any]:
+        return response_output(response, body["model"])
+
+    def _billing_input(self, wire: dict[str, Any]) -> dict[str, Any]:
+        """Historical default; versioned adapters can seal per-operation routes."""
+        return self.inputs.snapshot()
+
     def _usage_within_stage(self, ins: int, outs: int, wire: dict[str, Any]) -> bool:
         return ins <= int(self.inputs.settings["input_tokens"]) and outs <= int(
             self.inputs.settings["output_tokens"]
@@ -566,6 +573,8 @@ class QualificationAdapter:
                     prior.get("state") != "completed"
                     or prior.get("endpoint") != "messages/count_tokens"
                     or prior.get("generation_request_digest") != _digest(body)
+                    or prior.get("body") != {k: v for k, v in body.items() if k not in {"max_tokens", "temperature"}}
+                    or prior.get("request_digest") != _digest(prior.get("body"))
                     or type(estimate) is not int
                     or estimate < 0
                     or estimate * 5 > int(self.inputs.settings["input_tokens"]) * 4
@@ -688,7 +697,7 @@ class QualificationAdapter:
             ordinal = self._contact(job_id, wire, "messages")
             response = await self._post("messages", wire["body"], job_id=job_id, ordinal=ordinal)
             self._record(job_id, ordinal, response)
-            ins, outs, cost = priced_usage(response, self.inputs.snapshot())
+            ins, outs, cost = priced_usage(response, self._billing_input(wire))
             snapshot = self.snapshot(job_id)
             role = "checker" if wire["stage"] == "check" else "workflow"
             totals = {r: Decimal(snapshot[r + "_usd"]) for r in ("workflow", "checker")}
@@ -715,7 +724,7 @@ class QualificationAdapter:
             if cancelled():
                 return self.control.cancel(self.owner, job_id)
             self._response_authorization(job_id)
-            output = response_output(response, self.inputs.model_id)
+            output = self._response_output(response, wire["body"])
             final = False
             if wire["stage"] == "check":
                 checks = self._checks(output)
@@ -733,7 +742,7 @@ class QualificationAdapter:
                             c.claim_id,
                             c.input_digest,
                             c.decision,
-                            self.inputs.model_id,
+                            wire["body"]["model"],
                             self.revision + ":check",
                             c.reason,
                         )
@@ -758,6 +767,7 @@ class QualificationAdapter:
                 adapter["steps"].append(
                     {
                         "stage": wire["stage"],
+                        "model_id": wire["body"]["model"],
                         "request_digest": wire["request_digest"],
                         "output": output,
                         "usage": {"input_tokens": ins, "output_tokens": outs},

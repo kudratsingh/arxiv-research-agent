@@ -18,7 +18,6 @@ from src.workspace.admission import AdmissionError, _digest
 from src.workspace.assistance import LocalAssistanceTransport
 from src.workspace.d5_authorization import case_bindings, record_external
 from src.workspace.d5_freeze import COUNT_OWNER, RUN_OWNER, compile_inputs
-from src.workspace.d5_scope import LIMITS
 from src.workspace.qualification_budget import census
 from src.workspace.store import WorkspaceStore
 
@@ -194,7 +193,7 @@ def authorize_fixture(
         "expires_at": (now + timedelta(days=1)).isoformat(),
         "packet_digest": packet["packet_digest"],
         "scope_id": "d5-" + packet["packet_digest"][:24],
-        "limits": LIMITS,
+        "limits": packet["limits"],
         "members": sorted({v["owner"] for v in compiled.values()}),
         "case_bindings_digest": _digest(case_bindings(compiled)),
         "transport_mode": "mock",
@@ -265,6 +264,7 @@ class ReplayTransport:
         if self.scenario == "timeout":
             raise httpx.ReadTimeout("Synthetic uncertain completion", request=request)
         response = LocalAssistanceTransport.fixture(request).json()
+        response["model"] = body["model"]
         if self.scenario == "truncated":
             response["stop_reason"] = "max_tokens"
             response["content"][0]["text"] = '{"claims":['

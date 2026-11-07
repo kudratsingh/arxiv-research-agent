@@ -17,7 +17,7 @@ from src.workspace import d5_adapter as d
 from src.workspace.admission import AdmissionError, _digest
 from src.workspace.d5_authorization import case_bindings, record_external, revoke
 from src.workspace.d5_results import QualificationResults
-from src.workspace.d5_scope import LIMITS, guard_scope
+from src.workspace.d5_scope import guard_scope
 from src.workspace.qualification_budget import census
 from tests import test_workspace_assistance as support
 from tests.test_workspace_evaluation_program import program
@@ -35,7 +35,7 @@ def offline(monkeypatch):
     monkeypatch.setenv("WORKSPACE_D5_OFFLINE", "1")
 
 
-def setup(store, operation="workflow", stages=None, *, mode="learn", comparison=False):
+def setup(store, operation="workflow", stages=None, *, mode="learn", comparison=False, routes=None):
     program(store)
     service, value = support.setup(store, mode)
     if comparison:
@@ -82,6 +82,7 @@ def setup(store, operation="workflow", stages=None, *, mode="learn", comparison=
         packet_digest="packet",
         case_id="case",
         operation=operation,
+        operation_routes=routes,
     )
     compiled = {
         "case": {
@@ -98,7 +99,9 @@ def setup(store, operation="workflow", stages=None, *, mode="learn", comparison=
         "expires_at": (now + timedelta(days=1)).isoformat(),
         "packet_digest": "packet",
         "scope_id": "d5-test",
-        "limits": LIMITS,
+        "limits": __import__("src.workspace.d5_scope", fromlist=["limits_for"]).limits_for(
+            inputs.settings
+        ),
         "members": ["d5-run"],
         "case_bindings_digest": _digest(case_bindings(compiled)),
         "transport_mode": "mock",

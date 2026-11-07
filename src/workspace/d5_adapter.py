@@ -58,6 +58,10 @@ def qualification_producer() -> dict[str, Any]:
     root = Path(__file__).resolve().parents[1]
     files = (
         "workspace/d5_adapter.py",
+        "workspace/d5_operations.py",
+        "workspace/programme_amendments.py",
+        "workspace/d5_measurements.py",
+        "workspace/migrations/014_programme_amendments.sql",
         "workspace/d5_scope.py",
         "workspace/d5_authorization.py",
         "workspace/provider_adapter.py",
@@ -106,6 +110,8 @@ def prepare_input(
     case_id: str,
     operation: str = "workflow",
     probe_wire: dict[str, Any] | None = None,
+    programme_amendment_digest: str | None = None,
+    operation_routes: dict[str, Any] | None = None,
 ) -> GenerationInput:
     if operation not in {"workflow", "measurement", "probe"}:
         raise AdmissionError("d5_operation_required")
@@ -156,6 +162,7 @@ def prepare_input(
         ]
     settings = {
         "qualification_producer": _QUALIFICATION_LOADED,
+        "program_amendment_proposal_digest": programme_amendment_digest,
         "d5_scope_id": scope_id,
         "d5_packet_digest": packet_digest,
         "d5_case_id": case_id,
@@ -178,7 +185,18 @@ def prepare_input(
         "probe_context": probe_context,
         "probe_wire_digest": _digest(probe_wire) if probe_wire else None,
     }
-    return GenerationInput("deep_dive", CANDIDATE_MODEL, ADAPTER_REVISION, sources, settings)
+    model = CANDIDATE_MODEL
+    if operation_routes is not None and operation != "measurement":
+        from src.workspace.d5_operations import route, validate
+
+        validate(operation_routes)
+        settings["operation_routes"] = operation_routes
+        if operation == "probe":
+            selected = route(operation_routes, "check")
+            model = selected["model"]
+            settings["output_tokens"] = selected["output_tokens"]
+            settings["price_estimate_usd_per_million"] = selected["prices"]
+    return GenerationInput("deep_dive", model, ADAPTER_REVISION, sources, settings)
 
 
 class D5Adapter(QualificationAdapter):
@@ -187,11 +205,12 @@ class D5Adapter(QualificationAdapter):
     abstention_is_final = False
 
     def start(
-        self, request_id: str, amount_usd: str = "0.40", *, now: datetime | None = None
+        self, request_id: str, amount_usd: str | None = None, *, now: datetime | None = None
     ) -> dict[str, Any]:
         if self.inputs.settings["d5_operation"] != "workflow":
             raise AdmissionError("d5_workflow_operation_required")
-        return super().start(request_id, amount_usd, now=now)
+        amount = amount_usd or ("0.45" if self.inputs.settings.get("operation_routes") else "0.40")
+        return super().start(request_id, amount, now=now)
 
     def _complete_http_body(self, job_id: str, ordinal: int, status: int, body: bytes) -> None:
         # Credential headers never enter the journal. If an upstream error echoes
@@ -269,20 +288,37 @@ class D5Adapter(QualificationAdapter):
         settings = self.inputs.settings
         sealed = settings.get("d5_request", {})
         operation = settings.get("d5_operation")
+        routes = settings.get("operation_routes")
+        if routes:
+            from src.workspace.d5_operations import route, validate
+
+            validate(routes)
+        probe_route = route(routes, "check") if routes and operation == "probe" else None
         if (
             qualification_producer() != _QUALIFICATION_LOADED
             or settings.get("qualification_producer") != _QUALIFICATION_LOADED
-            or self.inputs.model_id != CANDIDATE_MODEL
+            or self.inputs.model_id != (probe_route["model"] if probe_route else CANDIDATE_MODEL)
             or self.inputs.prompt_revision != ADAPTER_REVISION
             or operation not in {"workflow", "measurement", "probe"}
             or settings.get("input_tokens") != 20000
-            or settings.get("output_tokens") != (1800 if operation == "probe" else 4000)
+            or settings.get("output_tokens")
+            != (
+                probe_route["output_tokens"]
+                if probe_route
+                else 1800
+                if operation == "probe"
+                else 4000
+            )
             or settings.get("timeout_seconds") != 30
             or settings.get("response_bytes") != 131072
             or settings.get("max_calls") != (1 if operation in {"probe", "measurement"} else 4)
             or settings.get("max_repairs") != (0 if operation in {"probe", "measurement"} else 1)
             or settings.get("price_estimate_usd_per_million")
-            != {"input": "2", "output": "10", "verified_at": "2026-11-06"}
+            != (
+                probe_route["prices"]
+                if probe_route
+                else {"input": "2", "output": "10", "verified_at": "2026-11-06"}
+            )
             or sealed.get("schema_revision") != REVISION
             or sealed.get("producer", {}).get("code") != producer_binding()
         ):
@@ -399,7 +435,7 @@ class D5Adapter(QualificationAdapter):
             if len(completed) != len(steps):
                 raise AdmissionError("d5_preceding_response_journal_mismatch")
             for step, contact in zip(steps, completed, strict=True):
-                original = response_output(contact["response"], self.inputs.model_id)
+                original = self._response_output(contact["response"], contact["body"])
                 stored = {key: value for key, value in step["output"].items() if key != "grounding"}
                 if (
                     original != stored
@@ -413,7 +449,10 @@ class D5Adapter(QualificationAdapter):
             if not isinstance(body, dict):
                 raise AdmissionError("d5_probe_wire_required")
             context = json.loads(body["messages"][0]["content"])
-            if context.get("phase") != "check" or body.get("max_tokens") != 1800:
+            if (
+                context.get("phase") != "check"
+                or body.get("max_tokens") != settings["output_tokens"]
+            ):
                 raise AdmissionError("d5_probe_contract_drift")
             if (
                 body.get("output_config", {}).get("format", {}).get("schema")
@@ -422,7 +461,7 @@ class D5Adapter(QualificationAdapter):
             ):
                 raise AdmissionError("d5_probe_schema_drift")
             self._checked_draft({})
-            rebuilt = build_wire({**context, "output_schema": transform_schema(Checks)})
+            rebuilt = self._wire({**context, "output_schema": transform_schema(Checks)})
             if rebuilt != body:
                 raise AdmissionError("d5_probe_wire_drift")
             return {"stage": "check", "body": body, "request_digest": _digest(body)}
@@ -483,7 +522,7 @@ class D5Adapter(QualificationAdapter):
                             c.claim_id,
                             c.input_digest,
                             c.decision,
-                            self.inputs.model_id,
+                            steps[-1]["model_id"],
                             self.revision + ":check",
                             c.reason,
                         )
@@ -496,7 +535,7 @@ class D5Adapter(QualificationAdapter):
                     ]
                 }
                 value["previous_grounding"] = asdict(report)
-        body = build_wire(value)
+        body = self._wire(value)
         if phase == "draft" and _digest(body) != sealed["candidate_initial_wire_digest"]:
             raise AdmissionError("d5_initial_wire_drift")
         if (
@@ -505,6 +544,43 @@ class D5Adapter(QualificationAdapter):
         ):
             raise AdmissionError("d5_complete_stage_capacity_exceeded")
         return {"stage": phase, "body": body, "request_digest": _digest(body)}
+
+    def _wire(self, context: dict[str, Any]) -> dict[str, Any]:
+        routes = self.inputs.settings.get("operation_routes")
+        if routes:
+            from src.workspace.d5_operations import wire
+
+            return wire(context, routes)
+        return build_wire(context)
+
+    def _response_output(self, response: dict[str, Any], body: dict[str, Any]) -> dict[str, Any]:
+        if self.inputs.settings.get("operation_routes") and body["model"] == "claude-opus-5-5":
+            from src.workspace.d5_operations import verdict_text
+
+            text = verdict_text(response)
+            # Keep the original strict model/stop/all-or-nothing object parser.
+            return response_output(
+                {**response, "content": [{"type": "text", "text": text}]}, body["model"]
+            )
+        return super()._response_output(response, body)
+
+    def _billing_input(self, wire: dict[str, Any]) -> dict[str, Any]:
+        routes = self.inputs.settings.get("operation_routes")
+        if not routes:
+            return super()._billing_input(wire)
+        from src.workspace.d5_operations import route
+
+        selected = route(routes, wire["stage"])
+        if wire["body"]["model"] != selected["model"]:
+            raise AdmissionError("d5_operation_model_drift")
+        return {
+            **self.inputs.snapshot(),
+            "model_id": selected["model"],
+            "settings": {
+                **self.inputs.settings,
+                "price_estimate_usd_per_million": selected["prices"],
+            },
+        }
 
     def _probe_wire(self) -> dict[str, Any]:
         context = self.inputs.settings.get("probe_context")
@@ -525,7 +601,7 @@ class D5Adapter(QualificationAdapter):
         except KeyError as exc:
             raise AdmissionError("d5_probe_unselected_evidence") from exc
         body_context["output_schema"] = transform_schema(Checks)
-        body = build_wire(body_context)
+        body = self._wire(body_context)
         if _digest(body) != self.inputs.settings["probe_wire_digest"]:
             raise AdmissionError("d5_probe_wire_drift")
         return body
@@ -585,7 +661,15 @@ class D5Adapter(QualificationAdapter):
             bound = guard_scope(conn, self.owner, self.inputs.snapshot(), policy, job_id=job_id)
             snapshot = self.snapshot(job_id)
             last = snapshot["contacts"][-1]
-            text = last["response"].get("content", [{}])[0].get("text", "")
+            if (
+                self.inputs.settings.get("operation_routes")
+                and last["body"]["model"] == "claude-opus-5-5"
+            ):
+                from src.workspace.d5_operations import verdict_text
+
+                text = verdict_text(last["response"])
+            else:
+                text = last["response"].get("content", [{}])[0].get("text", "")
 
             def unique(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
                 value = {}
@@ -621,7 +705,11 @@ class D5Adapter(QualificationAdapter):
 
 class D5MeasurementAdapter(D5Adapter, MeasurementAdapter):
     allowed_endpoints = frozenset({"messages/count_tokens"})
-    start = MeasurementAdapter.start
+
+    def start(
+        self, request_id: str, amount_usd: str | None = None, *, now: datetime | None = None
+    ) -> dict[str, Any]:
+        return MeasurementAdapter.start(self, request_id, amount_usd or "0", now=now)
 
     async def advance(self, job_id: str, *, cancelled: Any = lambda: False) -> dict[str, Any]:
         try:
@@ -652,10 +740,12 @@ class D5MeasurementAdapter(D5Adapter, MeasurementAdapter):
 
 class D5ProbeAdapter(D5Adapter):
     def start(
-        self, request_id: str, amount_usd: str = "0.08", *, now: datetime | None = None
+        self, request_id: str, amount_usd: str | None = None, *, now: datetime | None = None
     ) -> dict[str, Any]:
+        required = "0.15" if self.inputs.settings.get("operation_routes") else "0.08"
+        amount_usd = amount_usd or required
         if self.inputs.settings["d5_operation"] != "probe" or Decimal(amount_usd) != Decimal(
-            "0.08"
+            required
         ):
             raise AdmissionError("d5_probe_scope_required")
         return self._start(request_id, amount_usd, now=now)

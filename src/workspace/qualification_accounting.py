@@ -29,13 +29,20 @@ def priced_usage(response: dict[str, Any], sealed: dict[str, Any]) -> tuple[int,
     ):
         raise AdmissionError("invalid_or_unpriced_usage")
     rates = sealed["settings"]["price_estimate_usd_per_million"]
-    cost = (Decimal(ins) * _money(rates["input"]) + Decimal(outs) * _money(rates["output"])) / 1_000_000
+    cost = (
+        Decimal(ins) * _money(rates["input"]) + Decimal(outs) * _money(rates["output"])
+    ) / 1_000_000
     return ins, outs, cost
 
 
 def settle_failed_response(
-    store: WorkspaceStore, owner: str, job_id: str, *, receipt_id: str,
-    expected_contacts_digest: str | None = None, reason: str = "content_rejected",
+    store: WorkspaceStore,
+    owner: str,
+    job_id: str,
+    *,
+    receipt_id: str,
+    expected_contacts_digest: str | None = None,
+    reason: str = "content_rejected",
 ) -> dict[str, Any]:
     """Close known completed usage, never accept content or replay the job.
 
@@ -78,7 +85,31 @@ def settle_failed_response(
                 continue
             if contact["endpoint"] != "messages":
                 raise AdmissionError("unrecognized_billing_endpoint")
-            ins, outs, cost = priced_usage(response, sealed)
+            billing = sealed
+            routes = sealed["settings"].get("operation_routes")
+            if routes:
+                from src.workspace.d5_operations import route
+
+                stage = contact["stage"]
+                selected = route(routes, stage)
+                body = contact["body"]
+                if (
+                    body.get("model") != selected["model"]
+                    or body.get("thinking") != selected["thinking"]
+                    or body.get("max_tokens") != selected["output_tokens"]
+                    or body.get("output_config", {}).get("effort") != selected["effort"]
+                    or _digest(body) != contact["generation_request_digest"]
+                ):
+                    raise AdmissionError("accounting_operation_binding_drift")
+                billing = {
+                    **sealed,
+                    "model_id": selected["model"],
+                    "settings": {
+                        **sealed["settings"],
+                        "price_estimate_usd_per_million": selected["prices"],
+                    },
+                }
+            ins, outs, cost = priced_usage(response, billing)
             if not isinstance(response.get("id"), str) or not response["id"].strip():
                 raise AdmissionError("provider_receipt_id_required")
             if contact["stage"] not in {"draft", "repair", "check"}:
@@ -86,8 +117,15 @@ def settle_failed_response(
             role = "checker" if contact["stage"] == "check" else "workflow"
             if data["adapter"]["mode"] == "provider":
                 totals[role] += cost
-            messages.append({"id": response["id"], "response_digest": _digest(response),
-                             "input_tokens": ins, "output_tokens": outs, "role": role})
+            messages.append(
+                {
+                    "id": response["id"],
+                    "response_digest": _digest(response),
+                    "input_tokens": ins,
+                    "output_tokens": outs,
+                    "role": role,
+                }
+            )
         if len({m["id"] for m in messages}) != len(messages):
             raise AdmissionError("unique_completed_message_receipts_required")
         reservation = conn.execute(
@@ -100,26 +138,52 @@ def settle_failed_response(
         if totals["workflow"] < workflow or totals["checker"] < checker:
             raise AdmissionError("known_spend_cannot_decrease")
         now = datetime.now(UTC)
-        data["usage_events"].append({"day": now.date().isoformat(),
-            "month": now.date().replace(day=1).isoformat(),
-            "workflow": str(totals["workflow"] - workflow),
-            "judge": str(totals["checker"] - checker)})
-        next_state = "budget_stopped" if sum(totals.values()) > amount else (
-            state if state in {"cancelled", "budget_stopped"} else "failed")
-        audit = {"receipt_id": receipt_id, "contacts_digest": digest,
-                 "reason": reason, "recorded_at": now.isoformat(),
-                 "historical_rates": sealed["settings"]["price_estimate_usd_per_million"],
-                 "messages": messages, "prior_state": state, "state": next_state,
-                 "prior_unknown_usd": str(unknown), "unknown_usd": "0",
-                 "released_unused_usd": str(max(Decimal(0), amount - sum(totals.values()))),
-                 "workflow_usd": str(totals["workflow"]), "checker_usd": str(totals["checker"]),
-                 "content_accepted": False, "invoice_verified": False}
-        audit["financial_basis"] = "completed metered Messages responses" if messages else "completed valid count-only contacts; no Messages dispatch"
+        data["usage_events"].append(
+            {
+                "day": now.date().isoformat(),
+                "month": now.date().replace(day=1).isoformat(),
+                "workflow": str(totals["workflow"] - workflow),
+                "judge": str(totals["checker"] - checker),
+            }
+        )
+        next_state = (
+            "budget_stopped"
+            if sum(totals.values()) > amount
+            else (state if state in {"cancelled", "budget_stopped"} else "failed")
+        )
+        audit = {
+            "receipt_id": receipt_id,
+            "contacts_digest": digest,
+            "reason": reason,
+            "recorded_at": now.isoformat(),
+            "historical_rates": sealed["settings"]["price_estimate_usd_per_million"],
+            "messages": messages,
+            "prior_state": state,
+            "state": next_state,
+            "prior_unknown_usd": str(unknown),
+            "unknown_usd": "0",
+            "released_unused_usd": str(max(Decimal(0), amount - sum(totals.values()))),
+            "workflow_usd": str(totals["workflow"]),
+            "checker_usd": str(totals["checker"]),
+            "content_accepted": False,
+            "invoice_verified": False,
+        }
+        audit["financial_basis"] = (
+            "completed metered Messages responses"
+            if messages
+            else "completed valid count-only contacts; no Messages dispatch"
+        )
         audits[receipt_id] = audit
         data["result"] = None
-        data["adapter"].update(workflow_usd=str(totals["workflow"]), checker_usd=str(totals["checker"]))
-        conn.execute("UPDATE workspace_generation_jobs SET state=%s,data=%s WHERE id=%s",
-                     (next_state, Jsonb(data), job_id))
-        conn.execute("UPDATE workspace_spend_reservations SET workflow=%s,judge=%s,unknown=0,state=%s WHERE job_id=%s",
-                     (totals["workflow"], totals["checker"], next_state, job_id))
+        data["adapter"].update(
+            workflow_usd=str(totals["workflow"]), checker_usd=str(totals["checker"])
+        )
+        conn.execute(
+            "UPDATE workspace_generation_jobs SET state=%s,data=%s WHERE id=%s",
+            (next_state, Jsonb(data), job_id),
+        )
+        conn.execute(
+            "UPDATE workspace_spend_reservations SET workflow=%s,judge=%s,unknown=0,state=%s WHERE job_id=%s",
+            (totals["workflow"], totals["checker"], next_state, job_id),
+        )
         return audit

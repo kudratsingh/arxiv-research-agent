@@ -36,8 +36,8 @@ from src.workspace.store import WorkspaceStore
 
 REVISION_BENCHMARK = "d5-system-benchmark-v1"
 CLOCK = "2026-11-05T12:00:00+00:00"
-RUN_OWNER = "d5-v4-validation-run"
-COUNT_OWNER = "d5-v4-validation-measure"
+RUN_OWNER = "d5-v5-validation-run"
+COUNT_OWNER = "d5-v5-validation-measure"
 QUESTIONS = (
     (
         "dev-learn",
@@ -91,6 +91,10 @@ def code_bindings() -> dict[str, str]:
     root = Path(__file__).resolve().parents[2]
     names = [
         "d5_freeze.py",
+        "d5_operations.py",
+        "programme_amendments.py",
+        "d5_measurements.py",
+        "migrations/014_programme_amendments.sql",
         "d5_benchmark.py",
         "d5_scoring.py",
         "d5_reviews.py",
@@ -112,7 +116,10 @@ def code_bindings() -> dict[str, str]:
         "migrations/013_d5_stage_authorizations.sql",
     ]
     paths = [root / "src/workspace" / name for name in names]
-    paths += [root / "web/components/workspace/QualificationResult.tsx"]
+    paths += [
+        root / "web/components/workspace/QualificationResult.tsx",
+        root / "planning/14-explore-and-research-modes/d5/tools/prepare-opus-v5.py",
+    ]
     paths += [
         root / name
         for name in (
@@ -247,6 +254,10 @@ def compile_inputs(packet: dict[str, Any]) -> dict[str, dict[str, Any]]:
                 scope_id=scope_id,
                 packet_digest=packet["packet_digest"],
                 case_id=key,
+                programme_amendment_digest=packet.get("programme_amendment", {}).get(
+                    "proposal_digest"
+                ),
+                operation_routes=packet.get("operation_routes"),
             ).snapshot(),
         }
     for case in packet["probes"]:
@@ -259,8 +270,12 @@ def compile_inputs(packet: dict[str, Any]) -> dict[str, dict[str, Any]]:
                 scope_id=scope_id,
                 packet_digest=packet["packet_digest"],
                 case_id=key,
+                programme_amendment_digest=packet.get("programme_amendment", {}).get(
+                    "proposal_digest"
+                ),
                 operation="probe",
                 probe_wire=case["wire"],
+                operation_routes=packet.get("operation_routes"),
             ).snapshot(),
         }
     for index, key in enumerate(packet["measurement_cases"]):
@@ -276,7 +291,11 @@ def compile_inputs(packet: dict[str, Any]) -> dict[str, dict[str, Any]]:
                 scope_id=scope_id,
                 packet_digest=packet["packet_digest"],
                 case_id=mid,
+                programme_amendment_digest=packet.get("programme_amendment", {}).get(
+                    "proposal_digest"
+                ),
                 operation="measurement",
+                operation_routes=packet.get("operation_routes"),
             ).snapshot(),
         }
     return compiled

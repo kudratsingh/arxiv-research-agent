@@ -27,6 +27,21 @@ LIMITS: dict[str, Any] = {
 }
 
 
+def limits_for(settings: dict[str, Any]) -> dict[str, Any]:
+    if settings.get("operation_routes"):
+        from src.workspace.d5_operations import OPUS_LIMITS, validate
+
+        validate(settings["operation_routes"])
+        return OPUS_LIMITS
+    return LIMITS
+
+
+def valid_limits(value: Any) -> bool:
+    from src.workspace.d5_operations import OPUS_LIMITS
+
+    return value in (LIMITS, OPUS_LIMITS)
+
+
 def stage_authorizations(
     conn: Any,
     scope_id: str,
@@ -48,7 +63,7 @@ def stage_authorizations(
             or receipt.get("scope_id") != scope_id
             or receipt.get("parent_authorization_digest") != parent_digest
             or receipt.get("packet_digest") != data["authorization_record"]["packet_digest"]
-            or receipt.get("limits") != LIMITS
+            or receipt.get("limits") != data["limits"]
             or receipt.get("members") != data["members"]
             or receipt.get("case_bindings_digest") != _digest(data["cases"])
             or receipt.get("transport_mode") != data["authorization_record"]["transport_mode"]
@@ -88,18 +103,28 @@ def scope(
         or owner not in row[2].get("members", [])
         or row[0] != settings.get("d5_packet_digest")
         or row[1] != policy.get("d5_authorization_digest")
-        or row[2].get("limits") != LIMITS
+        or not valid_limits(row[2].get("limits"))
+        or (
+            settings.get("d5_operation") != "measurement"
+            and row[2].get("limits") != limits_for(settings)
+        )
         or policy.get("d5_scope_id") != scope_id
     ):
         raise AdmissionError("d5_scope_missing_revoked_expired_or_drifted")
     data = dict(row[2])
+    if settings.get("program_amendment_proposal_digest") != data.get(
+        "program_amendment_proposal_digest"
+    ) or settings.get("program_amendment_proposal_digest") != policy.get(
+        "program_amendment_proposal_digest"
+    ):
+        raise AdmissionError("d5_programme_amendment_binding_drift")
     receipt = data.get("authorization_record", {})
     if (
         receipt.get("approved") is not True
         or not receipt.get("approved_by")
         or _digest(receipt) != row[1]
         or receipt.get("packet_digest") != row[0]
-        or receipt.get("limits") != LIMITS
+        or receipt.get("limits") != data["limits"]
         or receipt.get("members") != data.get("members")
         or receipt.get("stages") != data.get("stages")
         or receipt.get("case_bindings_digest") != _digest(data.get("cases", {}))
@@ -150,12 +175,13 @@ def guard_scope(
     guard_trial(conn, owner, policy, reserve_usd=amount, current_job=job_id, next_endpoint=endpoint)
     history = census(conn, owner, members=bound["members"])
     baseline = bound["baseline"]
+    limits = bound["limits"]
     # Scope members start empty; historical money lives in the same programme's
     # immutable parent ledger and is checked by guard_trial, never reset here.
     messages, counts = history["messages"], history["counts"]
     if (
-        messages + (endpoint == "messages") > LIMITS["messages"]
-        or counts + (endpoint == "messages/count_tokens") > LIMITS["counts"]
+        messages + (endpoint == "messages") > limits["messages"]
+        or counts + (endpoint == "messages/count_tokens") > limits["counts"]
     ):
         raise AdmissionError("d5_scope_contact_cap_exceeded")
     jobs = conn.execute(
@@ -171,19 +197,26 @@ def guard_scope(
             "SELECT count(*) FROM workspace_d5_case_runs r JOIN workspace_generation_jobs j ON j.id=r.job_id WHERE r.scope_id=%s AND j.data->'sealed_input'->'settings'->>'d5_operation' <> 'measurement'",
             (bound["id"],),
         ).fetchone()[0]
-        if operation != "measurement" and generating >= LIMITS["jobs"]:
+        if operation != "measurement" and generating >= limits["jobs"]:
             raise AdmissionError("d5_scope_job_cap_exceeded")
         required = 1 if operation in {"measurement", "probe"} else 4
         if (
-            messages + (0 if operation == "measurement" else required) > LIMITS["messages"]
-            or counts + required > LIMITS["counts"]
+            messages + (0 if operation == "measurement" else required) > limits["messages"]
+            or counts + required > limits["counts"]
         ):
             raise AdmissionError("d5_complete_workflow_contact_capacity_required")
         maximum = (
             Decimal("0")
             if operation == "measurement"
-            else Decimal(LIMITS["probe_usd"] if operation == "probe" else LIMITS["workflow_usd"])
+            else Decimal(limits["probe_usd"] if operation == "probe" else limits["workflow_usd"])
         )
+        if inputs["settings"].get("operation_routes") and operation != "measurement":
+            from src.workspace.d5_operations import reservation
+
+            if amount < reservation(
+                inputs["settings"]["operation_routes"], probe=operation == "probe"
+            ):
+                raise AdmissionError("d5_complete_operation_reservation_required")
         if amount > maximum:
             raise AdmissionError("d5_per_job_cap_exceeded")
         if history["uncertain_contacts"] or Decimal(history["unknown_usd"]):
@@ -193,8 +226,8 @@ def guard_scope(
             + Decimal(history["known_usd"])
             + Decimal(history["pending_usd"])
             + amount
-            + Decimal(LIMITS["headroom_usd"])
-        ) > Decimal(LIMITS["usd"]):
+            + Decimal(limits["headroom_usd"])
+        ) > Decimal(limits["usd"]):
             raise AdmissionError("d5_cumulative_headroom_exceeded")
     if any(active != job_id for active in history["active_jobs"]):
         raise AdmissionError("d5_one_job_at_a_time")

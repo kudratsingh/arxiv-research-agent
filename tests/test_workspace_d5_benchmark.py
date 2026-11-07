@@ -479,3 +479,66 @@ async def test_count_only_then_separately_recorded_funded_stage_runs_same_protec
             "SELECT data->'authorization_record' FROM workspace_d5_scopes"
         ).fetchone()[0]
     assert parent["stages"] == ["A"]
+
+
+async def test_successor_explicitly_reuses_completed_A_receipts_but_B_C_D_still_need_separate_approval(
+    store, monkeypatch
+):
+    from copy import deepcopy
+
+    from src.workspace import d5_fixture as fixture
+    from src.workspace import d5_freeze as frozen
+    from src.workspace.d5_measurements import make_link
+
+    monkeypatch.setenv("WORKSPACE_D5_OFFLINE", "1")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "local-preview-disabled")
+    old_packet = corpus(store)
+    with store.pool.connection() as conn:
+        conn.execute("INSERT INTO workspace_d5_fixture_marker VALUES(TRUE,'offline_only','{}')")
+    authorize_fixture(store, old_packet, stages=("A",))
+    measured = await run(store, old_packet, "A", offline=True)
+    with store.pool.connection() as conn:
+        auth = conn.execute(
+            "SELECT data->'authorization_record' FROM workspace_d5_scopes"
+        ).fetchone()[0]
+        owners = [x[0] for x in conn.execute("SELECT owner FROM workspace_evaluation_members")]
+        before = census(conn, owners[0], members=owners)
+    links = {
+        key: make_link(store, value["id"], auth) for key, value in measured["raw_results"].items()
+    }
+    successor = deepcopy(old_packet)
+    successor.update(
+        history=before, measurement_reuse=links, predecessor_packet=old_packet["packet_digest"]
+    )
+    successor["packet_digest"] = _digest(
+        {k: v for k, v in successor.items() if k != "packet_digest"}
+    )
+    for module in (frozen, fixture):
+        monkeypatch.setattr(module, "RUN_OWNER", "d5-successor-run")
+        monkeypatch.setattr(module, "COUNT_OWNER", "d5-successor-measure")
+    fixture.prepare_projects(store, successor)
+    authorize_fixture(store, successor, stages=("B",))
+    result = await run(store, successor, "B", offline=True)
+    assert set(result["raw_results"]) == {"dev-learn", "dev-compare"}
+    assert all(result["raw_results"][k]["state"] == "ready" for k in result["raw_results"])
+    after = result["accounting"]["cumulative"]
+    assert (
+        after["counts"] - before["counts"] == 4
+    )  # Only mandatory paired draft/check counts, no repeated preliminary A.
+    for key, checkpoint in before["contact_checkpoints"].items():
+        assert after["contact_checkpoints"][key] == checkpoint
+    with store.pool.connection() as conn:
+        assert (
+            conn.execute(
+                "SELECT count(*) FROM workspace_generation_jobs WHERE owner='d5-successor-measure'"
+            ).fetchone()[0]
+            == 0
+        )
+        proofs = conn.execute(
+            "SELECT data->'d5_measurement_basis' FROM workspace_generation_jobs WHERE owner='d5-successor-run'"
+        ).fetchall()
+        assert len(proofs) == 2 and all(len(x[0]) == 4 for x in proofs)
+    with pytest.raises(AdmissionError, match="stage_not_authorized"):
+        await run(store, successor, "C", offline=True)
+    with pytest.raises(AdmissionError, match="previous_stage_not_complete"):
+        await run(store, successor, "D", offline=True)

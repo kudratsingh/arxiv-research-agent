@@ -21,7 +21,6 @@ from src.workspace.d5_authorization import (
 )
 from src.workspace.d5_benchmark import database, read, write
 from src.workspace.d5_freeze import compile_inputs
-from src.workspace.d5_scope import LIMITS
 from src.workspace.store import WorkspaceStore
 
 
@@ -50,7 +49,7 @@ def main() -> None:
                 "transport_mode": "provider",
                 "packet_digest": packet["packet_digest"],
                 "scope_id": scope_id,
-                "limits": LIMITS,
+                "limits": packet["limits"],
                 "members": sorted({v["owner"] for v in compiled.values()}),
                 "case_bindings_digest": _digest(case_bindings(compiled)),
                 "stages": (args.stages or "A").split(","),
