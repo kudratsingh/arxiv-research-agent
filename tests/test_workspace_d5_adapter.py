@@ -44,6 +44,8 @@ def setup(
     comparison=False,
     routes=None,
     source_setup=None,
+    procedural_contract=False,
+    repair_located_prose=False,
 ):
     program(store)
     service, value = source_setup(store) if source_setup else support.setup(store, mode)
@@ -86,12 +88,13 @@ def setup(
             ),
         )
     inputs = d.prepare_input(
-        preview.request,
+        d.seal_procedural_request(preview.request) if procedural_contract else preview.request,
         scope_id="d5-test",
         packet_digest="packet",
         case_id="case",
         operation=operation,
         operation_routes=routes,
+        repair_located_prose=repair_located_prose,
     )
     compiled = {
         "case": {

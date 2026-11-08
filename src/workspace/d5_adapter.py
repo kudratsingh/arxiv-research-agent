@@ -27,9 +27,11 @@ from src.workspace.admission import (
 )
 from src.workspace.assistance import CANDIDATE_MODEL, Checks, build_wire, producer_binding
 from src.workspace.assistance_contract import (
+    PROCEDURAL_REVISION,
     coherent_units,
     contract_revision,
     render_gaps,
+    render_procedures,
     resolve_draft,
     response_purpose,
     schemas,
@@ -107,6 +109,22 @@ class D5StudyDraft(StudyDraft):
     abstention: str | None = Field(default=None, max_length=180)
 
 
+def seal_procedural_request(sealed: dict[str, Any]) -> dict[str, Any]:
+    """Prospective schema/prompt binding; never modify a historical request."""
+    from copy import deepcopy
+
+    value = deepcopy(sealed)
+    value["schema_revision"] = PROCEDURAL_REVISION
+    value["response_schemas"] = schemas(
+        list(value["units"]), purpose=value["response_purpose"], revision=PROCEDURAL_REVISION
+    )
+    context = json.loads(value["candidate_initial_wire"]["messages"][0]["content"])
+    context["sealed_request"]["schema_revision"] = PROCEDURAL_REVISION
+    context["output_schema"] = value["response_schemas"]["wire"]
+    value["candidate_initial_wire"] = build_wire(context)
+    return value
+
+
 def prepare_input(
     sealed: dict[str, Any],
     *,
@@ -117,6 +135,7 @@ def prepare_input(
     probe_wire: dict[str, Any] | None = None,
     programme_amendment_digest: str | None = None,
     operation_routes: dict[str, Any] | None = None,
+    repair_located_prose: bool = False,
 ) -> GenerationInput:
     if operation not in {"workflow", "measurement", "probe"}:
         raise AdmissionError("d5_operation_required")
@@ -190,6 +209,8 @@ def prepare_input(
         "probe_context": probe_context,
         "probe_wire_digest": _digest(probe_wire) if probe_wire else None,
     }
+    if repair_located_prose or sealed["schema_revision"] == PROCEDURAL_REVISION:
+        settings["located_prose_repair"] = "first-check-only-v1"
     model = CANDIDATE_MODEL
     if operation_routes is not None and operation != "measurement":
         from src.workspace.d5_operations import route, validate
@@ -325,7 +346,10 @@ class D5Adapter(QualificationAdapter):
                 else {"input": "2", "output": "10", "verified_at": "2026-11-06"}
             )
             or sealed.get("schema_revision")
-            != contract_revision(response_purpose(sealed["assistance"]["mode"], sealed["units"]))
+            not in {
+                contract_revision(response_purpose(sealed["assistance"]["mode"], sealed["units"])),
+                PROCEDURAL_REVISION,
+            }
             or sealed.get("producer", {}).get("code") != producer_binding()
         ):
             raise AdmissionError("d5_settings_schema_or_producer_drift")
@@ -369,6 +393,7 @@ class D5Adapter(QualificationAdapter):
             schemas(
                 list(sealed["units"]),
                 purpose=response_purpose(sealed["assistance"]["mode"], sealed["units"]),
+                revision=sealed["schema_revision"],
             )
         ):
             raise AdmissionError("d5_local_or_wire_schema_drift")
@@ -423,6 +448,7 @@ class D5Adapter(QualificationAdapter):
             "output_schema": schemas(
                 list(sealed["units"]),
                 purpose=response_purpose(sealed["assistance"]["mode"], sealed["units"]),
+                revision=sealed["schema_revision"],
             )["wire"],
         }
 
@@ -489,6 +515,7 @@ class D5Adapter(QualificationAdapter):
                 {k: EvidenceRef(**v) for k, v in sealed["units"].items()},
                 materials,
                 purpose=response_purpose(sealed["assistance"]["mode"], sealed["units"]),
+                revision=sealed["schema_revision"],
             )
             if phase == "check":
                 value["role"] = "checker"
@@ -513,7 +540,7 @@ class D5Adapter(QualificationAdapter):
                     )
                     if k in workflow
                 }
-                value["unscored_prose"]["gaps"] = render_gaps(workflow["gaps"])
+                value["unscored_prose"].update(render_procedures(workflow))
             else:
                 checked = self._checks(
                     {
@@ -545,6 +572,10 @@ class D5Adapter(QualificationAdapter):
                     ]
                 }
                 value["previous_grounding"] = asdict(report)
+                value["previous_prose_review"] = checked.model_dump(mode="json")
+                value["procedural_draft"] = {
+                    k: workflow[k] for k in ("gaps", "questions", "proposal", "abstention")
+                }
         body = self._wire(value)
         if phase == "draft" and _digest(body) != sealed["candidate_initial_wire_digest"]:
             raise AdmissionError("d5_initial_wire_drift")
@@ -624,7 +655,9 @@ class D5Adapter(QualificationAdapter):
             {k: EvidenceRef(**v) for k, v in sealed["units"].items()},
             materials,
             purpose=response_purpose(sealed["assistance"]["mode"], sealed["units"]),
+            revision=sealed["schema_revision"],
         )
+        procedural = render_procedures(output)
         report = validate_claims(claims, materials)
         if any(not item.scope_compatible for item in report.assessments):
             raise AdmissionError("d5_draft_scope_incompatible")
@@ -633,21 +666,33 @@ class D5Adapter(QualificationAdapter):
                 "kind": "deep_dive",
                 "title": "Quarantined D5 assistance",
                 "claims": [asdict(c) for c in claims],
-                "abstention": draft.abstention,
+                "abstention": procedural["abstention"],
                 "sections": [{"name": "overview", "claim_ids": [c.claim_id for c in claims]}]
                 if claims
                 else [],
-                "questions": list(draft.questions),
-                "proposed_actions": [draft.proposal] if draft.proposal else [],
+                "questions": procedural["questions"],
+                "proposed_actions": [procedural["proposal"]] if procedural["proposal"] else [],
                 "limitations": render_gaps(draft.gaps),
             }
         )
 
     def _checks(self, output: dict[str, Any]) -> Any:
-        value = Checks.model_validate(output)
-        if value.prose_review != "procedural_only":
+        return Checks.model_validate(output)
+
+    def _review_complete(self, grounding: Any, snapshot: dict[str, Any], checks: Any) -> bool:
+        if checks.prose_review != "procedural_only":
+            # _response_authorization already bound every finding to an exact
+            # existing rendered field/index before this state transition.
+            # Only the first, decisive finding gets the existing single repair.
+            if (
+                checks.prose_review == "unscored_factual_content"
+                and len(snapshot["steps"]) == 1
+                and self.inputs.settings["d5_operation"] == "workflow"
+                and self.inputs.settings.get("located_prose_repair") == "first-check-only-v1"
+            ):
+                return False
             raise AdmissionError("d5_unscored_factual_prose")
-        return value
+        return self._check_complete(grounding, snapshot)
 
     def _contact_scope(self, conn: Any, job_id: str, endpoint: str) -> None:
         _, policy = self.control._policy(
@@ -697,9 +742,12 @@ class D5Adapter(QualificationAdapter):
                 parsed = json.loads(text, object_pairs_hook=unique, parse_constant=invalid)
                 if last["stage"] == "check":
                     context = json.loads(last["body"]["messages"][0]["content"])
-                    Checks.model_validate(parsed).validate_locations(
-                        context.get("unscored_prose", {})
-                    )
+                    checks = Checks.model_validate(parsed)
+                    checks.validate_locations(context.get("unscored_prose", {}))
+                    expected = {c["claim_id"]: c["input_digest"] for c in context["claim_inputs"]}
+                    actual = {c.claim_id: c.input_digest for c in checks.checks}
+                    if len(actual) != len(checks.checks) or actual != expected:
+                        raise AdmissionError("d5_checker_claim_binding_drift")
                 if len(text.encode()) > 8000:
                     raise AdmissionError("d5_compact_output_exceeded")
             response_id = last["response"].get("id")

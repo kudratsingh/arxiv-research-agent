@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import Any
 
 from src.workspace.admission import AdmissionError, _digest
-from src.workspace.assistance_contract import resolve_draft
+from src.workspace.assistance_contract import PROCEDURAL_REVISION, render_procedures, resolve_draft
 from src.workspace.d5_adapter import ADAPTER_REVISION
 from src.workspace.executor import FakeExecutor
 from src.workspace.grounding import EvidenceRef, validate_claims
@@ -77,6 +77,10 @@ class QualificationResults:
                     intact = False
                 if not intact:
                     output = None
+                elif sealed["schema_revision"] == PROCEDURAL_REVISION and output is not None:
+                    # Reader-facing prose is derived; immutable wire output
+                    # and claim-reference intents remain in adapter.steps.
+                    output.update(render_procedures(output))
             return {
                 "id": job_id,
                 "state": state if intact else "stale",

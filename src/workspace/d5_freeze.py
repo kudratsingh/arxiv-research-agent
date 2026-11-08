@@ -21,7 +21,7 @@ from src.workspace.assistance import AssistanceInput, AssistanceService, Checks,
 from src.workspace.assistance_contract import REVISION
 from src.workspace.context_schemas import ProjectData, ProjectWrite
 from src.workspace.context_store import WorkspaceContext
-from src.workspace.d5_adapter import prepare_input, qualification_producer
+from src.workspace.d5_adapter import prepare_input, qualification_producer, seal_procedural_request
 from src.workspace.d5_evidence import POLICY, select
 from src.workspace.d5_scope import LIMITS
 from src.workspace.grounding import ClaimKind, EvidenceRef, ResearchClaim, claim_input_digest
@@ -85,6 +85,75 @@ QUESTIONS = (
         "Does reinforcement learning control evidence establish safe deployment on my unspecified hardware?",
     ),
 )
+
+# A new cohort, fixed before its outputs exist. v7r2 cases remain diagnostics.
+PROCEDURAL_QUESTIONS = (
+    *QUESTIONS[:2],
+    (
+        "v8-learn-mechanism",
+        "fresh_system",
+        "learn",
+        "Describe the selected method's inputs, steps and outputs; distinguish stated prerequisites from unavailable details.",
+    ),
+    (
+        "v8-learn-conditions",
+        "fresh_system",
+        "learn",
+        "Which stated conditions bound the selected abstract's claims, and what remains unspecified?",
+    ),
+    (
+        "v8-learn-reproduce",
+        "fresh_system",
+        "learn",
+        "Plan what source evidence to collect before attempting a small reproducible implementation.",
+    ),
+    (
+        "v8-learn-measurement",
+        "fresh_system",
+        "learn",
+        "Which claims report measured results, and what applications, if any, does the excerpt propose?",
+    ),
+    (
+        "v8-research-memory",
+        "fresh_system",
+        "research",
+        "What evidence describes memory error persistence and valid-information retention in agents?",
+    ),
+    (
+        "v8-research-retrieval",
+        "fresh_system",
+        "research",
+        "Compare how selected sources evaluate retrieval relevance, noting incompatible tasks and missing judgments.",
+    ),
+    (
+        "v8-research-verification",
+        "fresh_system",
+        "research",
+        "What evidence supports uncertainty-aware claim verification, and what counterevidence or validation is missing?",
+    ),
+    (
+        "v8-research-insufficient",
+        "fresh_system",
+        "research",
+        "Can these abstracts establish a safe learned controller for an unspecified Rocket Twin vehicle and operating envelope?",
+    ),
+)
+
+
+def question_specifications(revision: str | None) -> tuple[Any, ...]:
+    if revision is None:
+        return QUESTIONS
+    if revision == "procedural-v8":
+        return PROCEDURAL_QUESTIONS
+    raise AdmissionError("d5_unknown_frozen_cohort")
+
+
+def case_pool(corpus: list[Any], cohort: str, excluded: list[str]) -> list[Any]:
+    return [i for i in corpus if cohort != "fresh_system" or i["version_id"] not in excluded]
+
+
+def reading_minutes(key: str, mode: str, index: int) -> int:
+    return 45 if key == "learn-results" or mode == "learn" and index - 2 >= 3 else 15
 
 
 def code_bindings() -> dict[str, str]:
@@ -186,14 +255,17 @@ def verify_discovery(packet: dict[str, Any]) -> None:
         )
         for m in packet["materials"]
     ]
-    if len(packet["cases"]) != len(QUESTIONS):
+    specifications = question_specifications(packet.get("cohort_revision"))
+    if len(packet["cases"]) != len(specifications):
         raise AdmissionError("d5_frozen_case_count_changed")
-    for index, (case, specification) in enumerate(zip(packet["cases"], QUESTIONS, strict=True)):
+    for index, (case, specification) in enumerate(
+        zip(packet["cases"], specifications, strict=True)
+    ):
         key, cohort, mode, question = specification
         if (case["id"], case["cohort"], case["mode"], case["question"]) != specification:
             raise AdmissionError("d5_frozen_question_or_cohort_changed")
         ranked = rank_mode_items(
-            packet["corpus"],
+            case_pool(packet["corpus"], cohort, packet.get("heldout_excluded_versions", [])),
             packet["profile"],
             product_mode=mode,
             project={"question": question, "scope": "Declared public retained corpus only"}
@@ -203,7 +275,7 @@ def verify_discovery(packet: dict[str, Any]) -> None:
         )
         edition, allocation = select_mode_edition(
             ranked,
-            45 if key == "learn-results" else 15,
+            reading_minutes(key, mode, index),
             product_mode=mode,
             exploration=packet["profile"].get("exploration", 0.15),
         )
@@ -333,7 +405,12 @@ def restore_input(raw: dict[str, Any]) -> GenerationInput:
 
 
 def freeze(
-    store: WorkspaceStore, profile: dict[str, Any], history: dict[str, Any]
+    store: WorkspaceStore,
+    profile: dict[str, Any],
+    history: dict[str, Any],
+    *,
+    cohort_revision: str | None = None,
+    heldout_excluded_versions: list[str] | None = None,
 ) -> dict[str, Any]:
     """Writes only explicit isolated proposal projects; never permission rows."""
     store.migrate()
@@ -364,18 +441,20 @@ def freeze(
     for material in materials:
         by_work.setdefault(material.work_id, []).append(material)
     context = WorkspaceContext(store)
-    baseline_pool = rank_mode_items(corpus, profile, now=datetime.fromisoformat(CLOCK))
     cases = []
-    for index, (key, cohort, mode, question) in enumerate(QUESTIONS):
+    excluded = sorted(set(heldout_excluded_versions or []))
+    for index, (key, cohort, mode, question) in enumerate(question_specifications(cohort_revision)):
+        pool = case_pool(corpus, cohort, excluded)
+        baseline_pool = rank_mode_items(pool, profile, now=datetime.fromisoformat(CLOCK))
         project = {"question": question, "scope": "Declared public retained corpus only"}
         ranked = rank_mode_items(
-            corpus,
+            pool,
             profile,
             product_mode=mode,
             project=project if mode == "research" else None,
             now=datetime.fromisoformat(CLOCK),
         )
-        minutes = 45 if key == "learn-results" else 15
+        minutes = reading_minutes(key, mode, index)
         edition, allocation = select_mode_edition(
             ranked, minutes, product_mode=mode, exploration=profile.get("exploration", 0.15)
         )
@@ -475,6 +554,8 @@ def freeze(
                 project_revision=revision,
             )
             case["sealed"] = service.preview(RUN_OWNER, value).request
+            if cohort_revision == "procedural-v8":
+                case["sealed"] = seal_procedural_request(case["sealed"])
             case["wire_digest"] = _digest(case["sealed"]["candidate_initial_wire"])
             case["source_scopes"] = [r["scope"] for r in refs]
         cases.append(case)
@@ -636,4 +717,9 @@ def freeze(
         "dynamic_requests": "Checks, repair and recheck derive only from actual preceding journalled outputs under frozen code; exact digests recorded at creation",
     }
     payload["packet_digest"] = _digest(payload)
+    if cohort_revision is not None:
+        payload.update(cohort_revision=cohort_revision, heldout_excluded_versions=excluded)
+        payload["packet_digest"] = _digest(
+            {k: v for k, v in payload.items() if k != "packet_digest"}
+        )
     return dict(json.loads(json.dumps(payload, ensure_ascii=False)))

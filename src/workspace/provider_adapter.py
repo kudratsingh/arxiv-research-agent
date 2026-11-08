@@ -269,6 +269,10 @@ class QualificationAdapter:
     def _check_complete(self, grounding: Any, snapshot: dict[str, Any]) -> bool:
         return bool(grounding.total_factual == grounding.supported or len(snapshot["steps"]) == 3)
 
+    def _review_complete(self, grounding: Any, snapshot: dict[str, Any], checks: Any) -> bool:
+        """Versioned adapters may require a repair for a located prose finding."""
+        return self._check_complete(grounding, snapshot)
+
     def _response_authorization(self, job_id: str) -> None:
         """Optional post-response fence; accounting must precede this check."""
 
@@ -749,7 +753,7 @@ class QualificationAdapter:
                         for c in checks.checks
                     ),
                 )
-                final = self._check_complete(grounding, snapshot)
+                final = self._review_complete(grounding, snapshot, checks)
                 output = {**checks.model_dump(mode="json"), "grounding": asdict(grounding)}
             else:
                 draft = self._draft(output)

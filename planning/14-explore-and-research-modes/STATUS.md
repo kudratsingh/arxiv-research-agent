@@ -1,5 +1,23 @@
 # Two-mode implementation status
 
+## Current offline D5 v8 repair and blinded premise calibration
+
+Starting published head **bddba77e003d5f7441f10201cb08e32de33c1b44**, applicationf430f2d3. Work is isolated on `codex/workspace-d5-procedural-v8`; the preceding review checkout and previews stay unchanged. [Procedural repair](d5/RESPONSE-REPAIR-v8.md), [blinded calibration plan](d5/QUESTION-PREMISE-CALIBRATION.md), [fresh qualification proposal](d5/PAID-VALIDATION-PROPOSAL-v8.md), [offline commands](d5/RUNBOOK-v8.md).
+
+The actual v7r2 run is preserved at **3/8 held-out workflows complete,1failed,4unrun**. `learn-results` failed on `questions[0]` with `d5_unscored_factual_prose`; all original drafts/verdicts, contact journals, scope/grants, costs and blank human labels are unchanged. Actual reconciled ledger: **16funded jobs/31Messages/50counts/USD0.825065estimated**,pendingunknown0,cap24/80/80/USD10. The v7r2 scope remains stopped. This offline batch adds0providerMessages/0counts/USD0 and creates no real authorization or amendment.
+
+The prospective schema uses neutral bounded question/action/abstention intents and cited claim references for factual premises. All rendered prose remains checked. An exact first-check field/index finding may use one input-bound repair and mandatory recheck; malformed, uncertain or residual prose is rejected. Historical requests without the new policy retain their immediate stop. Strict claim-batch ID/digest checks precede repair eligibility; version/quote/offset/selected-span checks remain intact.
+
+Blinded suite:3regression sets/12probes plus4fresh sets/16probes, separated. Each matched set holds draft/slot/retained evidence fixed and varies only the question. Four variants distinguish neutral, scored premise, unsupported premise and source-supported-but-unscored contract violation. Opaque salted IDs, seeded order, one variant per context; expected labels and matching key stay local/evaluator-only. Real reviewer worksheets are blank. Production checker/probe adapter runs only through MockTransport in disposable storage; synthetic labels/counts are not quality evidence.
+
+The smallest proposed live calibration is one fresh4-probe set:4new funded diagnostic jobs/4Messages/4pairedcounts/USD0.60reservation, reaching20jobs/35Messages/54counts/USD1.425065reservation-inclusive history. It fits current caps, but requires independent prereviews and its own separate owner-approved scope; no authority is recorded now. Larger scopes and all generation qualification remain separate decisions, with expiry no later than2026-11-14T07:24:01Z.
+
+A fresh eight-case generation cohort is frozen before any outputs, excluding all14 source versions selected in v7r2. Both development routes change and need fresh paired measurements and development runs. Full2B+8C+4D needs14jobs/44Messages/45counts with one preliminary A; cumulatively30jobs/75Messages/95counts before calibration. This cannot fit unchanged24jobs/80counts; no cap is silently raised. With the4-probe calibration first, the combined envelope is34jobs/79Messages/99counts/USD7.525065including history/reservations/buffer. Preserve all quality thresholds and20fact/20probe human minima.
+
+Verification evidence and final candidate/publication identities are recorded in the v8 evidence manifest. Required final coverage/publication checks remain in progress until their exact outputs are saved. Owner3137/review3178, everyday generation, recurrence and notifications remain untouched/disabled. No merge or deployment.
+
+## Preserved v7r2 publication checkpoint — predates its live A/B/C diagnostic
+
 ## Current D5 v7r2 — offline contract successor, no live approval
 
 Application **f430f2d3e7a3a7ae78cacdf92855b8b3294d3c12**, primary contract commit4a99ffa22e498ee98751d5eed06c3ad29beab5a9. Packet **cf6b9e4c1e49d0192467bd28d0bae00eb1d05cf85bb850f904902840937fc871**. [Repair/audit](d5/RESPONSE-REPAIR-v7.md), [packet](d5/d5-system-validation-v7r2.json.gz), [bindings](d5/d5-packet-identity-v7r2.json), [runbook](d5/RUNBOOK.md), [separate unapproved proposal](d5/PAID-VALIDATION-PROPOSAL.md), [evidence](d5/evidence/gap-repair-v7r2/README.md).

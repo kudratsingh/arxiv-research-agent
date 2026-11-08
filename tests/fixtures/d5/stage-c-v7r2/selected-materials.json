@@ -1,0 +1,36 @@
+[
+  {
+    "pages": [
+      "Expert scientists excel at weighing empirical findings from multiple sources that vary in both statistical reliability and epistemic relevance. To what extent are language models, which are increasingly driving autonomous discovery systems, capable of such evidence deliberation? We introduce EDB-Bio, a scientific reasoning benchmark curated from real-world data in three biological domains: drug-perturbation transcriptomics, CRISPR screens, and human genome-wide association studies (GWAS). Each of EDB-Bio's 96k episodes presents a sequence of experimental results from published studies and asks the model to predict the probability that a target hypothesis is true. Out-of-the-box, open-weight and frontier models alike demonstrate systematic underconfidence and attain Brier scores comparable to a trivial base-rate forecaster. Post-training against strictly proper scoring rules significantly improves both calibration and discrimination. This calibration pays off downstream: in a sequential experiment selection task, our Ibis0 model is 2.5 times more efficient than the best frontier model. Throughout, quantifying evidence weights as Bayes factors reveals how models update their beliefs over time, whether they agree with expert biologists on relevance, and where they exhibit inconsistencies and biases. Our work extends calibration training and uncertainty analysis to a realistic scientific forecasting setting with applications to human cancer biology. We release all code, data, and trained models."
+    ],
+    "scope": "abstract",
+    "spans": [
+      {
+        "end": 1516,
+        "page": null,
+        "text": "Expert scientists excel at weighing empirical findings from multiple sources that vary in both statistical reliability and epistemic relevance. To what extent are language models, which are increasingly driving autonomous discovery systems, capable of such evidence deliberation? We introduce EDB-Bio, a scientific reasoning benchmark curated from real-world data in three biological domains: drug-perturbation transcriptomics, CRISPR screens, and human genome-wide association studies (GWAS). Each of EDB-Bio's 96k episodes presents a sequence of experimental results from published studies and asks the model to predict the probability that a target hypothesis is true. Out-of-the-box, open-weight and frontier models alike demonstrate systematic underconfidence and attain Brier scores comparable to a trivial base-rate forecaster. Post-training against strictly proper scoring rules significantly improves both calibration and discrimination. This calibration pays off downstream: in a sequential experiment selection task, our Ibis0 model is 2.5 times more efficient than the best frontier model. Throughout, quantifying evidence weights as Bayes factors reveals how models update their beliefs over time, whether they agree with expert biologists on relevance, and where they exhibit inconsistencies and biases. Our work extends calibration training and uncertainty analysis to a realistic scientific forecasting setting with applications to human cancer biology. We release all code, data, and trained models.",
+        "scope": "abstract",
+        "start": 0,
+        "section": "abstract",
+        "span_id": "span-9a92d1c10b9b4e9ee5a9185bd6bb4afd",
+        "work_id": "arxiv:2610.41015",
+        "version_id": "arxiv:2610.41015:v1:metadata-9d3401c4c7c1014c",
+        "material_id": "mat-1c5ecdf06434f317157b2e5fce1b3b0e",
+        "source_hash": "sha256:b490f3ffa20059c827c7a1dde2576cc7857a3b26d3fe14489e47a2fc3f24f710",
+        "parser_revision": "workspace-plain-text-v1"
+      }
+    ],
+    "quality": "text_extracted",
+    "work_id": "arxiv:2610.41015",
+    "complete": true,
+    "warnings": [],
+    "page_count": null,
+    "version_id": "arxiv:2610.41015:v1:metadata-9d3401c4c7c1014c",
+    "material_id": "mat-1c5ecdf06434f317157b2e5fce1b3b0e",
+    "source_hash": "sha256:b490f3ffa20059c827c7a1dde2576cc7857a3b26d3fe14489e47a2fc3f24f710",
+    "content_hash": "sha256:0cec9bb7f98ae7db8b468c64329b03b2fcaf25930937b332c60f6790d6d4c164",
+    "offset_basis": "page-local Unicode code points; end exclusive",
+    "page_numbers": null,
+    "parser_revision": "workspace-plain-text-v1"
+  }
+]

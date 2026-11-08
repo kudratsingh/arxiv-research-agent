@@ -23,8 +23,12 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from src.llm import RequestProfile, _build_request_kwargs
 from src.workspace.assistance_contract import (
+    ABSTENTION_INTENTS,
+    ACTION_INTENTS,
     CITED_REVISION,
     MAX_DRAFT_BYTES,
+    PROCEDURAL_REVISION,
+    QUESTION_INTENTS,
     RESEARCH_REVISION,
     REVISION,
     coherent_units,
@@ -185,6 +189,17 @@ def enabled() -> None:
 def build_wire(request: dict[str, Any]) -> dict[str, Any]:
     """Pure candidate wire construction; no client, credential or contact."""
     phase = request["phase"]
+    procedural = request.get("sealed_request", {}).get("schema_revision") == PROCEDURAL_REVISION
+    if procedural:
+        request = {
+            **request,
+            "procedural_rendering": {
+                "questions": QUESTION_INTENTS,
+                "actions": ACTION_INTENTS,
+                "abstention": ABSTENTION_INTENTS,
+                "rule": "Emit bounded intents, not free procedural prose. A factual premise requires emitted scored claim_ids. Repair only within the sealed schema/evidence. All rendered text remains checked; a residual or uncertain prose finding blocks acceptance.",
+            },
+        }
     wire = _build_request_kwargs(
         profile=RequestProfile(CANDIDATE_MODEL, None, False, "medium", True),
         prompt=_json({key: value for key, value in request.items() if key != "output_schema"}),

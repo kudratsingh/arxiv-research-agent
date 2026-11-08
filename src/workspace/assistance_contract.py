@@ -32,6 +32,7 @@ LEGACY_REVISION = "workspace-assistance-purpose-specific-v2"
 CITED_REVISION = "workspace-assistance-cited-sections-v3"
 REVISION = "workspace-assistance-visible-bounds-v5"
 RESEARCH_REVISION = "workspace-assistance-evidence-request-codes-v4"
+PROCEDURAL_REVISION = "workspace-assistance-neutral-intents-v6"
 MAX_UNIT_CHARS = 1600
 MAX_SELECTED_UNITS = 8
 MAX_CLAIMS = 6
@@ -364,6 +365,153 @@ class EvidenceRequestDraft(CitedAssistanceDraft):
     )
 
 
+QUESTION_INTENTS = {
+    "measured_and_proposed": "Which claims report measured results, and what applications, if any, does the excerpt propose?",
+    "methods": "What methods, if any, does the selected evidence describe?",
+    "qualifications": "What assumptions or qualifications, if any, apply to the cited claims?",
+    "implementation": "What further evidence would be needed to implement or reproduce the method?",
+    "counterevidence": "What evidence could challenge the cited claims?",
+    "application_scope": "Does the selected evidence establish applicability to the proposed setting?",
+    "investigate_claim": "What evidence supports or limits the referenced claim?",
+}
+ACTION_INTENTS = {
+    "inspect_methods": "Inspect the original methods and implementation details.",
+    "inspect_evaluation": "Inspect evaluation methods, baselines and uncertainty before drawing conclusions.",
+    "seek_counterevidence": "Seek evidence that could challenge the cited claims.",
+    "inspect_scope": "Check source scope and applicability before proposing an experiment.",
+    "request_context": "Request the missing source material or application context.",
+}
+ABSTENTION_INTENTS = {
+    "insufficient_selected_evidence": "I cannot establish the requested conclusion from the selected evidence.",
+    "application_context_required": "I cannot assess the requested application without further context and evidence.",
+    "comparison_evidence_required": "I cannot establish the requested comparison from the selected evidence.",
+}
+
+
+class ProceduralQuestion(BaseModel):
+    """No free factual premise. A premise-dependent question names scored claims."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+    intent: Literal[
+        "measured_and_proposed",
+        "methods",
+        "qualifications",
+        "implementation",
+        "counterevidence",
+        "application_scope",
+        "investigate_claim",
+    ]
+    claim_ids: tuple[ClaimId, ...] = Field(
+        max_length=MAX_CLAIMS,
+        description="Only IDs of claims emitted and cited in this response; never evidence handles. investigate_claim requires at least one ID. No duplicated IDs or free premise text.",
+    )
+
+
+class ProceduralSinglePaperDraft(BaseModel):
+    """Neutral intents are rendered locally, then reviewed by the checker.
+
+    Local constraints: unique claim/section/question references to emitted IDs;
+    investigate_claim needs a scored claim reference; claims or an abstention;
+    nonblank claim text, unique selected handles; compact JSON <=8000 UTF-8 bytes.
+    At most six claims and three gaps/questions. No unreviewed factual prose.
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+    claims: tuple[AssistanceClaim, ...] = Field(max_length=MAX_CLAIMS)
+    background_claims: tuple[ClaimId, ...] = Field(max_length=MAX_CLAIMS)
+    assumption_claims: tuple[ClaimId, ...] = Field(max_length=MAX_CLAIMS)
+    limitation_claims: tuple[ClaimId, ...] = Field(max_length=MAX_CLAIMS)
+    gaps: tuple[EvidenceRequest, ...] = Field(min_length=1, max_length=3)
+    questions: tuple[ProceduralQuestion, ...] = Field(min_length=1, max_length=3)
+    proposal: Literal[
+        "inspect_methods",
+        "inspect_evaluation",
+        "seek_counterevidence",
+        "inspect_scope",
+        "request_context",
+    ]
+    abstention: (
+        Literal[
+            "insufficient_selected_evidence",
+            "application_context_required",
+            "comparison_evidence_required",
+        ]
+        | None
+    )
+
+    @model_validator(mode="after")
+    def bounded(self) -> ProceduralSinglePaperDraft:
+        ids = {c.claim_id for c in self.claims}
+        refs = (
+            self.background_claims,
+            self.assumption_claims,
+            self.limitation_claims,
+            *(q.claim_ids for q in self.questions),
+        )
+        if len(ids) != len(self.claims) or any(set(r) - ids or len(set(r)) != len(r) for r in refs):
+            raise ValueError("claim_or_section_reference_mismatch")
+        if any(q.intent == "investigate_claim" and not q.claim_ids for q in self.questions):
+            raise ValueError("question_premise_requires_scored_claim")
+        if not self.claims and self.abstention is None:
+            raise ValueError("claims_or_abstention_required")
+        if any(not c.text.strip() or len(set(c.handles)) != len(c.handles) for c in self.claims):
+            raise ValueError("blank_claim_or_duplicate_handle")
+        if len(self.model_dump_json().encode()) > MAX_DRAFT_BYTES:
+            raise ValueError("assistance_response_too_large")
+        return self
+
+
+class ProceduralResearchDraft(ProceduralSinglePaperDraft):
+    comparison_claims: tuple[ClaimId, ...] = Field(max_length=MAX_CLAIMS)
+    comparison_basis: tuple[ClaimId, ...] = Field(
+        max_length=MAX_CLAIMS,
+        description="Distinct emitted claim IDs with separately cited sources, not evidence handles. Empty if no comparison.",
+    )
+
+    @model_validator(mode="after")
+    def comparison_references(self) -> ProceduralResearchDraft:
+        ids = {c.claim_id for c in self.claims}
+        if any(
+            set(r) - ids or len(set(r)) != len(r)
+            for r in (self.comparison_claims, self.comparison_basis)
+        ):
+            raise ValueError("claim_or_comparison_basis_mismatch")
+        if self.comparison_claims and len(self.comparison_basis) < 2:
+            raise ValueError("comparison_requires_separate_evidence_claims")
+        if not self.comparison_claims and self.comparison_basis:
+            raise ValueError("comparison_basis_without_comparison")
+        return self
+
+
+def render_procedures(payload: dict[str, Any]) -> dict[str, Any]:
+    """One-to-one list rendering preserves the checker's exact field/index.
+
+    Historical prose stays verbatim for diagnosis. New intent objects cannot
+    supply free premise text; emitted claim IDs retain their visible bindings.
+    Rendering is included in the sealed producer, never an acceptance shortcut.
+    """
+    questions = []
+    for item in payload.get("questions", []):
+        if isinstance(item, str):
+            questions.append(item)
+        else:
+            question = ProceduralQuestion.model_validate(item)
+            suffix = (
+                " Refer to cited claims " + ", ".join(question.claim_ids) + "."
+                if question.claim_ids
+                else ""
+            )
+            questions.append(QUESTION_INTENTS[question.intent] + suffix)
+    return {
+        "gaps": render_gaps(payload.get("gaps", [])),
+        "questions": questions,
+        "proposal": ACTION_INTENTS.get(payload.get("proposal", ""), payload.get("proposal", "")),
+        "abstention": ABSTENTION_INTENTS.get(
+            payload.get("abstention", "") or "", payload.get("abstention")
+        ),
+    }
+
+
 def contract_revision(purpose: ResponsePurpose) -> str:
     return RESEARCH_REVISION if purpose == "research_comparison" else REVISION
 
@@ -373,7 +521,7 @@ def response_model(
     *,
     purpose: ResponsePurpose = "research_comparison",
     revision: str | None = None,
-) -> type[SinglePaperDraft] | type[CitedSinglePaperDraft]:
+) -> type[SinglePaperDraft] | type[CitedSinglePaperDraft] | type[ProceduralSinglePaperDraft]:
     revision = revision or contract_revision(purpose)
     # json_schema_extra keeps even a singleton enum after the SDK transform.
     selected = sorted(set(handles))
@@ -385,11 +533,12 @@ def response_model(
         REVISION,
         CITED_REVISION,
         RESEARCH_REVISION,
+        PROCEDURAL_REVISION,
         LEGACY_REVISION,
         "workspace-assistance-coherent-multicitation-v1",
     }:
         raise ValueError("unsupported_assistance_contract_revision")
-    legacy = revision not in {REVISION, CITED_REVISION, RESEARCH_REVISION}
+    legacy = revision not in {REVISION, CITED_REVISION, RESEARCH_REVISION, PROCEDURAL_REVISION}
     identity = digest([selected, purpose] if legacy else [selected, purpose, revision])[7:23]
     factory = cast(Callable[[str, dict[str, str]], type[StrEnum]], StrEnum)
     handle_type = factory(
@@ -419,7 +568,9 @@ def response_model(
         __base__=(SinglePaperDraft if purpose == "single_paper" else AssistanceDraft)
         if legacy
         else (
-            VisibleSinglePaperDraft
+            (ProceduralSinglePaperDraft if purpose == "single_paper" else ProceduralResearchDraft)
+            if revision == PROCEDURAL_REVISION
+            else VisibleSinglePaperDraft
             if purpose == "single_paper" and revision == REVISION
             else CitedSinglePaperDraft
             if purpose == "single_paper"
@@ -448,7 +599,9 @@ def resolve_draft(
     *,
     purpose: ResponsePurpose = "research_comparison",
     revision: str | None = None,
-) -> tuple[SinglePaperDraft | CitedSinglePaperDraft, tuple[ResearchClaim, ...]]:
+) -> tuple[
+    SinglePaperDraft | CitedSinglePaperDraft | ProceduralSinglePaperDraft, tuple[ResearchClaim, ...]
+]:
     draft = response_model(list(catalog), purpose=purpose, revision=revision).model_validate(
         payload
     )
@@ -466,9 +619,12 @@ def resolve_draft(
             raise ValueError("assistance_evidence_identity_failed")
         claims.append(value)
     comparison = (isinstance(draft, AssistanceDraft) and bool(draft.comparison)) or (
-        isinstance(draft, CitedAssistanceDraft) and bool(draft.comparison_claims)
+        isinstance(draft, (CitedAssistanceDraft, ProceduralResearchDraft))
+        and bool(draft.comparison_claims)
     )
-    if comparison and isinstance(draft, (AssistanceDraft, CitedAssistanceDraft)):
+    if comparison and isinstance(
+        draft, (AssistanceDraft, CitedAssistanceDraft, ProceduralResearchDraft)
+    ):
         by_id = {claim.claim_id: claim for claim in claims}
         compared_sources = {
             ref.work_id for key in draft.comparison_basis for ref in by_id[key].evidence
