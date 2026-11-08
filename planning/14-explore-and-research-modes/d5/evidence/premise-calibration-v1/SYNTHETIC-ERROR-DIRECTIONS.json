@@ -1,0 +1,63 @@
+{
+  "basis": "Synthetic grading-logic fixture with separate IDs, not provider verdicts or independent human evidence",
+  "counts": {
+    "planned": 4,
+    "judged": 4,
+    "acceptable": 2,
+    "unacceptable": 2,
+    "false_pass": 1,
+    "false_reject": 1,
+    "acceptable_abstentions": 0,
+    "unacceptable_abstentions": 0,
+    "acceptable_missing_invalid": 0,
+    "unacceptable_missing_invalid": 0,
+    "missing": 0,
+    "invalid": 0,
+    "complete": 4,
+    "unjudged": 0
+  },
+  "prose": {
+    "false_pass": {
+      "numerator": 1,
+      "denominator": 2,
+      "rate": 0.5
+    },
+    "false_reject": {
+      "numerator": 1,
+      "denominator": 2,
+      "rate": 0.5
+    },
+    "acceptable_abstentions": {
+      "numerator": 0,
+      "denominator": 2,
+      "rate": 0.0
+    },
+    "acceptable_operational_blocks": {
+      "numerator": 1,
+      "denominator": 2,
+      "rate": 0.5
+    },
+    "worst_case_false_pass": {
+      "numerator": 1,
+      "denominator": 2,
+      "rate": 0.5
+    },
+    "response_coverage": {
+      "numerator": 4,
+      "denominator": 4,
+      "rate": 1.0
+    },
+    "worst_case_false_reject": {
+      "numerator": 1,
+      "denominator": 2,
+      "rate": 0.5
+    }
+  },
+  "claim_support_machine_only": {
+    "supported": 4,
+    "unsupported": 0,
+    "abstain": 0
+  },
+  "checker_qualified": false,
+  "new_provider_contacts": 0
+}

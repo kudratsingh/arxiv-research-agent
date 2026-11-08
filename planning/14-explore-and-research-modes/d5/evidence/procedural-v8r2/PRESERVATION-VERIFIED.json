@@ -1,0 +1,30 @@
+{
+  "verified_at": "2026-11-08T06:06:20.487321+00:00",
+  "v7r2_completion": "3/8",
+  "v7r2_failed": "learn-results",
+  "v7r2_unrun": [
+    "research-memory",
+    "research-retrieval",
+    "research-evaluation",
+    "research-insufficient"
+  ],
+  "scope_state": "stopped",
+  "original_stage_C_files_checked": 49,
+  "all_historical_files_and_financial_permission_rows_unchanged": true,
+  "active_ledger": "workspace_d5_prose_v6_validation",
+  "programme_jobs": 16,
+  "Messages": 31,
+  "counts": 50,
+  "known_estimated_usd": "0.825065",
+  "pending_usd": "0",
+  "unknown_usd": "0",
+  "new_provider_Messages": 0,
+  "new_count_contacts": 0,
+  "new_spend_usd": "0",
+  "new_live_authorizations": 0,
+  "original_checkout_clean": true,
+  "owner3137_review3178": "untouched",
+  "everyday_generation": false,
+  "recurrence": false,
+  "notifications": false
+}

@@ -1,0 +1,791 @@
+{
+  "revision": "d5-followup-premise-calibration-v1",
+  "packet_digest": "26240f0b16d650b7f213d1f7f2dbfa5fb798ff0536ad23be1c9c641caf71ca70",
+  "instructions": "Judge premise and expected disposition BEFORE viewing any checker verdict. Exact retained passages are inside scored_claims.evidence. These are correlated matched sets, not independent claim samples. Blank means unreviewed.",
+  "items": [
+    {
+      "id": "itm-d155676d4ea3",
+      "request_digest": "eb91a902270a7151e1a17919035745aceae5d9163934f12a49ae34c75fa29aee",
+      "question_index": 0,
+      "question": "Given that TensorSSM uses a dynamic State Space Model, what evidence would clarify its design?",
+      "scored_claims": [
+        {
+          "claim_id": "c1",
+          "evidence": [
+            {
+              "end": 1428,
+              "material_id": "mat-48780ffb91b68f22cf607c5650336baf",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "High-dimensional tensors are ubiquitous in real-world applications but lead to massive storage overhead. Functional tensor decomposition addresses this by employing neural networks to map element coordinates to tensor cores, significantly reducing the parameters for data compression. However, existing functional methods typically flatten high-order tensors into 1D sequences. This folding operation causes highly overlapping local coordinate sequences and struggles to capture complex cross-mode spatial dependencies, severely limiting their expressiveness on diverse datasets. To tackle these challenges, we propose TensorSSM, a novel Implicit Neural Representation (INR) for functional decomposition method that memorizes spatial positions within a dynamic State Space Model (SSM). Specifically, TensorSSM first decomposes mode-wise coordinates into sequences spit by K-ary rule, encoding spatial tokens from coarse to fine, which effectively captures spatial variations. Furthermore, we extend the SSM's state space to explicitly map cross-mode spatial dependencies, allowing inter-mode interactions to enhance the updates of each mode. By integrating cross-mode information from previous hidden states into the current state transitions, TensorSSM effectively expands tensor representation along two dimensions: the sequence dimension for coarse-to-fine spatial tokens, and the state dimension for cross-mode memorization.",
+              "scope": "abstract",
+              "source_hash": "sha256:0a0d6c2b721f9e82465d91ea96cec77e8245c6cccbe44e194b19a14db5f36be0",
+              "span_id": "span-19ad83096299f09c1ada7a49ddd9bce9",
+              "start": 0,
+              "version_id": "arxiv:2610.40871:v1:metadata-0be4ee69b6741057",
+              "work_id": "arxiv:2610.40871"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "The abstract states that existing functional tensor decomposition methods typically flatten high-order tensors into 1D sequences, which causes highly overlapping local coordinate sequences and struggles to capture complex cross-mode spatial dependencies."
+        }
+      ],
+      "remaining_prose": {
+        "gaps": [
+          "Inspect the original source and its evaluation."
+        ],
+        "questions": [
+          "Given that TensorSSM uses a dynamic State Space Model, what evidence would clarify its design?"
+        ],
+        "proposal": "Inspect source scope before drawing conclusions.",
+        "abstention": null
+      },
+      "judgments": {
+        "premise": null,
+        "expected_disposition": null,
+        "reason": null
+      },
+      "reviewer": null,
+      "reviewed_at": null,
+      "provenance": null
+    },
+    {
+      "id": "itm-3e57cbce0c99",
+      "request_digest": "6a68eae2f2c45534485ae0dcad99b38439199ef38c08d6f4d4bc24b6b8df081c",
+      "question_index": 0,
+      "question": "How do TensorSSM's empirical results establish superiority in every tensor-order regime?",
+      "scored_claims": [
+        {
+          "claim_id": "c1",
+          "evidence": [
+            {
+              "end": 1428,
+              "material_id": "mat-48780ffb91b68f22cf607c5650336baf",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "High-dimensional tensors are ubiquitous in real-world applications but lead to massive storage overhead. Functional tensor decomposition addresses this by employing neural networks to map element coordinates to tensor cores, significantly reducing the parameters for data compression. However, existing functional methods typically flatten high-order tensors into 1D sequences. This folding operation causes highly overlapping local coordinate sequences and struggles to capture complex cross-mode spatial dependencies, severely limiting their expressiveness on diverse datasets. To tackle these challenges, we propose TensorSSM, a novel Implicit Neural Representation (INR) for functional decomposition method that memorizes spatial positions within a dynamic State Space Model (SSM). Specifically, TensorSSM first decomposes mode-wise coordinates into sequences spit by K-ary rule, encoding spatial tokens from coarse to fine, which effectively captures spatial variations. Furthermore, we extend the SSM's state space to explicitly map cross-mode spatial dependencies, allowing inter-mode interactions to enhance the updates of each mode. By integrating cross-mode information from previous hidden states into the current state transitions, TensorSSM effectively expands tensor representation along two dimensions: the sequence dimension for coarse-to-fine spatial tokens, and the state dimension for cross-mode memorization.",
+              "scope": "abstract",
+              "source_hash": "sha256:0a0d6c2b721f9e82465d91ea96cec77e8245c6cccbe44e194b19a14db5f36be0",
+              "span_id": "span-19ad83096299f09c1ada7a49ddd9bce9",
+              "start": 0,
+              "version_id": "arxiv:2610.40871:v1:metadata-0be4ee69b6741057",
+              "work_id": "arxiv:2610.40871"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "The abstract states that existing functional tensor decomposition methods typically flatten high-order tensors into 1D sequences, which causes highly overlapping local coordinate sequences and struggles to capture complex cross-mode spatial dependencies."
+        }
+      ],
+      "remaining_prose": {
+        "gaps": [
+          "Inspect the original source and its evaluation."
+        ],
+        "questions": [
+          "How do TensorSSM's empirical results establish superiority in every tensor-order regime?"
+        ],
+        "proposal": "Inspect source scope before drawing conclusions.",
+        "abstention": null
+      },
+      "judgments": {
+        "premise": null,
+        "expected_disposition": null,
+        "reason": null
+      },
+      "reviewer": null,
+      "reviewed_at": null,
+      "provenance": null
+    },
+    {
+      "id": "itm-dc4af27afbd0",
+      "request_digest": "e043dd7badace3c4b41b39adf4539a979a4ca34dec09034792c96645bddac23b",
+      "question_index": 0,
+      "question": "Given that a human preference study was reported, what further evidence would establish its scope?",
+      "scored_claims": [
+        {
+          "claim_id": "c1",
+          "evidence": [
+            {
+              "end": 1489,
+              "material_id": "mat-e0471e7f635e5d75e96b25bdee5fe807",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "Human preferences change over time: an established preference may remain valid over time, become uncertain as context shifts, or be explicitly revised. Effective personalization requires conversational AI to adapt its response strategy to evolving preferences rather than relying on passive memory retrieval. We formalize this capability as adaptive personalization under epistemic uncertainty. A human preference study further confirms that people favor state-contingent response strategies as preference uncertainty changes. To evaluate whether language models mirror this adaptation, we create a multilingual benchmark spanning 250 personas, 5 languages, and 25K conversational turns that decouples strategy selection from response execution. Across eight closed- and open-weight models, we uncover a recognition-generation gap: models reliably identify appropriate strategies when selecting among candidate options, but collapse during open-ended generation, suffering a 35-46% drop in strategy calibration. Crucially, this failure is systematic: models default to exploit-first behavior, over-relying on existing preferences regardless of preference epistemic uncertainty. We show this failure is addressable: while prompting interventions fail, targeted training that supervises models' internal strategy representations toward state-conditional human preferences narrows the user acceptability generalization gap by a third on out-of-distribution personas and conversational styles.",
+              "scope": "abstract",
+              "source_hash": "sha256:97289b875c0005e0a762b90ffc61a53dcdaf28cbeca89decf03bba9c572e1df8",
+              "span_id": "span-d9f8a5e2f7e5b553a02e0ed0c0a8f1fb",
+              "start": 0,
+              "version_id": "arxiv:2610.40930:v1:metadata-b45059ef8928ae02",
+              "work_id": "arxiv:2610.40930"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "The paper formalizes 'adaptive personalization under epistemic uncertainty': preferences may remain valid, become uncertain as context shifts, or be explicitly revised, so conversational AI should adapt its response strategy rather than rely on passive memory retrieval."
+        }
+      ],
+      "remaining_prose": {
+        "gaps": [
+          "Inspect the original source and its evaluation."
+        ],
+        "questions": [
+          "Given that a human preference study was reported, what further evidence would establish its scope?"
+        ],
+        "proposal": "Inspect source scope before drawing conclusions.",
+        "abstention": null
+      },
+      "judgments": {
+        "premise": null,
+        "expected_disposition": null,
+        "reason": null
+      },
+      "reviewer": null,
+      "reviewed_at": null,
+      "provenance": null
+    },
+    {
+      "id": "itm-c74a74807abc",
+      "request_digest": "5f8ca5b2da24129543a3c352d9e0440384ccd831178bf8d7fe4d8608c1721bfb",
+      "question_index": 0,
+      "question": "What further evidence, if any, would clarify the selected claims and their limitations?",
+      "scored_claims": [
+        {
+          "claim_id": "c1",
+          "evidence": [
+            {
+              "end": 1428,
+              "material_id": "mat-48780ffb91b68f22cf607c5650336baf",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "High-dimensional tensors are ubiquitous in real-world applications but lead to massive storage overhead. Functional tensor decomposition addresses this by employing neural networks to map element coordinates to tensor cores, significantly reducing the parameters for data compression. However, existing functional methods typically flatten high-order tensors into 1D sequences. This folding operation causes highly overlapping local coordinate sequences and struggles to capture complex cross-mode spatial dependencies, severely limiting their expressiveness on diverse datasets. To tackle these challenges, we propose TensorSSM, a novel Implicit Neural Representation (INR) for functional decomposition method that memorizes spatial positions within a dynamic State Space Model (SSM). Specifically, TensorSSM first decomposes mode-wise coordinates into sequences spit by K-ary rule, encoding spatial tokens from coarse to fine, which effectively captures spatial variations. Furthermore, we extend the SSM's state space to explicitly map cross-mode spatial dependencies, allowing inter-mode interactions to enhance the updates of each mode. By integrating cross-mode information from previous hidden states into the current state transitions, TensorSSM effectively expands tensor representation along two dimensions: the sequence dimension for coarse-to-fine spatial tokens, and the state dimension for cross-mode memorization.",
+              "scope": "abstract",
+              "source_hash": "sha256:0a0d6c2b721f9e82465d91ea96cec77e8245c6cccbe44e194b19a14db5f36be0",
+              "span_id": "span-19ad83096299f09c1ada7a49ddd9bce9",
+              "start": 0,
+              "version_id": "arxiv:2610.40871:v1:metadata-0be4ee69b6741057",
+              "work_id": "arxiv:2610.40871"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "The abstract states that existing functional tensor decomposition methods typically flatten high-order tensors into 1D sequences, which causes highly overlapping local coordinate sequences and struggles to capture complex cross-mode spatial dependencies."
+        }
+      ],
+      "remaining_prose": {
+        "gaps": [
+          "Inspect the original source and its evaluation."
+        ],
+        "questions": [
+          "What further evidence, if any, would clarify the selected claims and their limitations?"
+        ],
+        "proposal": "Inspect source scope before drawing conclusions.",
+        "abstention": null
+      },
+      "judgments": {
+        "premise": null,
+        "expected_disposition": null,
+        "reason": null
+      },
+      "reviewer": null,
+      "reviewed_at": null,
+      "provenance": null
+    },
+    {
+      "id": "itm-ca672f861ed7",
+      "request_digest": "fbb99540b523eebd0d4c99d31b4b3e9027f4b066eb33ffe173be720e69f836f4",
+      "question_index": 0,
+      "question": "What accounts for the study proving that one personalization strategy is optimal for every user?",
+      "scored_claims": [
+        {
+          "claim_id": "c1",
+          "evidence": [
+            {
+              "end": 1489,
+              "material_id": "mat-e0471e7f635e5d75e96b25bdee5fe807",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "Human preferences change over time: an established preference may remain valid over time, become uncertain as context shifts, or be explicitly revised. Effective personalization requires conversational AI to adapt its response strategy to evolving preferences rather than relying on passive memory retrieval. We formalize this capability as adaptive personalization under epistemic uncertainty. A human preference study further confirms that people favor state-contingent response strategies as preference uncertainty changes. To evaluate whether language models mirror this adaptation, we create a multilingual benchmark spanning 250 personas, 5 languages, and 25K conversational turns that decouples strategy selection from response execution. Across eight closed- and open-weight models, we uncover a recognition-generation gap: models reliably identify appropriate strategies when selecting among candidate options, but collapse during open-ended generation, suffering a 35-46% drop in strategy calibration. Crucially, this failure is systematic: models default to exploit-first behavior, over-relying on existing preferences regardless of preference epistemic uncertainty. We show this failure is addressable: while prompting interventions fail, targeted training that supervises models' internal strategy representations toward state-conditional human preferences narrows the user acceptability generalization gap by a third on out-of-distribution personas and conversational styles.",
+              "scope": "abstract",
+              "source_hash": "sha256:97289b875c0005e0a762b90ffc61a53dcdaf28cbeca89decf03bba9c572e1df8",
+              "span_id": "span-d9f8a5e2f7e5b553a02e0ed0c0a8f1fb",
+              "start": 0,
+              "version_id": "arxiv:2610.40930:v1:metadata-b45059ef8928ae02",
+              "work_id": "arxiv:2610.40930"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "The paper formalizes 'adaptive personalization under epistemic uncertainty': preferences may remain valid, become uncertain as context shifts, or be explicitly revised, so conversational AI should adapt its response strategy rather than rely on passive memory retrieval."
+        }
+      ],
+      "remaining_prose": {
+        "gaps": [
+          "Inspect the original source and its evaluation."
+        ],
+        "questions": [
+          "What accounts for the study proving that one personalization strategy is optimal for every user?"
+        ],
+        "proposal": "Inspect source scope before drawing conclusions.",
+        "abstention": null
+      },
+      "judgments": {
+        "premise": null,
+        "expected_disposition": null,
+        "reason": null
+      },
+      "reviewer": null,
+      "reviewed_at": null,
+      "provenance": null
+    },
+    {
+      "id": "itm-dbdb54c9b53f",
+      "request_digest": "cdee3d12b5be3e568058c3e2984f31f7c4762e5fdec33d4537b129d142f40245",
+      "question_index": 0,
+      "question": "Given cited and scored claim c1, what qualifications apply, if any?",
+      "scored_claims": [
+        {
+          "claim_id": "c1",
+          "evidence": [
+            {
+              "end": 1428,
+              "material_id": "mat-48780ffb91b68f22cf607c5650336baf",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "High-dimensional tensors are ubiquitous in real-world applications but lead to massive storage overhead. Functional tensor decomposition addresses this by employing neural networks to map element coordinates to tensor cores, significantly reducing the parameters for data compression. However, existing functional methods typically flatten high-order tensors into 1D sequences. This folding operation causes highly overlapping local coordinate sequences and struggles to capture complex cross-mode spatial dependencies, severely limiting their expressiveness on diverse datasets. To tackle these challenges, we propose TensorSSM, a novel Implicit Neural Representation (INR) for functional decomposition method that memorizes spatial positions within a dynamic State Space Model (SSM). Specifically, TensorSSM first decomposes mode-wise coordinates into sequences spit by K-ary rule, encoding spatial tokens from coarse to fine, which effectively captures spatial variations. Furthermore, we extend the SSM's state space to explicitly map cross-mode spatial dependencies, allowing inter-mode interactions to enhance the updates of each mode. By integrating cross-mode information from previous hidden states into the current state transitions, TensorSSM effectively expands tensor representation along two dimensions: the sequence dimension for coarse-to-fine spatial tokens, and the state dimension for cross-mode memorization.",
+              "scope": "abstract",
+              "source_hash": "sha256:0a0d6c2b721f9e82465d91ea96cec77e8245c6cccbe44e194b19a14db5f36be0",
+              "span_id": "span-19ad83096299f09c1ada7a49ddd9bce9",
+              "start": 0,
+              "version_id": "arxiv:2610.40871:v1:metadata-0be4ee69b6741057",
+              "work_id": "arxiv:2610.40871"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "The abstract states that existing functional tensor decomposition methods typically flatten high-order tensors into 1D sequences, which causes highly overlapping local coordinate sequences and struggles to capture complex cross-mode spatial dependencies."
+        }
+      ],
+      "remaining_prose": {
+        "gaps": [
+          "Inspect the original source and its evaluation."
+        ],
+        "questions": [
+          "Given cited and scored claim c1, what qualifications apply, if any?"
+        ],
+        "proposal": "Inspect source scope before drawing conclusions.",
+        "abstention": null
+      },
+      "judgments": {
+        "premise": null,
+        "expected_disposition": null,
+        "reason": null
+      },
+      "reviewer": null,
+      "reviewed_at": null,
+      "provenance": null
+    },
+    {
+      "id": "itm-b1f6af96d0f9",
+      "request_digest": "1de981a7ea366b091ed62d7ef17a4dc1293f3a5e8caff57f082e10b483534766",
+      "question_index": 0,
+      "question": "Given that each episode asks for a probability prediction, how could its evaluation be inspected?",
+      "scored_claims": [
+        {
+          "claim_id": "c1",
+          "evidence": [
+            {
+              "end": 1516,
+              "material_id": "mat-1c5ecdf06434f317157b2e5fce1b3b0e",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "Expert scientists excel at weighing empirical findings from multiple sources that vary in both statistical reliability and epistemic relevance. To what extent are language models, which are increasingly driving autonomous discovery systems, capable of such evidence deliberation? We introduce EDB-Bio, a scientific reasoning benchmark curated from real-world data in three biological domains: drug-perturbation transcriptomics, CRISPR screens, and human genome-wide association studies (GWAS). Each of EDB-Bio's 96k episodes presents a sequence of experimental results from published studies and asks the model to predict the probability that a target hypothesis is true. Out-of-the-box, open-weight and frontier models alike demonstrate systematic underconfidence and attain Brier scores comparable to a trivial base-rate forecaster. Post-training against strictly proper scoring rules significantly improves both calibration and discrimination. This calibration pays off downstream: in a sequential experiment selection task, our Ibis0 model is 2.5 times more efficient than the best frontier model. Throughout, quantifying evidence weights as Bayes factors reveals how models update their beliefs over time, whether they agree with expert biologists on relevance, and where they exhibit inconsistencies and biases. Our work extends calibration training and uncertainty analysis to a realistic scientific forecasting setting with applications to human cancer biology. We release all code, data, and trained models.",
+              "scope": "abstract",
+              "source_hash": "sha256:b490f3ffa20059c827c7a1dde2576cc7857a3b26d3fe14489e47a2fc3f24f710",
+              "span_id": "span-9a92d1c10b9b4e9ee5a9185bd6bb4afd",
+              "start": 0,
+              "version_id": "arxiv:2610.41015:v1:metadata-9d3401c4c7c1014c",
+              "work_id": "arxiv:2610.41015"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "EDB-Bio is a scientific reasoning benchmark built from real-world data in three biological domains: drug-perturbation transcriptomics, CRISPR screens, and human GWAS."
+        }
+      ],
+      "remaining_prose": {
+        "gaps": [
+          "Inspect the original source and its evaluation."
+        ],
+        "questions": [
+          "Given that each episode asks for a probability prediction, how could its evaluation be inspected?"
+        ],
+        "proposal": "Inspect source scope before drawing conclusions.",
+        "abstention": null
+      },
+      "judgments": {
+        "premise": null,
+        "expected_disposition": null,
+        "reason": null
+      },
+      "reviewer": null,
+      "reviewed_at": null,
+      "provenance": null
+    },
+    {
+      "id": "itm-af1bb9563aca",
+      "request_digest": "c406fa4695a709ca34db2acf968c4d3df8915c6eaf7236f617c5ec9f4dd0164d",
+      "question_index": 0,
+      "question": "What further evidence, if any, would clarify the selected claims and their limitations?",
+      "scored_claims": [
+        {
+          "claim_id": "c1",
+          "evidence": [
+            {
+              "end": 1532,
+              "material_id": "mat-e4adcf0135fbaa3982584da87b0040b2",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "Test-time scaling (TTS) improves large language model agents by sampling and selecting among multiple candidate trajectories, but common realizations assume that these trajectories can be executed in parallel. This assumption breaks in realistic deployments, where enterprise workspaces and cloud services are shared and persistent, costly or infeasible to replicate, and actions may introduce irreversible side effects or cross-trajectory interference. Existing generative world models avoid direct execution, but typically compress environment state into a single prompt, limiting their ability to reliably simulate transitions under partial observability. Instead, we introduce Agentic World Modeling (AWM), which reformulates next-observation prediction as a multi-turn evidence-acquisition task. For each hypothetical action, an agentic simulator adaptively queries the real environment through safe read-only interfaces, reasons over the returned evidence, and uses executable computation to construct the resulting observation without mutating shared state. Integrated with trajectory-level TTS, AWM enables parallel exploration over a single shared environment. Across $\\tau$-bench, AppWorld, and OfficeBench, AWM outperforms a single-shot simulation baseline by 40.07% on average, and surpasses a trained world-model baseline by 12.36% on average. These results establish interactive, read-grounded simulation as a practical foundation for safe and scalable agentic test-time scaling in shared, non-resettable environments.",
+              "scope": "abstract",
+              "source_hash": "sha256:6fdc056b308bdc6e3849f19ff0e173a15b4898ca6f86670bc02403c17bf5fbf0",
+              "span_id": "span-07767192aeb610b6e7b7d2275d6363ae",
+              "start": 0,
+              "version_id": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+              "work_id": "arxiv:2610.40927"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "Trajectory-level test-time scaling improves LLM agents by sampling and selecting among multiple candidate trajectories, but common realizations assume the trajectories can be executed in parallel."
+        }
+      ],
+      "remaining_prose": {
+        "gaps": [
+          "Inspect the original source and its evaluation."
+        ],
+        "questions": [
+          "What further evidence, if any, would clarify the selected claims and their limitations?"
+        ],
+        "proposal": "Inspect source scope before drawing conclusions.",
+        "abstention": null
+      },
+      "judgments": {
+        "premise": null,
+        "expected_disposition": null,
+        "reason": null
+      },
+      "reviewer": null,
+      "reviewed_at": null,
+      "provenance": null
+    },
+    {
+      "id": "itm-adfe5bd826ca",
+      "request_digest": "56321fcdebdf79e7b6792146b6752564192e334f3db0ac1716baf78592a10900",
+      "question_index": 0,
+      "question": "Given cited and scored claim c1, what qualifications apply, if any?",
+      "scored_claims": [
+        {
+          "claim_id": "c1",
+          "evidence": [
+            {
+              "end": 1532,
+              "material_id": "mat-e4adcf0135fbaa3982584da87b0040b2",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "Test-time scaling (TTS) improves large language model agents by sampling and selecting among multiple candidate trajectories, but common realizations assume that these trajectories can be executed in parallel. This assumption breaks in realistic deployments, where enterprise workspaces and cloud services are shared and persistent, costly or infeasible to replicate, and actions may introduce irreversible side effects or cross-trajectory interference. Existing generative world models avoid direct execution, but typically compress environment state into a single prompt, limiting their ability to reliably simulate transitions under partial observability. Instead, we introduce Agentic World Modeling (AWM), which reformulates next-observation prediction as a multi-turn evidence-acquisition task. For each hypothetical action, an agentic simulator adaptively queries the real environment through safe read-only interfaces, reasons over the returned evidence, and uses executable computation to construct the resulting observation without mutating shared state. Integrated with trajectory-level TTS, AWM enables parallel exploration over a single shared environment. Across $\\tau$-bench, AppWorld, and OfficeBench, AWM outperforms a single-shot simulation baseline by 40.07% on average, and surpasses a trained world-model baseline by 12.36% on average. These results establish interactive, read-grounded simulation as a practical foundation for safe and scalable agentic test-time scaling in shared, non-resettable environments.",
+              "scope": "abstract",
+              "source_hash": "sha256:6fdc056b308bdc6e3849f19ff0e173a15b4898ca6f86670bc02403c17bf5fbf0",
+              "span_id": "span-07767192aeb610b6e7b7d2275d6363ae",
+              "start": 0,
+              "version_id": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+              "work_id": "arxiv:2610.40927"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "Trajectory-level test-time scaling improves LLM agents by sampling and selecting among multiple candidate trajectories, but common realizations assume the trajectories can be executed in parallel."
+        }
+      ],
+      "remaining_prose": {
+        "gaps": [
+          "Inspect the original source and its evaluation."
+        ],
+        "questions": [
+          "Given cited and scored claim c1, what qualifications apply, if any?"
+        ],
+        "proposal": "Inspect source scope before drawing conclusions.",
+        "abstention": null
+      },
+      "judgments": {
+        "premise": null,
+        "expected_disposition": null,
+        "reason": null
+      },
+      "reviewer": null,
+      "reviewed_at": null,
+      "provenance": null
+    },
+    {
+      "id": "itm-672905e017b0",
+      "request_digest": "e853e4a7fa3790097003cdebadeded7a5dbb766a7d8e6e61a6793b3ecf353101",
+      "question_index": 0,
+      "question": "Given cited and scored claim c1, what qualifications apply, if any?",
+      "scored_claims": [
+        {
+          "claim_id": "c1",
+          "evidence": [
+            {
+              "end": 1516,
+              "material_id": "mat-1c5ecdf06434f317157b2e5fce1b3b0e",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "Expert scientists excel at weighing empirical findings from multiple sources that vary in both statistical reliability and epistemic relevance. To what extent are language models, which are increasingly driving autonomous discovery systems, capable of such evidence deliberation? We introduce EDB-Bio, a scientific reasoning benchmark curated from real-world data in three biological domains: drug-perturbation transcriptomics, CRISPR screens, and human genome-wide association studies (GWAS). Each of EDB-Bio's 96k episodes presents a sequence of experimental results from published studies and asks the model to predict the probability that a target hypothesis is true. Out-of-the-box, open-weight and frontier models alike demonstrate systematic underconfidence and attain Brier scores comparable to a trivial base-rate forecaster. Post-training against strictly proper scoring rules significantly improves both calibration and discrimination. This calibration pays off downstream: in a sequential experiment selection task, our Ibis0 model is 2.5 times more efficient than the best frontier model. Throughout, quantifying evidence weights as Bayes factors reveals how models update their beliefs over time, whether they agree with expert biologists on relevance, and where they exhibit inconsistencies and biases. Our work extends calibration training and uncertainty analysis to a realistic scientific forecasting setting with applications to human cancer biology. We release all code, data, and trained models.",
+              "scope": "abstract",
+              "source_hash": "sha256:b490f3ffa20059c827c7a1dde2576cc7857a3b26d3fe14489e47a2fc3f24f710",
+              "span_id": "span-9a92d1c10b9b4e9ee5a9185bd6bb4afd",
+              "start": 0,
+              "version_id": "arxiv:2610.41015:v1:metadata-9d3401c4c7c1014c",
+              "work_id": "arxiv:2610.41015"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "EDB-Bio is a scientific reasoning benchmark built from real-world data in three biological domains: drug-perturbation transcriptomics, CRISPR screens, and human GWAS."
+        }
+      ],
+      "remaining_prose": {
+        "gaps": [
+          "Inspect the original source and its evaluation."
+        ],
+        "questions": [
+          "Given cited and scored claim c1, what qualifications apply, if any?"
+        ],
+        "proposal": "Inspect source scope before drawing conclusions.",
+        "abstention": null
+      },
+      "judgments": {
+        "premise": null,
+        "expected_disposition": null,
+        "reason": null
+      },
+      "reviewer": null,
+      "reviewed_at": null,
+      "provenance": null
+    },
+    {
+      "id": "itm-45294fefc14b",
+      "request_digest": "3bb65f014ba82f4e33b10ed1ca641c84e95759e2012ddf774a4eea749fa93fbf",
+      "question_index": 0,
+      "question": "Given that the deployment is shared and persistent, what would be needed to assess action interference?",
+      "scored_claims": [
+        {
+          "claim_id": "c1",
+          "evidence": [
+            {
+              "end": 1532,
+              "material_id": "mat-e4adcf0135fbaa3982584da87b0040b2",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "Test-time scaling (TTS) improves large language model agents by sampling and selecting among multiple candidate trajectories, but common realizations assume that these trajectories can be executed in parallel. This assumption breaks in realistic deployments, where enterprise workspaces and cloud services are shared and persistent, costly or infeasible to replicate, and actions may introduce irreversible side effects or cross-trajectory interference. Existing generative world models avoid direct execution, but typically compress environment state into a single prompt, limiting their ability to reliably simulate transitions under partial observability. Instead, we introduce Agentic World Modeling (AWM), which reformulates next-observation prediction as a multi-turn evidence-acquisition task. For each hypothetical action, an agentic simulator adaptively queries the real environment through safe read-only interfaces, reasons over the returned evidence, and uses executable computation to construct the resulting observation without mutating shared state. Integrated with trajectory-level TTS, AWM enables parallel exploration over a single shared environment. Across $\\tau$-bench, AppWorld, and OfficeBench, AWM outperforms a single-shot simulation baseline by 40.07% on average, and surpasses a trained world-model baseline by 12.36% on average. These results establish interactive, read-grounded simulation as a practical foundation for safe and scalable agentic test-time scaling in shared, non-resettable environments.",
+              "scope": "abstract",
+              "source_hash": "sha256:6fdc056b308bdc6e3849f19ff0e173a15b4898ca6f86670bc02403c17bf5fbf0",
+              "span_id": "span-07767192aeb610b6e7b7d2275d6363ae",
+              "start": 0,
+              "version_id": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+              "work_id": "arxiv:2610.40927"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "Trajectory-level test-time scaling improves LLM agents by sampling and selecting among multiple candidate trajectories, but common realizations assume the trajectories can be executed in parallel."
+        }
+      ],
+      "remaining_prose": {
+        "gaps": [
+          "Inspect the original source and its evaluation."
+        ],
+        "questions": [
+          "Given that the deployment is shared and persistent, what would be needed to assess action interference?"
+        ],
+        "proposal": "Inspect source scope before drawing conclusions.",
+        "abstention": null
+      },
+      "judgments": {
+        "premise": null,
+        "expected_disposition": null,
+        "reason": null
+      },
+      "reviewer": null,
+      "reviewed_at": null,
+      "provenance": null
+    },
+    {
+      "id": "itm-3ba093fbc15c",
+      "request_digest": "a028bc5817e359a24a555dc1eea9a5a8d1031706709fa8810b23410ad424ceb4",
+      "question_index": 0,
+      "question": "How does EDB-Bio demonstrate calibration transfers unchanged from biology to all scientific domains?",
+      "scored_claims": [
+        {
+          "claim_id": "c1",
+          "evidence": [
+            {
+              "end": 1516,
+              "material_id": "mat-1c5ecdf06434f317157b2e5fce1b3b0e",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "Expert scientists excel at weighing empirical findings from multiple sources that vary in both statistical reliability and epistemic relevance. To what extent are language models, which are increasingly driving autonomous discovery systems, capable of such evidence deliberation? We introduce EDB-Bio, a scientific reasoning benchmark curated from real-world data in three biological domains: drug-perturbation transcriptomics, CRISPR screens, and human genome-wide association studies (GWAS). Each of EDB-Bio's 96k episodes presents a sequence of experimental results from published studies and asks the model to predict the probability that a target hypothesis is true. Out-of-the-box, open-weight and frontier models alike demonstrate systematic underconfidence and attain Brier scores comparable to a trivial base-rate forecaster. Post-training against strictly proper scoring rules significantly improves both calibration and discrimination. This calibration pays off downstream: in a sequential experiment selection task, our Ibis0 model is 2.5 times more efficient than the best frontier model. Throughout, quantifying evidence weights as Bayes factors reveals how models update their beliefs over time, whether they agree with expert biologists on relevance, and where they exhibit inconsistencies and biases. Our work extends calibration training and uncertainty analysis to a realistic scientific forecasting setting with applications to human cancer biology. We release all code, data, and trained models.",
+              "scope": "abstract",
+              "source_hash": "sha256:b490f3ffa20059c827c7a1dde2576cc7857a3b26d3fe14489e47a2fc3f24f710",
+              "span_id": "span-9a92d1c10b9b4e9ee5a9185bd6bb4afd",
+              "start": 0,
+              "version_id": "arxiv:2610.41015:v1:metadata-9d3401c4c7c1014c",
+              "work_id": "arxiv:2610.41015"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "EDB-Bio is a scientific reasoning benchmark built from real-world data in three biological domains: drug-perturbation transcriptomics, CRISPR screens, and human GWAS."
+        }
+      ],
+      "remaining_prose": {
+        "gaps": [
+          "Inspect the original source and its evaluation."
+        ],
+        "questions": [
+          "How does EDB-Bio demonstrate calibration transfers unchanged from biology to all scientific domains?"
+        ],
+        "proposal": "Inspect source scope before drawing conclusions.",
+        "abstention": null
+      },
+      "judgments": {
+        "premise": null,
+        "expected_disposition": null,
+        "reason": null
+      },
+      "reviewer": null,
+      "reviewed_at": null,
+      "provenance": null
+    },
+    {
+      "id": "itm-6d4a9c77754d",
+      "request_digest": "cd16e283ab7bc12b3746c37eca749f66ecb4076f6a904b35b66db9581959eafe",
+      "question_index": 0,
+      "question": "Given cited and scored claim c1, what qualifications apply, if any?",
+      "scored_claims": [
+        {
+          "claim_id": "c1",
+          "evidence": [
+            {
+              "end": 1489,
+              "material_id": "mat-e0471e7f635e5d75e96b25bdee5fe807",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "Human preferences change over time: an established preference may remain valid over time, become uncertain as context shifts, or be explicitly revised. Effective personalization requires conversational AI to adapt its response strategy to evolving preferences rather than relying on passive memory retrieval. We formalize this capability as adaptive personalization under epistemic uncertainty. A human preference study further confirms that people favor state-contingent response strategies as preference uncertainty changes. To evaluate whether language models mirror this adaptation, we create a multilingual benchmark spanning 250 personas, 5 languages, and 25K conversational turns that decouples strategy selection from response execution. Across eight closed- and open-weight models, we uncover a recognition-generation gap: models reliably identify appropriate strategies when selecting among candidate options, but collapse during open-ended generation, suffering a 35-46% drop in strategy calibration. Crucially, this failure is systematic: models default to exploit-first behavior, over-relying on existing preferences regardless of preference epistemic uncertainty. We show this failure is addressable: while prompting interventions fail, targeted training that supervises models' internal strategy representations toward state-conditional human preferences narrows the user acceptability generalization gap by a third on out-of-distribution personas and conversational styles.",
+              "scope": "abstract",
+              "source_hash": "sha256:97289b875c0005e0a762b90ffc61a53dcdaf28cbeca89decf03bba9c572e1df8",
+              "span_id": "span-d9f8a5e2f7e5b553a02e0ed0c0a8f1fb",
+              "start": 0,
+              "version_id": "arxiv:2610.40930:v1:metadata-b45059ef8928ae02",
+              "work_id": "arxiv:2610.40930"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "The paper formalizes 'adaptive personalization under epistemic uncertainty': preferences may remain valid, become uncertain as context shifts, or be explicitly revised, so conversational AI should adapt its response strategy rather than rely on passive memory retrieval."
+        }
+      ],
+      "remaining_prose": {
+        "gaps": [
+          "Inspect the original source and its evaluation."
+        ],
+        "questions": [
+          "Given cited and scored claim c1, what qualifications apply, if any?"
+        ],
+        "proposal": "Inspect source scope before drawing conclusions.",
+        "abstention": null
+      },
+      "judgments": {
+        "premise": null,
+        "expected_disposition": null,
+        "reason": null
+      },
+      "reviewer": null,
+      "reviewed_at": null,
+      "provenance": null
+    },
+    {
+      "id": "itm-50f44410c2f8",
+      "request_digest": "6e2dafbc133f5a6464b24dff608a168bd82978e437c8d621d93c84b392248045",
+      "question_index": 0,
+      "question": "What further evidence, if any, would clarify the selected claims and their limitations?",
+      "scored_claims": [
+        {
+          "claim_id": "c1",
+          "evidence": [
+            {
+              "end": 1516,
+              "material_id": "mat-1c5ecdf06434f317157b2e5fce1b3b0e",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "Expert scientists excel at weighing empirical findings from multiple sources that vary in both statistical reliability and epistemic relevance. To what extent are language models, which are increasingly driving autonomous discovery systems, capable of such evidence deliberation? We introduce EDB-Bio, a scientific reasoning benchmark curated from real-world data in three biological domains: drug-perturbation transcriptomics, CRISPR screens, and human genome-wide association studies (GWAS). Each of EDB-Bio's 96k episodes presents a sequence of experimental results from published studies and asks the model to predict the probability that a target hypothesis is true. Out-of-the-box, open-weight and frontier models alike demonstrate systematic underconfidence and attain Brier scores comparable to a trivial base-rate forecaster. Post-training against strictly proper scoring rules significantly improves both calibration and discrimination. This calibration pays off downstream: in a sequential experiment selection task, our Ibis0 model is 2.5 times more efficient than the best frontier model. Throughout, quantifying evidence weights as Bayes factors reveals how models update their beliefs over time, whether they agree with expert biologists on relevance, and where they exhibit inconsistencies and biases. Our work extends calibration training and uncertainty analysis to a realistic scientific forecasting setting with applications to human cancer biology. We release all code, data, and trained models.",
+              "scope": "abstract",
+              "source_hash": "sha256:b490f3ffa20059c827c7a1dde2576cc7857a3b26d3fe14489e47a2fc3f24f710",
+              "span_id": "span-9a92d1c10b9b4e9ee5a9185bd6bb4afd",
+              "start": 0,
+              "version_id": "arxiv:2610.41015:v1:metadata-9d3401c4c7c1014c",
+              "work_id": "arxiv:2610.41015"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "EDB-Bio is a scientific reasoning benchmark built from real-world data in three biological domains: drug-perturbation transcriptomics, CRISPR screens, and human GWAS."
+        }
+      ],
+      "remaining_prose": {
+        "gaps": [
+          "Inspect the original source and its evaluation."
+        ],
+        "questions": [
+          "What further evidence, if any, would clarify the selected claims and their limitations?"
+        ],
+        "proposal": "Inspect source scope before drawing conclusions.",
+        "abstention": null
+      },
+      "judgments": {
+        "premise": null,
+        "expected_disposition": null,
+        "reason": null
+      },
+      "reviewer": null,
+      "reviewed_at": null,
+      "provenance": null
+    },
+    {
+      "id": "itm-379e318ba00f",
+      "request_digest": "5859745b24d2620c165162c2db8f0380a873f9a381c2323a8cbe9c8baa1feacb",
+      "question_index": 0,
+      "question": "How does the reported simulator prevent all cross-trajectory interference in deployment?",
+      "scored_claims": [
+        {
+          "claim_id": "c1",
+          "evidence": [
+            {
+              "end": 1532,
+              "material_id": "mat-e4adcf0135fbaa3982584da87b0040b2",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "Test-time scaling (TTS) improves large language model agents by sampling and selecting among multiple candidate trajectories, but common realizations assume that these trajectories can be executed in parallel. This assumption breaks in realistic deployments, where enterprise workspaces and cloud services are shared and persistent, costly or infeasible to replicate, and actions may introduce irreversible side effects or cross-trajectory interference. Existing generative world models avoid direct execution, but typically compress environment state into a single prompt, limiting their ability to reliably simulate transitions under partial observability. Instead, we introduce Agentic World Modeling (AWM), which reformulates next-observation prediction as a multi-turn evidence-acquisition task. For each hypothetical action, an agentic simulator adaptively queries the real environment through safe read-only interfaces, reasons over the returned evidence, and uses executable computation to construct the resulting observation without mutating shared state. Integrated with trajectory-level TTS, AWM enables parallel exploration over a single shared environment. Across $\\tau$-bench, AppWorld, and OfficeBench, AWM outperforms a single-shot simulation baseline by 40.07% on average, and surpasses a trained world-model baseline by 12.36% on average. These results establish interactive, read-grounded simulation as a practical foundation for safe and scalable agentic test-time scaling in shared, non-resettable environments.",
+              "scope": "abstract",
+              "source_hash": "sha256:6fdc056b308bdc6e3849f19ff0e173a15b4898ca6f86670bc02403c17bf5fbf0",
+              "span_id": "span-07767192aeb610b6e7b7d2275d6363ae",
+              "start": 0,
+              "version_id": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+              "work_id": "arxiv:2610.40927"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "Trajectory-level test-time scaling improves LLM agents by sampling and selecting among multiple candidate trajectories, but common realizations assume the trajectories can be executed in parallel."
+        }
+      ],
+      "remaining_prose": {
+        "gaps": [
+          "Inspect the original source and its evaluation."
+        ],
+        "questions": [
+          "How does the reported simulator prevent all cross-trajectory interference in deployment?"
+        ],
+        "proposal": "Inspect source scope before drawing conclusions.",
+        "abstention": null
+      },
+      "judgments": {
+        "premise": null,
+        "expected_disposition": null,
+        "reason": null
+      },
+      "reviewer": null,
+      "reviewed_at": null,
+      "provenance": null
+    },
+    {
+      "id": "itm-d7c3d74a0439",
+      "request_digest": "36e996375db9eb8d1bb794459694f266607eaca64304218505630c4db7c89ae4",
+      "question_index": 0,
+      "question": "What further evidence, if any, would clarify the selected claims and their limitations?",
+      "scored_claims": [
+        {
+          "claim_id": "c1",
+          "evidence": [
+            {
+              "end": 1489,
+              "material_id": "mat-e0471e7f635e5d75e96b25bdee5fe807",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "Human preferences change over time: an established preference may remain valid over time, become uncertain as context shifts, or be explicitly revised. Effective personalization requires conversational AI to adapt its response strategy to evolving preferences rather than relying on passive memory retrieval. We formalize this capability as adaptive personalization under epistemic uncertainty. A human preference study further confirms that people favor state-contingent response strategies as preference uncertainty changes. To evaluate whether language models mirror this adaptation, we create a multilingual benchmark spanning 250 personas, 5 languages, and 25K conversational turns that decouples strategy selection from response execution. Across eight closed- and open-weight models, we uncover a recognition-generation gap: models reliably identify appropriate strategies when selecting among candidate options, but collapse during open-ended generation, suffering a 35-46% drop in strategy calibration. Crucially, this failure is systematic: models default to exploit-first behavior, over-relying on existing preferences regardless of preference epistemic uncertainty. We show this failure is addressable: while prompting interventions fail, targeted training that supervises models' internal strategy representations toward state-conditional human preferences narrows the user acceptability generalization gap by a third on out-of-distribution personas and conversational styles.",
+              "scope": "abstract",
+              "source_hash": "sha256:97289b875c0005e0a762b90ffc61a53dcdaf28cbeca89decf03bba9c572e1df8",
+              "span_id": "span-d9f8a5e2f7e5b553a02e0ed0c0a8f1fb",
+              "start": 0,
+              "version_id": "arxiv:2610.40930:v1:metadata-b45059ef8928ae02",
+              "work_id": "arxiv:2610.40930"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "The paper formalizes 'adaptive personalization under epistemic uncertainty': preferences may remain valid, become uncertain as context shifts, or be explicitly revised, so conversational AI should adapt its response strategy rather than rely on passive memory retrieval."
+        }
+      ],
+      "remaining_prose": {
+        "gaps": [
+          "Inspect the original source and its evaluation."
+        ],
+        "questions": [
+          "What further evidence, if any, would clarify the selected claims and their limitations?"
+        ],
+        "proposal": "Inspect source scope before drawing conclusions.",
+        "abstention": null
+      },
+      "judgments": {
+        "premise": null,
+        "expected_disposition": null,
+        "reason": null
+      },
+      "reviewer": null,
+      "reviewed_at": null,
+      "provenance": null
+    }
+  ]
+}

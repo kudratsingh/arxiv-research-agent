@@ -9,7 +9,7 @@ export VENV_PYTHON=/Users/kudratsingh/Machine-Learning-Projects/arxiv-venv-lock/
 export PYTHONPATH=/private/tmp/arxiv-qualification-schema-deps:$PWD
 export ANTHROPIC_API_KEY=local-preview-disabled
 export WORKSPACE_D5_OFFLINE=1
-export WORKSPACE_TEST_POSTGRES_URL=postgresql://workspace:workspace-local-only@127.0.0.1:15488/workspace_d5_tests
+export WORKSPACE_TEST_POSTGRES_URL=postgresql://workspace: workspace-local-only@127.0.0.1: 15488/workspace_d5_tests
 $VENV_PYTHON -c 'import src; print(src.__file__)'
 $VENV_PYTHON -m pytest -q tests/test_workspace_d5_procedural_intents.py tests/test_calibration_question_premises.py
 make test-cov-diff VENV_PYTHON="$VENV_PYTHON"
@@ -24,8 +24,16 @@ The checked-in test salts are explicitly synthetic, never live blinding keys.
 Choose a new output directory and preserve the original packet:
 
 ```sh
+# Keep fresh calibration and regressions separate. This prepares one fresh set.
+$VENV_PYTHON - <<'PYCODE'
+from pathlib import Path
+from src.workspace.d5_benchmark import read, write
+seeds = read(Path("tests/fixtures/d5/question-premises/seeds.json.gz"))["seeds"]
+fresh = [s for s in seeds if s["cohort"] == "fresh_calibration"]
+write(Path("outputs/d5/premise-calibration/smallest-seeds.json"), {"seeds": fresh[: 1]})
+PYCODE
 $VENV_PYTHON -m src.calibration.question_premises build \
-  --seeds tests/fixtures/d5/question-premises/seeds.json.gz \
+  --seeds outputs/d5/premise-calibration/smallest-seeds.json \
   --seed 7319 --salt-file outputs/d5/premise-calibration/evaluator-salt.txt \
   --out outputs/d5/premise-calibration/rebuilt-new
 # Reviewer labels the exported worksheet BEFORE seeing checker results.
@@ -56,7 +64,7 @@ Freeze/export the fresh generation cohort only in a **new empty** named D5 DB:
 ```sh
 # D5_POSTGRES_URL must name a newly created disposable workspace_d5_* database
 # on the isolated15488 service; never the active validation ledger.
-$VENV_PYTHON - --snapshot outputs/d5/procedural-v8/d5-replay-inputs-v8.json.gz \
+$VENV_PYTHON - --snapshot planning/14-explore-and-research-modes/d5/d5-replay-inputs-v8.json.gz \
   --packet outputs/d5/procedural-v8/new-packet.json.gz \
   --out outputs/d5/procedural-v8/new-freeze \
   < planning/14-explore-and-research-modes/d5/tools/prepare-procedural-v8.py
@@ -65,11 +73,11 @@ $VENV_PYTHON - --snapshot outputs/d5/procedural-v8/d5-replay-inputs-v8.json.gz \
 This freezes new question/source partitions before outputs; it creates no
 operative authorization. Larger cap policy support and external approval remain
 prerequisites for any complete new paid qualification schedule. Current v7r2
-remains stopped at3/8, including all original failures, receipts and human blanks.
+remains stopped at 3/8, including all original failures, receipts and human blanks.
 
 The private evaluator key is an annotation proposal only. Never copy its values
 into the real blank reviewer worksheet. For error-direction software evidence,
 use the clearly labelled synthetic test/demo results, which keep qualification
-onHOLD. The actual paid-calibration proposal binds exactly four fresh opaque IDs
+on HOLD. The actual paid-calibration proposal binds exactly four fresh opaque IDs
 and requires independently recorded prereviews and a new external scope. No
 approval, cap amendment or dispatch is created by exporting these files.

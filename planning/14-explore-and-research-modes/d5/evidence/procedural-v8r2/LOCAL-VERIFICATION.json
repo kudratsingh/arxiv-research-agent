@@ -1,0 +1,57 @@
+{
+  "application_commit": "691398bf7ca157742b36350227941f87cc350c97",
+  "verified_at": "2026-11-08T06:07:07.331958+00:00",
+  "full_python_summary": "6778 passed, 54 skipped, 53 deselected in 857.15s (0:14:17)",
+  "total_coverage_percent": 94.56,
+  "patch_coverage_percent": 97,
+  "focused_repair_calibration_tests": 55,
+  "workflow_e2e_tests": 53,
+  "documentation_tests": 95,
+  "strict_mypy_source_files": 195,
+  "registry_objects": 260,
+  "registry_mismatches": 0,
+  "research_simulation": "20/20; USD0",
+  "new_provider_Messages": 0,
+  "new_count_contacts": 0,
+  "new_spend_usd": "0",
+  "human_labels": null,
+  "evidence_logs": {
+    "test-cov-diff-owners-final.log": {
+      "sha256": "ef2a0d704134451e05809016c764dba9498a6a061b0b6eb9e810092af63df53d",
+      "bytes": 12051
+    },
+    "owners-focused.log": {
+      "sha256": "125ca239f28f31d202d4085171a4267e8c6acd60b0139de8a562f9f47d3ed5da",
+      "bytes": 100
+    },
+    "e2e-owners-final.log": {
+      "sha256": "0c6c691d24044dfe5622aa3150c03eb368687c5800dfeea53b44eb15013f1ecc",
+      "bytes": 8423
+    },
+    "docs-final.log": {
+      "sha256": "517d81708028da416533bfcfb21596c5dad66e2dbd5b635fa6bd516113550543",
+      "bytes": 180
+    },
+    "mypy-owners.log": {
+      "sha256": "a26123bd78884ea2ed677ffaab1876632f65611f63eae2bf70d9add013ad963f",
+      "bytes": 45
+    },
+    "ruff-final.log": {
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+      "bytes": 19
+    },
+    "registry-parity.log": {
+      "sha256": "ffe3a2763694f735d44ac4b58fee474f7091fa78a56db0f351933f7a88375886",
+      "bytes": 503
+    },
+    "simulation.log": {
+      "sha256": "e54a35ef5db308d6029ae091fee8e0ca6d8c95fefa3f140e131130ef65f6f6ea",
+      "bytes": 66270
+    },
+    "preservation-final.log": {
+      "sha256": "929dc0fc3353d2c55a9a1ade76abb4781e6d7dc70b077e98adfb8e0f533ff5c4",
+      "bytes": 779
+    }
+  },
+  "remote_CI": "Not claimed by local results. Final exact-head run is recorded separately after branch publication."
+}

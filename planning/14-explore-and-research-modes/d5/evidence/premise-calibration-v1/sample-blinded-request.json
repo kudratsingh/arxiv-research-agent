@@ -1,0 +1,149 @@
+{
+  "id": "itm-adfe5bd826ca",
+  "body": {
+    "model": "claude-opus-5-5",
+    "max_tokens": 3200,
+    "output_config": {
+      "effort": "high",
+      "format": {
+        "type": "json_schema",
+        "schema": {
+          "$defs": {
+            "ProseFinding": {
+              "type": "object",
+              "title": "ProseFinding",
+              "properties": {
+                "field": {
+                  "type": "string",
+                  "enum": [
+                    "background",
+                    "assumptions",
+                    "comparison",
+                    "gaps",
+                    "questions",
+                    "proposal",
+                    "abstention"
+                  ],
+                  "title": "Field"
+                },
+                "index": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "description": "{maximum: 2, minimum: 0}"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Index"
+                },
+                "reason": {
+                  "type": "string",
+                  "title": "Reason",
+                  "description": "{maxLength: 240, minLength: 1}"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "field",
+                "index",
+                "reason"
+              ]
+            },
+            "SupportDecision": {
+              "type": "string",
+              "enum": [
+                "supported",
+                "unsupported",
+                "abstain"
+              ],
+              "title": "SupportDecision"
+            },
+            "Verdict": {
+              "type": "object",
+              "title": "Verdict",
+              "properties": {
+                "claim_id": {
+                  "type": "string",
+                  "title": "Claim Id",
+                  "description": "{maxLength: 120, minLength: 1}"
+                },
+                "input_digest": {
+                  "type": "string",
+                  "title": "Input Digest"
+                },
+                "decision": {
+                  "$ref": "#/$defs/SupportDecision"
+                },
+                "reason": {
+                  "type": "string",
+                  "title": "Reason",
+                  "description": "{maxLength: 240, minLength: 1}"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "claim_id",
+                "input_digest",
+                "decision",
+                "reason"
+              ]
+            }
+          },
+          "type": "object",
+          "description": "Local semantic limits remain mandatory: at most 8000 UTF-8 response\nbytes; each claim input digest and ID must exactly match the supplied\nclaim_inputs, with no missing/duplicate/unknown verdicts. Prose locations\nmust exist and be nonblank. List fields use an existing index 0..2;\nscalars require null. No duplicate locations. procedural_only requires\nno findings; unscored_factual_content/abstain require located findings.\nReasons are 1..240 Unicode characters; at most six claim verdicts and\nten prose findings. Identity and quotes alone are never semantic support.",
+          "title": "Checks",
+          "properties": {
+            "checks": {
+              "type": "array",
+              "title": "Checks",
+              "items": {
+                "$ref": "#/$defs/Verdict"
+              },
+              "description": "{maxItems: 6}"
+            },
+            "prose_review": {
+              "type": "string",
+              "enum": [
+                "procedural_only",
+                "unscored_factual_content",
+                "abstain"
+              ],
+              "title": "Prose Review"
+            },
+            "prose_findings": {
+              "type": "array",
+              "title": "Prose Findings",
+              "items": {
+                "$ref": "#/$defs/ProseFinding"
+              },
+              "description": "{maxItems: 10}"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "checks",
+            "prose_review",
+            "prose_findings"
+          ]
+        }
+      }
+    },
+    "system": "Check every entire claim against only its exact cited passages and scope, including qualifications and counterevidence. Citation identity or quotation overlap is not support. Unsupported for contradiction; abstain for insufficient evidence, scope mismatch or missing qualifications. Review all remaining prose: gaps, questions, proposal and abstention; questions can hide presupposed findings. Every scientific background, assumption, limitation and comparison must be a scored claim referenced by ID. Mark residual factual prose unscored_factual_content and identify every flagged field in prose_findings (field, zero-based index for lists or null for a scalar, reason). A label of unverified is no exemption. procedural_only requires empty prose_findings; uncertain prose requires abstain with a field finding. Copy each claim input digest; never answer the task.",
+    "messages": [
+      {
+        "role": "user",
+        "content": "{\"claim_inputs\":[{\"claim_id\":\"c1\",\"input_digest\":\"sha256:91e1f21405ba6e908f2852e8cb6ec99625b788983cbd35ff674d8d1264a89bcc\"}],\"draft\":{\"claims\":[{\"claim_id\":\"c1\",\"evidence\":[{\"end\":1532,\"material_id\":\"mat-e4adcf0135fbaa3982584da87b0040b2\",\"page\":null,\"parser_revision\":\"workspace-plain-text-v1\",\"quote\":\"Test-time scaling (TTS) improves large language model agents by sampling and selecting among multiple candidate trajectories, but common realizations assume that these trajectories can be executed in parallel. This assumption breaks in realistic deployments, where enterprise workspaces and cloud services are shared and persistent, costly or infeasible to replicate, and actions may introduce irreversible side effects or cross-trajectory interference. Existing generative world models avoid direct execution, but typically compress environment state into a single prompt, limiting their ability to reliably simulate transitions under partial observability. Instead, we introduce Agentic World Modeling (AWM), which reformulates next-observation prediction as a multi-turn evidence-acquisition task. For each hypothetical action, an agentic simulator adaptively queries the real environment through safe read-only interfaces, reasons over the returned evidence, and uses executable computation to construct the resulting observation without mutating shared state. Integrated with trajectory-level TTS, AWM enables parallel exploration over a single shared environment. Across $\\\\tau$-bench, AppWorld, and OfficeBench, AWM outperforms a single-shot simulation baseline by 40.07% on average, and surpasses a trained world-model baseline by 12.36% on average. These results establish interactive, read-grounded simulation as a practical foundation for safe and scalable agentic test-time scaling in shared, non-resettable environments.\",\"scope\":\"abstract\",\"source_hash\":\"sha256:6fdc056b308bdc6e3849f19ff0e173a15b4898ca6f86670bc02403c17bf5fbf0\",\"span_id\":\"span-07767192aeb610b6e7b7d2275d6363ae\",\"start\":0,\"version_id\":\"arxiv:2610.40927:v1:metadata-b09108e19893972e\",\"work_id\":\"arxiv:2610.40927\"}],\"inference_label\":null,\"kind\":\"factual\",\"required_scope\":\"abstract\",\"required_section\":null,\"text\":\"Trajectory-level test-time scaling improves LLM agents by sampling and selecting among multiple candidate trajectories, but common realizations assume the trajectories can be executed in parallel.\"}]},\"phase\":\"check\",\"role\":\"checker\",\"sealed_request\":{\"private_context\":false,\"schema_revision\":\"workspace-assistance-visible-bounds-v5\"},\"unscored_prose\":{\"abstention\":null,\"gaps\":[\"Inspect the original source and its evaluation.\"],\"proposal\":\"Inspect source scope before drawing conclusions.\",\"questions\":[\"Given cited and scored claim c1, what qualifications apply, if any?\"]}}"
+      }
+    ],
+    "thinking": {
+      "type": "adaptive"
+    }
+  },
+  "request_digest": "56321fcdebdf79e7b6792146b6752564192e334f3db0ac1716baf78592a10900",
+  "target": {
+    "field": "questions",
+    "index": 0
+  }
+}

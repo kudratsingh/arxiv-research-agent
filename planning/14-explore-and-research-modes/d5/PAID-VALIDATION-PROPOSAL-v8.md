@@ -7,11 +7,11 @@ generation, recurrence and notifications remain disabled.
 ## Preserved programme baseline
 
 Read-only active ledger: `workspace_d5_prose_v6_validation`, programme
-`research-evaluation-20261105-v1`. Baseline16 funded jobs,31 Messages,50 counts,
-USD0.825065 estimated (workflow0.285853/checker0.539212),pendingunknown0. Current
-active cap24 jobs,80 Messages,80 counts,USD10,concurrency1. All predecessor
+`research-evaluation-20261105-v1`. Baseline16 funded jobs, 31 Messages, 50 counts,
+USD 0.825065 estimated (workflow0.285853/checker0.539212), pending and unknown liability: 0. Current
+active cap24 jobs, 80 Messages, 80 counts, USD 10, concurrency1. All predecessor
 amendments/receipts and stopped scopes remain intact. Latest possible expiry is
-**2026-11-14T07:24:01Z** (November13,11:24:01PM PST). No automatic extension.
+**2026-11-14T07:24:01Z** (November 13, 11: 24: 01PM PST). No automatic extension.
 
 v7r2 completion remains3/8, with one failed and four unrun cases. Original
 results are diagnostic evidence. They cannot be fresh validation or support
@@ -35,33 +35,33 @@ four-count measurement pass is unnecessary.
 | New full schedule |14|44|45|5.10|
 | Cumulative worst case |30|75|95|Historical spend + new usage|
 
-**The full schedule cannot fit the active24-job/80-count caps.** It requires a
-separately approved programme amendment to at least30 jobs and95 counts, keeping
-80 Messages andUSD10 unchanged. Without preliminary A,94 counts would suffice,
+**The full schedule cannot fit the active 24-job/80-count caps.** It requires a
+separately approved programme amendment to at least 30 jobs and 95 counts, keeping
+80 Messages and USD 10 unchanged. Without preliminary A, 94 counts would suffice,
 but that is a separate staging decision. Do not activate either limit through a
 packet or synthetic authorization. The current amendment mechanism does not
 change count ceilings; a separately reviewed implementation/approval is needed
 before a full-schedule paid authorization could be runnable.
 
 The smallest next paid step is A, followed (only after separate review/approval)
-by B. A+B fits existing limits: at most2 jobs/8 Messages/9counts/USD0.90 new,
-reaching18jobs/39Messages/59counts/USD1.725065 worst reservation-inclusive total.
+by B. A+B fits existing limits: at most 2 jobs/8 Messages/9 counts/USD 0.90 new,
+reaching 18 jobs/39 Messages/59 counts/USD 1.725065 worst reservation-inclusive total.
 Successful development does not authorize C or D and does not qualify a checker.
 Do not spend remaining budget merely to fill headroom.
 
 ## Routes, cost bounds and uncertainty
 
-Keep sealed Sonnet5.5 between-tools/medium,4000 output tokens for drafts/repairs;
-Opus5.5 adaptive/high,3200 output tokens including thinking for checks/rechecks
+Keep sealed Sonnet5.5 between-tools/medium, 4000 output tokens for drafts/repairs;
+Opus5.5 adaptive/high, 3200 output tokens including thinking for checks/rechecks
 and probes. Raw input cap20000; provider-count admission allowance16000. One job
 and one contact at a time; at most one repair and mandatory recheck. No automatic
 retry, model substitution, source expansion or alternate identity after failure.
 
-At sealed standard estimates Sonnet input/outputUSD2/10 per million, OpusUSD4/20,
-a four-stage workflow usage bound isUSD0.448; a probe bound isUSD0.144.
-Reservations remainUSD0.45/workflow andUSD0.15/probe. New full usage boundUSD5.056;
-conservative reservationsUSD5.10 + historicalUSD0.825065 + unchangedUSD1 uncertainty
-buffer = **USD6.925065**, belowUSD10. These are arithmetic estimates, not new token
+At sealed standard estimates Sonnet input/output USD 2/10 per million, Opus USD 4/20,
+a four-stage workflow usage bound is USD 0.448; a probe bound is USD 0.144.
+Reservations remain USD 0.45/workflow and USD 0.15/probe. New full usage bound USD 5.056;
+conservative reservations USD 5.10 + historical USD 0.825065 + unchanged USD 1 uncertainty
+buffer = **USD 6.925065**, below USD 10. These are arithmetic estimates, not new token
 measurements, invoices or renewed pricing approval. Pricing source:
 https://platform.claude.com/docs/en/about-claude/pricing . Recheck documentation
 and exact route compatibility before any separately approved dispatch; drift
@@ -75,12 +75,12 @@ before any new held-out output. Exclude v7r2 selected versions and retain its
 results separately. The pool is retained real metadata/abstracts with extraction
 limits; it is not fresh acquisition or comprehensive literature coverage.
 
-Seven potentially answerable cases permit up to42 claim slots (6 each);20 unique
+Seven potentially answerable cases permit up to42 claim slots (6 each); 20 unique
 fully reviewed facts are feasible but not guaranteed. The eighth case can and
 should abstain on unsupported deployment conclusions. Four D batches expose20
 probe items; they are proposed cases, never human truth labels. Keep8/8 completion,
 20 factual/20 decisive-probe review minimums and zero observed false passes. Do
-not add cases or relax thresholds after results. Missing labels remainHOLD;
+not add cases or relax thresholds after results. Missing labels remain HOLD;
 known failures take precedence. Small correlated samples do not statistically
 qualify the checker or establish personal daily usefulness.
 
@@ -93,8 +93,8 @@ that scope. A completed metered response remains charged even if rejected.
 
 ## Approval window and separate decisions
 
-Any future stage grant should expire at the earlier of24hours after that owner's
-approval and2026-11-14T07:24:01Z. No grant or amendment is activated by this file.
+Any future stage grant should expire at the earlier of 24 hours after that owner's
+approval and 2026-11-14T07:24:01Z. No grant or amendment is activated by this file.
 If time is insufficient for human review or the programme expires, stop and
 return a separately scoped renewal proposal rather than altering receipts.
 
@@ -105,11 +105,22 @@ without activating the full cap extension. No stopped v7r2 identity is resumed.
 
 ## Calibration is a separate decision, not free overhead
 
-The smallest proposed follow-up-premise calibration adds4checker-only jobs,
-4Messages,4paired counts andUSD0.60reservation. If approved/executed before this
-full qualification, the combined worst-case programme totals become34jobs,
-79Messages,99counts andUSD7.525065including history/reservations/unchangedbuffer.
+The smallest proposed follow-up-premise calibration adds4 checker-only jobs,
+4 Messages, 4 paired counts and USD 0.60 reservation. If approved/executed before this
+full qualification, the combined worst-case programme totals become34 jobs,
+79 Messages, 99 counts and USD 7.525065 including history/reservations/unchanged buffer.
 Recompute from actual receipts; do not reset the baseline or hide these calls as
 unfunded helpers. The cap30/count95 figures above apply only if no calibration
 calls have occurred. The small calibration does not replace either development
 case or the20-fact/20-probe qualification minima.
+
+## Frozen generation candidate
+
+Application `691398bf7ca157742b36350227941f87cc350c97`; prospective packet
+`1037d63e7c1a68a6f6a8c77d2c59d32ac8bb682cebf329485d1463551847ef2a`.
+[Packet](d5-system-validation-v8r2.json.gz), [source/profile/history snapshot](d5-replay-inputs-v8.json.gz),
+[freeze receipt](evidence/procedural-v8r2/FREEZE-RECEIPT.json),
+[old-measurement nonreuse](evidence/procedural-v8r2/MEASUREMENT-NONREUSE.json),
+[capacity arithmetic](evidence/procedural-v8r2/CONTINUATION-BUDGET.json).
+This is a generation proposal distinct from the4-probe premise calibration;
+approved=false, no stage grants or new live principal/database handoff.

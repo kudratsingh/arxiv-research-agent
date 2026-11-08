@@ -1,0 +1,1 @@
+This unapproved candidate bound application06d83d4a. Use ../premise-calibration-v2/ after the fresh-principal readiness fix. No contacts or authorizations occurred for either candidate. Original files retained.

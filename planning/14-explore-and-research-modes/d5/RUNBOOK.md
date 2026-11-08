@@ -1,4 +1,6 @@
-# D5 v7r2 offline verification and future operator runbook
+# D5 v7r2 historical operator runbook
+
+**STOPPED:** v7r2 Stage C remains 3/8. The commands below are historical, not permission to resume. Use the [current offline repair/calibration runbook](RUNBOOK-v8.md) and [separate review proposal](QUESTION-PREMISE-CALIBRATION.md). No new authority is recorded by this update.
 
 Application `f430f2d3e7a3a7ae78cacdf92855b8b3294d3c12`; packet `cf6b9e4c1e49d0192467bd28d0bae00eb1d05cf85bb850f904902840937fc871`. [Proposal and separate decisions](PAID-VALIDATION-PROPOSAL.md), [contract/limits](RESPONSE-REPAIR-v7.md). [Historical v6 instructions](RUNBOOK-v6.md) require their old source checkout and grant; they are not current permission.
 

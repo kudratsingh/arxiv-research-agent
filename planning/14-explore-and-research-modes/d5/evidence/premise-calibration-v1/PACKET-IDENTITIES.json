@@ -1,0 +1,71 @@
+{
+  "application_commit": "06d83d4adeffd210d0acd374614ff5114877bc0a",
+  "created_at": "2026-11-08T05:38:34.818418+00:00",
+  "packets": {
+    "regression": {
+      "packet_digest": "c82de9985090b654a16e46f050a2d3c1a63e688e779181227a3a2cafa92feafc",
+      "probes": 12,
+      "ids": [
+        "itm-aad2b3c96153",
+        "itm-3b05b4fc59e5",
+        "itm-06293c4e0303",
+        "itm-71effba1b007",
+        "itm-fa73602a213a",
+        "itm-da3a3844988a",
+        "itm-b087e910528f",
+        "itm-58268cc1e447",
+        "itm-873949c81164",
+        "itm-8e1003051114",
+        "itm-79aab55f7d14",
+        "itm-2d7bd09235fb"
+      ]
+    },
+    "fresh": {
+      "packet_digest": "26240f0b16d650b7f213d1f7f2dbfa5fb798ff0536ad23be1c9c641caf71ca70",
+      "probes": 16,
+      "ids": [
+        "itm-d155676d4ea3",
+        "itm-3e57cbce0c99",
+        "itm-dc4af27afbd0",
+        "itm-c74a74807abc",
+        "itm-ca672f861ed7",
+        "itm-dbdb54c9b53f",
+        "itm-b1f6af96d0f9",
+        "itm-af1bb9563aca",
+        "itm-adfe5bd826ca",
+        "itm-672905e017b0",
+        "itm-45294fefc14b",
+        "itm-3ba093fbc15c",
+        "itm-6d4a9c77754d",
+        "itm-50f44410c2f8",
+        "itm-379e318ba00f",
+        "itm-d7c3d74a0439"
+      ]
+    },
+    "smallest": {
+      "packet_digest": "ca2a3ccd1a5bd25b2c6a97063263e78b64d00770edb322a57645791bed4981ce",
+      "probes": 4,
+      "ids": [
+        "itm-adfe5bd826ca",
+        "itm-45294fefc14b",
+        "itm-af1bb9563aca",
+        "itm-379e318ba00f"
+      ]
+    }
+  },
+  "ledger_baseline": {
+    "programme_jobs": 16,
+    "Messages": 31,
+    "counts": 50,
+    "known_estimated_usd": "0.825065",
+    "pending_usd": "0",
+    "unknown_usd": "0"
+  },
+  "new_provider_Messages": 0,
+  "new_count_contacts": 0,
+  "new_spend_usd": "0",
+  "human_labels": null,
+  "approval_recorded": false,
+  "v7r2_stage_C": "3/8; stopped scope and original receipts unchanged",
+  "evaluator_keys": "Local ignored outputs only; not part of checker payload or this evidence package"
+}

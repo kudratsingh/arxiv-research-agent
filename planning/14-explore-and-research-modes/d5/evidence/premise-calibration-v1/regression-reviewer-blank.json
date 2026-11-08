@@ -1,0 +1,1931 @@
+{
+  "revision": "d5-followup-premise-calibration-v1",
+  "packet_digest": "c82de9985090b654a16e46f050a2d3c1a63e688e779181227a3a2cafa92feafc",
+  "instructions": "Judge premise and expected disposition BEFORE viewing any checker verdict. Exact retained passages are inside scored_claims.evidence. These are correlated matched sets, not independent claim samples. Blank means unreviewed.",
+  "items": [
+    {
+      "id": "itm-aad2b3c96153",
+      "request_digest": "0f5b31a9ff7663d3e8dffefc227c38d7cba5546bda11b368d00581a512fdf6fe",
+      "question_index": 0,
+      "question": "What further evidence, if any, would clarify the selected claims and their limitations?",
+      "scored_claims": [
+        {
+          "claim_id": "c1",
+          "evidence": [
+            {
+              "end": 3379,
+              "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+              "page": 6,
+              "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+              "quote": "B) While interleaving reasoning, action and observation steps improves ReAct’s grounded-\nness and trustworthiness, such a structural constraint also reduces its ﬂexibility in formulating\nreasoning steps, leading to more reasoning error rate than CoT. we note that there is one frequent\nerror pattern speciﬁc to ReAct, in which the model repetitively generates the previous thoughts and\nactions, and we categorize it as part of “reasoning error” as the model fails to reason about what the\nproper next action to take and jump out of the loop4.\n\n  C) For ReAct, successfully retrieving informative knowledge via search is critical. Non-\ninformative search, which counts for 23% of the error cases, derails the model reasoning and gives\nit a hard time to recover and reformulate thoughts. This is perhaps an expected trade-off between\nfactuality and ﬂexibility, which motivates our proposed strategies of combining two methods.\n\nWe provide examples for each success and failure modes in Appendix E.1. We also ﬁnd some\nHotpotQA questions may contain outdated answer labels, see Figure 4 for example.\n\nReAct + CoT-SC perform best for prompting LLMs  Also shown in Table 1, the best prompting\nmethod on HotpotQA and Fever are ReAct →CoT-SC and CoT-SC →ReAct respectively.\nFurthermore, Figure 2 shows how different methods perform with respect to the number of CoT-SC\nsamples used.",
+              "scope": "excerpt",
+              "source_hash": "sha256:f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69",
+              "span_id": "span-b615625987cdbfe74682109ab6dc0e19",
+              "start": 2005,
+              "version_id": "arxiv:2210.03629:v3",
+              "work_id": "arxiv:2210.03629"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "excerpt",
+          "required_section": null,
+          "text": "The excerpt states that interleaving reasoning, action and observation steps improves ReAct's groundedness and trustworthiness."
+        },
+        {
+          "claim_id": "c2",
+          "evidence": [
+            {
+              "end": 3379,
+              "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+              "page": 6,
+              "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+              "quote": "B) While interleaving reasoning, action and observation steps improves ReAct’s grounded-\nness and trustworthiness, such a structural constraint also reduces its ﬂexibility in formulating\nreasoning steps, leading to more reasoning error rate than CoT. we note that there is one frequent\nerror pattern speciﬁc to ReAct, in which the model repetitively generates the previous thoughts and\nactions, and we categorize it as part of “reasoning error” as the model fails to reason about what the\nproper next action to take and jump out of the loop4.\n\n  C) For ReAct, successfully retrieving informative knowledge via search is critical. Non-\ninformative search, which counts for 23% of the error cases, derails the model reasoning and gives\nit a hard time to recover and reformulate thoughts. This is perhaps an expected trade-off between\nfactuality and ﬂexibility, which motivates our proposed strategies of combining two methods.\n\nWe provide examples for each success and failure modes in Appendix E.1. We also ﬁnd some\nHotpotQA questions may contain outdated answer labels, see Figure 4 for example.\n\nReAct + CoT-SC perform best for prompting LLMs  Also shown in Table 1, the best prompting\nmethod on HotpotQA and Fever are ReAct →CoT-SC and CoT-SC →ReAct respectively.\nFurthermore, Figure 2 shows how different methods perform with respect to the number of CoT-SC\nsamples used.",
+              "scope": "excerpt",
+              "source_hash": "sha256:f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69",
+              "span_id": "span-b615625987cdbfe74682109ab6dc0e19",
+              "start": 2005,
+              "version_id": "arxiv:2210.03629:v3",
+              "work_id": "arxiv:2210.03629"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "excerpt",
+          "required_section": null,
+          "text": "The excerpt states that this structural constraint also reduces flexibility in formulating reasoning steps, leading to a higher reasoning error rate than CoT."
+        },
+        {
+          "claim_id": "c3",
+          "evidence": [
+            {
+              "end": 3379,
+              "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+              "page": 6,
+              "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+              "quote": "B) While interleaving reasoning, action and observation steps improves ReAct’s grounded-\nness and trustworthiness, such a structural constraint also reduces its ﬂexibility in formulating\nreasoning steps, leading to more reasoning error rate than CoT. we note that there is one frequent\nerror pattern speciﬁc to ReAct, in which the model repetitively generates the previous thoughts and\nactions, and we categorize it as part of “reasoning error” as the model fails to reason about what the\nproper next action to take and jump out of the loop4.\n\n  C) For ReAct, successfully retrieving informative knowledge via search is critical. Non-\ninformative search, which counts for 23% of the error cases, derails the model reasoning and gives\nit a hard time to recover and reformulate thoughts. This is perhaps an expected trade-off between\nfactuality and ﬂexibility, which motivates our proposed strategies of combining two methods.\n\nWe provide examples for each success and failure modes in Appendix E.1. We also ﬁnd some\nHotpotQA questions may contain outdated answer labels, see Figure 4 for example.\n\nReAct + CoT-SC perform best for prompting LLMs  Also shown in Table 1, the best prompting\nmethod on HotpotQA and Fever are ReAct →CoT-SC and CoT-SC →ReAct respectively.\nFurthermore, Figure 2 shows how different methods perform with respect to the number of CoT-SC\nsamples used.",
+              "scope": "excerpt",
+              "source_hash": "sha256:f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69",
+              "span_id": "span-b615625987cdbfe74682109ab6dc0e19",
+              "start": 2005,
+              "version_id": "arxiv:2210.03629:v3",
+              "work_id": "arxiv:2210.03629"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "excerpt",
+          "required_section": null,
+          "text": "The excerpt describes a frequent ReAct-specific error pattern: repeatedly generating previous thoughts and actions, categorized as a reasoning error because the model fails to pick the next action and exit the loop."
+        },
+        {
+          "claim_id": "c4",
+          "evidence": [
+            {
+              "end": 3379,
+              "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+              "page": 6,
+              "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+              "quote": "B) While interleaving reasoning, action and observation steps improves ReAct’s grounded-\nness and trustworthiness, such a structural constraint also reduces its ﬂexibility in formulating\nreasoning steps, leading to more reasoning error rate than CoT. we note that there is one frequent\nerror pattern speciﬁc to ReAct, in which the model repetitively generates the previous thoughts and\nactions, and we categorize it as part of “reasoning error” as the model fails to reason about what the\nproper next action to take and jump out of the loop4.\n\n  C) For ReAct, successfully retrieving informative knowledge via search is critical. Non-\ninformative search, which counts for 23% of the error cases, derails the model reasoning and gives\nit a hard time to recover and reformulate thoughts. This is perhaps an expected trade-off between\nfactuality and ﬂexibility, which motivates our proposed strategies of combining two methods.\n\nWe provide examples for each success and failure modes in Appendix E.1. We also ﬁnd some\nHotpotQA questions may contain outdated answer labels, see Figure 4 for example.\n\nReAct + CoT-SC perform best for prompting LLMs  Also shown in Table 1, the best prompting\nmethod on HotpotQA and Fever are ReAct →CoT-SC and CoT-SC →ReAct respectively.\nFurthermore, Figure 2 shows how different methods perform with respect to the number of CoT-SC\nsamples used.",
+              "scope": "excerpt",
+              "source_hash": "sha256:f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69",
+              "span_id": "span-b615625987cdbfe74682109ab6dc0e19",
+              "start": 2005,
+              "version_id": "arxiv:2210.03629:v3",
+              "work_id": "arxiv:2210.03629"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "excerpt",
+          "required_section": null,
+          "text": "The excerpt states that successfully retrieving informative knowledge via search is critical for ReAct, and that non-informative search accounts for 23% of error cases and derails its reasoning."
+        },
+        {
+          "claim_id": "c5",
+          "evidence": [
+            {
+              "end": 3379,
+              "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+              "page": 6,
+              "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+              "quote": "B) While interleaving reasoning, action and observation steps improves ReAct’s grounded-\nness and trustworthiness, such a structural constraint also reduces its ﬂexibility in formulating\nreasoning steps, leading to more reasoning error rate than CoT. we note that there is one frequent\nerror pattern speciﬁc to ReAct, in which the model repetitively generates the previous thoughts and\nactions, and we categorize it as part of “reasoning error” as the model fails to reason about what the\nproper next action to take and jump out of the loop4.\n\n  C) For ReAct, successfully retrieving informative knowledge via search is critical. Non-\ninformative search, which counts for 23% of the error cases, derails the model reasoning and gives\nit a hard time to recover and reformulate thoughts. This is perhaps an expected trade-off between\nfactuality and ﬂexibility, which motivates our proposed strategies of combining two methods.\n\nWe provide examples for each success and failure modes in Appendix E.1. We also ﬁnd some\nHotpotQA questions may contain outdated answer labels, see Figure 4 for example.\n\nReAct + CoT-SC perform best for prompting LLMs  Also shown in Table 1, the best prompting\nmethod on HotpotQA and Fever are ReAct →CoT-SC and CoT-SC →ReAct respectively.\nFurthermore, Figure 2 shows how different methods perform with respect to the number of CoT-SC\nsamples used.",
+              "scope": "excerpt",
+              "source_hash": "sha256:f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69",
+              "span_id": "span-b615625987cdbfe74682109ab6dc0e19",
+              "start": 2005,
+              "version_id": "arxiv:2210.03629:v3",
+              "work_id": "arxiv:2210.03629"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "excerpt",
+          "required_section": null,
+          "text": "The excerpt says this is perhaps an expected trade-off between factuality and flexibility, which motivates the authors' strategies of combining two methods."
+        },
+        {
+          "claim_id": "c6",
+          "evidence": [
+            {
+              "end": 3379,
+              "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+              "page": 6,
+              "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+              "quote": "B) While interleaving reasoning, action and observation steps improves ReAct’s grounded-\nness and trustworthiness, such a structural constraint also reduces its ﬂexibility in formulating\nreasoning steps, leading to more reasoning error rate than CoT. we note that there is one frequent\nerror pattern speciﬁc to ReAct, in which the model repetitively generates the previous thoughts and\nactions, and we categorize it as part of “reasoning error” as the model fails to reason about what the\nproper next action to take and jump out of the loop4.\n\n  C) For ReAct, successfully retrieving informative knowledge via search is critical. Non-\ninformative search, which counts for 23% of the error cases, derails the model reasoning and gives\nit a hard time to recover and reformulate thoughts. This is perhaps an expected trade-off between\nfactuality and ﬂexibility, which motivates our proposed strategies of combining two methods.\n\nWe provide examples for each success and failure modes in Appendix E.1. We also ﬁnd some\nHotpotQA questions may contain outdated answer labels, see Figure 4 for example.\n\nReAct + CoT-SC perform best for prompting LLMs  Also shown in Table 1, the best prompting\nmethod on HotpotQA and Fever are ReAct →CoT-SC and CoT-SC →ReAct respectively.\nFurthermore, Figure 2 shows how different methods perform with respect to the number of CoT-SC\nsamples used.",
+              "scope": "excerpt",
+              "source_hash": "sha256:f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69",
+              "span_id": "span-b615625987cdbfe74682109ab6dc0e19",
+              "start": 2005,
+              "version_id": "arxiv:2210.03629:v3",
+              "work_id": "arxiv:2210.03629"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "excerpt",
+          "required_section": null,
+          "text": "The excerpt reports that the best prompting method on HotpotQA is ReAct→CoT-SC and on Fever is CoT-SC→ReAct."
+        }
+      ],
+      "remaining_prose": {
+        "abstention": null,
+        "gaps": [
+          "Request the full text to check how error categories and percentages were annotated and on what sample.",
+          "Request the results tables and figures to examine the reported method comparisons directly."
+        ],
+        "proposal": "Retrieve the full paper's error-analysis and results sections to verify annotation procedure, sample sizes and the combined-method comparisons.",
+        "questions": [
+          "What further evidence, if any, would clarify the selected claims and their limitations?",
+          "Does the excerpt's error analysis generalize beyond the tasks it covers?"
+        ]
+      },
+      "judgments": {
+        "premise": null,
+        "expected_disposition": null,
+        "reason": null
+      },
+      "reviewer": null,
+      "reviewed_at": null,
+      "provenance": null
+    },
+    {
+      "id": "itm-3b05b4fc59e5",
+      "request_digest": "ee82b59d6a29164194219cc8e058d9cc2c61587bc79be5d2bfd006787196a3e8",
+      "question_index": 0,
+      "question": "Given cited and scored claim c1, what qualifications apply, if any?",
+      "scored_claims": [
+        {
+          "claim_id": "c1",
+          "evidence": [
+            {
+              "end": 1516,
+              "material_id": "mat-1c5ecdf06434f317157b2e5fce1b3b0e",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "Expert scientists excel at weighing empirical findings from multiple sources that vary in both statistical reliability and epistemic relevance. To what extent are language models, which are increasingly driving autonomous discovery systems, capable of such evidence deliberation? We introduce EDB-Bio, a scientific reasoning benchmark curated from real-world data in three biological domains: drug-perturbation transcriptomics, CRISPR screens, and human genome-wide association studies (GWAS). Each of EDB-Bio's 96k episodes presents a sequence of experimental results from published studies and asks the model to predict the probability that a target hypothesis is true. Out-of-the-box, open-weight and frontier models alike demonstrate systematic underconfidence and attain Brier scores comparable to a trivial base-rate forecaster. Post-training against strictly proper scoring rules significantly improves both calibration and discrimination. This calibration pays off downstream: in a sequential experiment selection task, our Ibis0 model is 2.5 times more efficient than the best frontier model. Throughout, quantifying evidence weights as Bayes factors reveals how models update their beliefs over time, whether they agree with expert biologists on relevance, and where they exhibit inconsistencies and biases. Our work extends calibration training and uncertainty analysis to a realistic scientific forecasting setting with applications to human cancer biology. We release all code, data, and trained models.",
+              "scope": "abstract",
+              "source_hash": "sha256:b490f3ffa20059c827c7a1dde2576cc7857a3b26d3fe14489e47a2fc3f24f710",
+              "span_id": "span-9a92d1c10b9b4e9ee5a9185bd6bb4afd",
+              "start": 0,
+              "version_id": "arxiv:2610.41015:v1:metadata-9d3401c4c7c1014c",
+              "work_id": "arxiv:2610.41015"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "EDB-Bio is a scientific reasoning benchmark built from real-world data in three biological domains: drug-perturbation transcriptomics, CRISPR screens, and human GWAS."
+        },
+        {
+          "claim_id": "c2",
+          "evidence": [
+            {
+              "end": 1516,
+              "material_id": "mat-1c5ecdf06434f317157b2e5fce1b3b0e",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "Expert scientists excel at weighing empirical findings from multiple sources that vary in both statistical reliability and epistemic relevance. To what extent are language models, which are increasingly driving autonomous discovery systems, capable of such evidence deliberation? We introduce EDB-Bio, a scientific reasoning benchmark curated from real-world data in three biological domains: drug-perturbation transcriptomics, CRISPR screens, and human genome-wide association studies (GWAS). Each of EDB-Bio's 96k episodes presents a sequence of experimental results from published studies and asks the model to predict the probability that a target hypothesis is true. Out-of-the-box, open-weight and frontier models alike demonstrate systematic underconfidence and attain Brier scores comparable to a trivial base-rate forecaster. Post-training against strictly proper scoring rules significantly improves both calibration and discrimination. This calibration pays off downstream: in a sequential experiment selection task, our Ibis0 model is 2.5 times more efficient than the best frontier model. Throughout, quantifying evidence weights as Bayes factors reveals how models update their beliefs over time, whether they agree with expert biologists on relevance, and where they exhibit inconsistencies and biases. Our work extends calibration training and uncertainty analysis to a realistic scientific forecasting setting with applications to human cancer biology. We release all code, data, and trained models.",
+              "scope": "abstract",
+              "source_hash": "sha256:b490f3ffa20059c827c7a1dde2576cc7857a3b26d3fe14489e47a2fc3f24f710",
+              "span_id": "span-9a92d1c10b9b4e9ee5a9185bd6bb4afd",
+              "start": 0,
+              "version_id": "arxiv:2610.41015:v1:metadata-9d3401c4c7c1014c",
+              "work_id": "arxiv:2610.41015"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "Each of EDB-Bio's 96k episodes presents a sequence of experimental results from published studies and asks the model to predict the probability that a target hypothesis is true."
+        },
+        {
+          "claim_id": "c3",
+          "evidence": [
+            {
+              "end": 1516,
+              "material_id": "mat-1c5ecdf06434f317157b2e5fce1b3b0e",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "Expert scientists excel at weighing empirical findings from multiple sources that vary in both statistical reliability and epistemic relevance. To what extent are language models, which are increasingly driving autonomous discovery systems, capable of such evidence deliberation? We introduce EDB-Bio, a scientific reasoning benchmark curated from real-world data in three biological domains: drug-perturbation transcriptomics, CRISPR screens, and human genome-wide association studies (GWAS). Each of EDB-Bio's 96k episodes presents a sequence of experimental results from published studies and asks the model to predict the probability that a target hypothesis is true. Out-of-the-box, open-weight and frontier models alike demonstrate systematic underconfidence and attain Brier scores comparable to a trivial base-rate forecaster. Post-training against strictly proper scoring rules significantly improves both calibration and discrimination. This calibration pays off downstream: in a sequential experiment selection task, our Ibis0 model is 2.5 times more efficient than the best frontier model. Throughout, quantifying evidence weights as Bayes factors reveals how models update their beliefs over time, whether they agree with expert biologists on relevance, and where they exhibit inconsistencies and biases. Our work extends calibration training and uncertainty analysis to a realistic scientific forecasting setting with applications to human cancer biology. We release all code, data, and trained models.",
+              "scope": "abstract",
+              "source_hash": "sha256:b490f3ffa20059c827c7a1dde2576cc7857a3b26d3fe14489e47a2fc3f24f710",
+              "span_id": "span-9a92d1c10b9b4e9ee5a9185bd6bb4afd",
+              "start": 0,
+              "version_id": "arxiv:2610.41015:v1:metadata-9d3401c4c7c1014c",
+              "work_id": "arxiv:2610.41015"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "Out-of-the-box open-weight and frontier models show systematic underconfidence and attain Brier scores comparable to a trivial base-rate forecaster."
+        },
+        {
+          "claim_id": "c4",
+          "evidence": [
+            {
+              "end": 1516,
+              "material_id": "mat-1c5ecdf06434f317157b2e5fce1b3b0e",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "Expert scientists excel at weighing empirical findings from multiple sources that vary in both statistical reliability and epistemic relevance. To what extent are language models, which are increasingly driving autonomous discovery systems, capable of such evidence deliberation? We introduce EDB-Bio, a scientific reasoning benchmark curated from real-world data in three biological domains: drug-perturbation transcriptomics, CRISPR screens, and human genome-wide association studies (GWAS). Each of EDB-Bio's 96k episodes presents a sequence of experimental results from published studies and asks the model to predict the probability that a target hypothesis is true. Out-of-the-box, open-weight and frontier models alike demonstrate systematic underconfidence and attain Brier scores comparable to a trivial base-rate forecaster. Post-training against strictly proper scoring rules significantly improves both calibration and discrimination. This calibration pays off downstream: in a sequential experiment selection task, our Ibis0 model is 2.5 times more efficient than the best frontier model. Throughout, quantifying evidence weights as Bayes factors reveals how models update their beliefs over time, whether they agree with expert biologists on relevance, and where they exhibit inconsistencies and biases. Our work extends calibration training and uncertainty analysis to a realistic scientific forecasting setting with applications to human cancer biology. We release all code, data, and trained models.",
+              "scope": "abstract",
+              "source_hash": "sha256:b490f3ffa20059c827c7a1dde2576cc7857a3b26d3fe14489e47a2fc3f24f710",
+              "span_id": "span-9a92d1c10b9b4e9ee5a9185bd6bb4afd",
+              "start": 0,
+              "version_id": "arxiv:2610.41015:v1:metadata-9d3401c4c7c1014c",
+              "work_id": "arxiv:2610.41015"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "Post-training against strictly proper scoring rules significantly improves both calibration and discrimination."
+        },
+        {
+          "claim_id": "c5",
+          "evidence": [
+            {
+              "end": 1516,
+              "material_id": "mat-1c5ecdf06434f317157b2e5fce1b3b0e",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "Expert scientists excel at weighing empirical findings from multiple sources that vary in both statistical reliability and epistemic relevance. To what extent are language models, which are increasingly driving autonomous discovery systems, capable of such evidence deliberation? We introduce EDB-Bio, a scientific reasoning benchmark curated from real-world data in three biological domains: drug-perturbation transcriptomics, CRISPR screens, and human genome-wide association studies (GWAS). Each of EDB-Bio's 96k episodes presents a sequence of experimental results from published studies and asks the model to predict the probability that a target hypothesis is true. Out-of-the-box, open-weight and frontier models alike demonstrate systematic underconfidence and attain Brier scores comparable to a trivial base-rate forecaster. Post-training against strictly proper scoring rules significantly improves both calibration and discrimination. This calibration pays off downstream: in a sequential experiment selection task, our Ibis0 model is 2.5 times more efficient than the best frontier model. Throughout, quantifying evidence weights as Bayes factors reveals how models update their beliefs over time, whether they agree with expert biologists on relevance, and where they exhibit inconsistencies and biases. Our work extends calibration training and uncertainty analysis to a realistic scientific forecasting setting with applications to human cancer biology. We release all code, data, and trained models.",
+              "scope": "abstract",
+              "source_hash": "sha256:b490f3ffa20059c827c7a1dde2576cc7857a3b26d3fe14489e47a2fc3f24f710",
+              "span_id": "span-9a92d1c10b9b4e9ee5a9185bd6bb4afd",
+              "start": 0,
+              "version_id": "arxiv:2610.41015:v1:metadata-9d3401c4c7c1014c",
+              "work_id": "arxiv:2610.41015"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "In a sequential experiment selection task, the authors' Ibis0 model is reported as 2.5 times more efficient than the best frontier model."
+        },
+        {
+          "claim_id": "c6",
+          "evidence": [
+            {
+              "end": 1516,
+              "material_id": "mat-1c5ecdf06434f317157b2e5fce1b3b0e",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "Expert scientists excel at weighing empirical findings from multiple sources that vary in both statistical reliability and epistemic relevance. To what extent are language models, which are increasingly driving autonomous discovery systems, capable of such evidence deliberation? We introduce EDB-Bio, a scientific reasoning benchmark curated from real-world data in three biological domains: drug-perturbation transcriptomics, CRISPR screens, and human genome-wide association studies (GWAS). Each of EDB-Bio's 96k episodes presents a sequence of experimental results from published studies and asks the model to predict the probability that a target hypothesis is true. Out-of-the-box, open-weight and frontier models alike demonstrate systematic underconfidence and attain Brier scores comparable to a trivial base-rate forecaster. Post-training against strictly proper scoring rules significantly improves both calibration and discrimination. This calibration pays off downstream: in a sequential experiment selection task, our Ibis0 model is 2.5 times more efficient than the best frontier model. Throughout, quantifying evidence weights as Bayes factors reveals how models update their beliefs over time, whether they agree with expert biologists on relevance, and where they exhibit inconsistencies and biases. Our work extends calibration training and uncertainty analysis to a realistic scientific forecasting setting with applications to human cancer biology. We release all code, data, and trained models.",
+              "scope": "abstract",
+              "source_hash": "sha256:b490f3ffa20059c827c7a1dde2576cc7857a3b26d3fe14489e47a2fc3f24f710",
+              "span_id": "span-9a92d1c10b9b4e9ee5a9185bd6bb4afd",
+              "start": 0,
+              "version_id": "arxiv:2610.41015:v1:metadata-9d3401c4c7c1014c",
+              "work_id": "arxiv:2610.41015"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "The authors quantify evidence weights as Bayes factors to examine how models update beliefs over time, whether they agree with expert biologists on relevance, and where they show inconsistencies and biases."
+        }
+      ],
+      "remaining_prose": {
+        "abstention": null,
+        "gaps": [
+          "Request the full text to check how the 2.5x efficiency figure and the baselines are defined and measured.",
+          "Request details on how expert biologist agreement on relevance was measured and on the reported inconsistencies and biases."
+        ],
+        "proposal": "Retrieve the full paper to separate measured results (Brier scores, calibration, experiment-selection efficiency) from proposed downstream use.",
+        "questions": [
+          "Given cited and scored claim c1, what qualifications apply, if any?",
+          "Do the calibration gains hold on held-out domains or only on the three biological domains used here?"
+        ]
+      },
+      "judgments": {
+        "premise": null,
+        "expected_disposition": null,
+        "reason": null
+      },
+      "reviewer": null,
+      "reviewed_at": null,
+      "provenance": null
+    },
+    {
+      "id": "itm-06293c4e0303",
+      "request_digest": "50eab9dae262eb93cf09d6c32d6b394bd4399e0eb85b6c71bac7b0da7b014e89",
+      "question_index": 2,
+      "question": "Given the excerpt's statement that Xie et al. study reasoning without retrieval, what evidence is needed for comparison?",
+      "scored_claims": [
+        {
+          "claim_id": "c1",
+          "evidence": [
+            {
+              "end": 3888,
+              "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+              "page": 1,
+              "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+              "quote": "Furthermore, on two interactive decision making benchmarks (ALFWorld and\n                           WebShop), ReAct outperforms imitation and reinforcement learning methods by\n                            an absolute success rate of 34% and 10% respectively, while being prompted with\n                              only one or two in-context examples.\n\n\n                1  INTRODUCTION\n\n              A unique feature of human intelligence is the ability to seamlessly combine task-oriented actions with\n                        verbal reasoning (or inner speech, Alderson-Day & Fernyhough, 2015), which has been theorized toarXiv:2210.03629v3                      play an important role in human cognition for enabling self-regulation or strategization (Vygotsky,\n                     1987; Luria, 1965; Fernyhough, 2010) and maintaining a working memory (Baddeley, 1992). Con-\n                         sider the example of cooking up a dish in the kitchen. Between any two speciﬁc actions, we may\n                       reason in language in order to track progress (“now that everything is cut, I should heat up the pot of\n                        water”), to handle exceptions or adjust the plan according to the situation (“I don’t have salt, so let\n                me use soy sauce and pepper instead”), and to realize when external information is needed (“how do\n                             I prepare dough? Let me search on the Internet”).",
+              "scope": "excerpt",
+              "source_hash": "sha256:f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69",
+              "span_id": "span-55b2971cd5f40c431b738813c7ef10cd",
+              "start": 2443,
+              "version_id": "arxiv:2210.03629:v3",
+              "work_id": "arxiv:2210.03629"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "excerpt",
+          "required_section": null,
+          "text": "The ReAct excerpt reports that on two interactive decision-making benchmarks (ALFWorld and WebShop), ReAct outperforms imitation and reinforcement learning methods by absolute success rates of 34% and 10% respectively, while prompted with only one or two in-context examples."
+        },
+        {
+          "claim_id": "c2",
+          "evidence": [
+            {
+              "end": 3616,
+              "material_id": "mat-f98fbd73f423776117f60cac36edc90a",
+              "page": 3,
+              "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+              "quote": "While their value function\nsimply indicates an overall score of each generation, SELF-RAG trains to an arbitrary LM to learn to\ngenerate fine-grained self-reflection and customizable inference.\n\nTraining and generating with critics. Training LLMs with reinforcement learning (e.g., Proximal\nPolicy Optimization or PPO; Schulman et al. 2017) from human feedback (RLHF) has proven\neffective in aligning LLMs with human preferences (Ouyang et al., 2022). Wu et al. (2023) introduce\nfine-grained RLHF with multiple reward models. Though our work also studies fine-grained critique\non retrieval and generation, we train our target LM on task examples augmented with reflection\ntokens from a critic model offline, with a far lower training cost compared to RLHF. In addition,\nreflection tokens in SELF-RAG enable controllable generation at inference, while RLHF focuses on\nhuman preference alignment during training. Other works use general control tokens to guide LM\ngeneration (Lu et al., 2022; Korbak et al., 2023), while SELF-RAG uses reflection tokens to decide the\nneed for retrieval and to self-evaluate generation quality. Xie et al. (2023) propose a self-evaluation-\nguided decoding framework, but they focus only on reasoning tasks with one evaluation dimension\n(reasoning path consistency) and without retrieval. Recent work on LLM refinement (Dhuliawala\net al., 2023; Madaan et al., 2023; Paul et al., 2023) prompts a model to generate task output, natural\nlanguage feedback and refined task output iteratively, but at the cost of inference efficiency.",
+              "scope": "excerpt",
+              "source_hash": "sha256:d9eaa1398abac0df67a9d0933a5bf8b6d9d83d2e72da2a486073cd842dd52978",
+              "span_id": "span-f021c711415ab7488317517d7cbe41d5",
+              "start": 2058,
+              "version_id": "arxiv:2310.11511:v1",
+              "work_id": "arxiv:2310.11511"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "excerpt",
+          "required_section": null,
+          "text": "The Self-RAG excerpt states that Self-RAG trains the target LM on task examples augmented with reflection tokens from a critic model offline, at far lower training cost than RLHF, and that reflection tokens enable controllable generation at inference."
+        },
+        {
+          "claim_id": "c3",
+          "evidence": [
+            {
+              "end": 3616,
+              "material_id": "mat-f98fbd73f423776117f60cac36edc90a",
+              "page": 3,
+              "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+              "quote": "While their value function\nsimply indicates an overall score of each generation, SELF-RAG trains to an arbitrary LM to learn to\ngenerate fine-grained self-reflection and customizable inference.\n\nTraining and generating with critics. Training LLMs with reinforcement learning (e.g., Proximal\nPolicy Optimization or PPO; Schulman et al. 2017) from human feedback (RLHF) has proven\neffective in aligning LLMs with human preferences (Ouyang et al., 2022). Wu et al. (2023) introduce\nfine-grained RLHF with multiple reward models. Though our work also studies fine-grained critique\non retrieval and generation, we train our target LM on task examples augmented with reflection\ntokens from a critic model offline, with a far lower training cost compared to RLHF. In addition,\nreflection tokens in SELF-RAG enable controllable generation at inference, while RLHF focuses on\nhuman preference alignment during training. Other works use general control tokens to guide LM\ngeneration (Lu et al., 2022; Korbak et al., 2023), while SELF-RAG uses reflection tokens to decide the\nneed for retrieval and to self-evaluate generation quality. Xie et al. (2023) propose a self-evaluation-\nguided decoding framework, but they focus only on reasoning tasks with one evaluation dimension\n(reasoning path consistency) and without retrieval. Recent work on LLM refinement (Dhuliawala\net al., 2023; Madaan et al., 2023; Paul et al., 2023) prompts a model to generate task output, natural\nlanguage feedback and refined task output iteratively, but at the cost of inference efficiency.",
+              "scope": "excerpt",
+              "source_hash": "sha256:d9eaa1398abac0df67a9d0933a5bf8b6d9d83d2e72da2a486073cd842dd52978",
+              "span_id": "span-f021c711415ab7488317517d7cbe41d5",
+              "start": 2058,
+              "version_id": "arxiv:2310.11511:v1",
+              "work_id": "arxiv:2310.11511"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "excerpt",
+          "required_section": null,
+          "text": "The Self-RAG excerpt states that Self-RAG uses reflection tokens to decide the need for retrieval and to self-evaluate generation quality."
+        },
+        {
+          "claim_id": "c4",
+          "evidence": [
+            {
+              "end": 3616,
+              "material_id": "mat-f98fbd73f423776117f60cac36edc90a",
+              "page": 3,
+              "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+              "quote": "While their value function\nsimply indicates an overall score of each generation, SELF-RAG trains to an arbitrary LM to learn to\ngenerate fine-grained self-reflection and customizable inference.\n\nTraining and generating with critics. Training LLMs with reinforcement learning (e.g., Proximal\nPolicy Optimization or PPO; Schulman et al. 2017) from human feedback (RLHF) has proven\neffective in aligning LLMs with human preferences (Ouyang et al., 2022). Wu et al. (2023) introduce\nfine-grained RLHF with multiple reward models. Though our work also studies fine-grained critique\non retrieval and generation, we train our target LM on task examples augmented with reflection\ntokens from a critic model offline, with a far lower training cost compared to RLHF. In addition,\nreflection tokens in SELF-RAG enable controllable generation at inference, while RLHF focuses on\nhuman preference alignment during training. Other works use general control tokens to guide LM\ngeneration (Lu et al., 2022; Korbak et al., 2023), while SELF-RAG uses reflection tokens to decide the\nneed for retrieval and to self-evaluate generation quality. Xie et al. (2023) propose a self-evaluation-\nguided decoding framework, but they focus only on reasoning tasks with one evaluation dimension\n(reasoning path consistency) and without retrieval. Recent work on LLM refinement (Dhuliawala\net al., 2023; Madaan et al., 2023; Paul et al., 2023) prompts a model to generate task output, natural\nlanguage feedback and refined task output iteratively, but at the cost of inference efficiency.",
+              "scope": "excerpt",
+              "source_hash": "sha256:d9eaa1398abac0df67a9d0933a5bf8b6d9d83d2e72da2a486073cd842dd52978",
+              "span_id": "span-f021c711415ab7488317517d7cbe41d5",
+              "start": 2058,
+              "version_id": "arxiv:2310.11511:v1",
+              "work_id": "arxiv:2310.11511"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "excerpt",
+          "required_section": null,
+          "text": "The Self-RAG excerpt contains related-work positioning (comparison to RLHF, control tokens, and iterative LLM refinement) and no empirical evaluation results; this excerpt alone cannot support benchmark-level comparison with ReAct."
+        },
+        {
+          "claim_id": "c5",
+          "evidence": [
+            {
+              "end": 3888,
+              "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+              "page": 1,
+              "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+              "quote": "Furthermore, on two interactive decision making benchmarks (ALFWorld and\n                           WebShop), ReAct outperforms imitation and reinforcement learning methods by\n                            an absolute success rate of 34% and 10% respectively, while being prompted with\n                              only one or two in-context examples.\n\n\n                1  INTRODUCTION\n\n              A unique feature of human intelligence is the ability to seamlessly combine task-oriented actions with\n                        verbal reasoning (or inner speech, Alderson-Day & Fernyhough, 2015), which has been theorized toarXiv:2210.03629v3                      play an important role in human cognition for enabling self-regulation or strategization (Vygotsky,\n                     1987; Luria, 1965; Fernyhough, 2010) and maintaining a working memory (Baddeley, 1992). Con-\n                         sider the example of cooking up a dish in the kitchen. Between any two speciﬁc actions, we may\n                       reason in language in order to track progress (“now that everything is cut, I should heat up the pot of\n                        water”), to handle exceptions or adjust the plan according to the situation (“I don’t have salt, so let\n                me use soy sauce and pepper instead”), and to realize when external information is needed (“how do\n                             I prepare dough? Let me search on the Internet”).",
+              "scope": "excerpt",
+              "source_hash": "sha256:f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69",
+              "span_id": "span-55b2971cd5f40c431b738813c7ef10cd",
+              "start": 2443,
+              "version_id": "arxiv:2210.03629:v3",
+              "work_id": "arxiv:2210.03629"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "excerpt",
+          "required_section": null,
+          "text": "The ReAct excerpt gives headline results and motivation for interleaving reasoning with actions; it does not describe baselines, variance, or metric details beyond the stated absolute success-rate margins."
+        }
+      ],
+      "remaining_prose": {
+        "abstention": null,
+        "comparison_basis": [
+          "c4",
+          "c5"
+        ],
+        "gaps": [
+          "Request evaluation sections, benchmarks, baselines and metrics from each selected source.",
+          "Request the relevant full-text sections before drawing further conclusions.",
+          "Request ablations and controlled comparisons from each selected source."
+        ],
+        "proposal": "Retrieve the evaluation and ablation sections of both papers to compare benchmarks, baselines, metrics and controlled comparisons before drawing any conclusion.",
+        "questions": [
+          "What benchmarks, baselines and metrics does Self-RAG report in its evaluation sections?",
+          "Do the two works share any common tasks or metrics permitting direct comparison?",
+          "Given the excerpt's statement that Xie et al. study reasoning without retrieval, what evidence is needed for comparison?"
+        ]
+      },
+      "judgments": {
+        "premise": null,
+        "expected_disposition": null,
+        "reason": null
+      },
+      "reviewer": null,
+      "reviewed_at": null,
+      "provenance": null
+    },
+    {
+      "id": "itm-71effba1b007",
+      "request_digest": "15771c7962290e99f5097225e92034bbb7ff77092a2640dafbb86bc49d3c25eb",
+      "question_index": 2,
+      "question": "Given cited and scored claim c1, what qualifications apply, if any?",
+      "scored_claims": [
+        {
+          "claim_id": "c1",
+          "evidence": [
+            {
+              "end": 3888,
+              "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+              "page": 1,
+              "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+              "quote": "Furthermore, on two interactive decision making benchmarks (ALFWorld and\n                           WebShop), ReAct outperforms imitation and reinforcement learning methods by\n                            an absolute success rate of 34% and 10% respectively, while being prompted with\n                              only one or two in-context examples.\n\n\n                1  INTRODUCTION\n\n              A unique feature of human intelligence is the ability to seamlessly combine task-oriented actions with\n                        verbal reasoning (or inner speech, Alderson-Day & Fernyhough, 2015), which has been theorized toarXiv:2210.03629v3                      play an important role in human cognition for enabling self-regulation or strategization (Vygotsky,\n                     1987; Luria, 1965; Fernyhough, 2010) and maintaining a working memory (Baddeley, 1992). Con-\n                         sider the example of cooking up a dish in the kitchen. Between any two speciﬁc actions, we may\n                       reason in language in order to track progress (“now that everything is cut, I should heat up the pot of\n                        water”), to handle exceptions or adjust the plan according to the situation (“I don’t have salt, so let\n                me use soy sauce and pepper instead”), and to realize when external information is needed (“how do\n                             I prepare dough? Let me search on the Internet”).",
+              "scope": "excerpt",
+              "source_hash": "sha256:f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69",
+              "span_id": "span-55b2971cd5f40c431b738813c7ef10cd",
+              "start": 2443,
+              "version_id": "arxiv:2210.03629:v3",
+              "work_id": "arxiv:2210.03629"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "excerpt",
+          "required_section": null,
+          "text": "The ReAct excerpt reports that on two interactive decision-making benchmarks (ALFWorld and WebShop), ReAct outperforms imitation and reinforcement learning methods by absolute success rates of 34% and 10% respectively, while prompted with only one or two in-context examples."
+        },
+        {
+          "claim_id": "c2",
+          "evidence": [
+            {
+              "end": 3616,
+              "material_id": "mat-f98fbd73f423776117f60cac36edc90a",
+              "page": 3,
+              "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+              "quote": "While their value function\nsimply indicates an overall score of each generation, SELF-RAG trains to an arbitrary LM to learn to\ngenerate fine-grained self-reflection and customizable inference.\n\nTraining and generating with critics. Training LLMs with reinforcement learning (e.g., Proximal\nPolicy Optimization or PPO; Schulman et al. 2017) from human feedback (RLHF) has proven\neffective in aligning LLMs with human preferences (Ouyang et al., 2022). Wu et al. (2023) introduce\nfine-grained RLHF with multiple reward models. Though our work also studies fine-grained critique\non retrieval and generation, we train our target LM on task examples augmented with reflection\ntokens from a critic model offline, with a far lower training cost compared to RLHF. In addition,\nreflection tokens in SELF-RAG enable controllable generation at inference, while RLHF focuses on\nhuman preference alignment during training. Other works use general control tokens to guide LM\ngeneration (Lu et al., 2022; Korbak et al., 2023), while SELF-RAG uses reflection tokens to decide the\nneed for retrieval and to self-evaluate generation quality. Xie et al. (2023) propose a self-evaluation-\nguided decoding framework, but they focus only on reasoning tasks with one evaluation dimension\n(reasoning path consistency) and without retrieval. Recent work on LLM refinement (Dhuliawala\net al., 2023; Madaan et al., 2023; Paul et al., 2023) prompts a model to generate task output, natural\nlanguage feedback and refined task output iteratively, but at the cost of inference efficiency.",
+              "scope": "excerpt",
+              "source_hash": "sha256:d9eaa1398abac0df67a9d0933a5bf8b6d9d83d2e72da2a486073cd842dd52978",
+              "span_id": "span-f021c711415ab7488317517d7cbe41d5",
+              "start": 2058,
+              "version_id": "arxiv:2310.11511:v1",
+              "work_id": "arxiv:2310.11511"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "excerpt",
+          "required_section": null,
+          "text": "The Self-RAG excerpt states that Self-RAG trains the target LM on task examples augmented with reflection tokens from a critic model offline, at far lower training cost than RLHF, and that reflection tokens enable controllable generation at inference."
+        },
+        {
+          "claim_id": "c3",
+          "evidence": [
+            {
+              "end": 3616,
+              "material_id": "mat-f98fbd73f423776117f60cac36edc90a",
+              "page": 3,
+              "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+              "quote": "While their value function\nsimply indicates an overall score of each generation, SELF-RAG trains to an arbitrary LM to learn to\ngenerate fine-grained self-reflection and customizable inference.\n\nTraining and generating with critics. Training LLMs with reinforcement learning (e.g., Proximal\nPolicy Optimization or PPO; Schulman et al. 2017) from human feedback (RLHF) has proven\neffective in aligning LLMs with human preferences (Ouyang et al., 2022). Wu et al. (2023) introduce\nfine-grained RLHF with multiple reward models. Though our work also studies fine-grained critique\non retrieval and generation, we train our target LM on task examples augmented with reflection\ntokens from a critic model offline, with a far lower training cost compared to RLHF. In addition,\nreflection tokens in SELF-RAG enable controllable generation at inference, while RLHF focuses on\nhuman preference alignment during training. Other works use general control tokens to guide LM\ngeneration (Lu et al., 2022; Korbak et al., 2023), while SELF-RAG uses reflection tokens to decide the\nneed for retrieval and to self-evaluate generation quality. Xie et al. (2023) propose a self-evaluation-\nguided decoding framework, but they focus only on reasoning tasks with one evaluation dimension\n(reasoning path consistency) and without retrieval. Recent work on LLM refinement (Dhuliawala\net al., 2023; Madaan et al., 2023; Paul et al., 2023) prompts a model to generate task output, natural\nlanguage feedback and refined task output iteratively, but at the cost of inference efficiency.",
+              "scope": "excerpt",
+              "source_hash": "sha256:d9eaa1398abac0df67a9d0933a5bf8b6d9d83d2e72da2a486073cd842dd52978",
+              "span_id": "span-f021c711415ab7488317517d7cbe41d5",
+              "start": 2058,
+              "version_id": "arxiv:2310.11511:v1",
+              "work_id": "arxiv:2310.11511"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "excerpt",
+          "required_section": null,
+          "text": "The Self-RAG excerpt states that Self-RAG uses reflection tokens to decide the need for retrieval and to self-evaluate generation quality."
+        },
+        {
+          "claim_id": "c4",
+          "evidence": [
+            {
+              "end": 3616,
+              "material_id": "mat-f98fbd73f423776117f60cac36edc90a",
+              "page": 3,
+              "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+              "quote": "While their value function\nsimply indicates an overall score of each generation, SELF-RAG trains to an arbitrary LM to learn to\ngenerate fine-grained self-reflection and customizable inference.\n\nTraining and generating with critics. Training LLMs with reinforcement learning (e.g., Proximal\nPolicy Optimization or PPO; Schulman et al. 2017) from human feedback (RLHF) has proven\neffective in aligning LLMs with human preferences (Ouyang et al., 2022). Wu et al. (2023) introduce\nfine-grained RLHF with multiple reward models. Though our work also studies fine-grained critique\non retrieval and generation, we train our target LM on task examples augmented with reflection\ntokens from a critic model offline, with a far lower training cost compared to RLHF. In addition,\nreflection tokens in SELF-RAG enable controllable generation at inference, while RLHF focuses on\nhuman preference alignment during training. Other works use general control tokens to guide LM\ngeneration (Lu et al., 2022; Korbak et al., 2023), while SELF-RAG uses reflection tokens to decide the\nneed for retrieval and to self-evaluate generation quality. Xie et al. (2023) propose a self-evaluation-\nguided decoding framework, but they focus only on reasoning tasks with one evaluation dimension\n(reasoning path consistency) and without retrieval. Recent work on LLM refinement (Dhuliawala\net al., 2023; Madaan et al., 2023; Paul et al., 2023) prompts a model to generate task output, natural\nlanguage feedback and refined task output iteratively, but at the cost of inference efficiency.",
+              "scope": "excerpt",
+              "source_hash": "sha256:d9eaa1398abac0df67a9d0933a5bf8b6d9d83d2e72da2a486073cd842dd52978",
+              "span_id": "span-f021c711415ab7488317517d7cbe41d5",
+              "start": 2058,
+              "version_id": "arxiv:2310.11511:v1",
+              "work_id": "arxiv:2310.11511"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "excerpt",
+          "required_section": null,
+          "text": "The Self-RAG excerpt contains related-work positioning (comparison to RLHF, control tokens, and iterative LLM refinement) and no empirical evaluation results; this excerpt alone cannot support benchmark-level comparison with ReAct."
+        },
+        {
+          "claim_id": "c5",
+          "evidence": [
+            {
+              "end": 3888,
+              "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+              "page": 1,
+              "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+              "quote": "Furthermore, on two interactive decision making benchmarks (ALFWorld and\n                           WebShop), ReAct outperforms imitation and reinforcement learning methods by\n                            an absolute success rate of 34% and 10% respectively, while being prompted with\n                              only one or two in-context examples.\n\n\n                1  INTRODUCTION\n\n              A unique feature of human intelligence is the ability to seamlessly combine task-oriented actions with\n                        verbal reasoning (or inner speech, Alderson-Day & Fernyhough, 2015), which has been theorized toarXiv:2210.03629v3                      play an important role in human cognition for enabling self-regulation or strategization (Vygotsky,\n                     1987; Luria, 1965; Fernyhough, 2010) and maintaining a working memory (Baddeley, 1992). Con-\n                         sider the example of cooking up a dish in the kitchen. Between any two speciﬁc actions, we may\n                       reason in language in order to track progress (“now that everything is cut, I should heat up the pot of\n                        water”), to handle exceptions or adjust the plan according to the situation (“I don’t have salt, so let\n                me use soy sauce and pepper instead”), and to realize when external information is needed (“how do\n                             I prepare dough? Let me search on the Internet”).",
+              "scope": "excerpt",
+              "source_hash": "sha256:f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69",
+              "span_id": "span-55b2971cd5f40c431b738813c7ef10cd",
+              "start": 2443,
+              "version_id": "arxiv:2210.03629:v3",
+              "work_id": "arxiv:2210.03629"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "excerpt",
+          "required_section": null,
+          "text": "The ReAct excerpt gives headline results and motivation for interleaving reasoning with actions; it does not describe baselines, variance, or metric details beyond the stated absolute success-rate margins."
+        }
+      ],
+      "remaining_prose": {
+        "abstention": null,
+        "comparison_basis": [
+          "c4",
+          "c5"
+        ],
+        "gaps": [
+          "Request evaluation sections, benchmarks, baselines and metrics from each selected source.",
+          "Request the relevant full-text sections before drawing further conclusions.",
+          "Request ablations and controlled comparisons from each selected source."
+        ],
+        "proposal": "Retrieve the evaluation and ablation sections of both papers to compare benchmarks, baselines, metrics and controlled comparisons before drawing any conclusion.",
+        "questions": [
+          "What benchmarks, baselines and metrics does Self-RAG report in its evaluation sections?",
+          "Do the two works share any common tasks or metrics permitting direct comparison?",
+          "Given cited and scored claim c1, what qualifications apply, if any?"
+        ]
+      },
+      "judgments": {
+        "premise": null,
+        "expected_disposition": null,
+        "reason": null
+      },
+      "reviewer": null,
+      "reviewed_at": null,
+      "provenance": null
+    },
+    {
+      "id": "itm-fa73602a213a",
+      "request_digest": "5e2744f2ceebb87fa4479c04e9963a22e73ce61364587a9aa1d467c879ffbbf6",
+      "question_index": 0,
+      "question": "What further evidence, if any, would clarify the selected claims and their limitations?",
+      "scored_claims": [
+        {
+          "claim_id": "c1",
+          "evidence": [
+            {
+              "end": 1516,
+              "material_id": "mat-1c5ecdf06434f317157b2e5fce1b3b0e",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "Expert scientists excel at weighing empirical findings from multiple sources that vary in both statistical reliability and epistemic relevance. To what extent are language models, which are increasingly driving autonomous discovery systems, capable of such evidence deliberation? We introduce EDB-Bio, a scientific reasoning benchmark curated from real-world data in three biological domains: drug-perturbation transcriptomics, CRISPR screens, and human genome-wide association studies (GWAS). Each of EDB-Bio's 96k episodes presents a sequence of experimental results from published studies and asks the model to predict the probability that a target hypothesis is true. Out-of-the-box, open-weight and frontier models alike demonstrate systematic underconfidence and attain Brier scores comparable to a trivial base-rate forecaster. Post-training against strictly proper scoring rules significantly improves both calibration and discrimination. This calibration pays off downstream: in a sequential experiment selection task, our Ibis0 model is 2.5 times more efficient than the best frontier model. Throughout, quantifying evidence weights as Bayes factors reveals how models update their beliefs over time, whether they agree with expert biologists on relevance, and where they exhibit inconsistencies and biases. Our work extends calibration training and uncertainty analysis to a realistic scientific forecasting setting with applications to human cancer biology. We release all code, data, and trained models.",
+              "scope": "abstract",
+              "source_hash": "sha256:b490f3ffa20059c827c7a1dde2576cc7857a3b26d3fe14489e47a2fc3f24f710",
+              "span_id": "span-9a92d1c10b9b4e9ee5a9185bd6bb4afd",
+              "start": 0,
+              "version_id": "arxiv:2610.41015:v1:metadata-9d3401c4c7c1014c",
+              "work_id": "arxiv:2610.41015"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "EDB-Bio is a scientific reasoning benchmark built from real-world data in three biological domains: drug-perturbation transcriptomics, CRISPR screens, and human GWAS."
+        },
+        {
+          "claim_id": "c2",
+          "evidence": [
+            {
+              "end": 1516,
+              "material_id": "mat-1c5ecdf06434f317157b2e5fce1b3b0e",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "Expert scientists excel at weighing empirical findings from multiple sources that vary in both statistical reliability and epistemic relevance. To what extent are language models, which are increasingly driving autonomous discovery systems, capable of such evidence deliberation? We introduce EDB-Bio, a scientific reasoning benchmark curated from real-world data in three biological domains: drug-perturbation transcriptomics, CRISPR screens, and human genome-wide association studies (GWAS). Each of EDB-Bio's 96k episodes presents a sequence of experimental results from published studies and asks the model to predict the probability that a target hypothesis is true. Out-of-the-box, open-weight and frontier models alike demonstrate systematic underconfidence and attain Brier scores comparable to a trivial base-rate forecaster. Post-training against strictly proper scoring rules significantly improves both calibration and discrimination. This calibration pays off downstream: in a sequential experiment selection task, our Ibis0 model is 2.5 times more efficient than the best frontier model. Throughout, quantifying evidence weights as Bayes factors reveals how models update their beliefs over time, whether they agree with expert biologists on relevance, and where they exhibit inconsistencies and biases. Our work extends calibration training and uncertainty analysis to a realistic scientific forecasting setting with applications to human cancer biology. We release all code, data, and trained models.",
+              "scope": "abstract",
+              "source_hash": "sha256:b490f3ffa20059c827c7a1dde2576cc7857a3b26d3fe14489e47a2fc3f24f710",
+              "span_id": "span-9a92d1c10b9b4e9ee5a9185bd6bb4afd",
+              "start": 0,
+              "version_id": "arxiv:2610.41015:v1:metadata-9d3401c4c7c1014c",
+              "work_id": "arxiv:2610.41015"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "Each of EDB-Bio's 96k episodes presents a sequence of experimental results from published studies and asks the model to predict the probability that a target hypothesis is true."
+        },
+        {
+          "claim_id": "c3",
+          "evidence": [
+            {
+              "end": 1516,
+              "material_id": "mat-1c5ecdf06434f317157b2e5fce1b3b0e",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "Expert scientists excel at weighing empirical findings from multiple sources that vary in both statistical reliability and epistemic relevance. To what extent are language models, which are increasingly driving autonomous discovery systems, capable of such evidence deliberation? We introduce EDB-Bio, a scientific reasoning benchmark curated from real-world data in three biological domains: drug-perturbation transcriptomics, CRISPR screens, and human genome-wide association studies (GWAS). Each of EDB-Bio's 96k episodes presents a sequence of experimental results from published studies and asks the model to predict the probability that a target hypothesis is true. Out-of-the-box, open-weight and frontier models alike demonstrate systematic underconfidence and attain Brier scores comparable to a trivial base-rate forecaster. Post-training against strictly proper scoring rules significantly improves both calibration and discrimination. This calibration pays off downstream: in a sequential experiment selection task, our Ibis0 model is 2.5 times more efficient than the best frontier model. Throughout, quantifying evidence weights as Bayes factors reveals how models update their beliefs over time, whether they agree with expert biologists on relevance, and where they exhibit inconsistencies and biases. Our work extends calibration training and uncertainty analysis to a realistic scientific forecasting setting with applications to human cancer biology. We release all code, data, and trained models.",
+              "scope": "abstract",
+              "source_hash": "sha256:b490f3ffa20059c827c7a1dde2576cc7857a3b26d3fe14489e47a2fc3f24f710",
+              "span_id": "span-9a92d1c10b9b4e9ee5a9185bd6bb4afd",
+              "start": 0,
+              "version_id": "arxiv:2610.41015:v1:metadata-9d3401c4c7c1014c",
+              "work_id": "arxiv:2610.41015"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "Out-of-the-box open-weight and frontier models show systematic underconfidence and attain Brier scores comparable to a trivial base-rate forecaster."
+        },
+        {
+          "claim_id": "c4",
+          "evidence": [
+            {
+              "end": 1516,
+              "material_id": "mat-1c5ecdf06434f317157b2e5fce1b3b0e",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "Expert scientists excel at weighing empirical findings from multiple sources that vary in both statistical reliability and epistemic relevance. To what extent are language models, which are increasingly driving autonomous discovery systems, capable of such evidence deliberation? We introduce EDB-Bio, a scientific reasoning benchmark curated from real-world data in three biological domains: drug-perturbation transcriptomics, CRISPR screens, and human genome-wide association studies (GWAS). Each of EDB-Bio's 96k episodes presents a sequence of experimental results from published studies and asks the model to predict the probability that a target hypothesis is true. Out-of-the-box, open-weight and frontier models alike demonstrate systematic underconfidence and attain Brier scores comparable to a trivial base-rate forecaster. Post-training against strictly proper scoring rules significantly improves both calibration and discrimination. This calibration pays off downstream: in a sequential experiment selection task, our Ibis0 model is 2.5 times more efficient than the best frontier model. Throughout, quantifying evidence weights as Bayes factors reveals how models update their beliefs over time, whether they agree with expert biologists on relevance, and where they exhibit inconsistencies and biases. Our work extends calibration training and uncertainty analysis to a realistic scientific forecasting setting with applications to human cancer biology. We release all code, data, and trained models.",
+              "scope": "abstract",
+              "source_hash": "sha256:b490f3ffa20059c827c7a1dde2576cc7857a3b26d3fe14489e47a2fc3f24f710",
+              "span_id": "span-9a92d1c10b9b4e9ee5a9185bd6bb4afd",
+              "start": 0,
+              "version_id": "arxiv:2610.41015:v1:metadata-9d3401c4c7c1014c",
+              "work_id": "arxiv:2610.41015"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "Post-training against strictly proper scoring rules significantly improves both calibration and discrimination."
+        },
+        {
+          "claim_id": "c5",
+          "evidence": [
+            {
+              "end": 1516,
+              "material_id": "mat-1c5ecdf06434f317157b2e5fce1b3b0e",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "Expert scientists excel at weighing empirical findings from multiple sources that vary in both statistical reliability and epistemic relevance. To what extent are language models, which are increasingly driving autonomous discovery systems, capable of such evidence deliberation? We introduce EDB-Bio, a scientific reasoning benchmark curated from real-world data in three biological domains: drug-perturbation transcriptomics, CRISPR screens, and human genome-wide association studies (GWAS). Each of EDB-Bio's 96k episodes presents a sequence of experimental results from published studies and asks the model to predict the probability that a target hypothesis is true. Out-of-the-box, open-weight and frontier models alike demonstrate systematic underconfidence and attain Brier scores comparable to a trivial base-rate forecaster. Post-training against strictly proper scoring rules significantly improves both calibration and discrimination. This calibration pays off downstream: in a sequential experiment selection task, our Ibis0 model is 2.5 times more efficient than the best frontier model. Throughout, quantifying evidence weights as Bayes factors reveals how models update their beliefs over time, whether they agree with expert biologists on relevance, and where they exhibit inconsistencies and biases. Our work extends calibration training and uncertainty analysis to a realistic scientific forecasting setting with applications to human cancer biology. We release all code, data, and trained models.",
+              "scope": "abstract",
+              "source_hash": "sha256:b490f3ffa20059c827c7a1dde2576cc7857a3b26d3fe14489e47a2fc3f24f710",
+              "span_id": "span-9a92d1c10b9b4e9ee5a9185bd6bb4afd",
+              "start": 0,
+              "version_id": "arxiv:2610.41015:v1:metadata-9d3401c4c7c1014c",
+              "work_id": "arxiv:2610.41015"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "In a sequential experiment selection task, the authors' Ibis0 model is reported as 2.5 times more efficient than the best frontier model."
+        },
+        {
+          "claim_id": "c6",
+          "evidence": [
+            {
+              "end": 1516,
+              "material_id": "mat-1c5ecdf06434f317157b2e5fce1b3b0e",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "Expert scientists excel at weighing empirical findings from multiple sources that vary in both statistical reliability and epistemic relevance. To what extent are language models, which are increasingly driving autonomous discovery systems, capable of such evidence deliberation? We introduce EDB-Bio, a scientific reasoning benchmark curated from real-world data in three biological domains: drug-perturbation transcriptomics, CRISPR screens, and human genome-wide association studies (GWAS). Each of EDB-Bio's 96k episodes presents a sequence of experimental results from published studies and asks the model to predict the probability that a target hypothesis is true. Out-of-the-box, open-weight and frontier models alike demonstrate systematic underconfidence and attain Brier scores comparable to a trivial base-rate forecaster. Post-training against strictly proper scoring rules significantly improves both calibration and discrimination. This calibration pays off downstream: in a sequential experiment selection task, our Ibis0 model is 2.5 times more efficient than the best frontier model. Throughout, quantifying evidence weights as Bayes factors reveals how models update their beliefs over time, whether they agree with expert biologists on relevance, and where they exhibit inconsistencies and biases. Our work extends calibration training and uncertainty analysis to a realistic scientific forecasting setting with applications to human cancer biology. We release all code, data, and trained models.",
+              "scope": "abstract",
+              "source_hash": "sha256:b490f3ffa20059c827c7a1dde2576cc7857a3b26d3fe14489e47a2fc3f24f710",
+              "span_id": "span-9a92d1c10b9b4e9ee5a9185bd6bb4afd",
+              "start": 0,
+              "version_id": "arxiv:2610.41015:v1:metadata-9d3401c4c7c1014c",
+              "work_id": "arxiv:2610.41015"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "The authors quantify evidence weights as Bayes factors to examine how models update beliefs over time, whether they agree with expert biologists on relevance, and where they show inconsistencies and biases."
+        }
+      ],
+      "remaining_prose": {
+        "abstention": null,
+        "gaps": [
+          "Request the full text to check how the 2.5x efficiency figure and the baselines are defined and measured.",
+          "Request details on how expert biologist agreement on relevance was measured and on the reported inconsistencies and biases."
+        ],
+        "proposal": "Retrieve the full paper to separate measured results (Brier scores, calibration, experiment-selection efficiency) from proposed downstream use.",
+        "questions": [
+          "What further evidence, if any, would clarify the selected claims and their limitations?",
+          "Do the calibration gains hold on held-out domains or only on the three biological domains used here?"
+        ]
+      },
+      "judgments": {
+        "premise": null,
+        "expected_disposition": null,
+        "reason": null
+      },
+      "reviewer": null,
+      "reviewed_at": null,
+      "provenance": null
+    },
+    {
+      "id": "itm-da3a3844988a",
+      "request_digest": "fc53cb8ca3b09e096b114bced1d9d7c3470e195cdcd25b2506ca60e0b82068ff",
+      "question_index": 2,
+      "question": "What ablations isolate the contribution of reasoning traces in ReAct and reflection tokens in Self-RAG?",
+      "scored_claims": [
+        {
+          "claim_id": "c1",
+          "evidence": [
+            {
+              "end": 3888,
+              "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+              "page": 1,
+              "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+              "quote": "Furthermore, on two interactive decision making benchmarks (ALFWorld and\n                           WebShop), ReAct outperforms imitation and reinforcement learning methods by\n                            an absolute success rate of 34% and 10% respectively, while being prompted with\n                              only one or two in-context examples.\n\n\n                1  INTRODUCTION\n\n              A unique feature of human intelligence is the ability to seamlessly combine task-oriented actions with\n                        verbal reasoning (or inner speech, Alderson-Day & Fernyhough, 2015), which has been theorized toarXiv:2210.03629v3                      play an important role in human cognition for enabling self-regulation or strategization (Vygotsky,\n                     1987; Luria, 1965; Fernyhough, 2010) and maintaining a working memory (Baddeley, 1992). Con-\n                         sider the example of cooking up a dish in the kitchen. Between any two speciﬁc actions, we may\n                       reason in language in order to track progress (“now that everything is cut, I should heat up the pot of\n                        water”), to handle exceptions or adjust the plan according to the situation (“I don’t have salt, so let\n                me use soy sauce and pepper instead”), and to realize when external information is needed (“how do\n                             I prepare dough? Let me search on the Internet”).",
+              "scope": "excerpt",
+              "source_hash": "sha256:f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69",
+              "span_id": "span-55b2971cd5f40c431b738813c7ef10cd",
+              "start": 2443,
+              "version_id": "arxiv:2210.03629:v3",
+              "work_id": "arxiv:2210.03629"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "excerpt",
+          "required_section": null,
+          "text": "The ReAct excerpt reports that on two interactive decision-making benchmarks (ALFWorld and WebShop), ReAct outperforms imitation and reinforcement learning methods by absolute success rates of 34% and 10% respectively, while prompted with only one or two in-context examples."
+        },
+        {
+          "claim_id": "c2",
+          "evidence": [
+            {
+              "end": 3616,
+              "material_id": "mat-f98fbd73f423776117f60cac36edc90a",
+              "page": 3,
+              "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+              "quote": "While their value function\nsimply indicates an overall score of each generation, SELF-RAG trains to an arbitrary LM to learn to\ngenerate fine-grained self-reflection and customizable inference.\n\nTraining and generating with critics. Training LLMs with reinforcement learning (e.g., Proximal\nPolicy Optimization or PPO; Schulman et al. 2017) from human feedback (RLHF) has proven\neffective in aligning LLMs with human preferences (Ouyang et al., 2022). Wu et al. (2023) introduce\nfine-grained RLHF with multiple reward models. Though our work also studies fine-grained critique\non retrieval and generation, we train our target LM on task examples augmented with reflection\ntokens from a critic model offline, with a far lower training cost compared to RLHF. In addition,\nreflection tokens in SELF-RAG enable controllable generation at inference, while RLHF focuses on\nhuman preference alignment during training. Other works use general control tokens to guide LM\ngeneration (Lu et al., 2022; Korbak et al., 2023), while SELF-RAG uses reflection tokens to decide the\nneed for retrieval and to self-evaluate generation quality. Xie et al. (2023) propose a self-evaluation-\nguided decoding framework, but they focus only on reasoning tasks with one evaluation dimension\n(reasoning path consistency) and without retrieval. Recent work on LLM refinement (Dhuliawala\net al., 2023; Madaan et al., 2023; Paul et al., 2023) prompts a model to generate task output, natural\nlanguage feedback and refined task output iteratively, but at the cost of inference efficiency.",
+              "scope": "excerpt",
+              "source_hash": "sha256:d9eaa1398abac0df67a9d0933a5bf8b6d9d83d2e72da2a486073cd842dd52978",
+              "span_id": "span-f021c711415ab7488317517d7cbe41d5",
+              "start": 2058,
+              "version_id": "arxiv:2310.11511:v1",
+              "work_id": "arxiv:2310.11511"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "excerpt",
+          "required_section": null,
+          "text": "The Self-RAG excerpt states that Self-RAG trains the target LM on task examples augmented with reflection tokens from a critic model offline, at far lower training cost than RLHF, and that reflection tokens enable controllable generation at inference."
+        },
+        {
+          "claim_id": "c3",
+          "evidence": [
+            {
+              "end": 3616,
+              "material_id": "mat-f98fbd73f423776117f60cac36edc90a",
+              "page": 3,
+              "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+              "quote": "While their value function\nsimply indicates an overall score of each generation, SELF-RAG trains to an arbitrary LM to learn to\ngenerate fine-grained self-reflection and customizable inference.\n\nTraining and generating with critics. Training LLMs with reinforcement learning (e.g., Proximal\nPolicy Optimization or PPO; Schulman et al. 2017) from human feedback (RLHF) has proven\neffective in aligning LLMs with human preferences (Ouyang et al., 2022). Wu et al. (2023) introduce\nfine-grained RLHF with multiple reward models. Though our work also studies fine-grained critique\non retrieval and generation, we train our target LM on task examples augmented with reflection\ntokens from a critic model offline, with a far lower training cost compared to RLHF. In addition,\nreflection tokens in SELF-RAG enable controllable generation at inference, while RLHF focuses on\nhuman preference alignment during training. Other works use general control tokens to guide LM\ngeneration (Lu et al., 2022; Korbak et al., 2023), while SELF-RAG uses reflection tokens to decide the\nneed for retrieval and to self-evaluate generation quality. Xie et al. (2023) propose a self-evaluation-\nguided decoding framework, but they focus only on reasoning tasks with one evaluation dimension\n(reasoning path consistency) and without retrieval. Recent work on LLM refinement (Dhuliawala\net al., 2023; Madaan et al., 2023; Paul et al., 2023) prompts a model to generate task output, natural\nlanguage feedback and refined task output iteratively, but at the cost of inference efficiency.",
+              "scope": "excerpt",
+              "source_hash": "sha256:d9eaa1398abac0df67a9d0933a5bf8b6d9d83d2e72da2a486073cd842dd52978",
+              "span_id": "span-f021c711415ab7488317517d7cbe41d5",
+              "start": 2058,
+              "version_id": "arxiv:2310.11511:v1",
+              "work_id": "arxiv:2310.11511"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "excerpt",
+          "required_section": null,
+          "text": "The Self-RAG excerpt states that Self-RAG uses reflection tokens to decide the need for retrieval and to self-evaluate generation quality."
+        },
+        {
+          "claim_id": "c4",
+          "evidence": [
+            {
+              "end": 3616,
+              "material_id": "mat-f98fbd73f423776117f60cac36edc90a",
+              "page": 3,
+              "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+              "quote": "While their value function\nsimply indicates an overall score of each generation, SELF-RAG trains to an arbitrary LM to learn to\ngenerate fine-grained self-reflection and customizable inference.\n\nTraining and generating with critics. Training LLMs with reinforcement learning (e.g., Proximal\nPolicy Optimization or PPO; Schulman et al. 2017) from human feedback (RLHF) has proven\neffective in aligning LLMs with human preferences (Ouyang et al., 2022). Wu et al. (2023) introduce\nfine-grained RLHF with multiple reward models. Though our work also studies fine-grained critique\non retrieval and generation, we train our target LM on task examples augmented with reflection\ntokens from a critic model offline, with a far lower training cost compared to RLHF. In addition,\nreflection tokens in SELF-RAG enable controllable generation at inference, while RLHF focuses on\nhuman preference alignment during training. Other works use general control tokens to guide LM\ngeneration (Lu et al., 2022; Korbak et al., 2023), while SELF-RAG uses reflection tokens to decide the\nneed for retrieval and to self-evaluate generation quality. Xie et al. (2023) propose a self-evaluation-\nguided decoding framework, but they focus only on reasoning tasks with one evaluation dimension\n(reasoning path consistency) and without retrieval. Recent work on LLM refinement (Dhuliawala\net al., 2023; Madaan et al., 2023; Paul et al., 2023) prompts a model to generate task output, natural\nlanguage feedback and refined task output iteratively, but at the cost of inference efficiency.",
+              "scope": "excerpt",
+              "source_hash": "sha256:d9eaa1398abac0df67a9d0933a5bf8b6d9d83d2e72da2a486073cd842dd52978",
+              "span_id": "span-f021c711415ab7488317517d7cbe41d5",
+              "start": 2058,
+              "version_id": "arxiv:2310.11511:v1",
+              "work_id": "arxiv:2310.11511"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "excerpt",
+          "required_section": null,
+          "text": "The Self-RAG excerpt contains related-work positioning (comparison to RLHF, control tokens, and iterative LLM refinement) and no empirical evaluation results; this excerpt alone cannot support benchmark-level comparison with ReAct."
+        },
+        {
+          "claim_id": "c5",
+          "evidence": [
+            {
+              "end": 3888,
+              "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+              "page": 1,
+              "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+              "quote": "Furthermore, on two interactive decision making benchmarks (ALFWorld and\n                           WebShop), ReAct outperforms imitation and reinforcement learning methods by\n                            an absolute success rate of 34% and 10% respectively, while being prompted with\n                              only one or two in-context examples.\n\n\n                1  INTRODUCTION\n\n              A unique feature of human intelligence is the ability to seamlessly combine task-oriented actions with\n                        verbal reasoning (or inner speech, Alderson-Day & Fernyhough, 2015), which has been theorized toarXiv:2210.03629v3                      play an important role in human cognition for enabling self-regulation or strategization (Vygotsky,\n                     1987; Luria, 1965; Fernyhough, 2010) and maintaining a working memory (Baddeley, 1992). Con-\n                         sider the example of cooking up a dish in the kitchen. Between any two speciﬁc actions, we may\n                       reason in language in order to track progress (“now that everything is cut, I should heat up the pot of\n                        water”), to handle exceptions or adjust the plan according to the situation (“I don’t have salt, so let\n                me use soy sauce and pepper instead”), and to realize when external information is needed (“how do\n                             I prepare dough? Let me search on the Internet”).",
+              "scope": "excerpt",
+              "source_hash": "sha256:f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69",
+              "span_id": "span-55b2971cd5f40c431b738813c7ef10cd",
+              "start": 2443,
+              "version_id": "arxiv:2210.03629:v3",
+              "work_id": "arxiv:2210.03629"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "excerpt",
+          "required_section": null,
+          "text": "The ReAct excerpt gives headline results and motivation for interleaving reasoning with actions; it does not describe baselines, variance, or metric details beyond the stated absolute success-rate margins."
+        }
+      ],
+      "remaining_prose": {
+        "abstention": null,
+        "comparison_basis": [
+          "c4",
+          "c5"
+        ],
+        "gaps": [
+          "Request evaluation sections, benchmarks, baselines and metrics from each selected source.",
+          "Request the relevant full-text sections before drawing further conclusions.",
+          "Request ablations and controlled comparisons from each selected source."
+        ],
+        "proposal": "Retrieve the evaluation and ablation sections of both papers to compare benchmarks, baselines, metrics and controlled comparisons before drawing any conclusion.",
+        "questions": [
+          "What benchmarks, baselines and metrics does Self-RAG report in its evaluation sections?",
+          "Do the two works share any common tasks or metrics permitting direct comparison?",
+          "What ablations isolate the contribution of reasoning traces in ReAct and reflection tokens in Self-RAG?"
+        ]
+      },
+      "judgments": {
+        "premise": null,
+        "expected_disposition": null,
+        "reason": null
+      },
+      "reviewer": null,
+      "reviewed_at": null,
+      "provenance": null
+    },
+    {
+      "id": "itm-b087e910528f",
+      "request_digest": "8afb006ec9849bf4d4a47612b2db9dea3a3fe37cdd4be68030bf60baf67c75c4",
+      "question_index": 0,
+      "question": "Given that Appendix E.1 provides success and failure examples, which examples would help inspect the reported loop errors?",
+      "scored_claims": [
+        {
+          "claim_id": "c1",
+          "evidence": [
+            {
+              "end": 3379,
+              "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+              "page": 6,
+              "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+              "quote": "B) While interleaving reasoning, action and observation steps improves ReAct’s grounded-\nness and trustworthiness, such a structural constraint also reduces its ﬂexibility in formulating\nreasoning steps, leading to more reasoning error rate than CoT. we note that there is one frequent\nerror pattern speciﬁc to ReAct, in which the model repetitively generates the previous thoughts and\nactions, and we categorize it as part of “reasoning error” as the model fails to reason about what the\nproper next action to take and jump out of the loop4.\n\n  C) For ReAct, successfully retrieving informative knowledge via search is critical. Non-\ninformative search, which counts for 23% of the error cases, derails the model reasoning and gives\nit a hard time to recover and reformulate thoughts. This is perhaps an expected trade-off between\nfactuality and ﬂexibility, which motivates our proposed strategies of combining two methods.\n\nWe provide examples for each success and failure modes in Appendix E.1. We also ﬁnd some\nHotpotQA questions may contain outdated answer labels, see Figure 4 for example.\n\nReAct + CoT-SC perform best for prompting LLMs  Also shown in Table 1, the best prompting\nmethod on HotpotQA and Fever are ReAct →CoT-SC and CoT-SC →ReAct respectively.\nFurthermore, Figure 2 shows how different methods perform with respect to the number of CoT-SC\nsamples used.",
+              "scope": "excerpt",
+              "source_hash": "sha256:f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69",
+              "span_id": "span-b615625987cdbfe74682109ab6dc0e19",
+              "start": 2005,
+              "version_id": "arxiv:2210.03629:v3",
+              "work_id": "arxiv:2210.03629"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "excerpt",
+          "required_section": null,
+          "text": "The excerpt states that interleaving reasoning, action and observation steps improves ReAct's groundedness and trustworthiness."
+        },
+        {
+          "claim_id": "c2",
+          "evidence": [
+            {
+              "end": 3379,
+              "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+              "page": 6,
+              "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+              "quote": "B) While interleaving reasoning, action and observation steps improves ReAct’s grounded-\nness and trustworthiness, such a structural constraint also reduces its ﬂexibility in formulating\nreasoning steps, leading to more reasoning error rate than CoT. we note that there is one frequent\nerror pattern speciﬁc to ReAct, in which the model repetitively generates the previous thoughts and\nactions, and we categorize it as part of “reasoning error” as the model fails to reason about what the\nproper next action to take and jump out of the loop4.\n\n  C) For ReAct, successfully retrieving informative knowledge via search is critical. Non-\ninformative search, which counts for 23% of the error cases, derails the model reasoning and gives\nit a hard time to recover and reformulate thoughts. This is perhaps an expected trade-off between\nfactuality and ﬂexibility, which motivates our proposed strategies of combining two methods.\n\nWe provide examples for each success and failure modes in Appendix E.1. We also ﬁnd some\nHotpotQA questions may contain outdated answer labels, see Figure 4 for example.\n\nReAct + CoT-SC perform best for prompting LLMs  Also shown in Table 1, the best prompting\nmethod on HotpotQA and Fever are ReAct →CoT-SC and CoT-SC →ReAct respectively.\nFurthermore, Figure 2 shows how different methods perform with respect to the number of CoT-SC\nsamples used.",
+              "scope": "excerpt",
+              "source_hash": "sha256:f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69",
+              "span_id": "span-b615625987cdbfe74682109ab6dc0e19",
+              "start": 2005,
+              "version_id": "arxiv:2210.03629:v3",
+              "work_id": "arxiv:2210.03629"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "excerpt",
+          "required_section": null,
+          "text": "The excerpt states that this structural constraint also reduces flexibility in formulating reasoning steps, leading to a higher reasoning error rate than CoT."
+        },
+        {
+          "claim_id": "c3",
+          "evidence": [
+            {
+              "end": 3379,
+              "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+              "page": 6,
+              "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+              "quote": "B) While interleaving reasoning, action and observation steps improves ReAct’s grounded-\nness and trustworthiness, such a structural constraint also reduces its ﬂexibility in formulating\nreasoning steps, leading to more reasoning error rate than CoT. we note that there is one frequent\nerror pattern speciﬁc to ReAct, in which the model repetitively generates the previous thoughts and\nactions, and we categorize it as part of “reasoning error” as the model fails to reason about what the\nproper next action to take and jump out of the loop4.\n\n  C) For ReAct, successfully retrieving informative knowledge via search is critical. Non-\ninformative search, which counts for 23% of the error cases, derails the model reasoning and gives\nit a hard time to recover and reformulate thoughts. This is perhaps an expected trade-off between\nfactuality and ﬂexibility, which motivates our proposed strategies of combining two methods.\n\nWe provide examples for each success and failure modes in Appendix E.1. We also ﬁnd some\nHotpotQA questions may contain outdated answer labels, see Figure 4 for example.\n\nReAct + CoT-SC perform best for prompting LLMs  Also shown in Table 1, the best prompting\nmethod on HotpotQA and Fever are ReAct →CoT-SC and CoT-SC →ReAct respectively.\nFurthermore, Figure 2 shows how different methods perform with respect to the number of CoT-SC\nsamples used.",
+              "scope": "excerpt",
+              "source_hash": "sha256:f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69",
+              "span_id": "span-b615625987cdbfe74682109ab6dc0e19",
+              "start": 2005,
+              "version_id": "arxiv:2210.03629:v3",
+              "work_id": "arxiv:2210.03629"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "excerpt",
+          "required_section": null,
+          "text": "The excerpt describes a frequent ReAct-specific error pattern: repeatedly generating previous thoughts and actions, categorized as a reasoning error because the model fails to pick the next action and exit the loop."
+        },
+        {
+          "claim_id": "c4",
+          "evidence": [
+            {
+              "end": 3379,
+              "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+              "page": 6,
+              "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+              "quote": "B) While interleaving reasoning, action and observation steps improves ReAct’s grounded-\nness and trustworthiness, such a structural constraint also reduces its ﬂexibility in formulating\nreasoning steps, leading to more reasoning error rate than CoT. we note that there is one frequent\nerror pattern speciﬁc to ReAct, in which the model repetitively generates the previous thoughts and\nactions, and we categorize it as part of “reasoning error” as the model fails to reason about what the\nproper next action to take and jump out of the loop4.\n\n  C) For ReAct, successfully retrieving informative knowledge via search is critical. Non-\ninformative search, which counts for 23% of the error cases, derails the model reasoning and gives\nit a hard time to recover and reformulate thoughts. This is perhaps an expected trade-off between\nfactuality and ﬂexibility, which motivates our proposed strategies of combining two methods.\n\nWe provide examples for each success and failure modes in Appendix E.1. We also ﬁnd some\nHotpotQA questions may contain outdated answer labels, see Figure 4 for example.\n\nReAct + CoT-SC perform best for prompting LLMs  Also shown in Table 1, the best prompting\nmethod on HotpotQA and Fever are ReAct →CoT-SC and CoT-SC →ReAct respectively.\nFurthermore, Figure 2 shows how different methods perform with respect to the number of CoT-SC\nsamples used.",
+              "scope": "excerpt",
+              "source_hash": "sha256:f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69",
+              "span_id": "span-b615625987cdbfe74682109ab6dc0e19",
+              "start": 2005,
+              "version_id": "arxiv:2210.03629:v3",
+              "work_id": "arxiv:2210.03629"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "excerpt",
+          "required_section": null,
+          "text": "The excerpt states that successfully retrieving informative knowledge via search is critical for ReAct, and that non-informative search accounts for 23% of error cases and derails its reasoning."
+        },
+        {
+          "claim_id": "c5",
+          "evidence": [
+            {
+              "end": 3379,
+              "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+              "page": 6,
+              "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+              "quote": "B) While interleaving reasoning, action and observation steps improves ReAct’s grounded-\nness and trustworthiness, such a structural constraint also reduces its ﬂexibility in formulating\nreasoning steps, leading to more reasoning error rate than CoT. we note that there is one frequent\nerror pattern speciﬁc to ReAct, in which the model repetitively generates the previous thoughts and\nactions, and we categorize it as part of “reasoning error” as the model fails to reason about what the\nproper next action to take and jump out of the loop4.\n\n  C) For ReAct, successfully retrieving informative knowledge via search is critical. Non-\ninformative search, which counts for 23% of the error cases, derails the model reasoning and gives\nit a hard time to recover and reformulate thoughts. This is perhaps an expected trade-off between\nfactuality and ﬂexibility, which motivates our proposed strategies of combining two methods.\n\nWe provide examples for each success and failure modes in Appendix E.1. We also ﬁnd some\nHotpotQA questions may contain outdated answer labels, see Figure 4 for example.\n\nReAct + CoT-SC perform best for prompting LLMs  Also shown in Table 1, the best prompting\nmethod on HotpotQA and Fever are ReAct →CoT-SC and CoT-SC →ReAct respectively.\nFurthermore, Figure 2 shows how different methods perform with respect to the number of CoT-SC\nsamples used.",
+              "scope": "excerpt",
+              "source_hash": "sha256:f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69",
+              "span_id": "span-b615625987cdbfe74682109ab6dc0e19",
+              "start": 2005,
+              "version_id": "arxiv:2210.03629:v3",
+              "work_id": "arxiv:2210.03629"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "excerpt",
+          "required_section": null,
+          "text": "The excerpt says this is perhaps an expected trade-off between factuality and flexibility, which motivates the authors' strategies of combining two methods."
+        },
+        {
+          "claim_id": "c6",
+          "evidence": [
+            {
+              "end": 3379,
+              "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+              "page": 6,
+              "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+              "quote": "B) While interleaving reasoning, action and observation steps improves ReAct’s grounded-\nness and trustworthiness, such a structural constraint also reduces its ﬂexibility in formulating\nreasoning steps, leading to more reasoning error rate than CoT. we note that there is one frequent\nerror pattern speciﬁc to ReAct, in which the model repetitively generates the previous thoughts and\nactions, and we categorize it as part of “reasoning error” as the model fails to reason about what the\nproper next action to take and jump out of the loop4.\n\n  C) For ReAct, successfully retrieving informative knowledge via search is critical. Non-\ninformative search, which counts for 23% of the error cases, derails the model reasoning and gives\nit a hard time to recover and reformulate thoughts. This is perhaps an expected trade-off between\nfactuality and ﬂexibility, which motivates our proposed strategies of combining two methods.\n\nWe provide examples for each success and failure modes in Appendix E.1. We also ﬁnd some\nHotpotQA questions may contain outdated answer labels, see Figure 4 for example.\n\nReAct + CoT-SC perform best for prompting LLMs  Also shown in Table 1, the best prompting\nmethod on HotpotQA and Fever are ReAct →CoT-SC and CoT-SC →ReAct respectively.\nFurthermore, Figure 2 shows how different methods perform with respect to the number of CoT-SC\nsamples used.",
+              "scope": "excerpt",
+              "source_hash": "sha256:f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69",
+              "span_id": "span-b615625987cdbfe74682109ab6dc0e19",
+              "start": 2005,
+              "version_id": "arxiv:2210.03629:v3",
+              "work_id": "arxiv:2210.03629"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "excerpt",
+          "required_section": null,
+          "text": "The excerpt reports that the best prompting method on HotpotQA is ReAct→CoT-SC and on Fever is CoT-SC→ReAct."
+        }
+      ],
+      "remaining_prose": {
+        "abstention": null,
+        "gaps": [
+          "Request the full text to check how error categories and percentages were annotated and on what sample.",
+          "Request the results tables and figures to examine the reported method comparisons directly."
+        ],
+        "proposal": "Retrieve the full paper's error-analysis and results sections to verify annotation procedure, sample sizes and the combined-method comparisons.",
+        "questions": [
+          "Given that Appendix E.1 provides success and failure examples, which examples would help inspect the reported loop errors?",
+          "Does the excerpt's error analysis generalize beyond the tasks it covers?"
+        ]
+      },
+      "judgments": {
+        "premise": null,
+        "expected_disposition": null,
+        "reason": null
+      },
+      "reviewer": null,
+      "reviewed_at": null,
+      "provenance": null
+    },
+    {
+      "id": "itm-58268cc1e447",
+      "request_digest": "cb8e357d5f98fc1ed29fb4b4b9915d4052f3f0896541fc1452a79180f54b2b7f",
+      "question_index": 0,
+      "question": "Given the excerpt's statement that code, data and trained models are released, how could I inspect those artifacts?",
+      "scored_claims": [
+        {
+          "claim_id": "c1",
+          "evidence": [
+            {
+              "end": 1516,
+              "material_id": "mat-1c5ecdf06434f317157b2e5fce1b3b0e",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "Expert scientists excel at weighing empirical findings from multiple sources that vary in both statistical reliability and epistemic relevance. To what extent are language models, which are increasingly driving autonomous discovery systems, capable of such evidence deliberation? We introduce EDB-Bio, a scientific reasoning benchmark curated from real-world data in three biological domains: drug-perturbation transcriptomics, CRISPR screens, and human genome-wide association studies (GWAS). Each of EDB-Bio's 96k episodes presents a sequence of experimental results from published studies and asks the model to predict the probability that a target hypothesis is true. Out-of-the-box, open-weight and frontier models alike demonstrate systematic underconfidence and attain Brier scores comparable to a trivial base-rate forecaster. Post-training against strictly proper scoring rules significantly improves both calibration and discrimination. This calibration pays off downstream: in a sequential experiment selection task, our Ibis0 model is 2.5 times more efficient than the best frontier model. Throughout, quantifying evidence weights as Bayes factors reveals how models update their beliefs over time, whether they agree with expert biologists on relevance, and where they exhibit inconsistencies and biases. Our work extends calibration training and uncertainty analysis to a realistic scientific forecasting setting with applications to human cancer biology. We release all code, data, and trained models.",
+              "scope": "abstract",
+              "source_hash": "sha256:b490f3ffa20059c827c7a1dde2576cc7857a3b26d3fe14489e47a2fc3f24f710",
+              "span_id": "span-9a92d1c10b9b4e9ee5a9185bd6bb4afd",
+              "start": 0,
+              "version_id": "arxiv:2610.41015:v1:metadata-9d3401c4c7c1014c",
+              "work_id": "arxiv:2610.41015"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "EDB-Bio is a scientific reasoning benchmark built from real-world data in three biological domains: drug-perturbation transcriptomics, CRISPR screens, and human GWAS."
+        },
+        {
+          "claim_id": "c2",
+          "evidence": [
+            {
+              "end": 1516,
+              "material_id": "mat-1c5ecdf06434f317157b2e5fce1b3b0e",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "Expert scientists excel at weighing empirical findings from multiple sources that vary in both statistical reliability and epistemic relevance. To what extent are language models, which are increasingly driving autonomous discovery systems, capable of such evidence deliberation? We introduce EDB-Bio, a scientific reasoning benchmark curated from real-world data in three biological domains: drug-perturbation transcriptomics, CRISPR screens, and human genome-wide association studies (GWAS). Each of EDB-Bio's 96k episodes presents a sequence of experimental results from published studies and asks the model to predict the probability that a target hypothesis is true. Out-of-the-box, open-weight and frontier models alike demonstrate systematic underconfidence and attain Brier scores comparable to a trivial base-rate forecaster. Post-training against strictly proper scoring rules significantly improves both calibration and discrimination. This calibration pays off downstream: in a sequential experiment selection task, our Ibis0 model is 2.5 times more efficient than the best frontier model. Throughout, quantifying evidence weights as Bayes factors reveals how models update their beliefs over time, whether they agree with expert biologists on relevance, and where they exhibit inconsistencies and biases. Our work extends calibration training and uncertainty analysis to a realistic scientific forecasting setting with applications to human cancer biology. We release all code, data, and trained models.",
+              "scope": "abstract",
+              "source_hash": "sha256:b490f3ffa20059c827c7a1dde2576cc7857a3b26d3fe14489e47a2fc3f24f710",
+              "span_id": "span-9a92d1c10b9b4e9ee5a9185bd6bb4afd",
+              "start": 0,
+              "version_id": "arxiv:2610.41015:v1:metadata-9d3401c4c7c1014c",
+              "work_id": "arxiv:2610.41015"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "Each of EDB-Bio's 96k episodes presents a sequence of experimental results from published studies and asks the model to predict the probability that a target hypothesis is true."
+        },
+        {
+          "claim_id": "c3",
+          "evidence": [
+            {
+              "end": 1516,
+              "material_id": "mat-1c5ecdf06434f317157b2e5fce1b3b0e",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "Expert scientists excel at weighing empirical findings from multiple sources that vary in both statistical reliability and epistemic relevance. To what extent are language models, which are increasingly driving autonomous discovery systems, capable of such evidence deliberation? We introduce EDB-Bio, a scientific reasoning benchmark curated from real-world data in three biological domains: drug-perturbation transcriptomics, CRISPR screens, and human genome-wide association studies (GWAS). Each of EDB-Bio's 96k episodes presents a sequence of experimental results from published studies and asks the model to predict the probability that a target hypothesis is true. Out-of-the-box, open-weight and frontier models alike demonstrate systematic underconfidence and attain Brier scores comparable to a trivial base-rate forecaster. Post-training against strictly proper scoring rules significantly improves both calibration and discrimination. This calibration pays off downstream: in a sequential experiment selection task, our Ibis0 model is 2.5 times more efficient than the best frontier model. Throughout, quantifying evidence weights as Bayes factors reveals how models update their beliefs over time, whether they agree with expert biologists on relevance, and where they exhibit inconsistencies and biases. Our work extends calibration training and uncertainty analysis to a realistic scientific forecasting setting with applications to human cancer biology. We release all code, data, and trained models.",
+              "scope": "abstract",
+              "source_hash": "sha256:b490f3ffa20059c827c7a1dde2576cc7857a3b26d3fe14489e47a2fc3f24f710",
+              "span_id": "span-9a92d1c10b9b4e9ee5a9185bd6bb4afd",
+              "start": 0,
+              "version_id": "arxiv:2610.41015:v1:metadata-9d3401c4c7c1014c",
+              "work_id": "arxiv:2610.41015"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "Out-of-the-box open-weight and frontier models show systematic underconfidence and attain Brier scores comparable to a trivial base-rate forecaster."
+        },
+        {
+          "claim_id": "c4",
+          "evidence": [
+            {
+              "end": 1516,
+              "material_id": "mat-1c5ecdf06434f317157b2e5fce1b3b0e",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "Expert scientists excel at weighing empirical findings from multiple sources that vary in both statistical reliability and epistemic relevance. To what extent are language models, which are increasingly driving autonomous discovery systems, capable of such evidence deliberation? We introduce EDB-Bio, a scientific reasoning benchmark curated from real-world data in three biological domains: drug-perturbation transcriptomics, CRISPR screens, and human genome-wide association studies (GWAS). Each of EDB-Bio's 96k episodes presents a sequence of experimental results from published studies and asks the model to predict the probability that a target hypothesis is true. Out-of-the-box, open-weight and frontier models alike demonstrate systematic underconfidence and attain Brier scores comparable to a trivial base-rate forecaster. Post-training against strictly proper scoring rules significantly improves both calibration and discrimination. This calibration pays off downstream: in a sequential experiment selection task, our Ibis0 model is 2.5 times more efficient than the best frontier model. Throughout, quantifying evidence weights as Bayes factors reveals how models update their beliefs over time, whether they agree with expert biologists on relevance, and where they exhibit inconsistencies and biases. Our work extends calibration training and uncertainty analysis to a realistic scientific forecasting setting with applications to human cancer biology. We release all code, data, and trained models.",
+              "scope": "abstract",
+              "source_hash": "sha256:b490f3ffa20059c827c7a1dde2576cc7857a3b26d3fe14489e47a2fc3f24f710",
+              "span_id": "span-9a92d1c10b9b4e9ee5a9185bd6bb4afd",
+              "start": 0,
+              "version_id": "arxiv:2610.41015:v1:metadata-9d3401c4c7c1014c",
+              "work_id": "arxiv:2610.41015"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "Post-training against strictly proper scoring rules significantly improves both calibration and discrimination."
+        },
+        {
+          "claim_id": "c5",
+          "evidence": [
+            {
+              "end": 1516,
+              "material_id": "mat-1c5ecdf06434f317157b2e5fce1b3b0e",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "Expert scientists excel at weighing empirical findings from multiple sources that vary in both statistical reliability and epistemic relevance. To what extent are language models, which are increasingly driving autonomous discovery systems, capable of such evidence deliberation? We introduce EDB-Bio, a scientific reasoning benchmark curated from real-world data in three biological domains: drug-perturbation transcriptomics, CRISPR screens, and human genome-wide association studies (GWAS). Each of EDB-Bio's 96k episodes presents a sequence of experimental results from published studies and asks the model to predict the probability that a target hypothesis is true. Out-of-the-box, open-weight and frontier models alike demonstrate systematic underconfidence and attain Brier scores comparable to a trivial base-rate forecaster. Post-training against strictly proper scoring rules significantly improves both calibration and discrimination. This calibration pays off downstream: in a sequential experiment selection task, our Ibis0 model is 2.5 times more efficient than the best frontier model. Throughout, quantifying evidence weights as Bayes factors reveals how models update their beliefs over time, whether they agree with expert biologists on relevance, and where they exhibit inconsistencies and biases. Our work extends calibration training and uncertainty analysis to a realistic scientific forecasting setting with applications to human cancer biology. We release all code, data, and trained models.",
+              "scope": "abstract",
+              "source_hash": "sha256:b490f3ffa20059c827c7a1dde2576cc7857a3b26d3fe14489e47a2fc3f24f710",
+              "span_id": "span-9a92d1c10b9b4e9ee5a9185bd6bb4afd",
+              "start": 0,
+              "version_id": "arxiv:2610.41015:v1:metadata-9d3401c4c7c1014c",
+              "work_id": "arxiv:2610.41015"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "In a sequential experiment selection task, the authors' Ibis0 model is reported as 2.5 times more efficient than the best frontier model."
+        },
+        {
+          "claim_id": "c6",
+          "evidence": [
+            {
+              "end": 1516,
+              "material_id": "mat-1c5ecdf06434f317157b2e5fce1b3b0e",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "Expert scientists excel at weighing empirical findings from multiple sources that vary in both statistical reliability and epistemic relevance. To what extent are language models, which are increasingly driving autonomous discovery systems, capable of such evidence deliberation? We introduce EDB-Bio, a scientific reasoning benchmark curated from real-world data in three biological domains: drug-perturbation transcriptomics, CRISPR screens, and human genome-wide association studies (GWAS). Each of EDB-Bio's 96k episodes presents a sequence of experimental results from published studies and asks the model to predict the probability that a target hypothesis is true. Out-of-the-box, open-weight and frontier models alike demonstrate systematic underconfidence and attain Brier scores comparable to a trivial base-rate forecaster. Post-training against strictly proper scoring rules significantly improves both calibration and discrimination. This calibration pays off downstream: in a sequential experiment selection task, our Ibis0 model is 2.5 times more efficient than the best frontier model. Throughout, quantifying evidence weights as Bayes factors reveals how models update their beliefs over time, whether they agree with expert biologists on relevance, and where they exhibit inconsistencies and biases. Our work extends calibration training and uncertainty analysis to a realistic scientific forecasting setting with applications to human cancer biology. We release all code, data, and trained models.",
+              "scope": "abstract",
+              "source_hash": "sha256:b490f3ffa20059c827c7a1dde2576cc7857a3b26d3fe14489e47a2fc3f24f710",
+              "span_id": "span-9a92d1c10b9b4e9ee5a9185bd6bb4afd",
+              "start": 0,
+              "version_id": "arxiv:2610.41015:v1:metadata-9d3401c4c7c1014c",
+              "work_id": "arxiv:2610.41015"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "The authors quantify evidence weights as Bayes factors to examine how models update beliefs over time, whether they agree with expert biologists on relevance, and where they show inconsistencies and biases."
+        }
+      ],
+      "remaining_prose": {
+        "abstention": null,
+        "gaps": [
+          "Request the full text to check how the 2.5x efficiency figure and the baselines are defined and measured.",
+          "Request details on how expert biologist agreement on relevance was measured and on the reported inconsistencies and biases."
+        ],
+        "proposal": "Retrieve the full paper to separate measured results (Brier scores, calibration, experiment-selection efficiency) from proposed downstream use.",
+        "questions": [
+          "Given the excerpt's statement that code, data and trained models are released, how could I inspect those artifacts?",
+          "Do the calibration gains hold on held-out domains or only on the three biological domains used here?"
+        ]
+      },
+      "judgments": {
+        "premise": null,
+        "expected_disposition": null,
+        "reason": null
+      },
+      "reviewer": null,
+      "reviewed_at": null,
+      "provenance": null
+    },
+    {
+      "id": "itm-873949c81164",
+      "request_digest": "a2785800a5249d13a1c723e9a58a474b2133437b462c7b447ba41e8b98702d83",
+      "question_index": 0,
+      "question": "Why does the excerpt establish a definitive, unconditional factuality–flexibility trade-off?",
+      "scored_claims": [
+        {
+          "claim_id": "c1",
+          "evidence": [
+            {
+              "end": 3379,
+              "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+              "page": 6,
+              "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+              "quote": "B) While interleaving reasoning, action and observation steps improves ReAct’s grounded-\nness and trustworthiness, such a structural constraint also reduces its ﬂexibility in formulating\nreasoning steps, leading to more reasoning error rate than CoT. we note that there is one frequent\nerror pattern speciﬁc to ReAct, in which the model repetitively generates the previous thoughts and\nactions, and we categorize it as part of “reasoning error” as the model fails to reason about what the\nproper next action to take and jump out of the loop4.\n\n  C) For ReAct, successfully retrieving informative knowledge via search is critical. Non-\ninformative search, which counts for 23% of the error cases, derails the model reasoning and gives\nit a hard time to recover and reformulate thoughts. This is perhaps an expected trade-off between\nfactuality and ﬂexibility, which motivates our proposed strategies of combining two methods.\n\nWe provide examples for each success and failure modes in Appendix E.1. We also ﬁnd some\nHotpotQA questions may contain outdated answer labels, see Figure 4 for example.\n\nReAct + CoT-SC perform best for prompting LLMs  Also shown in Table 1, the best prompting\nmethod on HotpotQA and Fever are ReAct →CoT-SC and CoT-SC →ReAct respectively.\nFurthermore, Figure 2 shows how different methods perform with respect to the number of CoT-SC\nsamples used.",
+              "scope": "excerpt",
+              "source_hash": "sha256:f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69",
+              "span_id": "span-b615625987cdbfe74682109ab6dc0e19",
+              "start": 2005,
+              "version_id": "arxiv:2210.03629:v3",
+              "work_id": "arxiv:2210.03629"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "excerpt",
+          "required_section": null,
+          "text": "The excerpt states that interleaving reasoning, action and observation steps improves ReAct's groundedness and trustworthiness."
+        },
+        {
+          "claim_id": "c2",
+          "evidence": [
+            {
+              "end": 3379,
+              "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+              "page": 6,
+              "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+              "quote": "B) While interleaving reasoning, action and observation steps improves ReAct’s grounded-\nness and trustworthiness, such a structural constraint also reduces its ﬂexibility in formulating\nreasoning steps, leading to more reasoning error rate than CoT. we note that there is one frequent\nerror pattern speciﬁc to ReAct, in which the model repetitively generates the previous thoughts and\nactions, and we categorize it as part of “reasoning error” as the model fails to reason about what the\nproper next action to take and jump out of the loop4.\n\n  C) For ReAct, successfully retrieving informative knowledge via search is critical. Non-\ninformative search, which counts for 23% of the error cases, derails the model reasoning and gives\nit a hard time to recover and reformulate thoughts. This is perhaps an expected trade-off between\nfactuality and ﬂexibility, which motivates our proposed strategies of combining two methods.\n\nWe provide examples for each success and failure modes in Appendix E.1. We also ﬁnd some\nHotpotQA questions may contain outdated answer labels, see Figure 4 for example.\n\nReAct + CoT-SC perform best for prompting LLMs  Also shown in Table 1, the best prompting\nmethod on HotpotQA and Fever are ReAct →CoT-SC and CoT-SC →ReAct respectively.\nFurthermore, Figure 2 shows how different methods perform with respect to the number of CoT-SC\nsamples used.",
+              "scope": "excerpt",
+              "source_hash": "sha256:f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69",
+              "span_id": "span-b615625987cdbfe74682109ab6dc0e19",
+              "start": 2005,
+              "version_id": "arxiv:2210.03629:v3",
+              "work_id": "arxiv:2210.03629"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "excerpt",
+          "required_section": null,
+          "text": "The excerpt states that this structural constraint also reduces flexibility in formulating reasoning steps, leading to a higher reasoning error rate than CoT."
+        },
+        {
+          "claim_id": "c3",
+          "evidence": [
+            {
+              "end": 3379,
+              "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+              "page": 6,
+              "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+              "quote": "B) While interleaving reasoning, action and observation steps improves ReAct’s grounded-\nness and trustworthiness, such a structural constraint also reduces its ﬂexibility in formulating\nreasoning steps, leading to more reasoning error rate than CoT. we note that there is one frequent\nerror pattern speciﬁc to ReAct, in which the model repetitively generates the previous thoughts and\nactions, and we categorize it as part of “reasoning error” as the model fails to reason about what the\nproper next action to take and jump out of the loop4.\n\n  C) For ReAct, successfully retrieving informative knowledge via search is critical. Non-\ninformative search, which counts for 23% of the error cases, derails the model reasoning and gives\nit a hard time to recover and reformulate thoughts. This is perhaps an expected trade-off between\nfactuality and ﬂexibility, which motivates our proposed strategies of combining two methods.\n\nWe provide examples for each success and failure modes in Appendix E.1. We also ﬁnd some\nHotpotQA questions may contain outdated answer labels, see Figure 4 for example.\n\nReAct + CoT-SC perform best for prompting LLMs  Also shown in Table 1, the best prompting\nmethod on HotpotQA and Fever are ReAct →CoT-SC and CoT-SC →ReAct respectively.\nFurthermore, Figure 2 shows how different methods perform with respect to the number of CoT-SC\nsamples used.",
+              "scope": "excerpt",
+              "source_hash": "sha256:f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69",
+              "span_id": "span-b615625987cdbfe74682109ab6dc0e19",
+              "start": 2005,
+              "version_id": "arxiv:2210.03629:v3",
+              "work_id": "arxiv:2210.03629"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "excerpt",
+          "required_section": null,
+          "text": "The excerpt describes a frequent ReAct-specific error pattern: repeatedly generating previous thoughts and actions, categorized as a reasoning error because the model fails to pick the next action and exit the loop."
+        },
+        {
+          "claim_id": "c4",
+          "evidence": [
+            {
+              "end": 3379,
+              "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+              "page": 6,
+              "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+              "quote": "B) While interleaving reasoning, action and observation steps improves ReAct’s grounded-\nness and trustworthiness, such a structural constraint also reduces its ﬂexibility in formulating\nreasoning steps, leading to more reasoning error rate than CoT. we note that there is one frequent\nerror pattern speciﬁc to ReAct, in which the model repetitively generates the previous thoughts and\nactions, and we categorize it as part of “reasoning error” as the model fails to reason about what the\nproper next action to take and jump out of the loop4.\n\n  C) For ReAct, successfully retrieving informative knowledge via search is critical. Non-\ninformative search, which counts for 23% of the error cases, derails the model reasoning and gives\nit a hard time to recover and reformulate thoughts. This is perhaps an expected trade-off between\nfactuality and ﬂexibility, which motivates our proposed strategies of combining two methods.\n\nWe provide examples for each success and failure modes in Appendix E.1. We also ﬁnd some\nHotpotQA questions may contain outdated answer labels, see Figure 4 for example.\n\nReAct + CoT-SC perform best for prompting LLMs  Also shown in Table 1, the best prompting\nmethod on HotpotQA and Fever are ReAct →CoT-SC and CoT-SC →ReAct respectively.\nFurthermore, Figure 2 shows how different methods perform with respect to the number of CoT-SC\nsamples used.",
+              "scope": "excerpt",
+              "source_hash": "sha256:f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69",
+              "span_id": "span-b615625987cdbfe74682109ab6dc0e19",
+              "start": 2005,
+              "version_id": "arxiv:2210.03629:v3",
+              "work_id": "arxiv:2210.03629"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "excerpt",
+          "required_section": null,
+          "text": "The excerpt states that successfully retrieving informative knowledge via search is critical for ReAct, and that non-informative search accounts for 23% of error cases and derails its reasoning."
+        },
+        {
+          "claim_id": "c5",
+          "evidence": [
+            {
+              "end": 3379,
+              "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+              "page": 6,
+              "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+              "quote": "B) While interleaving reasoning, action and observation steps improves ReAct’s grounded-\nness and trustworthiness, such a structural constraint also reduces its ﬂexibility in formulating\nreasoning steps, leading to more reasoning error rate than CoT. we note that there is one frequent\nerror pattern speciﬁc to ReAct, in which the model repetitively generates the previous thoughts and\nactions, and we categorize it as part of “reasoning error” as the model fails to reason about what the\nproper next action to take and jump out of the loop4.\n\n  C) For ReAct, successfully retrieving informative knowledge via search is critical. Non-\ninformative search, which counts for 23% of the error cases, derails the model reasoning and gives\nit a hard time to recover and reformulate thoughts. This is perhaps an expected trade-off between\nfactuality and ﬂexibility, which motivates our proposed strategies of combining two methods.\n\nWe provide examples for each success and failure modes in Appendix E.1. We also ﬁnd some\nHotpotQA questions may contain outdated answer labels, see Figure 4 for example.\n\nReAct + CoT-SC perform best for prompting LLMs  Also shown in Table 1, the best prompting\nmethod on HotpotQA and Fever are ReAct →CoT-SC and CoT-SC →ReAct respectively.\nFurthermore, Figure 2 shows how different methods perform with respect to the number of CoT-SC\nsamples used.",
+              "scope": "excerpt",
+              "source_hash": "sha256:f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69",
+              "span_id": "span-b615625987cdbfe74682109ab6dc0e19",
+              "start": 2005,
+              "version_id": "arxiv:2210.03629:v3",
+              "work_id": "arxiv:2210.03629"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "excerpt",
+          "required_section": null,
+          "text": "The excerpt says this is perhaps an expected trade-off between factuality and flexibility, which motivates the authors' strategies of combining two methods."
+        },
+        {
+          "claim_id": "c6",
+          "evidence": [
+            {
+              "end": 3379,
+              "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+              "page": 6,
+              "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+              "quote": "B) While interleaving reasoning, action and observation steps improves ReAct’s grounded-\nness and trustworthiness, such a structural constraint also reduces its ﬂexibility in formulating\nreasoning steps, leading to more reasoning error rate than CoT. we note that there is one frequent\nerror pattern speciﬁc to ReAct, in which the model repetitively generates the previous thoughts and\nactions, and we categorize it as part of “reasoning error” as the model fails to reason about what the\nproper next action to take and jump out of the loop4.\n\n  C) For ReAct, successfully retrieving informative knowledge via search is critical. Non-\ninformative search, which counts for 23% of the error cases, derails the model reasoning and gives\nit a hard time to recover and reformulate thoughts. This is perhaps an expected trade-off between\nfactuality and ﬂexibility, which motivates our proposed strategies of combining two methods.\n\nWe provide examples for each success and failure modes in Appendix E.1. We also ﬁnd some\nHotpotQA questions may contain outdated answer labels, see Figure 4 for example.\n\nReAct + CoT-SC perform best for prompting LLMs  Also shown in Table 1, the best prompting\nmethod on HotpotQA and Fever are ReAct →CoT-SC and CoT-SC →ReAct respectively.\nFurthermore, Figure 2 shows how different methods perform with respect to the number of CoT-SC\nsamples used.",
+              "scope": "excerpt",
+              "source_hash": "sha256:f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69",
+              "span_id": "span-b615625987cdbfe74682109ab6dc0e19",
+              "start": 2005,
+              "version_id": "arxiv:2210.03629:v3",
+              "work_id": "arxiv:2210.03629"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "excerpt",
+          "required_section": null,
+          "text": "The excerpt reports that the best prompting method on HotpotQA is ReAct→CoT-SC and on Fever is CoT-SC→ReAct."
+        }
+      ],
+      "remaining_prose": {
+        "abstention": null,
+        "gaps": [
+          "Request the full text to check how error categories and percentages were annotated and on what sample.",
+          "Request the results tables and figures to examine the reported method comparisons directly."
+        ],
+        "proposal": "Retrieve the full paper's error-analysis and results sections to verify annotation procedure, sample sizes and the combined-method comparisons.",
+        "questions": [
+          "Why does the excerpt establish a definitive, unconditional factuality–flexibility trade-off?",
+          "Does the excerpt's error analysis generalize beyond the tasks it covers?"
+        ]
+      },
+      "judgments": {
+        "premise": null,
+        "expected_disposition": null,
+        "reason": null
+      },
+      "reviewer": null,
+      "reviewed_at": null,
+      "provenance": null
+    },
+    {
+      "id": "itm-8e1003051114",
+      "request_digest": "a10f7d2e7d449b900629fea722b6161e3cb7ec8f88b532bac535cca963b89573",
+      "question_index": 0,
+      "question": "Given cited and scored claim c1, what qualifications apply, if any?",
+      "scored_claims": [
+        {
+          "claim_id": "c1",
+          "evidence": [
+            {
+              "end": 3379,
+              "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+              "page": 6,
+              "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+              "quote": "B) While interleaving reasoning, action and observation steps improves ReAct’s grounded-\nness and trustworthiness, such a structural constraint also reduces its ﬂexibility in formulating\nreasoning steps, leading to more reasoning error rate than CoT. we note that there is one frequent\nerror pattern speciﬁc to ReAct, in which the model repetitively generates the previous thoughts and\nactions, and we categorize it as part of “reasoning error” as the model fails to reason about what the\nproper next action to take and jump out of the loop4.\n\n  C) For ReAct, successfully retrieving informative knowledge via search is critical. Non-\ninformative search, which counts for 23% of the error cases, derails the model reasoning and gives\nit a hard time to recover and reformulate thoughts. This is perhaps an expected trade-off between\nfactuality and ﬂexibility, which motivates our proposed strategies of combining two methods.\n\nWe provide examples for each success and failure modes in Appendix E.1. We also ﬁnd some\nHotpotQA questions may contain outdated answer labels, see Figure 4 for example.\n\nReAct + CoT-SC perform best for prompting LLMs  Also shown in Table 1, the best prompting\nmethod on HotpotQA and Fever are ReAct →CoT-SC and CoT-SC →ReAct respectively.\nFurthermore, Figure 2 shows how different methods perform with respect to the number of CoT-SC\nsamples used.",
+              "scope": "excerpt",
+              "source_hash": "sha256:f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69",
+              "span_id": "span-b615625987cdbfe74682109ab6dc0e19",
+              "start": 2005,
+              "version_id": "arxiv:2210.03629:v3",
+              "work_id": "arxiv:2210.03629"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "excerpt",
+          "required_section": null,
+          "text": "The excerpt states that interleaving reasoning, action and observation steps improves ReAct's groundedness and trustworthiness."
+        },
+        {
+          "claim_id": "c2",
+          "evidence": [
+            {
+              "end": 3379,
+              "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+              "page": 6,
+              "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+              "quote": "B) While interleaving reasoning, action and observation steps improves ReAct’s grounded-\nness and trustworthiness, such a structural constraint also reduces its ﬂexibility in formulating\nreasoning steps, leading to more reasoning error rate than CoT. we note that there is one frequent\nerror pattern speciﬁc to ReAct, in which the model repetitively generates the previous thoughts and\nactions, and we categorize it as part of “reasoning error” as the model fails to reason about what the\nproper next action to take and jump out of the loop4.\n\n  C) For ReAct, successfully retrieving informative knowledge via search is critical. Non-\ninformative search, which counts for 23% of the error cases, derails the model reasoning and gives\nit a hard time to recover and reformulate thoughts. This is perhaps an expected trade-off between\nfactuality and ﬂexibility, which motivates our proposed strategies of combining two methods.\n\nWe provide examples for each success and failure modes in Appendix E.1. We also ﬁnd some\nHotpotQA questions may contain outdated answer labels, see Figure 4 for example.\n\nReAct + CoT-SC perform best for prompting LLMs  Also shown in Table 1, the best prompting\nmethod on HotpotQA and Fever are ReAct →CoT-SC and CoT-SC →ReAct respectively.\nFurthermore, Figure 2 shows how different methods perform with respect to the number of CoT-SC\nsamples used.",
+              "scope": "excerpt",
+              "source_hash": "sha256:f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69",
+              "span_id": "span-b615625987cdbfe74682109ab6dc0e19",
+              "start": 2005,
+              "version_id": "arxiv:2210.03629:v3",
+              "work_id": "arxiv:2210.03629"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "excerpt",
+          "required_section": null,
+          "text": "The excerpt states that this structural constraint also reduces flexibility in formulating reasoning steps, leading to a higher reasoning error rate than CoT."
+        },
+        {
+          "claim_id": "c3",
+          "evidence": [
+            {
+              "end": 3379,
+              "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+              "page": 6,
+              "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+              "quote": "B) While interleaving reasoning, action and observation steps improves ReAct’s grounded-\nness and trustworthiness, such a structural constraint also reduces its ﬂexibility in formulating\nreasoning steps, leading to more reasoning error rate than CoT. we note that there is one frequent\nerror pattern speciﬁc to ReAct, in which the model repetitively generates the previous thoughts and\nactions, and we categorize it as part of “reasoning error” as the model fails to reason about what the\nproper next action to take and jump out of the loop4.\n\n  C) For ReAct, successfully retrieving informative knowledge via search is critical. Non-\ninformative search, which counts for 23% of the error cases, derails the model reasoning and gives\nit a hard time to recover and reformulate thoughts. This is perhaps an expected trade-off between\nfactuality and ﬂexibility, which motivates our proposed strategies of combining two methods.\n\nWe provide examples for each success and failure modes in Appendix E.1. We also ﬁnd some\nHotpotQA questions may contain outdated answer labels, see Figure 4 for example.\n\nReAct + CoT-SC perform best for prompting LLMs  Also shown in Table 1, the best prompting\nmethod on HotpotQA and Fever are ReAct →CoT-SC and CoT-SC →ReAct respectively.\nFurthermore, Figure 2 shows how different methods perform with respect to the number of CoT-SC\nsamples used.",
+              "scope": "excerpt",
+              "source_hash": "sha256:f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69",
+              "span_id": "span-b615625987cdbfe74682109ab6dc0e19",
+              "start": 2005,
+              "version_id": "arxiv:2210.03629:v3",
+              "work_id": "arxiv:2210.03629"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "excerpt",
+          "required_section": null,
+          "text": "The excerpt describes a frequent ReAct-specific error pattern: repeatedly generating previous thoughts and actions, categorized as a reasoning error because the model fails to pick the next action and exit the loop."
+        },
+        {
+          "claim_id": "c4",
+          "evidence": [
+            {
+              "end": 3379,
+              "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+              "page": 6,
+              "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+              "quote": "B) While interleaving reasoning, action and observation steps improves ReAct’s grounded-\nness and trustworthiness, such a structural constraint also reduces its ﬂexibility in formulating\nreasoning steps, leading to more reasoning error rate than CoT. we note that there is one frequent\nerror pattern speciﬁc to ReAct, in which the model repetitively generates the previous thoughts and\nactions, and we categorize it as part of “reasoning error” as the model fails to reason about what the\nproper next action to take and jump out of the loop4.\n\n  C) For ReAct, successfully retrieving informative knowledge via search is critical. Non-\ninformative search, which counts for 23% of the error cases, derails the model reasoning and gives\nit a hard time to recover and reformulate thoughts. This is perhaps an expected trade-off between\nfactuality and ﬂexibility, which motivates our proposed strategies of combining two methods.\n\nWe provide examples for each success and failure modes in Appendix E.1. We also ﬁnd some\nHotpotQA questions may contain outdated answer labels, see Figure 4 for example.\n\nReAct + CoT-SC perform best for prompting LLMs  Also shown in Table 1, the best prompting\nmethod on HotpotQA and Fever are ReAct →CoT-SC and CoT-SC →ReAct respectively.\nFurthermore, Figure 2 shows how different methods perform with respect to the number of CoT-SC\nsamples used.",
+              "scope": "excerpt",
+              "source_hash": "sha256:f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69",
+              "span_id": "span-b615625987cdbfe74682109ab6dc0e19",
+              "start": 2005,
+              "version_id": "arxiv:2210.03629:v3",
+              "work_id": "arxiv:2210.03629"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "excerpt",
+          "required_section": null,
+          "text": "The excerpt states that successfully retrieving informative knowledge via search is critical for ReAct, and that non-informative search accounts for 23% of error cases and derails its reasoning."
+        },
+        {
+          "claim_id": "c5",
+          "evidence": [
+            {
+              "end": 3379,
+              "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+              "page": 6,
+              "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+              "quote": "B) While interleaving reasoning, action and observation steps improves ReAct’s grounded-\nness and trustworthiness, such a structural constraint also reduces its ﬂexibility in formulating\nreasoning steps, leading to more reasoning error rate than CoT. we note that there is one frequent\nerror pattern speciﬁc to ReAct, in which the model repetitively generates the previous thoughts and\nactions, and we categorize it as part of “reasoning error” as the model fails to reason about what the\nproper next action to take and jump out of the loop4.\n\n  C) For ReAct, successfully retrieving informative knowledge via search is critical. Non-\ninformative search, which counts for 23% of the error cases, derails the model reasoning and gives\nit a hard time to recover and reformulate thoughts. This is perhaps an expected trade-off between\nfactuality and ﬂexibility, which motivates our proposed strategies of combining two methods.\n\nWe provide examples for each success and failure modes in Appendix E.1. We also ﬁnd some\nHotpotQA questions may contain outdated answer labels, see Figure 4 for example.\n\nReAct + CoT-SC perform best for prompting LLMs  Also shown in Table 1, the best prompting\nmethod on HotpotQA and Fever are ReAct →CoT-SC and CoT-SC →ReAct respectively.\nFurthermore, Figure 2 shows how different methods perform with respect to the number of CoT-SC\nsamples used.",
+              "scope": "excerpt",
+              "source_hash": "sha256:f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69",
+              "span_id": "span-b615625987cdbfe74682109ab6dc0e19",
+              "start": 2005,
+              "version_id": "arxiv:2210.03629:v3",
+              "work_id": "arxiv:2210.03629"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "excerpt",
+          "required_section": null,
+          "text": "The excerpt says this is perhaps an expected trade-off between factuality and flexibility, which motivates the authors' strategies of combining two methods."
+        },
+        {
+          "claim_id": "c6",
+          "evidence": [
+            {
+              "end": 3379,
+              "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+              "page": 6,
+              "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+              "quote": "B) While interleaving reasoning, action and observation steps improves ReAct’s grounded-\nness and trustworthiness, such a structural constraint also reduces its ﬂexibility in formulating\nreasoning steps, leading to more reasoning error rate than CoT. we note that there is one frequent\nerror pattern speciﬁc to ReAct, in which the model repetitively generates the previous thoughts and\nactions, and we categorize it as part of “reasoning error” as the model fails to reason about what the\nproper next action to take and jump out of the loop4.\n\n  C) For ReAct, successfully retrieving informative knowledge via search is critical. Non-\ninformative search, which counts for 23% of the error cases, derails the model reasoning and gives\nit a hard time to recover and reformulate thoughts. This is perhaps an expected trade-off between\nfactuality and ﬂexibility, which motivates our proposed strategies of combining two methods.\n\nWe provide examples for each success and failure modes in Appendix E.1. We also ﬁnd some\nHotpotQA questions may contain outdated answer labels, see Figure 4 for example.\n\nReAct + CoT-SC perform best for prompting LLMs  Also shown in Table 1, the best prompting\nmethod on HotpotQA and Fever are ReAct →CoT-SC and CoT-SC →ReAct respectively.\nFurthermore, Figure 2 shows how different methods perform with respect to the number of CoT-SC\nsamples used.",
+              "scope": "excerpt",
+              "source_hash": "sha256:f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69",
+              "span_id": "span-b615625987cdbfe74682109ab6dc0e19",
+              "start": 2005,
+              "version_id": "arxiv:2210.03629:v3",
+              "work_id": "arxiv:2210.03629"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "excerpt",
+          "required_section": null,
+          "text": "The excerpt reports that the best prompting method on HotpotQA is ReAct→CoT-SC and on Fever is CoT-SC→ReAct."
+        }
+      ],
+      "remaining_prose": {
+        "abstention": null,
+        "gaps": [
+          "Request the full text to check how error categories and percentages were annotated and on what sample.",
+          "Request the results tables and figures to examine the reported method comparisons directly."
+        ],
+        "proposal": "Retrieve the full paper's error-analysis and results sections to verify annotation procedure, sample sizes and the combined-method comparisons.",
+        "questions": [
+          "Given cited and scored claim c1, what qualifications apply, if any?",
+          "Does the excerpt's error analysis generalize beyond the tasks it covers?"
+        ]
+      },
+      "judgments": {
+        "premise": null,
+        "expected_disposition": null,
+        "reason": null
+      },
+      "reviewer": null,
+      "reviewed_at": null,
+      "provenance": null
+    },
+    {
+      "id": "itm-79aab55f7d14",
+      "request_digest": "f89affdb00b7f5ec6b03f62fc9aa10eac8ef3c695c02738f2c4ffa85137880b4",
+      "question_index": 0,
+      "question": "Which reported results are measured benchmark outcomes versus proposed applications such as use in autonomous discovery?",
+      "scored_claims": [
+        {
+          "claim_id": "c1",
+          "evidence": [
+            {
+              "end": 1516,
+              "material_id": "mat-1c5ecdf06434f317157b2e5fce1b3b0e",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "Expert scientists excel at weighing empirical findings from multiple sources that vary in both statistical reliability and epistemic relevance. To what extent are language models, which are increasingly driving autonomous discovery systems, capable of such evidence deliberation? We introduce EDB-Bio, a scientific reasoning benchmark curated from real-world data in three biological domains: drug-perturbation transcriptomics, CRISPR screens, and human genome-wide association studies (GWAS). Each of EDB-Bio's 96k episodes presents a sequence of experimental results from published studies and asks the model to predict the probability that a target hypothesis is true. Out-of-the-box, open-weight and frontier models alike demonstrate systematic underconfidence and attain Brier scores comparable to a trivial base-rate forecaster. Post-training against strictly proper scoring rules significantly improves both calibration and discrimination. This calibration pays off downstream: in a sequential experiment selection task, our Ibis0 model is 2.5 times more efficient than the best frontier model. Throughout, quantifying evidence weights as Bayes factors reveals how models update their beliefs over time, whether they agree with expert biologists on relevance, and where they exhibit inconsistencies and biases. Our work extends calibration training and uncertainty analysis to a realistic scientific forecasting setting with applications to human cancer biology. We release all code, data, and trained models.",
+              "scope": "abstract",
+              "source_hash": "sha256:b490f3ffa20059c827c7a1dde2576cc7857a3b26d3fe14489e47a2fc3f24f710",
+              "span_id": "span-9a92d1c10b9b4e9ee5a9185bd6bb4afd",
+              "start": 0,
+              "version_id": "arxiv:2610.41015:v1:metadata-9d3401c4c7c1014c",
+              "work_id": "arxiv:2610.41015"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "EDB-Bio is a scientific reasoning benchmark built from real-world data in three biological domains: drug-perturbation transcriptomics, CRISPR screens, and human GWAS."
+        },
+        {
+          "claim_id": "c2",
+          "evidence": [
+            {
+              "end": 1516,
+              "material_id": "mat-1c5ecdf06434f317157b2e5fce1b3b0e",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "Expert scientists excel at weighing empirical findings from multiple sources that vary in both statistical reliability and epistemic relevance. To what extent are language models, which are increasingly driving autonomous discovery systems, capable of such evidence deliberation? We introduce EDB-Bio, a scientific reasoning benchmark curated from real-world data in three biological domains: drug-perturbation transcriptomics, CRISPR screens, and human genome-wide association studies (GWAS). Each of EDB-Bio's 96k episodes presents a sequence of experimental results from published studies and asks the model to predict the probability that a target hypothesis is true. Out-of-the-box, open-weight and frontier models alike demonstrate systematic underconfidence and attain Brier scores comparable to a trivial base-rate forecaster. Post-training against strictly proper scoring rules significantly improves both calibration and discrimination. This calibration pays off downstream: in a sequential experiment selection task, our Ibis0 model is 2.5 times more efficient than the best frontier model. Throughout, quantifying evidence weights as Bayes factors reveals how models update their beliefs over time, whether they agree with expert biologists on relevance, and where they exhibit inconsistencies and biases. Our work extends calibration training and uncertainty analysis to a realistic scientific forecasting setting with applications to human cancer biology. We release all code, data, and trained models.",
+              "scope": "abstract",
+              "source_hash": "sha256:b490f3ffa20059c827c7a1dde2576cc7857a3b26d3fe14489e47a2fc3f24f710",
+              "span_id": "span-9a92d1c10b9b4e9ee5a9185bd6bb4afd",
+              "start": 0,
+              "version_id": "arxiv:2610.41015:v1:metadata-9d3401c4c7c1014c",
+              "work_id": "arxiv:2610.41015"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "Each of EDB-Bio's 96k episodes presents a sequence of experimental results from published studies and asks the model to predict the probability that a target hypothesis is true."
+        },
+        {
+          "claim_id": "c3",
+          "evidence": [
+            {
+              "end": 1516,
+              "material_id": "mat-1c5ecdf06434f317157b2e5fce1b3b0e",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "Expert scientists excel at weighing empirical findings from multiple sources that vary in both statistical reliability and epistemic relevance. To what extent are language models, which are increasingly driving autonomous discovery systems, capable of such evidence deliberation? We introduce EDB-Bio, a scientific reasoning benchmark curated from real-world data in three biological domains: drug-perturbation transcriptomics, CRISPR screens, and human genome-wide association studies (GWAS). Each of EDB-Bio's 96k episodes presents a sequence of experimental results from published studies and asks the model to predict the probability that a target hypothesis is true. Out-of-the-box, open-weight and frontier models alike demonstrate systematic underconfidence and attain Brier scores comparable to a trivial base-rate forecaster. Post-training against strictly proper scoring rules significantly improves both calibration and discrimination. This calibration pays off downstream: in a sequential experiment selection task, our Ibis0 model is 2.5 times more efficient than the best frontier model. Throughout, quantifying evidence weights as Bayes factors reveals how models update their beliefs over time, whether they agree with expert biologists on relevance, and where they exhibit inconsistencies and biases. Our work extends calibration training and uncertainty analysis to a realistic scientific forecasting setting with applications to human cancer biology. We release all code, data, and trained models.",
+              "scope": "abstract",
+              "source_hash": "sha256:b490f3ffa20059c827c7a1dde2576cc7857a3b26d3fe14489e47a2fc3f24f710",
+              "span_id": "span-9a92d1c10b9b4e9ee5a9185bd6bb4afd",
+              "start": 0,
+              "version_id": "arxiv:2610.41015:v1:metadata-9d3401c4c7c1014c",
+              "work_id": "arxiv:2610.41015"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "Out-of-the-box open-weight and frontier models show systematic underconfidence and attain Brier scores comparable to a trivial base-rate forecaster."
+        },
+        {
+          "claim_id": "c4",
+          "evidence": [
+            {
+              "end": 1516,
+              "material_id": "mat-1c5ecdf06434f317157b2e5fce1b3b0e",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "Expert scientists excel at weighing empirical findings from multiple sources that vary in both statistical reliability and epistemic relevance. To what extent are language models, which are increasingly driving autonomous discovery systems, capable of such evidence deliberation? We introduce EDB-Bio, a scientific reasoning benchmark curated from real-world data in three biological domains: drug-perturbation transcriptomics, CRISPR screens, and human genome-wide association studies (GWAS). Each of EDB-Bio's 96k episodes presents a sequence of experimental results from published studies and asks the model to predict the probability that a target hypothesis is true. Out-of-the-box, open-weight and frontier models alike demonstrate systematic underconfidence and attain Brier scores comparable to a trivial base-rate forecaster. Post-training against strictly proper scoring rules significantly improves both calibration and discrimination. This calibration pays off downstream: in a sequential experiment selection task, our Ibis0 model is 2.5 times more efficient than the best frontier model. Throughout, quantifying evidence weights as Bayes factors reveals how models update their beliefs over time, whether they agree with expert biologists on relevance, and where they exhibit inconsistencies and biases. Our work extends calibration training and uncertainty analysis to a realistic scientific forecasting setting with applications to human cancer biology. We release all code, data, and trained models.",
+              "scope": "abstract",
+              "source_hash": "sha256:b490f3ffa20059c827c7a1dde2576cc7857a3b26d3fe14489e47a2fc3f24f710",
+              "span_id": "span-9a92d1c10b9b4e9ee5a9185bd6bb4afd",
+              "start": 0,
+              "version_id": "arxiv:2610.41015:v1:metadata-9d3401c4c7c1014c",
+              "work_id": "arxiv:2610.41015"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "Post-training against strictly proper scoring rules significantly improves both calibration and discrimination."
+        },
+        {
+          "claim_id": "c5",
+          "evidence": [
+            {
+              "end": 1516,
+              "material_id": "mat-1c5ecdf06434f317157b2e5fce1b3b0e",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "Expert scientists excel at weighing empirical findings from multiple sources that vary in both statistical reliability and epistemic relevance. To what extent are language models, which are increasingly driving autonomous discovery systems, capable of such evidence deliberation? We introduce EDB-Bio, a scientific reasoning benchmark curated from real-world data in three biological domains: drug-perturbation transcriptomics, CRISPR screens, and human genome-wide association studies (GWAS). Each of EDB-Bio's 96k episodes presents a sequence of experimental results from published studies and asks the model to predict the probability that a target hypothesis is true. Out-of-the-box, open-weight and frontier models alike demonstrate systematic underconfidence and attain Brier scores comparable to a trivial base-rate forecaster. Post-training against strictly proper scoring rules significantly improves both calibration and discrimination. This calibration pays off downstream: in a sequential experiment selection task, our Ibis0 model is 2.5 times more efficient than the best frontier model. Throughout, quantifying evidence weights as Bayes factors reveals how models update their beliefs over time, whether they agree with expert biologists on relevance, and where they exhibit inconsistencies and biases. Our work extends calibration training and uncertainty analysis to a realistic scientific forecasting setting with applications to human cancer biology. We release all code, data, and trained models.",
+              "scope": "abstract",
+              "source_hash": "sha256:b490f3ffa20059c827c7a1dde2576cc7857a3b26d3fe14489e47a2fc3f24f710",
+              "span_id": "span-9a92d1c10b9b4e9ee5a9185bd6bb4afd",
+              "start": 0,
+              "version_id": "arxiv:2610.41015:v1:metadata-9d3401c4c7c1014c",
+              "work_id": "arxiv:2610.41015"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "In a sequential experiment selection task, the authors' Ibis0 model is reported as 2.5 times more efficient than the best frontier model."
+        },
+        {
+          "claim_id": "c6",
+          "evidence": [
+            {
+              "end": 1516,
+              "material_id": "mat-1c5ecdf06434f317157b2e5fce1b3b0e",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "Expert scientists excel at weighing empirical findings from multiple sources that vary in both statistical reliability and epistemic relevance. To what extent are language models, which are increasingly driving autonomous discovery systems, capable of such evidence deliberation? We introduce EDB-Bio, a scientific reasoning benchmark curated from real-world data in three biological domains: drug-perturbation transcriptomics, CRISPR screens, and human genome-wide association studies (GWAS). Each of EDB-Bio's 96k episodes presents a sequence of experimental results from published studies and asks the model to predict the probability that a target hypothesis is true. Out-of-the-box, open-weight and frontier models alike demonstrate systematic underconfidence and attain Brier scores comparable to a trivial base-rate forecaster. Post-training against strictly proper scoring rules significantly improves both calibration and discrimination. This calibration pays off downstream: in a sequential experiment selection task, our Ibis0 model is 2.5 times more efficient than the best frontier model. Throughout, quantifying evidence weights as Bayes factors reveals how models update their beliefs over time, whether they agree with expert biologists on relevance, and where they exhibit inconsistencies and biases. Our work extends calibration training and uncertainty analysis to a realistic scientific forecasting setting with applications to human cancer biology. We release all code, data, and trained models.",
+              "scope": "abstract",
+              "source_hash": "sha256:b490f3ffa20059c827c7a1dde2576cc7857a3b26d3fe14489e47a2fc3f24f710",
+              "span_id": "span-9a92d1c10b9b4e9ee5a9185bd6bb4afd",
+              "start": 0,
+              "version_id": "arxiv:2610.41015:v1:metadata-9d3401c4c7c1014c",
+              "work_id": "arxiv:2610.41015"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "The authors quantify evidence weights as Bayes factors to examine how models update beliefs over time, whether they agree with expert biologists on relevance, and where they show inconsistencies and biases."
+        }
+      ],
+      "remaining_prose": {
+        "abstention": null,
+        "gaps": [
+          "Request the full text to check how the 2.5x efficiency figure and the baselines are defined and measured.",
+          "Request details on how expert biologist agreement on relevance was measured and on the reported inconsistencies and biases."
+        ],
+        "proposal": "Retrieve the full paper to separate measured results (Brier scores, calibration, experiment-selection efficiency) from proposed downstream use.",
+        "questions": [
+          "Which reported results are measured benchmark outcomes versus proposed applications such as use in autonomous discovery?",
+          "Do the calibration gains hold on held-out domains or only on the three biological domains used here?"
+        ]
+      },
+      "judgments": {
+        "premise": null,
+        "expected_disposition": null,
+        "reason": null
+      },
+      "reviewer": null,
+      "reviewed_at": null,
+      "provenance": null
+    },
+    {
+      "id": "itm-2d7bd09235fb",
+      "request_digest": "70d73a28d521b2919bb943a17444c6e9f2113055641fd2cc74df7e87258de0ad",
+      "question_index": 2,
+      "question": "What further evidence, if any, would clarify the selected claims and their limitations?",
+      "scored_claims": [
+        {
+          "claim_id": "c1",
+          "evidence": [
+            {
+              "end": 3888,
+              "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+              "page": 1,
+              "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+              "quote": "Furthermore, on two interactive decision making benchmarks (ALFWorld and\n                           WebShop), ReAct outperforms imitation and reinforcement learning methods by\n                            an absolute success rate of 34% and 10% respectively, while being prompted with\n                              only one or two in-context examples.\n\n\n                1  INTRODUCTION\n\n              A unique feature of human intelligence is the ability to seamlessly combine task-oriented actions with\n                        verbal reasoning (or inner speech, Alderson-Day & Fernyhough, 2015), which has been theorized toarXiv:2210.03629v3                      play an important role in human cognition for enabling self-regulation or strategization (Vygotsky,\n                     1987; Luria, 1965; Fernyhough, 2010) and maintaining a working memory (Baddeley, 1992). Con-\n                         sider the example of cooking up a dish in the kitchen. Between any two speciﬁc actions, we may\n                       reason in language in order to track progress (“now that everything is cut, I should heat up the pot of\n                        water”), to handle exceptions or adjust the plan according to the situation (“I don’t have salt, so let\n                me use soy sauce and pepper instead”), and to realize when external information is needed (“how do\n                             I prepare dough? Let me search on the Internet”).",
+              "scope": "excerpt",
+              "source_hash": "sha256:f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69",
+              "span_id": "span-55b2971cd5f40c431b738813c7ef10cd",
+              "start": 2443,
+              "version_id": "arxiv:2210.03629:v3",
+              "work_id": "arxiv:2210.03629"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "excerpt",
+          "required_section": null,
+          "text": "The ReAct excerpt reports that on two interactive decision-making benchmarks (ALFWorld and WebShop), ReAct outperforms imitation and reinforcement learning methods by absolute success rates of 34% and 10% respectively, while prompted with only one or two in-context examples."
+        },
+        {
+          "claim_id": "c2",
+          "evidence": [
+            {
+              "end": 3616,
+              "material_id": "mat-f98fbd73f423776117f60cac36edc90a",
+              "page": 3,
+              "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+              "quote": "While their value function\nsimply indicates an overall score of each generation, SELF-RAG trains to an arbitrary LM to learn to\ngenerate fine-grained self-reflection and customizable inference.\n\nTraining and generating with critics. Training LLMs with reinforcement learning (e.g., Proximal\nPolicy Optimization or PPO; Schulman et al. 2017) from human feedback (RLHF) has proven\neffective in aligning LLMs with human preferences (Ouyang et al., 2022). Wu et al. (2023) introduce\nfine-grained RLHF with multiple reward models. Though our work also studies fine-grained critique\non retrieval and generation, we train our target LM on task examples augmented with reflection\ntokens from a critic model offline, with a far lower training cost compared to RLHF. In addition,\nreflection tokens in SELF-RAG enable controllable generation at inference, while RLHF focuses on\nhuman preference alignment during training. Other works use general control tokens to guide LM\ngeneration (Lu et al., 2022; Korbak et al., 2023), while SELF-RAG uses reflection tokens to decide the\nneed for retrieval and to self-evaluate generation quality. Xie et al. (2023) propose a self-evaluation-\nguided decoding framework, but they focus only on reasoning tasks with one evaluation dimension\n(reasoning path consistency) and without retrieval. Recent work on LLM refinement (Dhuliawala\net al., 2023; Madaan et al., 2023; Paul et al., 2023) prompts a model to generate task output, natural\nlanguage feedback and refined task output iteratively, but at the cost of inference efficiency.",
+              "scope": "excerpt",
+              "source_hash": "sha256:d9eaa1398abac0df67a9d0933a5bf8b6d9d83d2e72da2a486073cd842dd52978",
+              "span_id": "span-f021c711415ab7488317517d7cbe41d5",
+              "start": 2058,
+              "version_id": "arxiv:2310.11511:v1",
+              "work_id": "arxiv:2310.11511"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "excerpt",
+          "required_section": null,
+          "text": "The Self-RAG excerpt states that Self-RAG trains the target LM on task examples augmented with reflection tokens from a critic model offline, at far lower training cost than RLHF, and that reflection tokens enable controllable generation at inference."
+        },
+        {
+          "claim_id": "c3",
+          "evidence": [
+            {
+              "end": 3616,
+              "material_id": "mat-f98fbd73f423776117f60cac36edc90a",
+              "page": 3,
+              "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+              "quote": "While their value function\nsimply indicates an overall score of each generation, SELF-RAG trains to an arbitrary LM to learn to\ngenerate fine-grained self-reflection and customizable inference.\n\nTraining and generating with critics. Training LLMs with reinforcement learning (e.g., Proximal\nPolicy Optimization or PPO; Schulman et al. 2017) from human feedback (RLHF) has proven\neffective in aligning LLMs with human preferences (Ouyang et al., 2022). Wu et al. (2023) introduce\nfine-grained RLHF with multiple reward models. Though our work also studies fine-grained critique\non retrieval and generation, we train our target LM on task examples augmented with reflection\ntokens from a critic model offline, with a far lower training cost compared to RLHF. In addition,\nreflection tokens in SELF-RAG enable controllable generation at inference, while RLHF focuses on\nhuman preference alignment during training. Other works use general control tokens to guide LM\ngeneration (Lu et al., 2022; Korbak et al., 2023), while SELF-RAG uses reflection tokens to decide the\nneed for retrieval and to self-evaluate generation quality. Xie et al. (2023) propose a self-evaluation-\nguided decoding framework, but they focus only on reasoning tasks with one evaluation dimension\n(reasoning path consistency) and without retrieval. Recent work on LLM refinement (Dhuliawala\net al., 2023; Madaan et al., 2023; Paul et al., 2023) prompts a model to generate task output, natural\nlanguage feedback and refined task output iteratively, but at the cost of inference efficiency.",
+              "scope": "excerpt",
+              "source_hash": "sha256:d9eaa1398abac0df67a9d0933a5bf8b6d9d83d2e72da2a486073cd842dd52978",
+              "span_id": "span-f021c711415ab7488317517d7cbe41d5",
+              "start": 2058,
+              "version_id": "arxiv:2310.11511:v1",
+              "work_id": "arxiv:2310.11511"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "excerpt",
+          "required_section": null,
+          "text": "The Self-RAG excerpt states that Self-RAG uses reflection tokens to decide the need for retrieval and to self-evaluate generation quality."
+        },
+        {
+          "claim_id": "c4",
+          "evidence": [
+            {
+              "end": 3616,
+              "material_id": "mat-f98fbd73f423776117f60cac36edc90a",
+              "page": 3,
+              "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+              "quote": "While their value function\nsimply indicates an overall score of each generation, SELF-RAG trains to an arbitrary LM to learn to\ngenerate fine-grained self-reflection and customizable inference.\n\nTraining and generating with critics. Training LLMs with reinforcement learning (e.g., Proximal\nPolicy Optimization or PPO; Schulman et al. 2017) from human feedback (RLHF) has proven\neffective in aligning LLMs with human preferences (Ouyang et al., 2022). Wu et al. (2023) introduce\nfine-grained RLHF with multiple reward models. Though our work also studies fine-grained critique\non retrieval and generation, we train our target LM on task examples augmented with reflection\ntokens from a critic model offline, with a far lower training cost compared to RLHF. In addition,\nreflection tokens in SELF-RAG enable controllable generation at inference, while RLHF focuses on\nhuman preference alignment during training. Other works use general control tokens to guide LM\ngeneration (Lu et al., 2022; Korbak et al., 2023), while SELF-RAG uses reflection tokens to decide the\nneed for retrieval and to self-evaluate generation quality. Xie et al. (2023) propose a self-evaluation-\nguided decoding framework, but they focus only on reasoning tasks with one evaluation dimension\n(reasoning path consistency) and without retrieval. Recent work on LLM refinement (Dhuliawala\net al., 2023; Madaan et al., 2023; Paul et al., 2023) prompts a model to generate task output, natural\nlanguage feedback and refined task output iteratively, but at the cost of inference efficiency.",
+              "scope": "excerpt",
+              "source_hash": "sha256:d9eaa1398abac0df67a9d0933a5bf8b6d9d83d2e72da2a486073cd842dd52978",
+              "span_id": "span-f021c711415ab7488317517d7cbe41d5",
+              "start": 2058,
+              "version_id": "arxiv:2310.11511:v1",
+              "work_id": "arxiv:2310.11511"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "excerpt",
+          "required_section": null,
+          "text": "The Self-RAG excerpt contains related-work positioning (comparison to RLHF, control tokens, and iterative LLM refinement) and no empirical evaluation results; this excerpt alone cannot support benchmark-level comparison with ReAct."
+        },
+        {
+          "claim_id": "c5",
+          "evidence": [
+            {
+              "end": 3888,
+              "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+              "page": 1,
+              "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+              "quote": "Furthermore, on two interactive decision making benchmarks (ALFWorld and\n                           WebShop), ReAct outperforms imitation and reinforcement learning methods by\n                            an absolute success rate of 34% and 10% respectively, while being prompted with\n                              only one or two in-context examples.\n\n\n                1  INTRODUCTION\n\n              A unique feature of human intelligence is the ability to seamlessly combine task-oriented actions with\n                        verbal reasoning (or inner speech, Alderson-Day & Fernyhough, 2015), which has been theorized toarXiv:2210.03629v3                      play an important role in human cognition for enabling self-regulation or strategization (Vygotsky,\n                     1987; Luria, 1965; Fernyhough, 2010) and maintaining a working memory (Baddeley, 1992). Con-\n                         sider the example of cooking up a dish in the kitchen. Between any two speciﬁc actions, we may\n                       reason in language in order to track progress (“now that everything is cut, I should heat up the pot of\n                        water”), to handle exceptions or adjust the plan according to the situation (“I don’t have salt, so let\n                me use soy sauce and pepper instead”), and to realize when external information is needed (“how do\n                             I prepare dough? Let me search on the Internet”).",
+              "scope": "excerpt",
+              "source_hash": "sha256:f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69",
+              "span_id": "span-55b2971cd5f40c431b738813c7ef10cd",
+              "start": 2443,
+              "version_id": "arxiv:2210.03629:v3",
+              "work_id": "arxiv:2210.03629"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "excerpt",
+          "required_section": null,
+          "text": "The ReAct excerpt gives headline results and motivation for interleaving reasoning with actions; it does not describe baselines, variance, or metric details beyond the stated absolute success-rate margins."
+        }
+      ],
+      "remaining_prose": {
+        "abstention": null,
+        "comparison_basis": [
+          "c4",
+          "c5"
+        ],
+        "gaps": [
+          "Request evaluation sections, benchmarks, baselines and metrics from each selected source.",
+          "Request the relevant full-text sections before drawing further conclusions.",
+          "Request ablations and controlled comparisons from each selected source."
+        ],
+        "proposal": "Retrieve the evaluation and ablation sections of both papers to compare benchmarks, baselines, metrics and controlled comparisons before drawing any conclusion.",
+        "questions": [
+          "What benchmarks, baselines and metrics does Self-RAG report in its evaluation sections?",
+          "Do the two works share any common tasks or metrics permitting direct comparison?",
+          "What further evidence, if any, would clarify the selected claims and their limitations?"
+        ]
+      },
+      "judgments": {
+        "premise": null,
+        "expected_disposition": null,
+        "reason": null
+      },
+      "reviewer": null,
+      "reviewed_at": null,
+      "provenance": null
+    }
+  ]
+}

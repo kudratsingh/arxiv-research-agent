@@ -1,0 +1,203 @@
+{
+  "revision": "d5-followup-premise-calibration-v1",
+  "packet_digest": "ee48fbde1c7c747fa928b5ecf7abc70f4df54a44efbc62d782c16f6703f1a73b",
+  "instructions": "Judge premise and expected disposition BEFORE viewing any checker verdict. Exact retained passages are inside scored_claims.evidence. These are correlated matched sets, not independent claim samples. Blank means unreviewed.",
+  "items": [
+    {
+      "id": "itm-adfe5bd826ca",
+      "request_digest": "56321fcdebdf79e7b6792146b6752564192e334f3db0ac1716baf78592a10900",
+      "question_index": 0,
+      "question": "Given cited and scored claim c1, what qualifications apply, if any?",
+      "scored_claims": [
+        {
+          "claim_id": "c1",
+          "evidence": [
+            {
+              "end": 1532,
+              "material_id": "mat-e4adcf0135fbaa3982584da87b0040b2",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "Test-time scaling (TTS) improves large language model agents by sampling and selecting among multiple candidate trajectories, but common realizations assume that these trajectories can be executed in parallel. This assumption breaks in realistic deployments, where enterprise workspaces and cloud services are shared and persistent, costly or infeasible to replicate, and actions may introduce irreversible side effects or cross-trajectory interference. Existing generative world models avoid direct execution, but typically compress environment state into a single prompt, limiting their ability to reliably simulate transitions under partial observability. Instead, we introduce Agentic World Modeling (AWM), which reformulates next-observation prediction as a multi-turn evidence-acquisition task. For each hypothetical action, an agentic simulator adaptively queries the real environment through safe read-only interfaces, reasons over the returned evidence, and uses executable computation to construct the resulting observation without mutating shared state. Integrated with trajectory-level TTS, AWM enables parallel exploration over a single shared environment. Across $\\tau$-bench, AppWorld, and OfficeBench, AWM outperforms a single-shot simulation baseline by 40.07% on average, and surpasses a trained world-model baseline by 12.36% on average. These results establish interactive, read-grounded simulation as a practical foundation for safe and scalable agentic test-time scaling in shared, non-resettable environments.",
+              "scope": "abstract",
+              "source_hash": "sha256:6fdc056b308bdc6e3849f19ff0e173a15b4898ca6f86670bc02403c17bf5fbf0",
+              "span_id": "span-07767192aeb610b6e7b7d2275d6363ae",
+              "start": 0,
+              "version_id": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+              "work_id": "arxiv:2610.40927"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "Trajectory-level test-time scaling improves LLM agents by sampling and selecting among multiple candidate trajectories, but common realizations assume the trajectories can be executed in parallel."
+        }
+      ],
+      "remaining_prose": {
+        "gaps": [
+          "Inspect the original source and its evaluation."
+        ],
+        "questions": [
+          "Given cited and scored claim c1, what qualifications apply, if any?"
+        ],
+        "proposal": "Inspect source scope before drawing conclusions.",
+        "abstention": null
+      },
+      "judgments": {
+        "premise": null,
+        "expected_disposition": null,
+        "reason": null
+      },
+      "reviewer": null,
+      "reviewed_at": null,
+      "provenance": null
+    },
+    {
+      "id": "itm-45294fefc14b",
+      "request_digest": "3bb65f014ba82f4e33b10ed1ca641c84e95759e2012ddf774a4eea749fa93fbf",
+      "question_index": 0,
+      "question": "Given that the deployment is shared and persistent, what would be needed to assess action interference?",
+      "scored_claims": [
+        {
+          "claim_id": "c1",
+          "evidence": [
+            {
+              "end": 1532,
+              "material_id": "mat-e4adcf0135fbaa3982584da87b0040b2",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "Test-time scaling (TTS) improves large language model agents by sampling and selecting among multiple candidate trajectories, but common realizations assume that these trajectories can be executed in parallel. This assumption breaks in realistic deployments, where enterprise workspaces and cloud services are shared and persistent, costly or infeasible to replicate, and actions may introduce irreversible side effects or cross-trajectory interference. Existing generative world models avoid direct execution, but typically compress environment state into a single prompt, limiting their ability to reliably simulate transitions under partial observability. Instead, we introduce Agentic World Modeling (AWM), which reformulates next-observation prediction as a multi-turn evidence-acquisition task. For each hypothetical action, an agentic simulator adaptively queries the real environment through safe read-only interfaces, reasons over the returned evidence, and uses executable computation to construct the resulting observation without mutating shared state. Integrated with trajectory-level TTS, AWM enables parallel exploration over a single shared environment. Across $\\tau$-bench, AppWorld, and OfficeBench, AWM outperforms a single-shot simulation baseline by 40.07% on average, and surpasses a trained world-model baseline by 12.36% on average. These results establish interactive, read-grounded simulation as a practical foundation for safe and scalable agentic test-time scaling in shared, non-resettable environments.",
+              "scope": "abstract",
+              "source_hash": "sha256:6fdc056b308bdc6e3849f19ff0e173a15b4898ca6f86670bc02403c17bf5fbf0",
+              "span_id": "span-07767192aeb610b6e7b7d2275d6363ae",
+              "start": 0,
+              "version_id": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+              "work_id": "arxiv:2610.40927"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "Trajectory-level test-time scaling improves LLM agents by sampling and selecting among multiple candidate trajectories, but common realizations assume the trajectories can be executed in parallel."
+        }
+      ],
+      "remaining_prose": {
+        "gaps": [
+          "Inspect the original source and its evaluation."
+        ],
+        "questions": [
+          "Given that the deployment is shared and persistent, what would be needed to assess action interference?"
+        ],
+        "proposal": "Inspect source scope before drawing conclusions.",
+        "abstention": null
+      },
+      "judgments": {
+        "premise": null,
+        "expected_disposition": null,
+        "reason": null
+      },
+      "reviewer": null,
+      "reviewed_at": null,
+      "provenance": null
+    },
+    {
+      "id": "itm-af1bb9563aca",
+      "request_digest": "c406fa4695a709ca34db2acf968c4d3df8915c6eaf7236f617c5ec9f4dd0164d",
+      "question_index": 0,
+      "question": "What further evidence, if any, would clarify the selected claims and their limitations?",
+      "scored_claims": [
+        {
+          "claim_id": "c1",
+          "evidence": [
+            {
+              "end": 1532,
+              "material_id": "mat-e4adcf0135fbaa3982584da87b0040b2",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "Test-time scaling (TTS) improves large language model agents by sampling and selecting among multiple candidate trajectories, but common realizations assume that these trajectories can be executed in parallel. This assumption breaks in realistic deployments, where enterprise workspaces and cloud services are shared and persistent, costly or infeasible to replicate, and actions may introduce irreversible side effects or cross-trajectory interference. Existing generative world models avoid direct execution, but typically compress environment state into a single prompt, limiting their ability to reliably simulate transitions under partial observability. Instead, we introduce Agentic World Modeling (AWM), which reformulates next-observation prediction as a multi-turn evidence-acquisition task. For each hypothetical action, an agentic simulator adaptively queries the real environment through safe read-only interfaces, reasons over the returned evidence, and uses executable computation to construct the resulting observation without mutating shared state. Integrated with trajectory-level TTS, AWM enables parallel exploration over a single shared environment. Across $\\tau$-bench, AppWorld, and OfficeBench, AWM outperforms a single-shot simulation baseline by 40.07% on average, and surpasses a trained world-model baseline by 12.36% on average. These results establish interactive, read-grounded simulation as a practical foundation for safe and scalable agentic test-time scaling in shared, non-resettable environments.",
+              "scope": "abstract",
+              "source_hash": "sha256:6fdc056b308bdc6e3849f19ff0e173a15b4898ca6f86670bc02403c17bf5fbf0",
+              "span_id": "span-07767192aeb610b6e7b7d2275d6363ae",
+              "start": 0,
+              "version_id": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+              "work_id": "arxiv:2610.40927"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "Trajectory-level test-time scaling improves LLM agents by sampling and selecting among multiple candidate trajectories, but common realizations assume the trajectories can be executed in parallel."
+        }
+      ],
+      "remaining_prose": {
+        "gaps": [
+          "Inspect the original source and its evaluation."
+        ],
+        "questions": [
+          "What further evidence, if any, would clarify the selected claims and their limitations?"
+        ],
+        "proposal": "Inspect source scope before drawing conclusions.",
+        "abstention": null
+      },
+      "judgments": {
+        "premise": null,
+        "expected_disposition": null,
+        "reason": null
+      },
+      "reviewer": null,
+      "reviewed_at": null,
+      "provenance": null
+    },
+    {
+      "id": "itm-379e318ba00f",
+      "request_digest": "5859745b24d2620c165162c2db8f0380a873f9a381c2323a8cbe9c8baa1feacb",
+      "question_index": 0,
+      "question": "How does the reported simulator prevent all cross-trajectory interference in deployment?",
+      "scored_claims": [
+        {
+          "claim_id": "c1",
+          "evidence": [
+            {
+              "end": 1532,
+              "material_id": "mat-e4adcf0135fbaa3982584da87b0040b2",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "Test-time scaling (TTS) improves large language model agents by sampling and selecting among multiple candidate trajectories, but common realizations assume that these trajectories can be executed in parallel. This assumption breaks in realistic deployments, where enterprise workspaces and cloud services are shared and persistent, costly or infeasible to replicate, and actions may introduce irreversible side effects or cross-trajectory interference. Existing generative world models avoid direct execution, but typically compress environment state into a single prompt, limiting their ability to reliably simulate transitions under partial observability. Instead, we introduce Agentic World Modeling (AWM), which reformulates next-observation prediction as a multi-turn evidence-acquisition task. For each hypothetical action, an agentic simulator adaptively queries the real environment through safe read-only interfaces, reasons over the returned evidence, and uses executable computation to construct the resulting observation without mutating shared state. Integrated with trajectory-level TTS, AWM enables parallel exploration over a single shared environment. Across $\\tau$-bench, AppWorld, and OfficeBench, AWM outperforms a single-shot simulation baseline by 40.07% on average, and surpasses a trained world-model baseline by 12.36% on average. These results establish interactive, read-grounded simulation as a practical foundation for safe and scalable agentic test-time scaling in shared, non-resettable environments.",
+              "scope": "abstract",
+              "source_hash": "sha256:6fdc056b308bdc6e3849f19ff0e173a15b4898ca6f86670bc02403c17bf5fbf0",
+              "span_id": "span-07767192aeb610b6e7b7d2275d6363ae",
+              "start": 0,
+              "version_id": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+              "work_id": "arxiv:2610.40927"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "Trajectory-level test-time scaling improves LLM agents by sampling and selecting among multiple candidate trajectories, but common realizations assume the trajectories can be executed in parallel."
+        }
+      ],
+      "remaining_prose": {
+        "gaps": [
+          "Inspect the original source and its evaluation."
+        ],
+        "questions": [
+          "How does the reported simulator prevent all cross-trajectory interference in deployment?"
+        ],
+        "proposal": "Inspect source scope before drawing conclusions.",
+        "abstention": null
+      },
+      "judgments": {
+        "premise": null,
+        "expected_disposition": null,
+        "reason": null
+      },
+      "reviewer": null,
+      "reviewed_at": null,
+      "provenance": null
+    }
+  ]
+}

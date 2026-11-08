@@ -1,0 +1,9 @@
+{
+  "measure-1": {
+    "old_digest": "769f89a172d32289cebfc7645bfabf3e3233f7dad9f4e4c7b34f2da69ef8dfe5",
+    "new_digest": "046b08e4a147c46dd07d950ad973f484c1bdd4c297424566fea6517de9ce5216",
+    "exact_match": false,
+    "reusable": false
+  },
+  "all_dynamic_counts": "Must measure each actual derived request; old digests cannot prove fit."
+}

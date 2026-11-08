@@ -1,0 +1,39 @@
+{
+  "packet_digest": "1037d63e7c1a68a6f6a8c77d2c59d32ac8bb682cebf329485d1463551847ef2a",
+  "application_commit": "691398bf7ca157742b36350227941f87cc350c97",
+  "snapshot_digest": "d42f93af554c0871fc3675f9f16eb5c1bd9c2bdebe44bc1e6e521a4dc9bdb88b",
+  "scoring_policy_digest": "a09a47a9576a60adcb01f6cb55b81634c387516244abf2bc05caef1f1b6e5686",
+  "heldout_case_ids": [
+    "v8-learn-mechanism",
+    "v8-learn-conditions",
+    "v8-learn-reproduce",
+    "v8-learn-measurement",
+    "v8-research-memory",
+    "v8-research-retrieval",
+    "v8-research-verification",
+    "v8-research-insufficient"
+  ],
+  "excluded_version_ids": [
+    "arxiv:2210.03629:v3",
+    "arxiv:2310.11511:v1",
+    "arxiv:2610.40871:v1:metadata-0be4ee69b6741057",
+    "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+    "arxiv:2610.40930:v1:metadata-b45059ef8928ae02",
+    "arxiv:2610.40940:v1:metadata-21d8200059afcd01",
+    "arxiv:2610.40943:v1:metadata-9449877c1e5f5e99",
+    "arxiv:2610.40966:v1:metadata-55c0a56c8750035c",
+    "arxiv:2610.41015:v1:metadata-9d3401c4c7c1014c",
+    "arxiv:2610.41022:v1:metadata-1d7490e908ceb729",
+    "arxiv:2610.41177:v1:metadata-f12968377b0c70f8",
+    "arxiv:2610.41291:v1:metadata-540221e5b83d286b",
+    "arxiv:2610.41391:v1:metadata-be875cebfaa26052",
+    "arxiv:2610.41482:v1:metadata-e5c832a06d88973f"
+  ],
+  "heldout_source_partition_overlap": false,
+  "human_labels": null,
+  "provider_contacts": 0,
+  "new_spend": "0",
+  "authority_created": false,
+  "fixture_database_permanently_provider_disabled": true,
+  "full_schedule_blocked_pending_separate_cap_review": true
+}

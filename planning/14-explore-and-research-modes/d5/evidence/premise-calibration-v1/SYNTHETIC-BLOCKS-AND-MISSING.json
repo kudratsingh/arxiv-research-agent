@@ -1,0 +1,58 @@
+{
+  "basis": "Synthetic grading-logic fixture with separate IDs, not provider verdicts or independent human evidence",
+  "counts": {
+    "planned": 4,
+    "judged": 4,
+    "acceptable": 2,
+    "unacceptable": 2,
+    "false_pass": 0,
+    "false_reject": 0,
+    "acceptable_abstentions": 1,
+    "unacceptable_abstentions": 0,
+    "acceptable_missing_invalid": 1,
+    "unacceptable_missing_invalid": 1,
+    "missing": 1,
+    "invalid": 1,
+    "complete": 2,
+    "unjudged": 0
+  },
+  "prose": {
+    "false_pass": {
+      "numerator": 0,
+      "denominator": 2,
+      "rate": 0.0
+    },
+    "false_reject": {
+      "numerator": 0,
+      "denominator": 2,
+      "rate": 0.0
+    },
+    "acceptable_abstentions": {
+      "numerator": 1,
+      "denominator": 2,
+      "rate": 0.5
+    },
+    "acceptable_operational_blocks": {
+      "numerator": 2,
+      "denominator": 2,
+      "rate": 1.0
+    },
+    "worst_case_false_pass": {
+      "numerator": 1,
+      "denominator": 2,
+      "rate": 0.5
+    },
+    "response_coverage": {
+      "numerator": 2,
+      "denominator": 4,
+      "rate": 0.5
+    },
+    "worst_case_false_reject": {
+      "numerator": 1,
+      "denominator": 2,
+      "rate": 0.5
+    }
+  },
+  "checker_qualified": false,
+  "new_provider_contacts": 0
+}

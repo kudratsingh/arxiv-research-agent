@@ -1,0 +1,20 @@
+{
+  "historical_usd": "0.825065",
+  "new_jobs": 14,
+  "new_Messages_max": 44,
+  "new_paired_counts_max": 44,
+  "preliminary_counts": 1,
+  "cumulative_jobs": 30,
+  "cumulative_Messages_max": 75,
+  "cumulative_counts_max": 95,
+  "active_job_cap": 24,
+  "active_Messages_cap": 80,
+  "active_count_cap": 80,
+  "additional_job_capacity_needed": 6,
+  "additional_count_capacity_needed": 15,
+  "per_workflow_usage_bound": "0.448",
+  "new_reservations_usd": "5.10",
+  "uncertainty_buffer_usd": "1",
+  "total_with_history_reservations_buffer": "6.925065",
+  "approved": false
+}

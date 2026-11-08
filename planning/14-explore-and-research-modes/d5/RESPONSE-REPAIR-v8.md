@@ -79,7 +79,7 @@ and retained snapshot remain explicitly retrospective. New questions and selecte
 contexts are frozen before future paid outputs. The old eight cases, including
 four unrun ones, stay in their original diagnostic cohort.
 
-Completion8/8,20 fully reviewed held-out facts,20 decisive adversarial labels,
+Completion8/8, 20 fully reviewed held-out facts, 20 decisive adversarial labels,
 zero observed false passes and all other quality thresholds remain unchanged.
 Development facts and machine support decisions cannot fill human minimums.
 Every human label remains blank. Fewer eligible facts means HOLD; no added cases
@@ -89,3 +89,9 @@ approval prerequisites. No new provider contact or spend is authorized here.
 The new repair policy additionally refuses missing, duplicate or mismatched
 claim verdict IDs/digests before allowing any located-prose repair. A valid
 field/index alone cannot rescue an invalid checker batch.
+
+Candidate application `691398bf7ca157742b36350227941f87cc350c97`.
+Frozen generation packet `1037d63e7c1a68a6f6a8c77d2c59d32ac8bb682cebf329485d1463551847ef2a`.
+The separate smallest premise-calibration packet is
+`ee48fbde1c7c747fa928b5ecf7abc70f4df54a44efbc62d782c16f6703f1a73b`.
+Neither packet is approved; the old live scope and its3/8 score are unchanged.
