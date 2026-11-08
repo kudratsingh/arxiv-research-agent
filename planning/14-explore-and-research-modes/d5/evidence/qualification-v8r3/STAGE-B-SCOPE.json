@@ -1,0 +1,626 @@
+{
+  "revision": "d5-v8r3-stage-approval-scope-v1",
+  "approved": false,
+  "application_commit": "d3a1d05297a7aa4c93f0f7ff6f492030bd06d36e",
+  "packet_digest": "42aa787ca0aa9e22dd92a6eddb5a7b8642a9f8364526bccf3af66b3947de2b4c",
+  "scope_id": "d5-42aa787ca0aa9e22dd92a6ed",
+  "program_id": "research-evaluation-20261105-v1",
+  "predecessor_job_cap_amendment_proposal_digest": "b4436db725310d1d17113c601398e7ad20a79776c38f8877b1e405d2b3fe9e94",
+  "case_bindings_digest": "fdd14aff47bd308563019d6957b74d89b9726e321b1d455b7e327e2548ed7015",
+  "current_financial_basis": {
+    "programme_jobs": 20,
+    "Messages": 35,
+    "counts": 54,
+    "estimated_usd": "0.904053",
+    "workflow_estimated_usd": "0.285853",
+    "checker_estimated_usd": "0.618200",
+    "pending_usd": "0",
+    "unknown_usd": "0"
+  },
+  "grant_window": "earlier of24hours after explicit owner approval, active parent expiry and2026-11-14T07:24:01Z; never renew automatically",
+  "model_settings": {
+    "revision": "d5-sonnet-opus-high-v1",
+    "draft_repair": {
+      "model": "claude-sonnet-5-5",
+      "thinking": {
+        "type": "between_tools"
+      },
+      "effort": "medium",
+      "input_tokens": 20000,
+      "output_tokens": 4000,
+      "prices": {
+        "input": "2",
+        "output": "10",
+        "verified_at": "2026-11-06"
+      }
+    },
+    "check_recheck_probe": {
+      "model": "claude-opus-5-5",
+      "thinking": {
+        "type": "adaptive"
+      },
+      "effort": "high",
+      "input_tokens": 20000,
+      "output_tokens": 3200,
+      "prices": {
+        "input": "4",
+        "output": "20",
+        "verified_at": "2026-11-06"
+      }
+    }
+  },
+  "sealed_scoring_policy_digest": "a09a47a9576a60adcb01f6cb55b81634c387516244abf2bc05caef1f1b6e5686",
+  "provider_contacts": 0,
+  "authority_created": false,
+  "stage": "B",
+  "case_ids": [
+    "dev-learn",
+    "dev-compare"
+  ],
+  "case_order": [
+    "dev-learn",
+    "dev-compare"
+  ],
+  "initial_requests": {
+    "dev-learn": {
+      "stage": "B",
+      "owner": "d5-v8-validation-run",
+      "request_id": "d5-42aa787ca0aa9e22dd92a6ed-dev-learn",
+      "input_digest": "96441caf66735da4e9d91f01e9b073d18c699d8fa8faa7f1f89857fc1a1883c1",
+      "request_digest": "3f28827518a1f1d6e6f6f5b4cfcbb7c9513368588c55a92a4c683530f07c9714",
+      "model": "claude-sonnet-5-5",
+      "settings": {
+        "d5_case_id": "dev-learn",
+        "d5_operation": "workflow",
+        "d5_packet_digest": "42aa787ca0aa9e22dd92a6eddb5a7b8642a9f8364526bccf3af66b3947de2b4c",
+        "d5_request": {
+          "assistance": {
+            "background": "",
+            "depth": "overview",
+            "direction": "overview",
+            "follow_up": "Explain ReAct's mechanism and what its excerpts cannot establish.",
+            "material_ids": [
+              "mat-2b7a38f3cfa1449f7728f044688ca2c2"
+            ],
+            "mode": "learn",
+            "origin": null,
+            "parent_job": null,
+            "project_id": null,
+            "project_revision": null,
+            "span_ids": [
+              "span-b615625987cdbfe74682109ab6dc0e19"
+            ],
+            "unit_ids": [
+              "ua6f0f4d05fd72b2b86b2"
+            ],
+            "version_id": "arxiv:2210.03629:v3",
+            "work_id": "arxiv:2210.03629"
+          },
+          "candidate_initial_wire_digest": "3f28827518a1f1d6e6f6f5b4cfcbb7c9513368588c55a92a4c683530f07c9714",
+          "capacity": {
+            "actual_provider_usage": null,
+            "actual_usd": "0.000000",
+            "basis": "bounded serialized UTF-8 bytes; no provider measurement",
+            "input_bytes_reserved": 192196,
+            "max_calls": 4,
+            "max_repairs": 1,
+            "offline_token_estimates": {
+              "check": {
+                "conservative_byte_units": 67029,
+                "heuristic": 22343
+              },
+              "draft": {
+                "conservative_byte_units": 9069,
+                "heuristic": 3023
+              },
+              "recheck": {
+                "conservative_byte_units": 67029,
+                "heuristic": 22343
+              },
+              "repair": {
+                "conservative_byte_units": 49069,
+                "heuristic": 16357
+              }
+            },
+            "output_bytes_per_call_max": 8000,
+            "output_bytes_reserved": 32000,
+            "provider_token_counts": null,
+            "stage_input_bytes_max": {
+              "check": 67029,
+              "draft": 9069,
+              "recheck": 67029,
+              "repair": 49069
+            }
+          },
+          "full_preview_digest": "a065b5eb08fe2a26ea435e83271df5231a78ec600bdf1c2f187c87563c1cb2ad",
+          "kind": "deep_dive",
+          "private_context": {
+            "notes": false,
+            "profile": false,
+            "reading_history": false
+          },
+          "producer": {
+            "code": {
+              "llm.py": "sha256:07dc89e847340e65215cb2a9d287f48fa0040273726e4751fa30853d3a098bb4",
+              "llm_models.py": "sha256:610662404098f8e4d5d934db9fdf768014af80cc1eb4e326debfdc20dc01bdad",
+              "workspace/assistance.py": "sha256:46b070d77cd07fe78eaadfa56890fc3149737761cb9b6b101838b0aa71cbd3fd",
+              "workspace/assistance_contract.py": "sha256:eef0249f9800dda1e1034b469ec641e1ef867ba853603d3dafab739459207c11",
+              "workspace/executor.py": "sha256:75ddf32188e5897decc12993caee3883dd667ca8ad4b8756a3dfa2eb5b46ac28",
+              "workspace/grounding.py": "sha256:05b9cd7e0c1737b36b731996f2ec20132034b3a233acebe5be64d9e43c260bb7",
+              "workspace/material.py": "sha256:688cbee37fa7007806dad087331672b381f0d3e094d88dc9dc8a7a889b4d7ba2"
+            },
+            "contract": "workspace-assistance-visible-bounds-v5"
+          },
+          "project_context": null,
+          "response_purpose": "single_paper",
+          "response_schemas_digest": "4627a6c05c9a856f0991287a9d10b8d9a6172fce8450fb9f4b23580f6a2c0450",
+          "schema_revision": "workspace-assistance-neutral-intents-v6",
+          "selection": {
+            "material_ids": [
+              "mat-2b7a38f3cfa1449f7728f044688ca2c2"
+            ],
+            "span_ids": [
+              "span-b615625987cdbfe74682109ab6dc0e19"
+            ]
+          },
+          "settings": {
+            "effort": "medium",
+            "max_repairs": 1,
+            "structured_outputs": true,
+            "temperature": null,
+            "thinking": {
+              "type": "between_tools"
+            }
+          },
+          "sources": [
+            {
+              "content_hash": "sha256:196be15c138fb6e551d2641473fee7b175fca7f4dcb0d0f5a171ee103ba57e16",
+              "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+              "scope": "excerpt",
+              "version_id": "arxiv:2210.03629:v3",
+              "work_id": "arxiv:2210.03629"
+            }
+          ],
+          "units": {
+            "ua6f0f4d05fd72b2b86b2": {
+              "end": 3379,
+              "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+              "page": 6,
+              "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+              "quote": "B) While interleaving reasoning, action and observation steps improves ReAct’s grounded-\nness and trustworthiness, such a structural constraint also reduces its ﬂexibility in formulating\nreasoning steps, leading to more reasoning error rate than CoT. we note that there is one frequent\nerror pattern speciﬁc to ReAct, in which the model repetitively generates the previous thoughts and\nactions, and we categorize it as part of “reasoning error” as the model fails to reason about what the\nproper next action to take and jump out of the loop4.\n\n  C) For ReAct, successfully retrieving informative knowledge via search is critical. Non-\ninformative search, which counts for 23% of the error cases, derails the model reasoning and gives\nit a hard time to recover and reformulate thoughts. This is perhaps an expected trade-off between\nfactuality and ﬂexibility, which motivates our proposed strategies of combining two methods.\n\nWe provide examples for each success and failure modes in Appendix E.1. We also ﬁnd some\nHotpotQA questions may contain outdated answer labels, see Figure 4 for example.\n\nReAct + CoT-SC perform best for prompting LLMs  Also shown in Table 1, the best prompting\nmethod on HotpotQA and Fever are ReAct →CoT-SC and CoT-SC →ReAct respectively.\nFurthermore, Figure 2 shows how different methods perform with respect to the number of CoT-SC\nsamples used.",
+              "scope": "excerpt",
+              "source_hash": "sha256:f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69",
+              "span_id": "span-b615625987cdbfe74682109ab6dc0e19",
+              "start": 2005,
+              "version_id": "arxiv:2210.03629:v3",
+              "work_id": "arxiv:2210.03629"
+            }
+          },
+          "version_hashes": {
+            "arxiv:2210.03629:v3": "d816508359f2e74c2e4d1cf5b724d241a9e9f4f229e383627edd0d39fd03f88f"
+          }
+        },
+        "d5_request_id": "d5-42aa787ca0aa9e22dd92a6ed-dev-learn",
+        "d5_scope_id": "d5-42aa787ca0aa9e22dd92a6ed",
+        "input_tokens": 20000,
+        "located_prose_repair": "first-check-only-v1",
+        "max_calls": 4,
+        "max_repairs": 1,
+        "operation_routes": {
+          "check_recheck_probe": {
+            "effort": "high",
+            "input_tokens": 20000,
+            "model": "claude-opus-5-5",
+            "output_tokens": 3200,
+            "prices": {
+              "input": "4",
+              "output": "20",
+              "verified_at": "2026-11-06"
+            },
+            "thinking": {
+              "type": "adaptive"
+            }
+          },
+          "draft_repair": {
+            "effort": "medium",
+            "input_tokens": 20000,
+            "model": "claude-sonnet-5-5",
+            "output_tokens": 4000,
+            "prices": {
+              "input": "2",
+              "output": "10",
+              "verified_at": "2026-11-06"
+            },
+            "thinking": {
+              "type": "between_tools"
+            }
+          },
+          "revision": "d5-sonnet-opus-high-v1"
+        },
+        "output_tokens": 4000,
+        "price_estimate_usd_per_million": {
+          "input": "2",
+          "output": "10",
+          "verified_at": "2026-11-06"
+        },
+        "probe_context": null,
+        "probe_wire_digest": null,
+        "program_amendment_proposal_digest": "b4436db725310d1d17113c601398e7ad20a79776c38f8877b1e405d2b3fe9e94",
+        "qualification_producer": {
+          "code": {
+            "llm.py": "sha256:07dc89e847340e65215cb2a9d287f48fa0040273726e4751fa30853d3a098bb4",
+            "llm_models.py": "sha256:610662404098f8e4d5d934db9fdf768014af80cc1eb4e326debfdc20dc01bdad",
+            "workspace/admission.py": "sha256:12524a9e192cde7d6988e44d57623d946252d5e4c039c14990076f1ba4ac84ac",
+            "workspace/d5_adapter.py": "sha256:07dc2393533274ffcbccfbdd6e711aedb030f48a8453edc1447b3d02518f069d",
+            "workspace/d5_authorization.py": "sha256:6c29af12f103af82495962720a83a19c2b51a4be2848bdd573886ec77fbfa2fc",
+            "workspace/d5_benchmark.py": "sha256:cb2b4bf54ff54158f38a416f541ba35472b893646b9933def7ec0f464fb9b865",
+            "workspace/d5_fixture.py": "sha256:9331715d4da3a22e0c81978a71c8bac13393b18b975980259d1de248d9d67593",
+            "workspace/d5_freeze.py": "sha256:fd16a1d81fc1186a1484b8efc2d6402b70dcdb64211ea6ef289e61c3a159bb44",
+            "workspace/d5_measurements.py": "sha256:f780b4e16b27e4f52ae18d3390112aa237b6ec83d2dd0478e6f795395b2e01b2",
+            "workspace/d5_operations.py": "sha256:1e9f173b6900275a492545fd079eb04573330d68f4a595d44aaed82da25d96f1",
+            "workspace/d5_operator.py": "sha256:746e61011964043285bda06c0f5d2c9e4ca71ee2b1556d5acdf5411e1daa6e48",
+            "workspace/d5_results.py": "sha256:589e349bd61a49e18528ef0df22d4009d0b2372acc74f85f2c72463220f414ec",
+            "workspace/d5_review_scoring.py": "sha256:0448f64dedc0db431cda1c05f0faf6428a61d145d9abaafbc322e99b9701bcc1",
+            "workspace/d5_reviews.py": "sha256:8d0c642f4026f87c44de3b2c354d8187c3776d2284079cbfe8f6a2290030cab2",
+            "workspace/d5_scope.py": "sha256:2f80099c6f06fed81191fd88e50dd1f4a4d5d61b3ccb39e2b428495150565c6e",
+            "workspace/d5_scoring.py": "sha256:5e80c8a54c5e037afb48cb504cfadd5ddb4ca40354687407ea1394133a1dcd11",
+            "workspace/measurement.py": "sha256:797c13428a924f51e186942a709c6807010083acad60a19ff5baf251f34652ab",
+            "workspace/migrations/012_d5_qualification_scope.sql": "sha256:35b58928738e143daa2e592ea9f81bf93d14b521f3af771337daecef2369eeb3",
+            "workspace/migrations/013_d5_stage_authorizations.sql": "sha256:805ccdc0e518679471e2a12da4bc2a94d37fd28475e1fa96fc6e686c562869ea",
+            "workspace/migrations/014_programme_amendments.sql": "sha256:11a88a4bccc586b3e0800ee60997d4099b6df07ef8b346e9a05406fa877293b0",
+            "workspace/migrations/015_programme_successor_amendments.sql": "sha256:ecfebbf208ad29eb4ce46340d7d17a9fc15c96088a1914257df79f8ff9a485b6",
+            "workspace/migrations/016_programme_third_amendments.sql": "sha256:5fcffc1339f3910706341388054a367d1394e819b9eaf60bf6b8cac687b35cb3",
+            "workspace/programme_amendments.py": "sha256:1ce1306627253bfa7f8d5e601ca1b631306a8210582a3002148459431babdfab",
+            "workspace/programme_successors.py": "sha256:1b3f50e0d77403656f3cd329a7f35b79ae6bbbc3a75610723f7a73a11bb15ff2",
+            "workspace/programme_third_amendment.py": "sha256:6d8feef6b3062514d01989bc1285778ff3a8cf7edbf05a4848349ced869ff58d",
+            "workspace/provider_adapter.py": "sha256:9095edbb1308340862e00e10b250fdc15854db22ba1d9d555a57829af198aeee",
+            "workspace/qualification_accounting.py": "sha256:14f3baea7fa1695ff22e95ef0114199703d5adcc7bc8d10830729e4f28e4f6d1",
+            "workspace/qualification_budget.py": "sha256:9d36735257ebdbceb51a6b50e964df217b29d51c16c2e338d4712a2826641a44"
+          },
+          "dependencies": {
+            "anthropic": "1.4.0",
+            "httpx": "0.28.1",
+            "pydantic": "2.13.4"
+          }
+        },
+        "research_task": "Explain ReAct's mechanism and what its excerpts cannot establish.",
+        "response_bytes": 131072,
+        "selection": {
+          "material_ids": [
+            "mat-2b7a38f3cfa1449f7728f044688ca2c2"
+          ],
+          "span_ids": [
+            "span-b615625987cdbfe74682109ab6dc0e19"
+          ]
+        },
+        "timeout_seconds": 30
+      },
+      "source_refs": [
+        {
+          "content_hash": "sha256:196be15c138fb6e551d2641473fee7b175fca7f4dcb0d0f5a171ee103ba57e16",
+          "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+          "scope": "excerpt",
+          "version_id": "arxiv:2210.03629:v3",
+          "work_id": "arxiv:2210.03629"
+        }
+      ]
+    },
+    "dev-compare": {
+      "stage": "B",
+      "owner": "d5-v8-validation-run",
+      "request_id": "d5-42aa787ca0aa9e22dd92a6ed-dev-compare",
+      "input_digest": "366658b84ef0f08f77a395071503598648e6cb779f42036faa8551b43462c105",
+      "request_digest": "219f2c5670ba7b193e480c9258da85258d4d57202030e844059389e34dcabe44",
+      "model": "claude-sonnet-5-5",
+      "settings": {
+        "d5_case_id": "dev-compare",
+        "d5_operation": "workflow",
+        "d5_packet_digest": "42aa787ca0aa9e22dd92a6eddb5a7b8642a9f8364526bccf3af66b3947de2b4c",
+        "d5_request": {
+          "assistance": {
+            "background": "",
+            "depth": "overview",
+            "direction": "overview",
+            "follow_up": "Compare ReAct and Self-RAG evidence and evaluation limitations.",
+            "material_ids": [
+              "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+              "mat-f98fbd73f423776117f60cac36edc90a"
+            ],
+            "mode": "research",
+            "origin": null,
+            "parent_job": null,
+            "project_id": "project-d323fc7f292539ea490d65421aa0ea75",
+            "project_revision": 1,
+            "span_ids": [
+              "span-55b2971cd5f40c431b738813c7ef10cd",
+              "span-f021c711415ab7488317517d7cbe41d5"
+            ],
+            "unit_ids": [
+              "uf800ed16cb52eb251690",
+              "u423a5ed5c10153d66367"
+            ],
+            "version_id": "arxiv:2210.03629:v3",
+            "work_id": "arxiv:2210.03629"
+          },
+          "candidate_initial_wire_digest": "219f2c5670ba7b193e480c9258da85258d4d57202030e844059389e34dcabe44",
+          "capacity": {
+            "actual_provider_usage": null,
+            "actual_usd": "0.000000",
+            "basis": "bounded serialized UTF-8 bytes; no provider measurement",
+            "input_bytes_reserved": 254992,
+            "max_calls": 4,
+            "max_repairs": 1,
+            "offline_token_estimates": {
+              "check": {
+                "conservative_byte_units": 95088,
+                "heuristic": 31696
+              },
+              "draft": {
+                "conservative_byte_units": 12408,
+                "heuristic": 4136
+              },
+              "recheck": {
+                "conservative_byte_units": 95088,
+                "heuristic": 31696
+              },
+              "repair": {
+                "conservative_byte_units": 52408,
+                "heuristic": 17470
+              }
+            },
+            "output_bytes_per_call_max": 8000,
+            "output_bytes_reserved": 32000,
+            "provider_token_counts": null,
+            "stage_input_bytes_max": {
+              "check": 95088,
+              "draft": 12408,
+              "recheck": 95088,
+              "repair": 52408
+            }
+          },
+          "full_preview_digest": "ec1b9f6f0bb070188901c77ded99336aa2e85d2c9bb9f3625602d12e9f2a492f",
+          "kind": "deep_dive",
+          "private_context": {
+            "notes": false,
+            "profile": false,
+            "reading_history": false
+          },
+          "producer": {
+            "code": {
+              "llm.py": "sha256:07dc89e847340e65215cb2a9d287f48fa0040273726e4751fa30853d3a098bb4",
+              "llm_models.py": "sha256:610662404098f8e4d5d934db9fdf768014af80cc1eb4e326debfdc20dc01bdad",
+              "workspace/assistance.py": "sha256:46b070d77cd07fe78eaadfa56890fc3149737761cb9b6b101838b0aa71cbd3fd",
+              "workspace/assistance_contract.py": "sha256:eef0249f9800dda1e1034b469ec641e1ef867ba853603d3dafab739459207c11",
+              "workspace/executor.py": "sha256:75ddf32188e5897decc12993caee3883dd667ca8ad4b8756a3dfa2eb5b46ac28",
+              "workspace/grounding.py": "sha256:05b9cd7e0c1737b36b731996f2ec20132034b3a233acebe5be64d9e43c260bb7",
+              "workspace/material.py": "sha256:688cbee37fa7007806dad087331672b381f0d3e094d88dc9dc8a7a889b4d7ba2"
+            },
+            "contract": "workspace-assistance-visible-bounds-v5"
+          },
+          "project_context": {
+            "constraints": "No private notes, no source expansion; retained scopes only",
+            "id": "project-d323fc7f292539ea490d65421aa0ea75",
+            "question": "Compare ReAct and Self-RAG evidence and evaluation limitations.",
+            "revision": 1,
+            "scope": "Declared public retained corpus only"
+          },
+          "response_purpose": "research_comparison",
+          "response_schemas_digest": "88d6292a214e65aa5d46ca7f75ebfca85a7c138f78edea555f9008163b2c4a0c",
+          "schema_revision": "workspace-assistance-neutral-intents-v6",
+          "selection": {
+            "material_ids": [
+              "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+              "mat-f98fbd73f423776117f60cac36edc90a"
+            ],
+            "span_ids": [
+              "span-55b2971cd5f40c431b738813c7ef10cd",
+              "span-f021c711415ab7488317517d7cbe41d5"
+            ]
+          },
+          "settings": {
+            "effort": "medium",
+            "max_repairs": 1,
+            "structured_outputs": true,
+            "temperature": null,
+            "thinking": {
+              "type": "between_tools"
+            }
+          },
+          "sources": [
+            {
+              "content_hash": "sha256:196be15c138fb6e551d2641473fee7b175fca7f4dcb0d0f5a171ee103ba57e16",
+              "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+              "scope": "excerpt",
+              "version_id": "arxiv:2210.03629:v3",
+              "work_id": "arxiv:2210.03629"
+            },
+            {
+              "content_hash": "sha256:99202ba231c19f02bb313bccfd65015534e23b9202611b09a16ba6b2b0590310",
+              "material_id": "mat-f98fbd73f423776117f60cac36edc90a",
+              "scope": "excerpt",
+              "version_id": "arxiv:2310.11511:v1",
+              "work_id": "arxiv:2310.11511"
+            }
+          ],
+          "units": {
+            "u423a5ed5c10153d66367": {
+              "end": 3616,
+              "material_id": "mat-f98fbd73f423776117f60cac36edc90a",
+              "page": 3,
+              "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+              "quote": "While their value function\nsimply indicates an overall score of each generation, SELF-RAG trains to an arbitrary LM to learn to\ngenerate fine-grained self-reflection and customizable inference.\n\nTraining and generating with critics. Training LLMs with reinforcement learning (e.g., Proximal\nPolicy Optimization or PPO; Schulman et al. 2017) from human feedback (RLHF) has proven\neffective in aligning LLMs with human preferences (Ouyang et al., 2022). Wu et al. (2023) introduce\nfine-grained RLHF with multiple reward models. Though our work also studies fine-grained critique\non retrieval and generation, we train our target LM on task examples augmented with reflection\ntokens from a critic model offline, with a far lower training cost compared to RLHF. In addition,\nreflection tokens in SELF-RAG enable controllable generation at inference, while RLHF focuses on\nhuman preference alignment during training. Other works use general control tokens to guide LM\ngeneration (Lu et al., 2022; Korbak et al., 2023), while SELF-RAG uses reflection tokens to decide the\nneed for retrieval and to self-evaluate generation quality. Xie et al. (2023) propose a self-evaluation-\nguided decoding framework, but they focus only on reasoning tasks with one evaluation dimension\n(reasoning path consistency) and without retrieval. Recent work on LLM refinement (Dhuliawala\net al., 2023; Madaan et al., 2023; Paul et al., 2023) prompts a model to generate task output, natural\nlanguage feedback and refined task output iteratively, but at the cost of inference efficiency.",
+              "scope": "excerpt",
+              "source_hash": "sha256:d9eaa1398abac0df67a9d0933a5bf8b6d9d83d2e72da2a486073cd842dd52978",
+              "span_id": "span-f021c711415ab7488317517d7cbe41d5",
+              "start": 2058,
+              "version_id": "arxiv:2310.11511:v1",
+              "work_id": "arxiv:2310.11511"
+            },
+            "uf800ed16cb52eb251690": {
+              "end": 3888,
+              "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+              "page": 1,
+              "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+              "quote": "Furthermore, on two interactive decision making benchmarks (ALFWorld and\n                           WebShop), ReAct outperforms imitation and reinforcement learning methods by\n                            an absolute success rate of 34% and 10% respectively, while being prompted with\n                              only one or two in-context examples.\n\n\n                1  INTRODUCTION\n\n              A unique feature of human intelligence is the ability to seamlessly combine task-oriented actions with\n                        verbal reasoning (or inner speech, Alderson-Day & Fernyhough, 2015), which has been theorized toarXiv:2210.03629v3                      play an important role in human cognition for enabling self-regulation or strategization (Vygotsky,\n                     1987; Luria, 1965; Fernyhough, 2010) and maintaining a working memory (Baddeley, 1992). Con-\n                         sider the example of cooking up a dish in the kitchen. Between any two speciﬁc actions, we may\n                       reason in language in order to track progress (“now that everything is cut, I should heat up the pot of\n                        water”), to handle exceptions or adjust the plan according to the situation (“I don’t have salt, so let\n                me use soy sauce and pepper instead”), and to realize when external information is needed (“how do\n                             I prepare dough? Let me search on the Internet”).",
+              "scope": "excerpt",
+              "source_hash": "sha256:f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69",
+              "span_id": "span-55b2971cd5f40c431b738813c7ef10cd",
+              "start": 2443,
+              "version_id": "arxiv:2210.03629:v3",
+              "work_id": "arxiv:2210.03629"
+            }
+          },
+          "version_hashes": {
+            "arxiv:2210.03629:v3": "d816508359f2e74c2e4d1cf5b724d241a9e9f4f229e383627edd0d39fd03f88f",
+            "arxiv:2310.11511:v1": "2abdf85aaa8a79285bb62cb626c09065da880b8da7efc449be8a9022e5de8b9d"
+          }
+        },
+        "d5_request_id": "d5-42aa787ca0aa9e22dd92a6ed-dev-compare",
+        "d5_scope_id": "d5-42aa787ca0aa9e22dd92a6ed",
+        "input_tokens": 20000,
+        "located_prose_repair": "first-check-only-v1",
+        "max_calls": 4,
+        "max_repairs": 1,
+        "operation_routes": {
+          "check_recheck_probe": {
+            "effort": "high",
+            "input_tokens": 20000,
+            "model": "claude-opus-5-5",
+            "output_tokens": 3200,
+            "prices": {
+              "input": "4",
+              "output": "20",
+              "verified_at": "2026-11-06"
+            },
+            "thinking": {
+              "type": "adaptive"
+            }
+          },
+          "draft_repair": {
+            "effort": "medium",
+            "input_tokens": 20000,
+            "model": "claude-sonnet-5-5",
+            "output_tokens": 4000,
+            "prices": {
+              "input": "2",
+              "output": "10",
+              "verified_at": "2026-11-06"
+            },
+            "thinking": {
+              "type": "between_tools"
+            }
+          },
+          "revision": "d5-sonnet-opus-high-v1"
+        },
+        "output_tokens": 4000,
+        "price_estimate_usd_per_million": {
+          "input": "2",
+          "output": "10",
+          "verified_at": "2026-11-06"
+        },
+        "probe_context": null,
+        "probe_wire_digest": null,
+        "program_amendment_proposal_digest": "b4436db725310d1d17113c601398e7ad20a79776c38f8877b1e405d2b3fe9e94",
+        "qualification_producer": {
+          "code": {
+            "llm.py": "sha256:07dc89e847340e65215cb2a9d287f48fa0040273726e4751fa30853d3a098bb4",
+            "llm_models.py": "sha256:610662404098f8e4d5d934db9fdf768014af80cc1eb4e326debfdc20dc01bdad",
+            "workspace/admission.py": "sha256:12524a9e192cde7d6988e44d57623d946252d5e4c039c14990076f1ba4ac84ac",
+            "workspace/d5_adapter.py": "sha256:07dc2393533274ffcbccfbdd6e711aedb030f48a8453edc1447b3d02518f069d",
+            "workspace/d5_authorization.py": "sha256:6c29af12f103af82495962720a83a19c2b51a4be2848bdd573886ec77fbfa2fc",
+            "workspace/d5_benchmark.py": "sha256:cb2b4bf54ff54158f38a416f541ba35472b893646b9933def7ec0f464fb9b865",
+            "workspace/d5_fixture.py": "sha256:9331715d4da3a22e0c81978a71c8bac13393b18b975980259d1de248d9d67593",
+            "workspace/d5_freeze.py": "sha256:fd16a1d81fc1186a1484b8efc2d6402b70dcdb64211ea6ef289e61c3a159bb44",
+            "workspace/d5_measurements.py": "sha256:f780b4e16b27e4f52ae18d3390112aa237b6ec83d2dd0478e6f795395b2e01b2",
+            "workspace/d5_operations.py": "sha256:1e9f173b6900275a492545fd079eb04573330d68f4a595d44aaed82da25d96f1",
+            "workspace/d5_operator.py": "sha256:746e61011964043285bda06c0f5d2c9e4ca71ee2b1556d5acdf5411e1daa6e48",
+            "workspace/d5_results.py": "sha256:589e349bd61a49e18528ef0df22d4009d0b2372acc74f85f2c72463220f414ec",
+            "workspace/d5_review_scoring.py": "sha256:0448f64dedc0db431cda1c05f0faf6428a61d145d9abaafbc322e99b9701bcc1",
+            "workspace/d5_reviews.py": "sha256:8d0c642f4026f87c44de3b2c354d8187c3776d2284079cbfe8f6a2290030cab2",
+            "workspace/d5_scope.py": "sha256:2f80099c6f06fed81191fd88e50dd1f4a4d5d61b3ccb39e2b428495150565c6e",
+            "workspace/d5_scoring.py": "sha256:5e80c8a54c5e037afb48cb504cfadd5ddb4ca40354687407ea1394133a1dcd11",
+            "workspace/measurement.py": "sha256:797c13428a924f51e186942a709c6807010083acad60a19ff5baf251f34652ab",
+            "workspace/migrations/012_d5_qualification_scope.sql": "sha256:35b58928738e143daa2e592ea9f81bf93d14b521f3af771337daecef2369eeb3",
+            "workspace/migrations/013_d5_stage_authorizations.sql": "sha256:805ccdc0e518679471e2a12da4bc2a94d37fd28475e1fa96fc6e686c562869ea",
+            "workspace/migrations/014_programme_amendments.sql": "sha256:11a88a4bccc586b3e0800ee60997d4099b6df07ef8b346e9a05406fa877293b0",
+            "workspace/migrations/015_programme_successor_amendments.sql": "sha256:ecfebbf208ad29eb4ce46340d7d17a9fc15c96088a1914257df79f8ff9a485b6",
+            "workspace/migrations/016_programme_third_amendments.sql": "sha256:5fcffc1339f3910706341388054a367d1394e819b9eaf60bf6b8cac687b35cb3",
+            "workspace/programme_amendments.py": "sha256:1ce1306627253bfa7f8d5e601ca1b631306a8210582a3002148459431babdfab",
+            "workspace/programme_successors.py": "sha256:1b3f50e0d77403656f3cd329a7f35b79ae6bbbc3a75610723f7a73a11bb15ff2",
+            "workspace/programme_third_amendment.py": "sha256:6d8feef6b3062514d01989bc1285778ff3a8cf7edbf05a4848349ced869ff58d",
+            "workspace/provider_adapter.py": "sha256:9095edbb1308340862e00e10b250fdc15854db22ba1d9d555a57829af198aeee",
+            "workspace/qualification_accounting.py": "sha256:14f3baea7fa1695ff22e95ef0114199703d5adcc7bc8d10830729e4f28e4f6d1",
+            "workspace/qualification_budget.py": "sha256:9d36735257ebdbceb51a6b50e964df217b29d51c16c2e338d4712a2826641a44"
+          },
+          "dependencies": {
+            "anthropic": "1.4.0",
+            "httpx": "0.28.1",
+            "pydantic": "2.13.4"
+          }
+        },
+        "research_task": "Compare ReAct and Self-RAG evidence and evaluation limitations.",
+        "response_bytes": 131072,
+        "selection": {
+          "material_ids": [
+            "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+            "mat-f98fbd73f423776117f60cac36edc90a"
+          ],
+          "span_ids": [
+            "span-55b2971cd5f40c431b738813c7ef10cd",
+            "span-f021c711415ab7488317517d7cbe41d5"
+          ]
+        },
+        "timeout_seconds": 30
+      },
+      "source_refs": [
+        {
+          "content_hash": "sha256:196be15c138fb6e551d2641473fee7b175fca7f4dcb0d0f5a171ee103ba57e16",
+          "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+          "scope": "excerpt",
+          "version_id": "arxiv:2210.03629:v3",
+          "work_id": "arxiv:2210.03629"
+        },
+        {
+          "content_hash": "sha256:99202ba231c19f02bb313bccfd65015534e23b9202611b09a16ba6b2b0590310",
+          "material_id": "mat-f98fbd73f423776117f60cac36edc90a",
+          "scope": "excerpt",
+          "version_id": "arxiv:2310.11511:v1",
+          "work_id": "arxiv:2310.11511"
+        }
+      ]
+    }
+  },
+  "purpose": {
+    "dev-learn": "Learning explanation and procedural follow-up/qualification repair; development,not held-out.",
+    "dev-compare": "Cross-source ReAct/Self-RAG comparison with independently cited bases; development,not held-out."
+  },
+  "limits": {
+    "funded_jobs": 2,
+    "Messages": 8,
+    "exact_paired_counts": 8,
+    "per_job_usd": "0.45",
+    "total_new_usd": "0.90",
+    "max_repair_per_job": 1,
+    "mandatory_recheck_after_repair": true,
+    "automatic_retries": 0,
+    "input_count_allowance_per_stage": 16000,
+    "concurrency": 1
+  },
+  "prerequisites": [
+    "A separately approved,completed input-bound measurement.",
+    "Active unexpired parent A authorization and separately appended B grant.",
+    "Ledger reverified after A:20jobs/35Messages/55counts/USD0.904053,pendingunknown0.",
+    "No provider/source/model/settings/schema/producer drift."
+  ],
+  "dynamic_request_binding": "Checks, repair and recheck derive only from actual preceding journalled outputs under frozen code; exact digests recorded at creation",
+  "dynamic_request_note": "Do not fabricate check/repair/recheck bodies before preceding outputs exist. Derive from actual journalled outputs under frozen templates,schemas,selected evidence and limits; record exact digest before paired count/dispatch.",
+  "cumulative_maximum_after_A_and_B": {
+    "jobs": 22,
+    "Messages": 43,
+    "counts": 63,
+    "known_plus_reservation_usd": "1.804053"
+  },
+  "stages_C_D_authorized": false,
+  "next_step": "STOP for development review before any C/D decision.",
+  "approval_scope_digest": "3d3759115b5679df7ceae37bfc41daf738672e5eef8b956ff5b4062e7143fdec"
+}

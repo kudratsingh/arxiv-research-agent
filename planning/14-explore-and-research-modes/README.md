@@ -1,5 +1,7 @@
 # Explore & Learn and Research
 
+Current qualification review: [v8r3 reconciled-ledger proposal](d5/PAID-VALIDATION-PROPOSAL-v8r3.md), baseline 20 jobs / 35 Messages / 54 counts / USD 0.904053. Stages A/B and the capacity amendment are proposals only, with no new contact or authority.
+
 Owner-adopted product direction, recorded **2026-11-04 America/Los_Angeles**.
 Status: **D0–D4 complete; D5 prospective procedural repair and blinded premise calibration verified offline at application `691398bf`. Paid validation remains stopped and requires separate approval.**
 

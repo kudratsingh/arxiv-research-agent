@@ -1,0 +1,9 @@
+{
+  "candidate_measure_1_digest": "046b08e4a147c46dd07d950ad973f484c1bdd4c297424566fea6517de9ce5216",
+  "unchanged_from_unexecuted_v8r2_export": true,
+  "completed_historical_count_contacts_compared": 54,
+  "exact_matching_completed_receipts": [],
+  "reuse_authorized": false,
+  "new_measurement_required": true,
+  "reason": "No v8 measurement was executed. Prior v7 requests and four checker-only Opus measurements differ from this Sonnet Compare request; dynamic checks/repair/recheck still need exact paired measurements."
+}

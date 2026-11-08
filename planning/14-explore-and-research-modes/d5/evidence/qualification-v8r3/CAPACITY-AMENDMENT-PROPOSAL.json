@@ -1,0 +1,70 @@
+{
+  "revision": "programme-v8-full-schedule-capacity-proposal-v1",
+  "proposal_only": true,
+  "approved": false,
+  "amendment_id": "research-evaluation-20261105-v1-v8r3-schedule-capacity-v1",
+  "program_id": "research-evaluation-20261105-v1",
+  "programme_authorization_digest": "791c57d58f6425a14845d18b6563200e932b3869de59805b586727916fbff7ae",
+  "candidate_packet_digest": "42aa787ca0aa9e22dd92a6eddb5a7b8642a9f8364526bccf3af66b3947de2b4c",
+  "candidate_scope_id": "d5-42aa787ca0aa9e22dd92a6ed",
+  "application_commit": "d3a1d05297a7aa4c93f0f7ff6f492030bd06d36e",
+  "predecessor_amendment_proposal_digest": "b4436db725310d1d17113c601398e7ad20a79776c38f8877b1e405d2b3fe9e94",
+  "predecessor_amendment_authorization_digest": "b5f9fd8ed8b534b80f034ce885544cda5bb41a29524ae47d1b5eb40c4bc05872",
+  "basis": {
+    "ledger_history_digest": "88fe8f85f6edd640c033cf5623b8133ab52bc157f1b90f7e8ec04135ec20d64b",
+    "programme_jobs": 20,
+    "Messages": 35,
+    "counts": 54,
+    "estimated_usd": "0.904053",
+    "workflow_estimated_usd": "0.285853",
+    "checker_estimated_usd": "0.618200",
+    "pending_usd": "0",
+    "unknown_usd": "0"
+  },
+  "current_limits": {
+    "new_jobs": 24,
+    "messages": 80,
+    "counts": 80,
+    "usd": "10",
+    "concurrency": 1
+  },
+  "proposed_limits": {
+    "new_jobs": 34,
+    "messages": 80,
+    "counts": 99,
+    "usd": "10",
+    "concurrency": 1
+  },
+  "funded_jobs_delta": 10,
+  "count_limit_delta": 19,
+  "expiry_unchanged": "2026-11-14T07:24:01Z",
+  "preserve_failed_jobs_and_all_receipts": true,
+  "preserve_pending_unknown_reservations": true,
+  "quality_thresholds_unchanged": {
+    "completion_required": 8,
+    "fresh_cases": 8,
+    "generated_fact_reviews_min": 20,
+    "adversarial_reviews_min": 20,
+    "false_pass_max": 0,
+    "provenance_required": 1,
+    "human_missing": "HOLD",
+    "minimum_feasibility": "7 potentially answerable fresh cases x 6 claims = 42 slots; 20 not guaranteed. Fewer observed facts means HOLD, no added cases.",
+    "correlation": "Report by case/source; claims are not independent samples"
+  },
+  "stage_authorizations_created": [],
+  "activation_prerequisites": [
+    "Separate owner decision on this programme-specific job/count expansion.",
+    "Offline implementation/tests of a versioned count-cap extension; existing job-only recorders cannot activate count99.",
+    "Freeze any changed producer bindings before paid A/B; if code changes after paid development, require explicit request/evidence/code/receipt-reuse audit and a successor packet,never silently retag old jobs.",
+    "Record only after independently supplied matching approval; preserve predecessor receipts and expiry."
+  ],
+  "required_policy_tests": [
+    "Without new amendment cap24 refusesjob25; amendedcap34 admits34/refuses35.",
+    "Without new amendment count80 refuses81; amendedcount99 admits99/refuses100.",
+    "Dollar10,Messages80,concurrency1,expiry/revocation and liabilities still bind.",
+    "Wrong programme,packet,basis,predecessor or receipt refuses; no scope/stage permission is created."
+  ],
+  "provider_contacts": 0,
+  "amendment_activated": false,
+  "proposal_digest": "3f47029086fd846968aa93f14f64a693739b5bc1485d4fbb4a2f3793ec4662ef"
+}

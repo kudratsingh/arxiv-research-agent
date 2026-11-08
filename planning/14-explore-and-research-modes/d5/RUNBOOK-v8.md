@@ -1,6 +1,8 @@
 # D5 v8 offline repair and premise calibration runbook
 
-Current calibration entry point: [independent-review preflight](CALIBRATION-PREFLIGHT.md). A prereview digest alone is insufficient. Four supplied attributed reviews now validate; the actual preflight is READY_FOR_APPROVAL with approved=false. No live grant is recorded.
+Current budget/approval scopes: [v8r3 ledger refresh](PAID-VALIDATION-PROPOSAL-v8r3.md) and [v8r3 commands](RUNBOOK-v8r3.md). Use its new packet; earlier 16-job scopes below are historical. No paid command is authorized by this runbook.
+
+Historical calibration entry point: [independent-review preflight](CALIBRATION-PREFLIGHT.md). Its separately approved four-probe run has since completed and stopped. The [v8r3 refresh receipt](evidence/qualification-v8r3/REFRESH-RECEIPT.json) binds that diagnostic separately from v7r2 and the prospective qualification. The instructions below describe the earlier offline checkpoint; they grant no further contacts.
 
 No paid execution or authorization is performed by these commands. Work from the
 isolated `codex/workspace-d5-procedural-v8` checkout. Preserve the active stopped

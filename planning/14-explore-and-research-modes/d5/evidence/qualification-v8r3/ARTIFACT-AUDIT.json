@@ -1,0 +1,10 @@
+{
+  "packet": "42aa787ca0aa9e22dd92a6eddb5a7b8642a9f8364526bccf3af66b3947de2b4c",
+  "frozen_fields_unchanged": 16,
+  "approval_and_amendment_digests_valid": true,
+  "initial_request_bindings_valid": true,
+  "arithmetic_valid": true,
+  "prior_live_records_unchanged": 3,
+  "generator_hash_valid": true,
+  "new_provider_contacts": 0
+}

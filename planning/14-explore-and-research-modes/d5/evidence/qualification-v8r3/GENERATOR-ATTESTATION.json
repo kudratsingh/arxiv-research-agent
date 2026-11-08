@@ -1,0 +1,10 @@
+{
+  "generator": "planning/14-explore-and-research-modes/d5/tools/refresh-v8-ledger.py",
+  "generator_sha256": "e6231b7fa95deabed943fe08a709ba22c9a6df1679d112e2a86ef267530f9575",
+  "candidate_packet_digest": "42aa787ca0aa9e22dd92a6eddb5a7b8642a9f8364526bccf3af66b3947de2b4c",
+  "command": "ANTHROPIC_API_KEY=local-preview-disabled WORKSPACE_D5_OFFLINE=1 PYTHONPATH=/private/tmp/arxiv-calibration-preflight-deps:$PWD D5_POSTGRES_URL=postgresql://workspace:workspace-local-only@127.0.0.1:15488/workspace_d5_v8r3_ledger_refresh_20261108 $VENV_PYTHON - --private-out outputs/d5/v8-ledger-refresh/private-replay-v1 --public-out planning/14-explore-and-research-modes/d5/evidence/qualification-v8r3 < planning/14-explore-and-research-modes/d5/tools/refresh-v8-ledger.py",
+  "reproduction_requires": "New empty isolated fixture DB and fresh output directories; never overwrite frozen artifacts. Ledger must still match20/35/54/USD0.904053.",
+  "private_snapshot_not_published": true,
+  "authority_created": false,
+  "provider_contacts": 0
+}

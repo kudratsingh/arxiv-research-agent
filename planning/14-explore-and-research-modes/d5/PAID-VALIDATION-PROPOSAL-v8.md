@@ -1,5 +1,7 @@
 # D5 v8 fresh qualification proposal — UNAPPROVED, UNEXECUTED
 
+**Historical 16-job baseline proposal.** The [v8r3 ledger refresh](PAID-VALIDATION-PROPOSAL-v8r3.md) carries the reconciled20-job/35-Message/54-count/USD0.904053 basis. This predecessor and its frozen packet remain retained; no old run is replayed or retagged.
+
 This is a separate decision package after the stopped v7r2 diagnostic. It grants
 no API contact, token count, funded job, cap amendment or renewal. Everyday
 generation, recurrence and notifications remain disabled.

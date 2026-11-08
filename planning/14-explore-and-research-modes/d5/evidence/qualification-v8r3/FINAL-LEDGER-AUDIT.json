@@ -1,0 +1,20 @@
+{
+  "read_only": true,
+  "programme_jobs": 20,
+  "Messages": 35,
+  "counts": 54,
+  "estimated_usd": "0.904053",
+  "pending_usd": "0",
+  "unknown_usd": "0",
+  "history_matches_packet": true,
+  "limits": {
+    "usd": "10",
+    "counts": 80,
+    "messages": 80,
+    "new_jobs": 24,
+    "concurrency": 1
+  },
+  "new_candidate_scope_exists": false,
+  "old_scopes_stopped": true,
+  "new_provider_contacts": 0
+}
