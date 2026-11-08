@@ -496,3 +496,40 @@ def test_noncanonical_numeric_types_cannot_change_a_sealed_amendment(store, fiel
     r["proposal_digest"] = _digest(r["amendment"])
     with pytest.raises(AdmissionError, match="binding_or_limits_drift"):
         capacity.record_external(store, r)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "case_id,abstains", [("v8-research-insufficient", True), ("v8-research-memory", False)]
+)
+async def test_capacity_fixture_honors_the_real_frozen_case_identity(case_id, abstains):
+    import importlib.util
+    import json
+    from pathlib import Path
+
+    import httpx
+
+    from src.workspace.d5_benchmark import read
+
+    root = Path(__file__).resolve().parents[1]
+    helper = root / "planning/14-explore-and-research-modes/d5/tools/prepare-capacity-v8.py"
+    spec = importlib.util.spec_from_file_location("capacity_fixture_regression", helper)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    # This preserved, unexecuted predecessor has the same frozen questions,
+    # selected evidence and wire schemas. No old authorization/output is reused.
+    packet = read(
+        root
+        / "planning/14-explore-and-research-modes/d5/evidence/qualification-v8r3/packet.json.gz"
+    )
+    case = next(c for c in packet["cases"] if c["id"] == case_id)
+    request = httpx.Request(
+        "POST",
+        "https://api.anthropic.com/v1/messages",
+        headers={"x-api-key": "local-preview-disabled"},
+        json=case["sealed"]["candidate_initial_wire"],
+    )
+    response = await module.CapacityTransport(case_id)(request)
+    output = json.loads(response.json()["content"][0]["text"])
+    assert bool(output["claims"]) is not abstains
+    assert (output["abstention"] == "application_context_required") is abstains

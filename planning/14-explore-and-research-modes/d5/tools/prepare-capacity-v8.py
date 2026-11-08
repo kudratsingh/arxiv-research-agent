@@ -132,6 +132,7 @@ def prepare(store, captured, previous, out):
         adapter=qualification_producer(),
         programme_amendment=proposal,
         refreshed_at=datetime.now(UTC).isoformat(),
+        offline_fixture_revision="capacity-envelope-v2-correct-v8-insufficient-id",
         refresh_policy="Prospective capacity-code binding only; no corpus, question, selection, schema, prompt, rubric, threshold or historical result changes.",
     )
     p["required_separate_decisions"].update(
@@ -340,7 +341,7 @@ class CapacityTransport:
                     comparison_claims=[c["claim_id"] for c in chosen],
                     comparison_basis=[c["claim_id"] for c in chosen],
                 )
-            if self.case_id == "research-insufficient":
+            if self.case_id.endswith("research-insufficient"):
                 output.update(
                     claims=[], background_claims=[], abstention="application_context_required"
                 )
@@ -480,6 +481,16 @@ async def replay(store, captured, packet, out):
             else:
                 raise AssertionError("Capacity overflow accepted")
     assert all(c["completion"] for c in report["cases"])
+    insufficient = next(c for c in report["cases"] if c["id"].endswith("research-insufficient"))
+    workflow = next(
+        s["output"]
+        for s in reversed(report["raw_results"][insufficient["id"]]["steps"])
+        if s["stage"] in {"draft", "repair"}
+    )
+    assert workflow["claims"] == [] and workflow["abstention"] == "application_context_required"
+    assert insufficient["abstention"], (
+        "Completion without appropriate abstention is not this case's success"
+    )
     assert not report["checker_qualified"] and report["human_labels"] is None
     write(out / "REPORT.json.gz", report)
     write(
