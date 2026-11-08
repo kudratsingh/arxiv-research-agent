@@ -1,0 +1,20 @@
+{
+  "revision": "offline-refresh-helper-formatting-audit-v1",
+  "executed_generator_commit": "961c339a16ba19bcfc5fa13b4ac4db1f9b8d2279",
+  "executed_generator_sha256": "e6231b7fa95deabed943fe08a709ba22c9a6df1679d112e2a86ef267530f9575",
+  "published_generator_sha256": "afa15352251f4b05b3fceaf2f4b427a572a336e94aa9970abc68156676c51b2b",
+  "changes": [
+    "Ruff formatting",
+    "Removed unused AdmissionError import",
+    "Merged equivalent nested context managers"
+  ],
+  "normalized_AST_equal": true,
+  "normalizations": [
+    "Ignore unused AdmissionError import",
+    "Flatten nested with contexts preserving order"
+  ],
+  "packet_unchanged": "42aa787ca0aa9e22dd92a6eddb5a7b8642a9f8364526bccf3af66b3947de2b4c",
+  "runtime_producer_code_unchanged": true,
+  "generator_reexecuted": false,
+  "provider_contacts": 0
+}

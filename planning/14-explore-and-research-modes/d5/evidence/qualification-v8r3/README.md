@@ -23,3 +23,8 @@ review or fixture authority may be used for a paid stage. The independent
 four-probe diagnostic supplies no generation development/held-out/minimum credit.
 The count-cap policy extension remains unimplemented and unapproved; the current
 caps are 24 jobs / 80 Messages / 80 counts / USD 10.
+
+The original executed generator is retained at commit `961c339a`. The published
+helper received lint-only cleanup; [formatting audit](HELPER-FORMATTING-AUDIT.json)
+binds both hashes and proves equivalent normalized ASTs. The original producer
+attestation remains unchanged. The sealed packet and runtime producer are unchanged.
