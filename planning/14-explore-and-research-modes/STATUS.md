@@ -1,5 +1,7 @@
 # Two-mode implementation status
 
+Latest offline preflight: application `d3a1d052`, [runbook and exact command](d5/CALIBRATION-PREFLIGHT.md). Candidate `a6056aa2237fce4385f0f531080c82f1cb53095774f4f893f2582f1f98d40b77` adds content-validated independent prereviews with all four checker bodies unchanged. Actual receipt is **READY_FOR_APPROVAL, approved=false** after four supplied independent-review declarations (two accepts, two rejects). One reviewer; agreement UNMEASURED. The new labels remain private in ignored outputs; historical v7r2 labels remain unchanged. No authority/contact/spend. Local gate passed: 6,816 tests, 54 existing skips, 53 separate-tier deselections; total coverage 94.58%, patch 97%, new preflight module 100% line/branch. Focused 68, workflow E2E 53, documentation 95, mypy196, ruff, simulation20/20 USD0 and parity260/0 passed. The first gate caught a stale README test-count claim; corrected to over6,900 for6,923 collected, without changing assertions or floors. Exact-head remote CI is separate.
+
 ## Current offline D5 v8 repair and blinded premise calibration
 
 Starting published head **bddba77e003d5f7441f10201cb08e32de33c1b44**, applicationf430f2d3. Work is isolated on `codex/workspace-d5-procedural-v8`; the preceding review checkout and previews stay unchanged. [Procedural repair](d5/RESPONSE-REPAIR-v8.md), [blinded calibration plan](d5/QUESTION-PREMISE-CALIBRATION.md), [fresh qualification proposal](d5/PAID-VALIDATION-PROPOSAL-v8.md), [offline commands](d5/RUNBOOK-v8.md).

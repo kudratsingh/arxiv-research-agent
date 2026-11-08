@@ -1,0 +1,16 @@
+{
+  "basis": "SYNTHETIC TEST FIXTURE ONLY; simulated attribution, not actual independent human evidence",
+  "actual_human_reviews": 0,
+  "approveable": false,
+  "demonstrated_status": "READY_FOR_APPROVAL",
+  "fixture_packet_digest": "bde917362a89bd39cea291a2f69158480cc9c0a7e169dd4915a6ae8bb08b5670",
+  "fixture_worksheet_digest": "ccc18307c82beb14416f1a36238693266115f489f3ce0331a748c31be3526ea9",
+  "fixture_scope_digest": "cc97b5ea4634af3397b4b2cf97397f5e67b657fefd1326d5e7c3ef399f630263",
+  "fixture_case_bindings_digest": "5cae75a890437354019f6bbbeadc326b30d72adbea5093327ace87cc0ac08f27",
+  "reviewed_items": 4,
+  "accept": 2,
+  "reject": 2,
+  "approved": false,
+  "new_provider_contacts": 0,
+  "new_spend_usd": "0"
+}

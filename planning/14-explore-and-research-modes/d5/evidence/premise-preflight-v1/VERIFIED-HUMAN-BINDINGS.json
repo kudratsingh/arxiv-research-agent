@@ -1,0 +1,33 @@
+{
+  "verified_at": "2026-11-08T08:53:59.703232+00:00",
+  "application_commit": "d3a1d05297a7aa4c93f0f7ff6f492030bd06d36e",
+  "candidate_packet_digest": "a6056aa2237fce4385f0f531080c82f1cb53095774f4f893f2582f1f98d40b77",
+  "status": "READY_FOR_APPROVAL",
+  "approved": false,
+  "worksheet_digest": "8d3dd10734cbdbad06ad6c7d19f66e183492ab9e1b17f4629524ea4c0869dffa",
+  "review_file_sha256": "1d6eb090d8058ee93d80ce2a2361bcfce15e02c243f4ac73ab49d92594395fa7",
+  "preflight_receipt_digest": "279b067e52a02407747daaf28e3d1ad29a30eb05cd7626043e795b948bfcf158",
+  "scope_id": "d5-premise-a6056aa2237fce4385f0f531",
+  "scope_digest": "382e656c87a2380a3025238e84283a58f3b33d212e620b08f452763e75411ce2",
+  "case_bindings_digest": "d23d9f4e88f343545e6223fc5aaa712ff05866932fd9d057e7980a49684f6c06",
+  "compiled_digest": "8d9ec0ced1ca4436c3da8a8dcf68fe60d39c2cd31ec5f4a18c9705b5afbcb34a",
+  "reviewed_items": 4,
+  "accept": 2,
+  "reject": 2,
+  "declared_independent_reviewers": 1,
+  "inter_reviewer_agreement": null,
+  "agreement_basis": "UNMEASURED: one declared independent reviewer; software verifies attribution and exact bindings, not identity or semantic correctness",
+  "private_review_and_compiled_inputs": "Remain in ignored local outputs; labels and reviewer attribution are not published or sent in checker bodies",
+  "contact_envelope": {
+    "jobs": 4,
+    "messages": 4,
+    "counts": 4,
+    "usd": "0.60",
+    "per_job_usd": "0.15"
+  },
+  "CLI_reproduction_identical_to_supplied_receipt": true,
+  "new_provider_Messages": 0,
+  "new_token_count_contacts": 0,
+  "new_spend_usd": "0",
+  "new_live_authorizations": 0
+}

@@ -1,0 +1,61 @@
+{
+  "verified_at": "2026-11-08T08:59:09.686616+00:00",
+  "application_commit": "d3a1d05297a7aa4c93f0f7ff6f492030bd06d36e",
+  "full_python_summary": "6816 passed, 54 skipped, 53 deselected in 1001.61s (0:16:41)",
+  "total_coverage_percent": 94.58,
+  "patch_coverage_percent": 97,
+  "preflight_module_line_coverage_percent": 100.0,
+  "preflight_module_branch_coverage_percent": 100.0,
+  "focused_tests": 68,
+  "workflow_e2e_tests": 53,
+  "documentation_checks": 95,
+  "strict_mypy_source_files": 196,
+  "ruff": "passed src and tests",
+  "registry_objects": 260,
+  "registry_mismatches": 0,
+  "simulation": "20/20; USD0",
+  "first_full_gate": "One README test-count staleness failure; original log retained. Raised factual claim from over6400 to over6900 against6923 collected; no test/floor changed. Corrected full gate passed.",
+  "actual_independent_review_records": 4,
+  "declared_reviewers": 1,
+  "inter_reviewer_agreement": null,
+  "human_preflight": "READY_FOR_APPROVAL, approved=false; actual CLI identical to supplied receipt",
+  "new_provider_Messages": 0,
+  "new_count_contacts": 0,
+  "new_spend_usd": "0",
+  "new_authorizations": 0,
+  "remote_CI": "Not claimed by local gates; exact published-head run recorded separately.",
+  "logs": {
+    "full-gate.log": {
+      "sha256": "f0113b60866c77af58ab9656f0248e3ea9a7f988e4ed615a255417ff14797e7f",
+      "bytes": 9779
+    },
+    "full-gate-final.log": {
+      "sha256": "29a7463f6e89bff732858c8435a8fd4c7195308cef3341904d3282686fa1e550",
+      "bytes": 12172
+    },
+    "focused.log": {
+      "sha256": "4f4158d0382c9b25e3299d7de2e0b450e7adbab1b8323924c596339243b5be74",
+      "bytes": 801
+    },
+    "docs.log": {
+      "sha256": "80342a562365128bc403eaca205f7fd86dbf53fcac2865068cef731483e6d1ef",
+      "bytes": 180
+    },
+    "e2e.log": {
+      "sha256": "d5b95ac56b61546116e306d90448a162e5e0583fed8a7abea8fc33dd690735b4",
+      "bytes": 8421
+    },
+    "registry.log": {
+      "sha256": "ffe3a2763694f735d44ac4b58fee474f7091fa78a56db0f351933f7a88375886",
+      "bytes": 503
+    },
+    "simulation.log": {
+      "sha256": "437c31c385c215222b36eb5db86e0fe0315dba85cdfaa9b1ef39a7454f0af32c",
+      "bytes": 66270
+    },
+    "actual-command.log": {
+      "sha256": "095343c3efba0341ec469c44031665524cc91719a211e7411fb6e38ac80547c9",
+      "bytes": 222
+    }
+  }
+}

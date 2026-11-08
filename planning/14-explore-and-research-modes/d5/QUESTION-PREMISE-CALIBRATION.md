@@ -1,5 +1,7 @@
 # Blinded follow-up-question premise calibration — offline candidate
 
+Current offline prereview entry point: [content-validated preflight](CALIBRATION-PREFLIGHT.md), application `d3a1d052`, candidate `a6056aa2237fce4385f0f531080c82f1cb53095774f4f893f2582f1f98d40b77`. All four checker bodies are unchanged; the validator/source binding is new. The earlier candidate below is retained historically. Actual preflight is READY_FOR_APPROVAL after four supplied review declarations (two accepts, two rejects), with approved=false and one reviewer; agreement is UNMEASURED. No paid approval is requested or recorded by preflight.
+
 No provider Messages, token-count contacts, new spend or paid authorization.
 v7r2 remains stopped at 3/8 complete, with its failed Learn draft, Opus verdict,
 four unrun Research cases, original scopes, accounting and blank labels intact.

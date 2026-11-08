@@ -1,0 +1,11 @@
+{
+  "revision": "d5-premise-independent-preflight-v1",
+  "status": "HOLD",
+  "approved": false,
+  "reason": "premise_preflight_review_refused: complete_independent_non_uncertain_review_required",
+  "new_provider_contacts": 0,
+  "new_spend_usd": "0",
+  "scope_id": "d5-premise-a6056aa2237fce4385f0f531",
+  "packet_file_sha256": "dacb0b896c221f734feaeef5aab590199ca0dd550f9740a92a4c893549f0c499",
+  "review_file_sha256": "8e91288d3586423946714082057931be686a72cb3c7956cef425597e0fc13213"
+}

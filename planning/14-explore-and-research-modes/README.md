@@ -3,7 +3,9 @@
 Owner-adopted product direction, recorded **2026-11-04 America/Los_Angeles**.
 Status: **D0–D4 complete; D5 prospective procedural repair and blinded premise calibration verified offline at application `691398bf`. Paid validation remains stopped and requires separate approval.**
 
-Current offline handoff: [premise calibration plan](d5/QUESTION-PREMISE-CALIBRATION.md), [blank independent worksheet](d5/evidence/premise-calibration-v2/smallest-reviewer-blank.md), and [offline runbook](d5/RUNBOOK-v8.md). Historical v7r2 remains stopped at 3/8 Stage C workflows.
+Current prereview gate: [independent-review preflight](d5/CALIBRATION-PREFLIGHT.md), application `d3a1d052`; four supplied reviews have been validated and the receipt is READY_FOR_APPROVAL, approved=false.
+
+Previous offline handoff: [premise calibration plan](d5/QUESTION-PREMISE-CALIBRATION.md), [blank independent worksheet](d5/evidence/premise-calibration-v2/smallest-reviewer-blank.md), and [offline runbook](d5/RUNBOOK-v8.md). Historical v7r2 remains stopped at 3/8 Stage C workflows.
 
 The workspace will have two main modes sharing one Library, Reader, source
 identity system and durable personal records. Explore & Learn supports daily

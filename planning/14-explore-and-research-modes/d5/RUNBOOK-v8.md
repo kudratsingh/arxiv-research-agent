@@ -1,5 +1,7 @@
 # D5 v8 offline repair and premise calibration runbook
 
+Current calibration entry point: [independent-review preflight](CALIBRATION-PREFLIGHT.md). A prereview digest alone is insufficient. Four supplied attributed reviews now validate; the actual preflight is READY_FOR_APPROVAL with approved=false. No live grant is recorded.
+
 No paid execution or authorization is performed by these commands. Work from the
 isolated `codex/workspace-d5-procedural-v8` checkout. Preserve the active stopped
 ledger and owner3137/review3178; all test writes use disposable schemas/databases.

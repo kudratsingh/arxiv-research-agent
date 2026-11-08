@@ -1,0 +1,34 @@
+{
+  "application_commit": "d3a1d05297a7aa4c93f0f7ff6f492030bd06d36e",
+  "predecessor_packet_digest": "ee48fbde1c7c747fa928b5ecf7abc70f4df54a44efbc62d782c16f6703f1a73b",
+  "candidate_packet_digest": "a6056aa2237fce4385f0f531080c82f1cb53095774f4f893f2582f1f98d40b77",
+  "change": "Offline prereview validator/code binding only; all four transmitted bodies, source/evidence, schemas, model/settings and opaque IDs unchanged. No contact or label reuse.",
+  "requests": [
+    {
+      "id": "itm-adfe5bd826ca",
+      "old_request_digest": "56321fcdebdf79e7b6792146b6752564192e334f3db0ac1716baf78592a10900",
+      "new_request_digest": "56321fcdebdf79e7b6792146b6752564192e334f3db0ac1716baf78592a10900",
+      "byte_content_equal": true
+    },
+    {
+      "id": "itm-45294fefc14b",
+      "old_request_digest": "3bb65f014ba82f4e33b10ed1ca641c84e95759e2012ddf774a4eea749fa93fbf",
+      "new_request_digest": "3bb65f014ba82f4e33b10ed1ca641c84e95759e2012ddf774a4eea749fa93fbf",
+      "byte_content_equal": true
+    },
+    {
+      "id": "itm-af1bb9563aca",
+      "old_request_digest": "c406fa4695a709ca34db2acf968c4d3df8915c6eaf7236f617c5ec9f4dd0164d",
+      "new_request_digest": "c406fa4695a709ca34db2acf968c4d3df8915c6eaf7236f617c5ec9f4dd0164d",
+      "byte_content_equal": true
+    },
+    {
+      "id": "itm-379e318ba00f",
+      "old_request_digest": "5859745b24d2620c165162c2db8f0380a873f9a381c2323a8cbe9c8baa1feacb",
+      "new_request_digest": "5859745b24d2620c165162c2db8f0380a873f9a381c2323a8cbe9c8baa1feacb",
+      "byte_content_equal": true
+    }
+  ],
+  "approval_recorded": false,
+  "new_contacts": 0
+}
