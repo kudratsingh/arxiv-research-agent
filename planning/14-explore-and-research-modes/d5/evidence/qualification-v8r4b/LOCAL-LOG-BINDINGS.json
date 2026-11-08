@@ -1,0 +1,36 @@
+{
+  "application_commit": "68c23441cdc351cfb4938f2a01b58597423aca7c",
+  "packet_digest": "1429b39296792b8bc3d5530d28bcc56600048b149310fc10df30c2ee6048a7a7",
+  "local_logs": {
+    "final-focused-corrected.log": {
+      "path": "outputs/d5/capacity-extension/final-focused-corrected.log",
+      "sha256": "284047ad1628ef36ca78ec7e2406671d3454c29a279cbaaace0b8635f4301ab7"
+    },
+    "test-cov-diff-corrected.log": {
+      "path": "outputs/d5/capacity-extension/test-cov-diff-corrected.log",
+      "sha256": "84212424b220b4e462932854c774e71e920e297ad3854021c1b9424009d01b62"
+    },
+    "e2e-corrected.log": {
+      "path": "outputs/d5/capacity-extension/e2e-corrected.log",
+      "sha256": "14cb3c4f94d9092015bb6ee45a90d085422980f38caec22e0c525ef00a68b997"
+    },
+    "simulation-corrected.log": {
+      "path": "outputs/d5/capacity-extension/simulation-corrected.log",
+      "sha256": "fe8ecd4ed4f9193d15f858bd763260c546b348ea6847ab04dc2c0d3b32c96722"
+    },
+    "parity-corrected.log": {
+      "path": "outputs/d5/capacity-extension/parity-corrected.log",
+      "sha256": "ffe3a2763694f735d44ac4b58fee474f7091fa78a56db0f351933f7a88375886"
+    },
+    "mypy-corrected.log": {
+      "path": "outputs/d5/capacity-extension/mypy-corrected.log",
+      "sha256": "7cb633152e62aae6e03fae6954c540b04fe061dba298df534cd78cd9a2ad562a"
+    },
+    "final-replay-corrected.log": {
+      "path": "outputs/d5/capacity-extension/final-replay-corrected.log",
+      "sha256": "8a9d9cf3d781f7daaa06b0fed6d201bc4e44ba9e541980b0ee44785df18eda88"
+    }
+  },
+  "raw_financial_snapshot_published": false,
+  "provider_contacts": 0
+}

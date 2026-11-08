@@ -1,0 +1,14 @@
+{
+  "application_commit": "05a12c76bc5ce8903fede1ba71937897fe21f386",
+  "packet_digest": "e6c6fac53aa32aba010fe1b484de0e7a8415593e62772d4405ec4fa14fd7c131",
+  "script": "planning/14-explore-and-research-modes/d5/tools/prepare-capacity-v8.py",
+  "script_sha256": "17d5ff5e4378f41ec5efd1fbfc40ade9908ec846dabf02c8f713f8f9db16d610",
+  "private_snapshot_file_sha256": "f5102e11878f1a6b100056873bd75e9885a698cd7b55be6a155e24ebd4979366",
+  "private_snapshot_committed": false,
+  "source_root": "/private/tmp/arxiv-agent-eng-programme-capacity",
+  "invocation": "python - prepare|replay ... < planning/14-explore-and-research-modes/d5/tools/prepare-capacity-v8.py",
+  "ANTHROPIC_API_KEY": "local-preview-disabled",
+  "WORKSPACE_D5_OFFLINE": "1",
+  "provider_contacts": 0,
+  "real_authority_created": false
+}

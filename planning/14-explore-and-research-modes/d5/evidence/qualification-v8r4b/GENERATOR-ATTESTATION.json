@@ -1,0 +1,14 @@
+{
+  "application_commit": "68c23441cdc351cfb4938f2a01b58597423aca7c",
+  "packet_digest": "1429b39296792b8bc3d5530d28bcc56600048b149310fc10df30c2ee6048a7a7",
+  "predecessor_packet_digest": "e6c6fac53aa32aba010fe1b484de0e7a8415593e62772d4405ec4fa14fd7c131",
+  "script": "planning/14-explore-and-research-modes/d5/tools/prepare-capacity-v8.py",
+  "script_sha256": "70391c6d91a1046e00d0c35945438a0cdfd1dc8f3650da827b929ed2dc9fb92b",
+  "private_snapshot_file_sha256": "f5102e11878f1a6b100056873bd75e9885a698cd7b55be6a155e24ebd4979366",
+  "private_snapshot_committed": false,
+  "source_root": "/private/tmp/arxiv-agent-eng-programme-capacity",
+  "invocation": "python - prepare|replay ... < planning/14-explore-and-research-modes/d5/tools/prepare-capacity-v8.py",
+  "offline_fixture_revision": "capacity-envelope-v2-correct-v8-insufficient-id",
+  "provider_contacts": 0,
+  "real_authority_created": false
+}

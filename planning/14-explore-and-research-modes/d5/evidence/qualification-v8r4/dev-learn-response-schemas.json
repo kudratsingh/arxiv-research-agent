@@ -1,0 +1,455 @@
+{
+  "local": {
+    "$defs": {
+      "D5Claim_8834feb8add29b7f": {
+        "additionalProperties": false,
+        "properties": {
+          "claim_id": {
+            "description": "Unique ID of this emitted claim, c1 through c6.",
+            "enum": [
+              "c1",
+              "c2",
+              "c3",
+              "c4",
+              "c5",
+              "c6"
+            ],
+            "title": "Claim Id",
+            "type": "string"
+          },
+          "text": {
+            "maxLength": 360,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          },
+          "handles": {
+            "description": "Selected evidence handles (u...), never claim IDs. Each passage must support this claim.",
+            "items": {
+              "$ref": "#/$defs/D5Evidence_8834feb8add29b7f"
+            },
+            "maxItems": 3,
+            "minItems": 1,
+            "title": "Handles",
+            "type": "array"
+          },
+          "required_scope": {
+            "default": "abstract",
+            "enum": [
+              "abstract",
+              "excerpt",
+              "full_text"
+            ],
+            "title": "Required Scope",
+            "type": "string"
+          }
+        },
+        "required": [
+          "claim_id",
+          "text",
+          "handles"
+        ],
+        "title": "D5Claim_8834feb8add29b7f",
+        "type": "object"
+      },
+      "D5Evidence_8834feb8add29b7f": {
+        "enum": [
+          "ua6f0f4d05fd72b2b86b2"
+        ],
+        "title": "D5Evidence_8834feb8add29b7f",
+        "type": "string"
+      },
+      "ProceduralQuestion": {
+        "additionalProperties": false,
+        "description": "No free factual premise. A premise-dependent question names scored claims.",
+        "properties": {
+          "intent": {
+            "enum": [
+              "measured_and_proposed",
+              "methods",
+              "qualifications",
+              "implementation",
+              "counterevidence",
+              "application_scope",
+              "investigate_claim"
+            ],
+            "title": "Intent",
+            "type": "string"
+          },
+          "claim_ids": {
+            "description": "Only IDs of claims emitted and cited in this response; never evidence handles. investigate_claim requires at least one ID. No duplicated IDs or free premise text.",
+            "items": {
+              "enum": [
+                "c1",
+                "c2",
+                "c3",
+                "c4",
+                "c5",
+                "c6"
+              ],
+              "type": "string"
+            },
+            "maxItems": 6,
+            "title": "Claim Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "intent",
+          "claim_ids"
+        ],
+        "title": "ProceduralQuestion",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "claims": {
+        "items": {
+          "$ref": "#/$defs/D5Claim_8834feb8add29b7f"
+        },
+        "maxItems": 6,
+        "title": "Claims",
+        "type": "array"
+      },
+      "background_claims": {
+        "items": {
+          "enum": [
+            "c1",
+            "c2",
+            "c3",
+            "c4",
+            "c5",
+            "c6"
+          ],
+          "type": "string"
+        },
+        "maxItems": 6,
+        "title": "Background Claims",
+        "type": "array"
+      },
+      "assumption_claims": {
+        "items": {
+          "enum": [
+            "c1",
+            "c2",
+            "c3",
+            "c4",
+            "c5",
+            "c6"
+          ],
+          "type": "string"
+        },
+        "maxItems": 6,
+        "title": "Assumption Claims",
+        "type": "array"
+      },
+      "limitation_claims": {
+        "items": {
+          "enum": [
+            "c1",
+            "c2",
+            "c3",
+            "c4",
+            "c5",
+            "c6"
+          ],
+          "type": "string"
+        },
+        "maxItems": 6,
+        "title": "Limitation Claims",
+        "type": "array"
+      },
+      "gaps": {
+        "items": {
+          "enum": [
+            "methods",
+            "evaluation",
+            "ablations",
+            "full_text",
+            "counterevidence",
+            "source_scope"
+          ],
+          "type": "string"
+        },
+        "maxItems": 3,
+        "minItems": 1,
+        "title": "Gaps",
+        "type": "array"
+      },
+      "questions": {
+        "items": {
+          "$ref": "#/$defs/ProceduralQuestion"
+        },
+        "maxItems": 3,
+        "minItems": 1,
+        "title": "Questions",
+        "type": "array"
+      },
+      "proposal": {
+        "enum": [
+          "inspect_methods",
+          "inspect_evaluation",
+          "seek_counterevidence",
+          "inspect_scope",
+          "request_context"
+        ],
+        "title": "Proposal",
+        "type": "string"
+      },
+      "abstention": {
+        "anyOf": [
+          {
+            "enum": [
+              "insufficient_selected_evidence",
+              "application_context_required",
+              "comparison_evidence_required"
+            ],
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Abstention"
+      }
+    },
+    "required": [
+      "claims",
+      "background_claims",
+      "assumption_claims",
+      "limitation_claims",
+      "gaps",
+      "questions",
+      "proposal",
+      "abstention"
+    ],
+    "title": "D5Draft_8834feb8add29b7f",
+    "type": "object"
+  },
+  "wire": {
+    "$defs": {
+      "D5Claim_8834feb8add29b7f": {
+        "type": "object",
+        "title": "D5Claim_8834feb8add29b7f",
+        "properties": {
+          "claim_id": {
+            "type": "string",
+            "enum": [
+              "c1",
+              "c2",
+              "c3",
+              "c4",
+              "c5",
+              "c6"
+            ],
+            "description": "Unique ID of this emitted claim, c1 through c6.",
+            "title": "Claim Id"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text",
+            "description": "{maxLength: 360, minLength: 1}"
+          },
+          "handles": {
+            "type": "array",
+            "description": "Selected evidence handles (u...), never claim IDs. Each passage must support this claim.\n\n{maxItems: 3}",
+            "title": "Handles",
+            "items": {
+              "$ref": "#/$defs/D5Evidence_8834feb8add29b7f"
+            },
+            "minItems": 1
+          },
+          "required_scope": {
+            "type": "string",
+            "enum": [
+              "abstract",
+              "excerpt",
+              "full_text"
+            ],
+            "title": "Required Scope",
+            "description": "{default: abstract}"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "claim_id",
+          "text",
+          "handles"
+        ]
+      },
+      "D5Evidence_8834feb8add29b7f": {
+        "type": "string",
+        "enum": [
+          "ua6f0f4d05fd72b2b86b2"
+        ],
+        "title": "D5Evidence_8834feb8add29b7f"
+      },
+      "ProceduralQuestion": {
+        "type": "object",
+        "description": "No free factual premise. A premise-dependent question names scored claims.",
+        "title": "ProceduralQuestion",
+        "properties": {
+          "intent": {
+            "type": "string",
+            "enum": [
+              "measured_and_proposed",
+              "methods",
+              "qualifications",
+              "implementation",
+              "counterevidence",
+              "application_scope",
+              "investigate_claim"
+            ],
+            "title": "Intent"
+          },
+          "claim_ids": {
+            "type": "array",
+            "description": "Only IDs of claims emitted and cited in this response; never evidence handles. investigate_claim requires at least one ID. No duplicated IDs or free premise text.\n\n{maxItems: 6}",
+            "title": "Claim Ids",
+            "items": {
+              "type": "string",
+              "enum": [
+                "c1",
+                "c2",
+                "c3",
+                "c4",
+                "c5",
+                "c6"
+              ]
+            }
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "intent",
+          "claim_ids"
+        ]
+      }
+    },
+    "type": "object",
+    "title": "D5Draft_8834feb8add29b7f",
+    "properties": {
+      "claims": {
+        "type": "array",
+        "title": "Claims",
+        "items": {
+          "$ref": "#/$defs/D5Claim_8834feb8add29b7f"
+        },
+        "description": "{maxItems: 6}"
+      },
+      "background_claims": {
+        "type": "array",
+        "title": "Background Claims",
+        "items": {
+          "type": "string",
+          "enum": [
+            "c1",
+            "c2",
+            "c3",
+            "c4",
+            "c5",
+            "c6"
+          ]
+        },
+        "description": "{maxItems: 6}"
+      },
+      "assumption_claims": {
+        "type": "array",
+        "title": "Assumption Claims",
+        "items": {
+          "type": "string",
+          "enum": [
+            "c1",
+            "c2",
+            "c3",
+            "c4",
+            "c5",
+            "c6"
+          ]
+        },
+        "description": "{maxItems: 6}"
+      },
+      "limitation_claims": {
+        "type": "array",
+        "title": "Limitation Claims",
+        "items": {
+          "type": "string",
+          "enum": [
+            "c1",
+            "c2",
+            "c3",
+            "c4",
+            "c5",
+            "c6"
+          ]
+        },
+        "description": "{maxItems: 6}"
+      },
+      "gaps": {
+        "type": "array",
+        "title": "Gaps",
+        "items": {
+          "type": "string",
+          "enum": [
+            "methods",
+            "evaluation",
+            "ablations",
+            "full_text",
+            "counterevidence",
+            "source_scope"
+          ]
+        },
+        "minItems": 1,
+        "description": "{maxItems: 3}"
+      },
+      "questions": {
+        "type": "array",
+        "title": "Questions",
+        "items": {
+          "$ref": "#/$defs/ProceduralQuestion"
+        },
+        "minItems": 1,
+        "description": "{maxItems: 3}"
+      },
+      "proposal": {
+        "type": "string",
+        "enum": [
+          "inspect_methods",
+          "inspect_evaluation",
+          "seek_counterevidence",
+          "inspect_scope",
+          "request_context"
+        ],
+        "title": "Proposal"
+      },
+      "abstention": {
+        "anyOf": [
+          {
+            "type": "string",
+            "enum": [
+              "insufficient_selected_evidence",
+              "application_context_required",
+              "comparison_evidence_required"
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Abstention"
+      }
+    },
+    "additionalProperties": false,
+    "required": [
+      "claims",
+      "background_claims",
+      "assumption_claims",
+      "limitation_claims",
+      "gaps",
+      "questions",
+      "proposal",
+      "abstention"
+    ]
+  }
+}

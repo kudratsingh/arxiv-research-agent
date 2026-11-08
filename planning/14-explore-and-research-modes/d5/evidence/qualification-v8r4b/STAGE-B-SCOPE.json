@@ -1,0 +1,97 @@
+{
+  "revision": "d5-v8r4b-stage-scope-v1",
+  "approved": false,
+  "packet_digest": "1429b39296792b8bc3d5530d28bcc56600048b149310fc10df30c2ee6048a7a7",
+  "application_commit": "68c23441cdc351cfb4938f2a01b58597423aca7c",
+  "scope_id": "d5-1429b39296792b8bc3d5530d",
+  "program_id": "research-evaluation-20261105-v1",
+  "capacity_proposal_digest": "8d699885e58d228f00fe2a9edadd13a14f4d7d58b54393875bd6f3693b7e34dc",
+  "programme_authorization_digest": "791c57d58f6425a14845d18b6563200e932b3869de59805b586727916fbff7ae",
+  "history_digest": "88fe8f85f6edd640c033cf5623b8133ab52bc157f1b90f7e8ec04135ec20d64b",
+  "producer_code_digest": "c5e16d7f95cb063b71f73e42f1a3b3005854aa76ce8d1be0d58f3b6dfed65f83",
+  "adapter_digest": "dea31abb2d6989fac508dbdb7c3e936f0a5e325ba73190a99ca42bae77f900da",
+  "scoring_digest": "a09a47a9576a60adcb01f6cb55b81634c387516244abf2bc05caef1f1b6e5686",
+  "operation_routes": {
+    "revision": "d5-sonnet-opus-high-v1",
+    "draft_repair": {
+      "model": "claude-sonnet-5-5",
+      "thinking": {
+        "type": "between_tools"
+      },
+      "effort": "medium",
+      "input_tokens": 20000,
+      "output_tokens": 4000,
+      "prices": {
+        "input": "2",
+        "output": "10",
+        "verified_at": "2026-11-06"
+      }
+    },
+    "check_recheck_probe": {
+      "model": "claude-opus-5-5",
+      "thinking": {
+        "type": "adaptive"
+      },
+      "effort": "high",
+      "input_tokens": 20000,
+      "output_tokens": 3200,
+      "prices": {
+        "input": "4",
+        "output": "20",
+        "verified_at": "2026-11-06"
+      }
+    }
+  },
+  "authority_created": false,
+  "provider_contacts": 0,
+  "grant_window": "Earliest of24hours after explicit approval, existing parent expiry when applicable, and2026-11-14T07:24:01Z; no automatic renewal",
+  "stage": "B",
+  "case_ids": [
+    "dev-learn",
+    "dev-compare"
+  ],
+  "initial_bindings": {
+    "dev-learn": {
+      "input_digest": "2fbb50d6a5398896f62435462c01d0216a0af762a765f7f3f559f732d066f009",
+      "request_digest": "3f28827518a1f1d6e6f6f5b4cfcbb7c9513368588c55a92a4c683530f07c9714",
+      "model": "claude-sonnet-5-5",
+      "stage": "B",
+      "request_id": "d5-1429b39296792b8bc3d5530d-dev-learn"
+    },
+    "dev-compare": {
+      "input_digest": "9e4d177e83083efcc2d159ef3845ebe8efd1ec046f0eb9ae01baa182fd0a15d8",
+      "request_digest": "219f2c5670ba7b193e480c9258da85258d4d57202030e844059389e34dcabe44",
+      "model": "claude-sonnet-5-5",
+      "stage": "B",
+      "request_id": "d5-1429b39296792b8bc3d5530d-dev-compare"
+    }
+  },
+  "expected_baseline": {
+    "jobs": 20,
+    "Messages": 35,
+    "counts": 55,
+    "estimated_usd": "0.904053",
+    "pending": "0",
+    "unknown": "0"
+  },
+  "limits": {
+    "jobs": 2,
+    "Messages": 8,
+    "counts": 8,
+    "new_usd": "0.90",
+    "per_job_usd": "0.45"
+  },
+  "requirements": [
+    "Matching active capacity amendment and source/packet/model/schema/evidence bindings",
+    "Separate explicit owner stage approval",
+    "Exact paired count before each Messages call; no count-body or model substitution",
+    "Stop on sealed drift, contract, admission, provider, accounting or uncertain-completion failure; no automatic retries"
+  ],
+  "required_successful_stage_A": "Actual input-bound measure-1 receipt under16000 tokens, not a fixture",
+  "must_bind_actual_parent_authorization": true,
+  "mandatory_initial_check": true,
+  "max_repairs": 1,
+  "mandatory_recheck_after_repair": true,
+  "dynamic_request_digests": "Derived only from actual preceding outputs under frozen templates and limits; not precomputed",
+  "scope_digest": "56e1ebd0e77eddb167cb7aa0eae19e2ba731672255c5ee7cbfa925e80e5fd805"
+}

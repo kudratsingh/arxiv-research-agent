@@ -1,0 +1,35 @@
+{
+  "packet_digest": "e6c6fac53aa32aba010fe1b484de0e7a8415593e62772d4405ec4fa14fd7c131",
+  "application_commit": "05a12c76bc5ce8903fede1ba71937897fe21f386",
+  "baseline": {
+    "jobs": 20,
+    "Messages": 35,
+    "counts": 54,
+    "usd": "0.904053"
+  },
+  "final_synthetic_census": {
+    "jobs": 34,
+    "Messages": 79,
+    "counts": 99,
+    "known_usd": "0.904053",
+    "pending_usd": "0",
+    "unknown_usd": "0"
+  },
+  "new_mock_jobs": 14,
+  "mock_Messages": 44,
+  "mock_counts": 45,
+  "real_provider_contacts": 0,
+  "real_new_spend_usd": "0",
+  "denials": {
+    "A_without_stage_grant": "owner_approval_required",
+    "B_without_stage_grant": "d5_stage_not_authorized",
+    "C_without_stage_grant": "d5_stage_not_authorized",
+    "D_without_stage_grant": "d5_stage_not_authorized",
+    "job35": "program_job_cap_exceeded",
+    "count100": "program_contact_cap_exceeded"
+  },
+  "historical_financial_rows_preserved": true,
+  "human_labels": null,
+  "checker_qualified": false,
+  "synthetic_authority_confined_to_fixture": true
+}

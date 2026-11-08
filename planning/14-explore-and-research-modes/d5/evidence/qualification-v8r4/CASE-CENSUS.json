@@ -1,0 +1,195 @@
+{
+  "packet_digest": "e6c6fac53aa32aba010fe1b484de0e7a8415593e62772d4405ec4fa14fd7c131",
+  "application_commit": "05a12c76bc5ce8903fede1ba71937897fe21f386",
+  "basis": "Synthetic maximum-envelope fixtures through production adapter/admission; not provider results or quality evidence",
+  "cases": [
+    {
+      "case_id": "dev-learn",
+      "state": "ready",
+      "simulated": true,
+      "stages": [
+        "draft",
+        "check",
+        "repair",
+        "check"
+      ],
+      "human_review": null,
+      "qualified": false
+    },
+    {
+      "case_id": "dev-compare",
+      "state": "ready",
+      "simulated": true,
+      "stages": [
+        "draft",
+        "check",
+        "repair",
+        "check"
+      ],
+      "human_review": null,
+      "qualified": false
+    },
+    {
+      "case_id": "v8-learn-mechanism",
+      "state": "ready",
+      "simulated": true,
+      "stages": [
+        "draft",
+        "check",
+        "repair",
+        "check"
+      ],
+      "human_review": null,
+      "qualified": false
+    },
+    {
+      "case_id": "v8-learn-conditions",
+      "state": "ready",
+      "simulated": true,
+      "stages": [
+        "draft",
+        "check",
+        "repair",
+        "check"
+      ],
+      "human_review": null,
+      "qualified": false
+    },
+    {
+      "case_id": "v8-learn-reproduce",
+      "state": "ready",
+      "simulated": true,
+      "stages": [
+        "draft",
+        "check",
+        "repair",
+        "check"
+      ],
+      "human_review": null,
+      "qualified": false
+    },
+    {
+      "case_id": "v8-learn-measurement",
+      "state": "ready",
+      "simulated": true,
+      "stages": [
+        "draft",
+        "check",
+        "repair",
+        "check"
+      ],
+      "human_review": null,
+      "qualified": false
+    },
+    {
+      "case_id": "v8-research-memory",
+      "state": "ready",
+      "simulated": true,
+      "stages": [
+        "draft",
+        "check",
+        "repair",
+        "check"
+      ],
+      "human_review": null,
+      "qualified": false
+    },
+    {
+      "case_id": "v8-research-retrieval",
+      "state": "ready",
+      "simulated": true,
+      "stages": [
+        "draft",
+        "check",
+        "repair",
+        "check"
+      ],
+      "human_review": null,
+      "qualified": false
+    },
+    {
+      "case_id": "v8-research-verification",
+      "state": "ready",
+      "simulated": true,
+      "stages": [
+        "draft",
+        "check",
+        "repair",
+        "check"
+      ],
+      "human_review": null,
+      "qualified": false
+    },
+    {
+      "case_id": "v8-research-insufficient",
+      "state": "ready",
+      "simulated": true,
+      "stages": [
+        "draft",
+        "check",
+        "repair",
+        "check"
+      ],
+      "human_review": null,
+      "qualified": false
+    },
+    {
+      "case_id": "probe-1",
+      "state": "ready",
+      "simulated": true,
+      "stages": [
+        "check"
+      ],
+      "human_review": null,
+      "qualified": false
+    },
+    {
+      "case_id": "probe-2",
+      "state": "ready",
+      "simulated": true,
+      "stages": [
+        "check"
+      ],
+      "human_review": null,
+      "qualified": false
+    },
+    {
+      "case_id": "probe-3",
+      "state": "ready",
+      "simulated": true,
+      "stages": [
+        "check"
+      ],
+      "human_review": null,
+      "qualified": false
+    },
+    {
+      "case_id": "probe-4",
+      "state": "ready",
+      "simulated": true,
+      "stages": [
+        "check"
+      ],
+      "human_review": null,
+      "qualified": false
+    },
+    {
+      "case_id": "measure-1",
+      "state": "ready",
+      "simulated": true,
+      "stages": [],
+      "human_review": null,
+      "qualified": false
+    }
+  ],
+  "independent_human_labels": null,
+  "checker_qualified": false,
+  "actual_provider_contacts": 0,
+  "actual_new_spend_usd": "0",
+  "quality_outcome": "HOLD",
+  "live_v7r2_completion_unchanged": {
+    "numerator": 3,
+    "denominator": 8
+  },
+  "four_probe_diagnostic_is_separate": true
+}

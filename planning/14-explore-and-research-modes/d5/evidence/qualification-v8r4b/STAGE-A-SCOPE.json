@@ -1,0 +1,83 @@
+{
+  "revision": "d5-v8r4b-stage-scope-v1",
+  "approved": false,
+  "packet_digest": "1429b39296792b8bc3d5530d28bcc56600048b149310fc10df30c2ee6048a7a7",
+  "application_commit": "68c23441cdc351cfb4938f2a01b58597423aca7c",
+  "scope_id": "d5-1429b39296792b8bc3d5530d",
+  "program_id": "research-evaluation-20261105-v1",
+  "capacity_proposal_digest": "8d699885e58d228f00fe2a9edadd13a14f4d7d58b54393875bd6f3693b7e34dc",
+  "programme_authorization_digest": "791c57d58f6425a14845d18b6563200e932b3869de59805b586727916fbff7ae",
+  "history_digest": "88fe8f85f6edd640c033cf5623b8133ab52bc157f1b90f7e8ec04135ec20d64b",
+  "producer_code_digest": "c5e16d7f95cb063b71f73e42f1a3b3005854aa76ce8d1be0d58f3b6dfed65f83",
+  "adapter_digest": "dea31abb2d6989fac508dbdb7c3e936f0a5e325ba73190a99ca42bae77f900da",
+  "scoring_digest": "a09a47a9576a60adcb01f6cb55b81634c387516244abf2bc05caef1f1b6e5686",
+  "operation_routes": {
+    "revision": "d5-sonnet-opus-high-v1",
+    "draft_repair": {
+      "model": "claude-sonnet-5-5",
+      "thinking": {
+        "type": "between_tools"
+      },
+      "effort": "medium",
+      "input_tokens": 20000,
+      "output_tokens": 4000,
+      "prices": {
+        "input": "2",
+        "output": "10",
+        "verified_at": "2026-11-06"
+      }
+    },
+    "check_recheck_probe": {
+      "model": "claude-opus-5-5",
+      "thinking": {
+        "type": "adaptive"
+      },
+      "effort": "high",
+      "input_tokens": 20000,
+      "output_tokens": 3200,
+      "prices": {
+        "input": "4",
+        "output": "20",
+        "verified_at": "2026-11-06"
+      }
+    }
+  },
+  "authority_created": false,
+  "provider_contacts": 0,
+  "grant_window": "Earliest of24hours after explicit approval, existing parent expiry when applicable, and2026-11-14T07:24:01Z; no automatic renewal",
+  "stage": "A",
+  "case_ids": [
+    "measure-1"
+  ],
+  "initial_bindings": {
+    "measure-1": {
+      "input_digest": "657441a3a87fd5255b4bac59600c29d30bb7a11dd25e26069efdb35884b35f9d",
+      "request_digest": "046b08e4a147c46dd07d950ad973f484c1bdd4c297424566fea6517de9ce5216",
+      "model": "claude-sonnet-5-5",
+      "stage": "A",
+      "request_id": "d5-1429b39296792b8bc3d5530d-measure-1"
+    }
+  },
+  "expected_baseline": {
+    "jobs": 20,
+    "Messages": 35,
+    "counts": 54,
+    "estimated_usd": "0.904053",
+    "pending": "0",
+    "unknown": "0"
+  },
+  "limits": {
+    "jobs": 0,
+    "Messages": 0,
+    "counts": 1,
+    "new_usd": "0",
+    "per_job_usd": "0"
+  },
+  "requirements": [
+    "Matching active capacity amendment and source/packet/model/schema/evidence bindings",
+    "Separate explicit owner stage approval",
+    "Exact paired count before each Messages call; no count-body or model substitution",
+    "Stop on sealed drift, contract, admission, provider, accounting or uncertain-completion failure; no automatic retries"
+  ],
+  "scope_digest": "64f43ae5c810f15c8d68b2736e6e42927e59a12ac612eeaf5b33f2f126ccf67a"
+}

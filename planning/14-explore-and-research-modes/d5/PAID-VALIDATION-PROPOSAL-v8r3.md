@@ -1,5 +1,7 @@
 # D5 v8r3 — reconciled-ledger qualification proposal
 
+Historical unexecuted predecessor. [v8r4b](PAID-VALIDATION-PROPOSAL-v8r4b.md) implements and freezes the capacity extension; this packet/proposal remains preserved and grants nothing.
+
 **UNAPPROVED, UNEXECUTED. Preparation made zero provider Messages / count contacts,
 USD 0 new spend and no live authorization/cap change.**
 

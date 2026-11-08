@@ -1,0 +1,77 @@
+{
+  "baseline": {
+    "programme_jobs": 20,
+    "Messages": 35,
+    "counts": 54,
+    "estimated_usd": "0.904053",
+    "workflow_estimated_usd": "0.285853",
+    "checker_estimated_usd": "0.618200",
+    "pending_usd": "0",
+    "unknown_usd": "0"
+  },
+  "current_limits": {
+    "jobs": 24,
+    "Messages": 80,
+    "counts": 80,
+    "usd": "10",
+    "concurrency": 1
+  },
+  "proposed_limits": {
+    "jobs": 34,
+    "Messages": 80,
+    "counts": 99,
+    "usd": "10",
+    "concurrency": 1
+  },
+  "expires_at": "2026-11-14T07:24:01Z",
+  "stages": {
+    "cap_activation": {
+      "jobs": 0,
+      "Messages": 0,
+      "counts": 0,
+      "reservation_usd": "0"
+    },
+    "A": {
+      "jobs": 0,
+      "Messages": 0,
+      "counts": 1,
+      "reservation_usd": "0"
+    },
+    "B": {
+      "jobs": 2,
+      "Messages": 8,
+      "counts": 8,
+      "reservation_usd": "0.90"
+    },
+    "C": {
+      "jobs": 8,
+      "Messages": 32,
+      "counts": 32,
+      "reservation_usd": "3.60"
+    },
+    "D": {
+      "jobs": 4,
+      "Messages": 4,
+      "counts": 4,
+      "reservation_usd": "0.60"
+    }
+  },
+  "new_full_schedule": {
+    "jobs": 14,
+    "Messages": 44,
+    "counts": 45,
+    "reservation_usd": "5.10",
+    "usage_bound_usd": "5.056"
+  },
+  "cumulative_maximum": {
+    "jobs": 34,
+    "Messages": 79,
+    "counts": 99,
+    "history_plus_reservations_usd": "6.004053",
+    "history_plus_reservations_plus_buffer_usd": "7.004053"
+  },
+  "cap_activation_approved": false,
+  "stage_authorizations_created": [],
+  "actual_new_provider_contacts": 0,
+  "actual_new_spend_usd": "0"
+}

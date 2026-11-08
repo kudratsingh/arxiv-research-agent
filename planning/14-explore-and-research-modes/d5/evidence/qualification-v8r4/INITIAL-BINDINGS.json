@@ -1,0 +1,23 @@
+{
+  "measure-1": {
+    "input_digest": "a6dba0661c33d5665571f84d6718b534f518538c258cb14547c4421497f330b2",
+    "request_digest": "046b08e4a147c46dd07d950ad973f484c1bdd4c297424566fea6517de9ce5216",
+    "model": "claude-sonnet-5-5",
+    "stage": "A",
+    "request_id": "d5-e6c6fac53aa32aba010fe1b4-measure-1"
+  },
+  "dev-learn": {
+    "input_digest": "4fe5884731e0b5426a8b410582d457a54f28029031752e2712ebd7f03484c583",
+    "request_digest": "3f28827518a1f1d6e6f6f5b4cfcbb7c9513368588c55a92a4c683530f07c9714",
+    "model": "claude-sonnet-5-5",
+    "stage": "B",
+    "request_id": "d5-e6c6fac53aa32aba010fe1b4-dev-learn"
+  },
+  "dev-compare": {
+    "input_digest": "5475ddc2984faaad3b6145bf05a70e38ca894355e8e4653d6b4d607db62f820d",
+    "request_digest": "219f2c5670ba7b193e480c9258da85258d4d57202030e844059389e34dcabe44",
+    "model": "claude-sonnet-5-5",
+    "stage": "B",
+    "request_id": "d5-e6c6fac53aa32aba010fe1b4-dev-compare"
+  }
+}

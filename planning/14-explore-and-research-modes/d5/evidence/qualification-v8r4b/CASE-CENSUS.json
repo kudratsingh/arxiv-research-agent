@@ -1,0 +1,225 @@
+{
+  "packet_digest": "1429b39296792b8bc3d5530d28bcc56600048b149310fc10df30c2ee6048a7a7",
+  "application_commit": "68c23441cdc351cfb4938f2a01b58597423aca7c",
+  "basis": "Synthetic maximum-envelope fixtures through actual protected adapter/admission, not provider results or quality evidence",
+  "cases": [
+    {
+      "case_id": "dev-learn",
+      "state": "ready",
+      "simulated": true,
+      "stages": [
+        "draft",
+        "check",
+        "repair",
+        "check"
+      ],
+      "final_claim_count": 1,
+      "final_abstention_code": null,
+      "human_review": null,
+      "qualified": false
+    },
+    {
+      "case_id": "dev-compare",
+      "state": "ready",
+      "simulated": true,
+      "stages": [
+        "draft",
+        "check",
+        "repair",
+        "check"
+      ],
+      "final_claim_count": 2,
+      "final_abstention_code": null,
+      "human_review": null,
+      "qualified": false
+    },
+    {
+      "case_id": "v8-learn-mechanism",
+      "state": "ready",
+      "simulated": true,
+      "stages": [
+        "draft",
+        "check",
+        "repair",
+        "check"
+      ],
+      "final_claim_count": 1,
+      "final_abstention_code": null,
+      "human_review": null,
+      "qualified": false
+    },
+    {
+      "case_id": "v8-learn-conditions",
+      "state": "ready",
+      "simulated": true,
+      "stages": [
+        "draft",
+        "check",
+        "repair",
+        "check"
+      ],
+      "final_claim_count": 1,
+      "final_abstention_code": null,
+      "human_review": null,
+      "qualified": false
+    },
+    {
+      "case_id": "v8-learn-reproduce",
+      "state": "ready",
+      "simulated": true,
+      "stages": [
+        "draft",
+        "check",
+        "repair",
+        "check"
+      ],
+      "final_claim_count": 1,
+      "final_abstention_code": null,
+      "human_review": null,
+      "qualified": false
+    },
+    {
+      "case_id": "v8-learn-measurement",
+      "state": "ready",
+      "simulated": true,
+      "stages": [
+        "draft",
+        "check",
+        "repair",
+        "check"
+      ],
+      "final_claim_count": 1,
+      "final_abstention_code": null,
+      "human_review": null,
+      "qualified": false
+    },
+    {
+      "case_id": "v8-research-memory",
+      "state": "ready",
+      "simulated": true,
+      "stages": [
+        "draft",
+        "check",
+        "repair",
+        "check"
+      ],
+      "final_claim_count": 2,
+      "final_abstention_code": null,
+      "human_review": null,
+      "qualified": false
+    },
+    {
+      "case_id": "v8-research-retrieval",
+      "state": "ready",
+      "simulated": true,
+      "stages": [
+        "draft",
+        "check",
+        "repair",
+        "check"
+      ],
+      "final_claim_count": 2,
+      "final_abstention_code": null,
+      "human_review": null,
+      "qualified": false
+    },
+    {
+      "case_id": "v8-research-verification",
+      "state": "ready",
+      "simulated": true,
+      "stages": [
+        "draft",
+        "check",
+        "repair",
+        "check"
+      ],
+      "final_claim_count": 2,
+      "final_abstention_code": null,
+      "human_review": null,
+      "qualified": false
+    },
+    {
+      "case_id": "v8-research-insufficient",
+      "state": "ready",
+      "simulated": true,
+      "stages": [
+        "draft",
+        "check",
+        "repair",
+        "check"
+      ],
+      "final_claim_count": 0,
+      "final_abstention_code": "application_context_required",
+      "human_review": null,
+      "qualified": false
+    },
+    {
+      "case_id": "probe-1",
+      "state": "ready",
+      "simulated": true,
+      "stages": [
+        "check"
+      ],
+      "final_claim_count": null,
+      "final_abstention_code": null,
+      "human_review": null,
+      "qualified": false
+    },
+    {
+      "case_id": "probe-2",
+      "state": "ready",
+      "simulated": true,
+      "stages": [
+        "check"
+      ],
+      "final_claim_count": null,
+      "final_abstention_code": null,
+      "human_review": null,
+      "qualified": false
+    },
+    {
+      "case_id": "probe-3",
+      "state": "ready",
+      "simulated": true,
+      "stages": [
+        "check"
+      ],
+      "final_claim_count": null,
+      "final_abstention_code": null,
+      "human_review": null,
+      "qualified": false
+    },
+    {
+      "case_id": "probe-4",
+      "state": "ready",
+      "simulated": true,
+      "stages": [
+        "check"
+      ],
+      "final_claim_count": null,
+      "final_abstention_code": null,
+      "human_review": null,
+      "qualified": false
+    },
+    {
+      "case_id": "measure-1",
+      "state": "ready",
+      "simulated": true,
+      "stages": [],
+      "final_claim_count": null,
+      "final_abstention_code": null,
+      "human_review": null,
+      "qualified": false
+    }
+  ],
+  "quality_outcome": "HOLD",
+  "human_labels": null,
+  "checker_qualified": false,
+  "actual_provider_contacts": 0,
+  "actual_new_spend_usd": "0",
+  "live_v7r2_completion_unchanged": {
+    "numerator": 3,
+    "denominator": 8
+  },
+  "four_probe_diagnostic_is_separate": true
+}

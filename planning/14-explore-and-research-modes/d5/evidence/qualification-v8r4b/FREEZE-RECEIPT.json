@@ -1,0 +1,28 @@
+{
+  "packet_digest": "1429b39296792b8bc3d5530d28bcc56600048b149310fc10df30c2ee6048a7a7",
+  "application_commit": "68c23441cdc351cfb4938f2a01b58597423aca7c",
+  "capacity_proposal_digest": "8d699885e58d228f00fe2a9edadd13a14f4d7d58b54393875bd6f3693b7e34dc",
+  "unchanged_fields": [
+    "corpus",
+    "profile",
+    "clock",
+    "cases",
+    "probes",
+    "scoring",
+    "human_rubric",
+    "ranking_policy",
+    "selection_policy",
+    "checker_schema",
+    "execution",
+    "operation_routes",
+    "dynamic_requests",
+    "stop_rules",
+    "historical_v7r2",
+    "historical_premise_calibration"
+  ],
+  "predecessor_packet_digest": "e6c6fac53aa32aba010fe1b484de0e7a8415593e62772d4405ec4fa14fd7c131",
+  "source_snapshot_digest": "a1ed1606fb4bb5082dd5cb47842ce12256599e78416b8c7496248f3e832bc971",
+  "authority_created": false,
+  "provider_contacts": 0,
+  "new_spend_usd": "0"
+}

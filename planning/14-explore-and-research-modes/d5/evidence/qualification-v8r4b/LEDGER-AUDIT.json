@@ -1,0 +1,13 @@
+{
+  "baseline": {
+    "jobs": 20,
+    "Messages": 35,
+    "counts": 54,
+    "usd": "0.904053"
+  },
+  "read_only": true,
+  "history_digest": "88fe8f85f6edd640c033cf5623b8133ab52bc157f1b90f7e8ec04135ec20d64b",
+  "capacity_proposal_digest": "8d699885e58d228f00fe2a9edadd13a14f4d7d58b54393875bd6f3693b7e34dc",
+  "amendment_activated": false,
+  "provider_contacts": 0
+}

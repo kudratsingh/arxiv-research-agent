@@ -1,0 +1,32 @@
+{
+  "packet_digest": "1429b39296792b8bc3d5530d28bcc56600048b149310fc10df30c2ee6048a7a7",
+  "application_commit": "68c23441cdc351cfb4938f2a01b58597423aca7c",
+  "unchanged_frozen_fields": [
+    "corpus",
+    "profile",
+    "clock",
+    "cases",
+    "probes",
+    "scoring",
+    "human_rubric",
+    "ranking_policy",
+    "selection_policy",
+    "checker_schema",
+    "execution",
+    "operation_routes",
+    "dynamic_requests",
+    "stop_rules",
+    "historical_v7r2",
+    "historical_premise_calibration"
+  ],
+  "capacity_proposal_and_scope_digests_valid": true,
+  "initial_request_digests_valid": true,
+  "count_body_matches_exact_compare_request": true,
+  "compiled_entries": 15,
+  "private_prereview_proofs_in_new_input_settings": false,
+  "historical_record_file_hashes_unchanged": 3,
+  "producer_code_verified": true,
+  "generator_hash_valid": true,
+  "real_provider_contacts": 0,
+  "real_authority_created": false
+}

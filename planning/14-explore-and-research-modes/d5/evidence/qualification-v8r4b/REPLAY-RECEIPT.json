@@ -1,0 +1,47 @@
+{
+  "packet_digest": "1429b39296792b8bc3d5530d28bcc56600048b149310fc10df30c2ee6048a7a7",
+  "application_commit": "68c23441cdc351cfb4938f2a01b58597423aca7c",
+  "baseline": {
+    "jobs": 20,
+    "Messages": 35,
+    "counts": 54,
+    "usd": "0.904053"
+  },
+  "final_synthetic_census": {
+    "jobs": 34,
+    "Messages": 79,
+    "counts": 99,
+    "known_usd": "0.904053",
+    "pending_usd": "0",
+    "unknown_usd": "0"
+  },
+  "new_mock_jobs": 14,
+  "mock_Messages": 44,
+  "mock_counts": 45,
+  "real_provider_contacts": 0,
+  "real_new_spend_usd": "0",
+  "denials": {
+    "A_without_stage_grant": "owner_approval_required",
+    "B_without_stage_grant": "d5_stage_not_authorized",
+    "C_without_stage_grant": "d5_stage_not_authorized",
+    "D_without_stage_grant": "d5_stage_not_authorized",
+    "job35": "program_job_cap_exceeded",
+    "count100": "program_contact_cap_exceeded"
+  },
+  "historical_financial_rows_preserved": true,
+  "human_labels": null,
+  "checker_qualified": false,
+  "synthetic_authority_confined_to_fixture": true,
+  "insufficient_case": {
+    "case_id": "v8-research-insufficient",
+    "final_claim_count": 0,
+    "final_abstention_code": "application_context_required",
+    "stages": [
+      "draft",
+      "check",
+      "repair",
+      "check"
+    ],
+    "human_review": null
+  }
+}

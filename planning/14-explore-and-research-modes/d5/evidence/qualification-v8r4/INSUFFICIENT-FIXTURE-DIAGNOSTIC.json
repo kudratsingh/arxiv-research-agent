@@ -1,0 +1,16 @@
+{
+  "revision": "offline-fixture-diagnostic-v1",
+  "packet_digest": "e6c6fac53aa32aba010fe1b484de0e7a8415593e62772d4405ec4fa14fd7c131",
+  "application_commit": "05a12c76bc5ce8903fede1ba71937897fe21f386",
+  "case_id": "v8-research-insufficient",
+  "observed_claim_count": 2,
+  "observed_abstention": null,
+  "expected_claim_count": 0,
+  "expected_abstention": "application_context_required",
+  "cause": "Fixture matched the older case ID rather than the frozen v8-prefixed ID",
+  "original_mock_report_sha256": "3db626e8b5240cbcbf01a723f13b0a9902763b01ed34a03965725453d50c5d9a",
+  "actual_provider_contacts": 0,
+  "live_result_or_threshold_changed": false,
+  "acceptance_credit": false,
+  "action": "Preserve this diagnostic, correct and regression-test the fixture, freeze a distinct successor and replay before publication"
+}
