@@ -466,3 +466,56 @@ async def test_prose_repair_cannot_rescue_an_invalid_claim_verdict_batch(store, 
         await adapter.advance(job["id"])
     result = adapter.snapshot(job["id"])
     assert result["state"] == "failed" and result["result"] is None and len(transport.calls) == 4
+
+
+async def test_successor_uses_empty_new_financial_principals_without_reopening_old_scope(
+    store, monkeypatch
+):
+    from src.workspace.admission import _digest
+    from src.workspace.d5_benchmark import run
+    from src.workspace.d5_fixture import authorize_fixture, prepare_projects
+    from src.workspace.d5_freeze import compile_inputs, execution_owners, freeze
+    from src.workspace.qualification_budget import census
+    from tests.test_workspace_d5_benchmark import corpus
+
+    old = corpus(store)
+    with store.pool.connection() as conn:
+        conn.execute("INSERT INTO workspace_d5_fixture_marker VALUES(TRUE,'offline_only','{}')")
+    authorize_fixture(store, old, stages=("A",))
+    await run(store, old, "A", offline=True)
+    with store.pool.connection() as conn:
+        members = [
+            r[0]
+            for r in conn.execute(
+                "SELECT owner FROM workspace_evaluation_members WHERE program_id='evaluation'"
+            )
+        ]
+        history = census(conn, members[0], members=members)
+        old_rows = [
+            r[0] for r in conn.execute("SELECT to_jsonb(t) FROM workspace_generation_jobs t")
+        ]
+        original_scope = [
+            r[0] for r in conn.execute("SELECT to_jsonb(t) FROM workspace_d5_scopes t")
+        ]
+    new = freeze(store, old["profile"], history, cohort_revision="procedural-v8")
+    new.update(program_id="evaluation", measurement_cases=["dev-compare"])
+    new["packet_digest"] = _digest({k: v for k, v in new.items() if k != "packet_digest"})
+    assert execution_owners(new) == ("d5-v8-validation-run", "d5-v8-validation-measure")
+    assert {v["owner"] for v in compile_inputs(new).values()} == set(execution_owners(new))
+    prepare_projects(store, new)
+    prepare_projects(store, new)  # retry-safe, no profile or project overwrite
+    receipt = authorize_fixture(store, new, stages=("A",))
+    assert receipt["scope_id"] != "d5-" + old["packet_digest"][:24]
+    with store.pool.connection() as conn:
+        assert [
+            r[0] for r in conn.execute("SELECT to_jsonb(t) FROM workspace_generation_jobs t")
+        ] == old_rows
+        assert all(
+            r in [x[0] for x in conn.execute("SELECT to_jsonb(t) FROM workspace_d5_scopes t")]
+            for r in original_scope
+        )
+        conn.execute(
+            "UPDATE workspace_profiles SET data=jsonb_set(data,'{minutes}','45') WHERE owner='d5-v8-validation-run'"
+        )
+    with pytest.raises(AdmissionError, match="prepared_profile_changed"):
+        prepare_projects(store, new)

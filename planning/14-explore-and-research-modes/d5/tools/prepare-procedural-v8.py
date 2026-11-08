@@ -19,7 +19,7 @@ from psycopg.types.json import Jsonb
 from src.workspace.admission import AdmissionError, _digest
 from src.workspace.d5_adapter import D5MeasurementAdapter
 from src.workspace.d5_benchmark import database, read, write
-from src.workspace.d5_fixture import install
+from src.workspace.d5_fixture import install, prepare_projects
 from src.workspace.d5_freeze import compile_inputs, freeze, restore_input, verify
 from src.workspace.d5_operations import OPUS_LIMITS, ROUTES, reservation, wire
 from src.workspace.store import WorkspaceStore
@@ -127,6 +127,7 @@ with database(os.environ["D5_POSTGRES_URL"]) as pool:
         probe["wire"] = wire({**context, "output_schema": p["checker_schema"]["wire"]}, ROUTES)
     p["packet_digest"] = _digest({k: v for k, v in p.items() if k != "packet_digest"})
     verify(p)
+    prepare_projects(store, p)
     compiled = compile_inputs(p)
 
     # No network is possible in request export, even if a regression dispatches.

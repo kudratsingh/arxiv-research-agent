@@ -156,6 +156,13 @@ def reading_minutes(key: str, mode: str, index: int) -> int:
     return 45 if key == "learn-results" or mode == "learn" and index - 2 >= 3 else 15
 
 
+def execution_owners(packet: dict[str, Any]) -> tuple[str, str]:
+    """A new prospective cohort cannot reuse stopped financial identities."""
+    if packet.get("cohort_revision") == "procedural-v8":
+        return "d5-v8-validation-run", "d5-v8-validation-measure"
+    return RUN_OWNER, COUNT_OWNER
+
+
 def code_bindings() -> dict[str, str]:
     root = Path(__file__).resolve().parents[2]
     names = [
@@ -327,6 +334,7 @@ def verify_discovery(packet: dict[str, Any]) -> None:
 
 def compile_inputs(packet: dict[str, Any]) -> dict[str, dict[str, Any]]:
     verify(packet)
+    run_owner, count_owner = execution_owners(packet)
     scope_id = "d5-" + packet["packet_digest"][:24]
     compiled = {}
     for case in packet["cases"]:
@@ -338,7 +346,7 @@ def compile_inputs(packet: dict[str, Any]) -> dict[str, dict[str, Any]]:
         ):
             continue
         compiled[key] = {
-            "owner": RUN_OWNER,
+            "owner": run_owner,
             "stage": "B" if case["cohort"] == "development" else "C",
             "input": prepare_input(
                 case["sealed"],
@@ -354,7 +362,7 @@ def compile_inputs(packet: dict[str, Any]) -> dict[str, dict[str, Any]]:
     for case in packet["probes"]:
         key = case["id"]
         compiled[key] = {
-            "owner": RUN_OWNER,
+            "owner": run_owner,
             "stage": "D",
             "input": prepare_input(
                 case["sealed"],
@@ -375,7 +383,7 @@ def compile_inputs(packet: dict[str, Any]) -> dict[str, dict[str, Any]]:
             continue
         mid = "measure-" + str(index + 1)
         compiled[mid] = {
-            "owner": COUNT_OWNER,
+            "owner": count_owner,
             "stage": "A",
             "input": prepare_input(
                 case["sealed"],

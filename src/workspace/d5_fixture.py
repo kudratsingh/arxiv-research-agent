@@ -17,7 +17,7 @@ from psycopg.types.json import Jsonb
 from src.workspace.admission import AdmissionError, _digest
 from src.workspace.assistance import LocalAssistanceTransport
 from src.workspace.d5_authorization import case_bindings, record_external
-from src.workspace.d5_freeze import COUNT_OWNER, RUN_OWNER, compile_inputs
+from src.workspace.d5_freeze import COUNT_OWNER, RUN_OWNER, compile_inputs, execution_owners
 from src.workspace.qualification_budget import census
 from src.workspace.store import WorkspaceStore
 
@@ -255,11 +255,26 @@ def prepare_projects(store: WorkspaceStore, packet: dict[str, Any]) -> None:
     from src.workspace.context_store import WorkspaceContext
 
     context = WorkspaceContext(store)
+    owners = execution_owners(packet)
+    if packet.get("cohort_revision") == "procedural-v8":
+        with store.pool.connection() as conn:
+            for owner in owners:
+                row = conn.execute(
+                    "SELECT data FROM workspace_profiles WHERE owner=%s", (owner,)
+                ).fetchone()
+                if row:
+                    if any(row[0].get(k) != v for k, v in packet["profile"].items()):
+                        raise AdmissionError("d5_prepared_profile_changed")
+                else:
+                    conn.execute(
+                        "INSERT INTO workspace_profiles VALUES(%s,1,%s)",
+                        (owner, Jsonb(packet["profile"])),
+                    )
     for case in packet["cases"]:
         project = (case.get("sealed") or {}).get("project_context")
         if not project:
             continue
-        for owner in (RUN_OWNER, COUNT_OWNER):
+        for owner in owners:
             actual = context.write_project(
                 owner,
                 ProjectWrite(
