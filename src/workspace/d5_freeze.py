@@ -171,6 +171,8 @@ def code_bindings() -> dict[str, str]:
         "programme_amendments.py",
         "programme_successors.py",
         "programme_third_amendment.py",
+        "programme_capacity.py",
+        "migrations/017_programme_capacity_amendments.sql",
         "migrations/016_programme_third_amendments.sql",
         "migrations/015_programme_successor_amendments.sql",
         "d5_measurements.py",
@@ -203,6 +205,7 @@ def code_bindings() -> dict[str, str]:
         root / "web/components/workspace/ScoredSections.tsx",
         root / "web/components/workspace/AssistancePanel.tsx",
         root / "planning/14-explore-and-research-modes/d5/tools/prepare-opus-v5.py",
+        root / "planning/14-explore-and-research-modes/d5/tools/prepare-capacity-v8.py",
         root / "planning/14-explore-and-research-modes/d5/tools/prepare-prose-v6.py",
         root / "planning/14-explore-and-research-modes/d5/tools/prepare-gap-v7.py",
     ]

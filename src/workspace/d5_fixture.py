@@ -167,6 +167,10 @@ def install(store: WorkspaceStore, captured: dict[str, Any], *, fixture: bool) -
                                 r["authorization_digest"]
                                 for r in captured.get("recorded_amendments", [])
                             ],
+                            "historical_third_authorizations": [
+                                r["authorization_digest"]
+                                for r in captured.get("recorded_third_amendments", [])
+                            ],
                         }
                     ),
                 ),

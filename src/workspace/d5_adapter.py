@@ -65,6 +65,8 @@ def qualification_producer() -> dict[str, Any]:
         "workspace/programme_amendments.py",
         "workspace/programme_successors.py",
         "workspace/programme_third_amendment.py",
+        "workspace/programme_capacity.py",
+        "workspace/migrations/017_programme_capacity_amendments.sql",
         "workspace/migrations/016_programme_third_amendments.sql",
         "workspace/migrations/015_programme_successor_amendments.sql",
         "workspace/d5_measurements.py",

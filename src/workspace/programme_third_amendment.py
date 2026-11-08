@@ -89,14 +89,20 @@ def _validate(conn: Any, receipt: dict[str, Any], program_id: str) -> dict[str, 
         )
     except (KeyError, TypeError, ValueError):
         time_ok = False
-    fixture = bool(conn.execute("SELECT 1 FROM workspace_d5_fixture_marker").fetchone())
+    marker = conn.execute("SELECT data FROM workspace_d5_fixture_marker").fetchone()
+    fixture = bool(marker)
+    historical_mirror = bool(
+        marker and _digest(receipt) in marker[0].get("historical_third_authorizations", [])
+    )
     if (
         receipt.get("approved") is not True
         or not receipt.get("approved_by")
         or not receipt.get("authorization_reference")
         or not time_ok
-        or receipt.get("authorization_kind") != ("offline_fixture" if fixture else "owner")
-        or receipt.get("transport_mode") != ("mock" if fixture else "provider")
+        or receipt.get("authorization_kind")
+        != ("offline_fixture" if fixture and not historical_mirror else "owner")
+        or receipt.get("transport_mode")
+        != ("mock" if fixture and not historical_mirror else "provider")
     ):
         raise AdmissionError("successor_external_approval_or_expiry_required")
     if (
@@ -189,8 +195,6 @@ def effective(
     if (
         _digest(receipt) != auth
         or digest != receipt["proposal_digest"]
-        or required
-        and required != digest
         or expiry != datetime.fromisoformat(receipt["expires_at"])
         or conn.execute(
             "SELECT 1 FROM workspace_programme_third_revocations WHERE amendment_id=%s",
@@ -208,7 +212,11 @@ def effective(
         != core["basis"]
     ):
         raise AdmissionError("successor_historical_receipts_changed")
-    return dict(core["amended_limits"])
+    if required == digest:
+        return dict(core["amended_limits"])
+    from src.workspace.programme_capacity import effective as capacity_effective
+
+    return capacity_effective(conn, program_id, dict(core["amended_limits"]), digest, required)
 
 
 def revoke(store: WorkspaceStore, amendment_id: str, *, actor: str) -> None:
