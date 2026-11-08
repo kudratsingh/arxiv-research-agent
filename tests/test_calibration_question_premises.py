@@ -217,19 +217,31 @@ async def test_reviews_are_input_bound_and_attributed(fault):
 
 
 def prepare_production_probe(store, variant):
+    from src.calibration.premise_preflight import bind
+    from src.workspace.d5_freeze import restore_input
+
     support.program(store)
     service, selection = source(store)
     sealed = service.preview("a", selection).request
-    p, key, _ = q.build(q.read(SEEDS)["seeds"][:1], seed=7319, salt="synthetic-evaluator-only-salt")
-    probe = next(x for x in p["probes"] if key["items"][x["id"]]["variant"] == variant)
-    inputs = q.compile_probe(
-        sealed,
-        probe,
-        packet_digest=p["packet_digest"],
-        scope_id="d5-premise-synthetic",
-        pre_review_digest="synthetic-pre-review",
+    p, key, worksheet = q.build(
+        q.read(SEEDS)["seeds"][:1], seed=7319, salt="synthetic-evaluator-only-salt"
     )
-    compiled = {probe["id"]: {"owner": "d5-premise-test", "stage": "D", "input": inputs.snapshot()}}
+    probe = next(x for x in p["probes"] if key["items"][x["id"]]["variant"] == variant)
+    compiled = {
+        item["id"]: {
+            "owner": "d5-premise-test",
+            "stage": "D",
+            "input": q.compile_probe(
+                sealed, item, packet_digest=p["packet_digest"], scope_id="d5-premise-synthetic"
+            ).snapshot(),
+        }
+        for item in p["probes"]
+    }
+    # Structural simulation of attributed reviews in a permanently offline DB.
+    # These test objects never populate an actual independent-review worksheet.
+    completed = labels(worksheet, key, provenance="independent_human")
+    compiled = bind(p, completed, compiled, scope_id="d5-premise-synthetic")["compiled"]
+    inputs = restore_input(compiled[probe["id"]]["input"])
     now = datetime.now(UTC)
     with store.pool.connection() as conn:
         conn.execute("INSERT INTO workspace_d5_fixture_marker VALUES(TRUE,'offline_only','{}')")

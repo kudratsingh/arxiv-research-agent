@@ -35,6 +35,9 @@ def build(
     seeds: list[dict[str, Any]], *, seed: int, salt: str
 ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
     """Vary only the target question; keep draft, slot and exact citations fixed."""
+    from src.calibration.premise_preflight import CODE
+    from src.calibration.premise_preflight import REVISION as PREFLIGHT_REVISION
+
     if not salt or len({s["key"] for s in seeds}) != len(seeds):
         raise ValueError("distinct_matched_sets_and_private_salt_required")
     probes = []
@@ -130,6 +133,8 @@ def build(
         "evaluator_key_digest": _digest(evaluator),
         "producer": qualification_producer(),
         "calibration_code_sha256": _CODE,
+        "preflight_validator_sha256": CODE,
+        "preflight_revision": PREFLIGHT_REVISION,
         "route": MODEL,
         "input_count_allowance": 16000,
         "policy": {
@@ -154,6 +159,9 @@ def build(
 
 
 def validate_packet(packet: dict[str, Any]) -> None:
+    from src.calibration.premise_preflight import CODE
+    from src.calibration.premise_preflight import REVISION as PREFLIGHT_REVISION
+
     if packet.get("approved") is not False or packet.get("packet_digest") != _digest(
         {k: v for k, v in packet.items() if k != "packet_digest"}
     ):
@@ -163,6 +171,8 @@ def validate_packet(packet: dict[str, Any]) -> None:
         or packet["calibration_code_sha256"] != _CODE
         or hashlib.sha256(Path(__file__).read_bytes()).hexdigest() != _CODE
         or packet["route"] != MODEL
+        or packet.get("preflight_validator_sha256") != CODE
+        or packet.get("preflight_revision") != PREFLIGHT_REVISION
     ):
         raise AdmissionError("premise_producer_route_drift")
     if len({p["id"] for p in packet["probes"]}) != len(packet["probes"]):
@@ -230,8 +240,9 @@ class PremiseProbeAdapter(D5ProbeAdapter):
             raise AdmissionError("premise_calibration_producer_drift")
         if binding.get("request_digest") != self.inputs.settings.get("probe_wire_digest"):
             raise AdmissionError("premise_request_binding_drift")
-        if self.mode == "provider" and not binding.get("pre_review_digest"):
-            raise AdmissionError("premise_independent_pre_review_required")
+        from src.calibration.premise_preflight import validate_bound_input
+
+        validate_bound_input(self.inputs.snapshot())
         return super()._context()
 
     def _review_complete(self, grounding: Any, snapshot: dict[str, Any], checks: Any) -> bool:
