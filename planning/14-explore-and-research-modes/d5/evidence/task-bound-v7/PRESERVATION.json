@@ -1,0 +1,15 @@
+{
+  "after_sha256": "97298195fa27ad126146fce9718a5807e4415f80ee3ea04e93b68daf6116594b",
+  "before_sha256": "97298195fa27ad126146fce9718a5807e4415f80ee3ea04e93b68daf6116594b",
+  "counts": 81,
+  "final_sha256": "97298195fa27ad126146fce9718a5807e4415f80ee3ea04e93b68daf6116594b",
+  "jobs": 30,
+  "known_estimated_usd": "1.779493",
+  "messages": 61,
+  "new_count_contacts": 0,
+  "new_provider_contacts": 0,
+  "pending_usd": "0",
+  "preserved": true,
+  "stage_D_granted": false,
+  "unknown_usd": "0"
+}

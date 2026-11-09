@@ -1,0 +1,87 @@
+{
+  "application_commit": "03c0140bd133eb1208050b7004b499788b8a6f18",
+  "browser": {
+    "api": "intercepted synthetic GET-only; PG durability tested separately",
+    "cases": 24,
+    "issues": [],
+    "serious_critical_axe": 0,
+    "viewers": [
+      "assistance",
+      "qualification"
+    ]
+  },
+  "frontend": {
+    "byte_identical_on_final_application": true,
+    "coverage_summary": "Coverage summary ===============================\nStatements   : 98.2% ( 6688/6810 )\nBranches     : 94.01% ( 5769/6136 )\nFunctions    : 94.16% ( 2229/2367 )\nLines        : 99.5% ( 5221/5247 )\n================================================================================",
+    "dependencies": "npm ci, locked Next16.4.4",
+    "passed": 4285,
+    "verified_source_commit": "a7104be799333ee6e5a2bf0490a73aef991145ea"
+  },
+  "human_labels_written": 0,
+  "log_sha256": {
+    "documentation-complete.log": "cb13dd445be7429f8afff3b392f90c6d52352068d6a6ba536ed0b53e31f0f68a",
+    "focused-canonical.log": "56bb94da9fbcf22c2ef05fd1d18fd137625003cfe27061790807ebd432289c84",
+    "frontend-budgets-complete.log": "1fffde30d02e3517dcbcebe1538ba1c9a11f3c52ddc10bcbff51f98d992f2700",
+    "frontend-contract-complete.log": "9115dedb0b606e8a59df59757087cef5779d46e0ab1f7d5f624cabb708e7ae2d",
+    "frontend-coverage-complete.log": "99eb44fc8fda8250765e958e39fd6a57786cb21b9b134c44f5f023d8daec4e1d",
+    "frontend-lint-complete.log": "3abf1d9178e65389b228b48abcf35554976381024c89ace777f11f80205faf37",
+    "frontend-typecheck-complete.log": "a7d3e417b6cd1706638232a0866a3d00e29d67d337e100e7c609cec19e0c149d",
+    "mypy-canonical.log": "744692d85e5a8e097ce9949aa1b21b9740f3ad5fc6077e0acc8256abc61d09d8",
+    "registry-parity-complete.log": "ffe3a2763694f735d44ac4b58fee474f7091fa78a56db0f351933f7a88375886",
+    "renderers-final.log": "0de9d02b70d2bffb808d73177fce5c32107fbe5e8a7a8822a71168b5dd396831",
+    "ruff-canonical.log": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+    "simulation-complete.log": "e90c79db1fbe164136658af562f64eacd4412e0b62f86cb9040a896202d84abb",
+    "test-cov-diff-canonical.log": "ee38009d1aa3ff74dd785f24c4333ce8025f2917d7d0fa9a43b8da87b7e86ca0",
+    "tier-and-policy.log": "86781e6b5470b3b9dd41eb91ddfc6ecf179943ba06077d701616fd616e4ca06d",
+    "workflow-e2e-complete.log": "c004b29ec65088d4829ce6548512d9563fb4c311053bbe5c4b94826b3e9c64d0"
+  },
+  "new_authorizations": 0,
+  "new_spend_usd": "0",
+  "preservation": {
+    "after_sha256": "97298195fa27ad126146fce9718a5807e4415f80ee3ea04e93b68daf6116594b",
+    "before_sha256": "97298195fa27ad126146fce9718a5807e4415f80ee3ea04e93b68daf6116594b",
+    "counts": 81,
+    "final_sha256": "97298195fa27ad126146fce9718a5807e4415f80ee3ea04e93b68daf6116594b",
+    "jobs": 30,
+    "known_estimated_usd": "1.779493",
+    "messages": 61,
+    "new_count_contacts": 0,
+    "new_provider_contacts": 0,
+    "pending_usd": "0",
+    "preserved": true,
+    "stage_D_granted": false,
+    "unknown_usd": "0"
+  },
+  "provider_contacts": 0,
+  "python": {
+    "duration": "1073.48s (0:17:53)",
+    "package_floors": {
+      "agents": {
+        "actual_rounded": "96",
+        "floor": 92
+      },
+      "api": {
+        "actual_rounded": "88",
+        "floor": 86
+      },
+      "eval": {
+        "actual_rounded": "95",
+        "floor": 91
+      },
+      "security": {
+        "actual_rounded": "100",
+        "floor": 97
+      }
+    },
+    "passed": 6912,
+    "patch_coverage_percent": "97",
+    "separate_tier_deselected": 53,
+    "skipped": 54,
+    "total_coverage_percent": "94.59"
+  },
+  "remote_ci": "tracked separately on exact publication; not inferred from local checks",
+  "scope": "offline software repair; no human qualification",
+  "source_revision_digest": "86721e0cade1c13c4a135530f0f11fc93ce265fa862d64cfdb2c01b75180fc34",
+  "stage_D": "deferred",
+  "token_count_contacts": 0
+}
