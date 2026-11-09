@@ -2,6 +2,7 @@
 
 import json
 from copy import deepcopy
+from dataclasses import replace
 
 import httpx
 import pytest
@@ -147,6 +148,13 @@ async def test_actual_request_adapter_and_rendering(store, case_id, claims):
     transport = Transport(case_id)
     runtime, inputs = adapter(store, case_id, transport)
     wire = runtime.request()
+    canonical_inputs = replace(
+        inputs, settings=json.loads(json.dumps(inputs.settings, sort_keys=True))
+    )
+    restored = D5Adapter(
+        store, "d5-run", canonical_inputs, transport=httpx.MockTransport(transport)
+    )
+    assert restored.request() == wire
     context = json.loads(wire["body"]["messages"][0]["content"])
     assert context["sealed_request"]["schema_revision"] == TASK_REVISION
     assert context["sealed_request"]["task_policy"] == inputs.settings["d5_request"]["task_policy"]

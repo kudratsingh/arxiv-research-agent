@@ -261,3 +261,17 @@ def test_generic_full_abstention_and_byte_bound():
     value["junk"] = "a" * 8001
     with pytest.raises(ValueError, match="too_large"):
         normalize_task_output(value, list(c["units"]), c["purpose"], policy(NORMAL))
+
+
+@pytest.mark.parametrize("case_id", [SAFETY, RETRIEVAL, NORMAL])
+def test_schema_binding_survives_json_object_key_order_and_duplicate_handles(case_id):
+    case = ARCHIVE["cases"][case_id]
+    handles = list(case["units"])
+    parameters = {
+        "purpose": case["purpose"],
+        "revision": TASK_REVISION,
+        "task_policy": policy(case_id),
+    }
+    expected = schemas(handles, **parameters)
+    assert schemas(list(reversed(handles)), **parameters) == expected
+    assert schemas(handles + handles, **parameters) == expected

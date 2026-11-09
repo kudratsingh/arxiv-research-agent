@@ -6,7 +6,7 @@
       "disposition": "full_abstention",
       "factual_claims": 0,
       "identity": "v8-research-insufficient",
-      "local_schema_sha256": "d966793e3682371a664cc139921e4fdcf0b19c566cbcbd7dfa010b2709a07a2b",
+      "local_schema_sha256": "e91a1f1c2d909bbf0a5a93443faa9ae0ec00b34aad0da7a88be174d2c8fb30a5",
       "original_output_sha256": "5f0cf0a8952d2c3971a37d02da7dbda42e95ae4dce275ad859e41082432255ad",
       "rendered_sha256": "ec0302d69ab48844d6f5dfabf683b49f4875fcb30381fa4cb2de91c82c75b340",
       "selected_units_sha256": "16633e60b31870808a3bcd907703364717a3b064c45e7852f0c859e6abebad63",
@@ -39,7 +39,7 @@
         "selected_work_count": 2,
         "task_intent": "application_assessment"
       },
-      "wire_schema_sha256": "a008c5778de5693b80ea899a656f6ea0a7d269dd508ba0d961b16e949806d353"
+      "wire_schema_sha256": "18c05d8e1f79de11d4fcb30982e623d543ce60049d235e8f29649505bbbed1bc"
     },
     {
       "disposition": "comparison_abstention",
@@ -104,13 +104,13 @@
     }
   ],
   "human_qualification": false,
-  "offline_revision_digest": "20534ad32ce25002026ecd6bd997f33c06abe5c1e051f23c4b71232fe7fd4e18",
+  "offline_revision_digest": "86721e0cade1c13c4a135530f0f11fc93ce265fa862d64cfdb2c01b75180fc34",
   "producer": {
     "llm.py": "sha256:07dc89e847340e65215cb2a9d287f48fa0040273726e4751fa30853d3a098bb4",
     "llm_models.py": "sha256:610662404098f8e4d5d934db9fdf768014af80cc1eb4e326debfdc20dc01bdad",
     "workspace/assistance.py": "sha256:f2ee5d4dbcc949431f11428863ea04670687d42757528d17a4454be71a506a7a",
     "workspace/assistance_contract.py": "sha256:3198b4a557535bd475f314d3d76b1b2516be5f49f28f4be8436cd0e92aa3057e",
-    "workspace/assistance_policy.py": "sha256:5e3cbd32634e252e12f2dde819dc3f0c08d103ceb1ea5511c8e8e5faf74d0ac0",
+    "workspace/assistance_policy.py": "sha256:d8e46c644dfa398b1c753c19ddca64a33642287579164d7bfc20cb1e194e1288",
     "workspace/executor.py": "sha256:75ddf32188e5897decc12993caee3883dd667ca8ad4b8756a3dfa2eb5b46ac28",
     "workspace/grounding.py": "sha256:05b9cd7e0c1737b36b731996f2ec20132034b3a233acebe5be64d9e43c260bb7",
     "workspace/material.py": "sha256:688cbee37fa7007806dad087331672b381f0d3e094d88dc9dc8a7a889b4d7ba2"
@@ -121,7 +121,7 @@
       "llm.py": "sha256:07dc89e847340e65215cb2a9d287f48fa0040273726e4751fa30853d3a098bb4",
       "llm_models.py": "sha256:610662404098f8e4d5d934db9fdf768014af80cc1eb4e326debfdc20dc01bdad",
       "workspace/admission.py": "sha256:12524a9e192cde7d6988e44d57623d946252d5e4c039c14990076f1ba4ac84ac",
-      "workspace/assistance_policy.py": "sha256:5e3cbd32634e252e12f2dde819dc3f0c08d103ceb1ea5511c8e8e5faf74d0ac0",
+      "workspace/assistance_policy.py": "sha256:d8e46c644dfa398b1c753c19ddca64a33642287579164d7bfc20cb1e194e1288",
       "workspace/d5_adapter.py": "sha256:0e84e3cf3eea8cf5bfe808381e2a255516134b22ac3145bc5688df724fe67614",
       "workspace/d5_authorization.py": "sha256:6c29af12f103af82495962720a83a19c2b51a4be2848bdd573886ec77fbfa2fc",
       "workspace/d5_benchmark.py": "sha256:cb2b4bf54ff54158f38a416f541ba35472b893646b9933def7ec0f464fb9b865",
@@ -157,8 +157,8 @@
     }
   },
   "regression_and_ui_files": {
-    "tests/test_workspace_task_assistance.py": "08f9a66d6daf21ed2e9356417bd623027f166b0b6b997fb4d2ed9a8f4a998f11",
-    "tests/test_workspace_task_policy.py": "87d012c06fdad827e3d184d1cbcf777455ca8cd96e0bbe18cbca352cff2c24d2",
+    "tests/test_workspace_task_assistance.py": "519d3937304f974eb8165b6899d480a4dbebb5f6164f8c8552645caa1595895a",
+    "tests/test_workspace_task_policy.py": "379a88b465d1c447741fc617ffdda0f3f8bf6dc70be6bc755a6a31354e05c608",
     "web/components/workspace/AssistancePanel.tsx": "5d47886265e5675c16e6cadcf04cb3b77dc8e5a8f9a525ad01afe5b265464e18",
     "web/components/workspace/AssistanceTaskContext.tsx": "53eb59e4df36e3119c8a2737a99fad4d505ea9e6ecabae8be5d6da85a1b7b084",
     "web/components/workspace/QualificationResult.tsx": "1f4b02e7ea9c1df48f08302addd064c3f24815c968c81840cc7f2d9a822afa74",

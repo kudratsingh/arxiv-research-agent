@@ -84,6 +84,9 @@ def task_response_model(
     from src.workspace.assistance_contract import PROCEDURAL_REVISION, response_model
 
     validate_task_policy(policy)
+    # JSONB and canonical packet serialization reorder object keys. Schema names
+    # must bind the selected catalog, not its transient insertion order.
+    handles = sorted(set(handles))
     # The existing per-request evidence-handle enum and semantic limits stay authoritative.
     original = response_model(handles, purpose=purpose, revision=PROCEDURAL_REVISION)  # type: ignore[arg-type]
     from src.workspace.assistance_contract import digest
