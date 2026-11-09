@@ -257,8 +257,9 @@ async def test_canonical_metadata_drift_is_refused_before_any_count(store):
             "UPDATE workspace_versions SET data=jsonb_set(data,'{content_hash}',to_jsonb('drifted'::text)) WHERE version_id=%s",
             (version,),
         )
+    job = a.start(a.inputs.settings["d5_request_id"])
     with pytest.raises(AdmissionError, match="source_version_drift"):
-        a.start(a.inputs.settings["d5_request_id"])
+        await a.advance(job["id"])
     with store.pool.connection() as c:
         assert census(c, owners(p)[0], members=list(owners(p)))["counts"] == 0
 
