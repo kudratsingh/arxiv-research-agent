@@ -1,0 +1,120 @@
+{
+  "application_commit": "ea3a4a19ce824385bfc11a97b2018dcbe7a71b6c",
+  "base": "a7d4198fc23afa3682ef804b8a3906f1178b5806",
+  "contract": "passed",
+  "proposal_digest": "sha256:14e761c2bb3139428a0093caae022a175b37f81bd6ce35f5a0082367a358b101",
+  "approved": false,
+  "python": {
+    "passed": 6952,
+    "inherited_skips": 54,
+    "separate_e2e_deselections": 53,
+    "coverage_percent": 94.61,
+    "patch_percent": 97,
+    "new_module": {
+      "covered_lines": 198,
+      "num_statements": 203,
+      "percent_covered": 96.36363636363636,
+      "percent_covered_display": "96",
+      "missing_lines": 5,
+      "excluded_lines": 0,
+      "percent_statements_covered": 97.53694581280789,
+      "percent_statements_covered_display": "98",
+      "num_branches": 72,
+      "num_partial_branches": 5,
+      "covered_branches": 67,
+      "missing_branches": 5,
+      "percent_branches_covered": 93.05555555555556,
+      "percent_branches_covered_display": "93"
+    }
+  },
+  "focused_harness_and_new_controls": 77,
+  "frontend": {
+    "passed": 4288,
+    "component_passed": 56,
+    "statement": 98.18,
+    "branch": 94.32,
+    "function": 94.14,
+    "line": 99.52
+  },
+  "browser": {
+    "cases": 24,
+    "widths": [
+      1440,
+      390
+    ],
+    "themes": [
+      "dark",
+      "light"
+    ],
+    "serious_critical_axe": 0,
+    "console_exceptions": 0,
+    "basis": "GET-only intercepted synthetic API rendering/reload; durable HTTP/service paths independently exercised in disposable PostgreSQL"
+  },
+  "workflow_e2e": 53,
+  "research_simulation": "20/20 USD0",
+  "registry": {
+    "objects": 260,
+    "mismatches": 0
+  },
+  "docs": 95,
+  "mypy_source_files": 199,
+  "ruff": "passed",
+  "typecheck": "passed",
+  "production_build": "passed",
+  "budgets": {
+    "css": 24868,
+    "css_ceiling": 25600,
+    "reader": 165931,
+    "today": 169848,
+    "js_ceiling": 169984
+  },
+  "package_floors": {
+    "api": {
+      "floor": 86,
+      "actual_rounded": "88"
+    },
+    "agents": {
+      "floor": 92,
+      "actual_rounded": "96"
+    },
+    "security": {
+      "floor": 97,
+      "actual_rounded": "100"
+    },
+    "eval": {
+      "floor": 91,
+      "actual_rounded": "95"
+    }
+  },
+  "preservation": {
+    "preserved": true,
+    "before_sha256": "957fc9e63923c493afbe39cec2f271b0fa9333cd454d35d34fdcf7163d83f256",
+    "after_sha256": "957fc9e63923c493afbe39cec2f271b0fa9333cd454d35d34fdcf7163d83f256",
+    "jobs": 30,
+    "messages": 61,
+    "counts": 81,
+    "known_estimated_usd": "1.779493",
+    "pending_usd": "0",
+    "unknown_usd": "0",
+    "stage_D_granted": false,
+    "new_provider_contacts": 0,
+    "new_count_contacts": 0,
+    "new_spend_usd": "0"
+  },
+  "new_provider_contacts": 0,
+  "new_count_contacts": 0,
+  "new_spend_usd": "0",
+  "remote_ci": "Not inferred from local results. Exact publication-head receipt is outputs/d5/request-coverage-v8/PUBLICATION.json.",
+  "unrun": [
+    "provider Messages",
+    "provider counts",
+    "new semantic-quality validation",
+    "human qualification",
+    "Stage D"
+  ],
+  "retained_diagnostics": [
+    "Initial sandbox-denied Postgres run was rerun with permitted loopback access",
+    "New-test expected status/body/repair-field errors corrected to actual contracts; assertions retained",
+    "An exploratory global format check reported328 inherited files; formatting is not the repository gate, Ruff lint passes; unrelated files unchanged"
+  ]
+}
