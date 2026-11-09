@@ -55,6 +55,24 @@ def measurement_bindings(cases: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return result
 
 
+def canonical_request(sealed: dict[str, Any], corpus: list[dict[str, Any]]) -> dict[str, Any]:
+    """Bind metadata hashes separately from unchanged retained-material hashes.
+
+    The predecessor was prepared in a disposable fixture whose version rows
+    used material source hashes. Canonical storage uses its own metadata hash.
+    Only these two local metadata-binding fields change; the transmitted body,
+    selected passages, source identity and all other sealed fields remain exact.
+    """
+    hashes = {row["version_id"]: row.get("content_hash") for row in corpus}
+    versions = set(sealed["version_hashes"])
+    if any(not isinstance(hashes.get(v), str) or not hashes[v] for v in versions):
+        raise AdmissionError("coverage_canonical_metadata_required")
+    result = deepcopy(sealed)
+    result["version_hashes"] = {v: hashes[v] for v in sorted(versions)}
+    result["source_version_hash"] = hashes[sealed["assistance"]["version_id"]]
+    return result
+
+
 def verify_controls(packet: dict[str, Any]) -> None:
     from pathlib import Path
 
@@ -108,7 +126,7 @@ def verify_controls(packet: dict[str, Any]) -> None:
             not reference
             or case.get("cohort") != "development"
             or case.get("pipeline") != "fixed_evidence_diagnostic"
-            or case["sealed"] != reference["sealed"]
+            or case["sealed"] != canonical_request(reference["sealed"], packet["corpus"])
             or case["mode"] != reference["input"]["mode"]
             or case["question"] != reference["input"]["follow_up"]
         ):
@@ -173,6 +191,7 @@ def freeze_controls(
 
     if manifest.get("packet_digest") != PREDECESSOR or manifest.get("approved") is not False:
         raise AdmissionError("coverage_expected_unapproved_predecessor_required")
+    corpus = [r["data"] for r in snapshot["tables"]["workspace_versions"]]
     cases = [
         {
             "id": c["id"],
@@ -180,14 +199,13 @@ def freeze_controls(
             "pipeline": "fixed_evidence_diagnostic",
             "mode": c["input"]["mode"],
             "question": c["input"]["follow_up"],
-            "sealed": deepcopy(c["sealed"]),
+            "sealed": canonical_request(c["sealed"], corpus),
             "wire_digest": _digest(c["initial_wire"]),
             "human_review": None,
         }
         for c in manifest["cases"]
     ]
     materials = [r["data"] for r in snapshot["tables"]["workspace_material"]]
-    corpus = [r["data"] for r in snapshot["tables"]["workspace_versions"]]
     packet = {
         "revision": REVISION,
         "approved": False,

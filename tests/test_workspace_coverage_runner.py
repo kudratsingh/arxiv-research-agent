@@ -42,7 +42,7 @@ def offline(monkeypatch):
     monkeypatch.setenv("WORKSPACE_D5_OFFLINE", "1")
 
 
-def setup(store, *, authorize=True):
+def setup(store, *, authorize=True, canonical=False):
     template, _ = cap.setup(store)
     activate(store, cap.approved(template))
     am.seed_failed(store, 7, 23)
@@ -95,6 +95,13 @@ def setup(store, *, authorize=True):
                 "INSERT INTO workspace_material VALUES(%s,%s,%s,%s,%s) ON CONFLICT DO NOTHING",
                 (m["material_id"], m["version_id"], m["content_hash"], m["scope"], Jsonb(m)),
             )
+    if canonical:
+        # Production metadata hashes and retained-text source hashes differ.
+        # This isolated fixture must not accidentally equate the two layers.
+        with store.pool.connection() as c:
+            c.execute(
+                "UPDATE workspace_versions SET data=jsonb_set(data,'{content_hash}',to_jsonb('canonical-metadata-' || version_id))"
+            )
     snapshot = capture(store, store, "evaluation")
     p = freeze_controls(manifest, snapshot, snapshot["programme"])
     prepare_projects(store, p)
@@ -121,7 +128,7 @@ def adapter(store, p, key):
 
 
 async def test_A_then_B_requires_separate_grant_and_preserves_full_history(store):
-    p, snapshot = setup(store)
+    p, snapshot = setup(store, canonical=True)
     assert p["planned_development_cases"] == CASE_IDS and all(
         c["cohort"] == "development" for c in p["cases"]
     )
@@ -239,6 +246,21 @@ async def test_parent_and_programme_expiry_and_revocation_are_enforced(store):
         )
     with pytest.raises(AdmissionError, match="revoked_expired"):
         a.start(a.inputs.settings["d5_request_id"])
+
+
+async def test_canonical_metadata_drift_is_refused_before_any_count(store):
+    p, _ = setup(store, canonical=True)
+    a = adapter(store, p, "measure-1")
+    version = p["cases"][0]["sealed"]["assistance"]["version_id"]
+    with store.pool.connection() as c:
+        c.execute(
+            "UPDATE workspace_versions SET data=jsonb_set(data,'{content_hash}',to_jsonb('drifted'::text)) WHERE version_id=%s",
+            (version,),
+        )
+    with pytest.raises(AdmissionError, match="source_version_drift"):
+        a.start(a.inputs.settings["d5_request_id"])
+    with store.pool.connection() as c:
+        assert census(c, owners(p)[0], members=list(owners(p)))["counts"] == 0
 
 
 async def test_preparation_has_no_authority_and_parent_cannot_outlive_programme(

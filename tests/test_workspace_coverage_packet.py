@@ -17,7 +17,12 @@ from src.workspace import d5_coverage_policy as policy
 from src.workspace import d5_coverage_replay as replay
 from src.workspace.admission import AdmissionError, _digest
 from src.workspace.d5_benchmark import read
-from src.workspace.d5_coverage_packet import CASE_IDS, PREDECESSOR, freeze_controls
+from src.workspace.d5_coverage_packet import (
+    CASE_IDS,
+    PREDECESSOR,
+    canonical_request,
+    freeze_controls,
+)
 from src.workspace.d5_freeze import compile_inputs, verify
 from src.workspace.qualification_budget import PROGRAM_LIMITS
 
@@ -45,13 +50,43 @@ def packet():
     snap = {
         "tables": {
             "workspace_material": [{"data": v} for v in archive["materials"]],
-            "workspace_versions": [],
+            "workspace_versions": [
+                {"data": {"version_id": v["version_id"], "content_hash": v["source_hash"]}}
+                for v in archive["materials"]
+            ],
         },
         "program_id": "unit",
         "history": {},
         "profile": {},
     }
     return freeze_controls(m, snap, binding)
+
+
+def test_canonical_metadata_hashes_do_not_replace_retained_evidence_or_wire(packet):
+    original = packet["cases"][0]["sealed"]
+    corpus = [
+        {"version_id": version, "content_hash": "canonical-metadata-" + version}
+        for version in original["version_hashes"]
+    ]
+    corrected = canonical_request(original, corpus)
+    assert corrected["version_hashes"] == {
+        row["version_id"]: row["content_hash"] for row in corpus
+    }
+    assert corrected["source_version_hash"] == corrected["version_hashes"][
+        original["assistance"]["version_id"]
+    ]
+    for key in original.keys() - {"version_hashes", "source_version_hash"}:
+        assert corrected[key] == original[key]
+    assert corrected["units"] == original["units"]
+    assert corrected["candidate_initial_wire"] == original["candidate_initial_wire"]
+
+
+@pytest.mark.parametrize("missing", [None, "", 123])
+def test_missing_or_invalid_canonical_metadata_cannot_be_rebound(packet, missing):
+    original = packet["cases"][0]["sealed"]
+    corpus = [{"version_id": v, "content_hash": missing} for v in original["version_hashes"]]
+    with pytest.raises(AdmissionError, match="canonical_metadata_required"):
+        canonical_request(original, corpus)
 
 
 def test_named_development_cases_compile_to_exact_A_B_bindings(packet):
@@ -90,6 +125,7 @@ def test_named_development_cases_compile_to_exact_A_B_bindings(packet):
         "reuse",
         "context",
         "source",
+        "metadata",
         "approval",
         "code",
         "predecessor",
@@ -119,6 +155,11 @@ def test_recomputed_digest_cannot_broaden_or_drift_scope(packet, change):
         p["cases"][0]["question"] = "Different request"
     elif change == "source":
         p["cases"][0]["sealed"]["units"] = {}
+    elif change == "metadata":
+        version = next(iter(p["cases"][0]["sealed"]["version_hashes"]))
+        next(row for row in p["corpus"] if row["version_id"] == version)["content_hash"] = (
+            "unapproved-metadata"
+        )
     elif change == "approval":
         p["approved"] = True
     elif change == "code":
