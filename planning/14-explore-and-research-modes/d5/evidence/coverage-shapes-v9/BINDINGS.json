@@ -1,0 +1,128 @@
+{
+  "application_commit": "5e51269be259cf0d4ee6eacaddbccc63ace3fa2c",
+  "packet_digest": "22b8e13bc39d78cb1203f2e613c7c488d7f5a403234840d5ae15dcfa3d44a477",
+  "scope_id": "d5-22b8e13bc39d78cb1203f2e6",
+  "approved": false,
+  "predecessor_packet": "f48b3f24fd7c831d76aed787faebc4e64b2c322ef80657d0a2f6bd8ea6ee0b86",
+  "schema_revision": "workspace-assistance-coverage-shapes-v9",
+  "local_schema_digest": "7d1b3834b5c95e01b7f96631305d80e1c4c1d63570faf8cc73c52135f6f7c187",
+  "sdk_wire_schema_digest": "20fb2d7532f99bf70310728319ba3f78a8a23c4af8fb8966901bbc5b44d573b5",
+  "actual_sdk_transform_equal": true,
+  "operation_routes": {
+    "revision": "d5-sonnet-opus-high-v1",
+    "draft_repair": {
+      "model": "claude-sonnet-5-5",
+      "thinking": {
+        "type": "between_tools"
+      },
+      "effort": "medium",
+      "input_tokens": 20000,
+      "output_tokens": 4000,
+      "prices": {
+        "input": "2",
+        "output": "10",
+        "verified_at": "2026-11-06"
+      }
+    },
+    "check_recheck_probe": {
+      "model": "claude-opus-5-5",
+      "thinking": {
+        "type": "adaptive"
+      },
+      "effort": "high",
+      "input_tokens": 20000,
+      "output_tokens": 3200,
+      "prices": {
+        "input": "4",
+        "output": "20",
+        "verified_at": "2026-11-06"
+      }
+    }
+  },
+  "compiled": {
+    "development-v9-learn-coverage": {
+      "owner": "d5-coverage-22b8e13bc39d78cb-run",
+      "stage": "B",
+      "input_digest": "189ad8a2855beb4eb2c1187ae32c22c2d7cb010f67d13701323ddd5c76485793",
+      "request_id": "d5-22b8e13bc39d78cb1203f2e6-development-v9-learn-coverage",
+      "model_id": "claude-sonnet-5-5"
+    },
+    "measure-1": {
+      "owner": "d5-coverage-22b8e13bc39d78cb-measure",
+      "stage": "A",
+      "input_digest": "668ab90489e03c9cd0f0e084c1cb353a187e3f1cf0b64b1f6f66cb669b74a31b",
+      "request_id": "d5-22b8e13bc39d78cb1203f2e6-measure-1",
+      "model_id": "claude-sonnet-5-5"
+    }
+  },
+  "measurements": [
+    {
+      "id": "measure-1",
+      "workflow": "development-v9-learn-coverage",
+      "model": "claude-sonnet-5-5",
+      "request_digest": "84086fe7e0904f5772b88f721b79915c63c9670b697ee2c3d017ec2082d53c42"
+    }
+  ],
+  "reuse": [],
+  "fresh_counts_required": [
+    "measure-1"
+  ],
+  "old_measure_1_digest": "c2019e0ebdb94ed884a579114fe195e8b15b3618e262d21c2801c2c93a4f0a27",
+  "count_body_match": false,
+  "source_bindings": {
+    "u199bc87ac63c4d9e8535": {
+      "material_id": "mat-4c16f701f33831a7541e340a65c12a24",
+      "span_id": "span-19ef61ad682feb5985a67c51ff803347",
+      "work_id": "arxiv:2610.40798",
+      "version_id": "arxiv:2610.40798:v1:metadata-c1a34fa53cba3d51",
+      "source_hash": "sha256:06a821c06c428faa00a5d8696567d3a955b6bcd5e830130b5f94a10e09d6119e",
+      "scope": "abstract",
+      "parser_revision": "workspace-plain-text-v1",
+      "page": null,
+      "start": 0,
+      "end": 1588,
+      "quote": "Web world models increasingly predict the consequences of candidate actions before agents act, yet a plausible predicted future does not necessarily support the correct safety decision. In a matched human evaluation of 3,000 predictions from ten frozen open models, 86.1% are judged semantically plausible. However, several models exhibit highly asymmetric authorisation behaviour, combining low false-safe execution with poor recall of clarifiable ASK cases and a strong preference for BLOCK. This motivates safety sufficiency: whether a predictive interface preserves and exposes the policy-decisive information required to distinguish actions that may be EXECUTED, require clarification through ASK, or should be BLOCKED. We introduce SafeWebWorld, a benchmark for evaluating safety sufficiency across five web-safety domains through action-conditioned futures, policy-decisive evidence, and policy-conditioned decisions. Under a controlled Security-Aligned Supervised Fine-Tuning protocol, evidence preservation can improve substantially while authorisation-sensitive decisions deteriorate. To determine whether this deterioration reflects loss of authorisation-sensitive score structure or a failure of the decision readout, we introduce Latent Authorisation Recovery (LAR). Frozen-score recalibration reveals substantial but backbone-dependent recovery, while paired recovery provides only a modest additional gain. Yet within-family and matched-authorisation evaluations remain poor, showing that aggregate recoverability does not imply robust fine-grained authorisation behaviour."
+    }
+  },
+  "metadata_version_hashes": {
+    "arxiv:2610.40798:v1:metadata-c1a34fa53cba3d51": "b77eda4278705b9a4d62a312176df3e7d751fd0dc1f1a4c3c345b0c60167e443"
+  },
+  "programme": {
+    "program_id": "research-evaluation-20261105-v1",
+    "original_authorization_digest": "791c57d58f6425a14845d18b6563200e932b3869de59805b586727916fbff7ae",
+    "capacity_authorization_digest": "4e279c5f8cdae6dfda61e4b350a8649ea67df6a1a89a18d7285123100b42c376",
+    "capacity_proposal_digest": "8d699885e58d228f00fe2a9edadd13a14f4d7d58b54393875bd6f3693b7e34dc",
+    "limits": {
+      "usd": "10",
+      "counts": 99,
+      "messages": 80,
+      "new_jobs": 34,
+      "concurrency": 1
+    },
+    "expires_at": "2026-11-14T07:24:01+00:00"
+  },
+  "limits": {
+    "jobs": 1,
+    "messages": 4,
+    "counts": 5,
+    "usd": "10",
+    "concurrency": 1,
+    "workflow_usd": "0.45",
+    "probe_usd": "0",
+    "headroom_usd": "1.00",
+    "new_usd": "0.45",
+    "stages": {
+      "A": {
+        "jobs": 0,
+        "messages": 0,
+        "counts": 1
+      },
+      "B": {
+        "jobs": 1,
+        "messages": 4,
+        "counts": 4
+      }
+    }
+  },
+  "human_qualification": false
+}

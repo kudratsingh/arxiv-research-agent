@@ -1,0 +1,71 @@
+{
+  "basis": "Original failed provider response versus separately constructed SYNTHETIC correction. No accepted provider result or semantic qualification.",
+  "original_response_text_sha256": "cff382a2bb608f25d16114892ca51848996cbc4346e02441b9a2091758357bf6",
+  "archived_request_digest": "219ed35921c21ad734ae83058be57fcf2cc5a69c2edccbb6a17b898d54b18ed0",
+  "original_wire_schema_valid": true,
+  "original_local_contract_valid": false,
+  "original_local_failure": "answer_references_require_answered_status",
+  "new_wire_schema_valid_for_original": false,
+  "original_accepted": false,
+  "offending_original_row": {
+    "status": "lacks_evidence",
+    "answer_claim_ids": [
+      "c5"
+    ],
+    "context_claim_ids": [],
+    "gap": "protocol"
+  },
+  "synthetic_wire_and_local_valid": true,
+  "synthetic_c5_is_result_not_protocol": true,
+  "synthetic_claim_texts_unchanged": true,
+  "synthetic_normalized_request_coverage": [
+    {
+      "id": "p1",
+      "request": "Study scope and evaluated conditions",
+      "kind": "answer",
+      "status": "answered",
+      "answer_claim_ids": [
+        "c1",
+        "c2",
+        "c3"
+      ],
+      "context_claim_ids": [],
+      "gap": "none",
+      "gap_text": "No evidence gap declared."
+    },
+    {
+      "id": "p2",
+      "request": "Reported conditional findings",
+      "kind": "answer",
+      "status": "answered",
+      "answer_claim_ids": [
+        "c1",
+        "c3",
+        "c4",
+        "c5"
+      ],
+      "context_claim_ids": [],
+      "gap": "none",
+      "gap_text": "No evidence gap declared."
+    },
+    {
+      "id": "p3",
+      "request": "Unspecified protocol and breakdowns",
+      "kind": "answer",
+      "status": "lacks_evidence",
+      "gap": "protocol",
+      "context_claim_ids": [
+        "c5"
+      ],
+      "answer_claim_ids": [],
+      "gap_text": "Request evaluation scope, protocol and condition breakdowns."
+    }
+  ],
+  "synthetic_coverage_complete": false,
+  "semantic_provenance_support_qualified": false,
+  "human_labels": null,
+  "protected_regression_tests": [
+    "test_preserved_actual_draft_through_production_adapter[False]",
+    "test_preserved_actual_draft_through_production_adapter[True]"
+  ]
+}

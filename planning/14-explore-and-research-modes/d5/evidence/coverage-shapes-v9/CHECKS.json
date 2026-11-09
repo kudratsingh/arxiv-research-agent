@@ -1,0 +1,163 @@
+{
+  "application_commit": "5e51269be259cf0d4ee6eacaddbccc63ace3fa2c",
+  "packet_digest": "22b8e13bc39d78cb1203f2e613c7c488d7f5a403234840d5ae15dcfa3d44a477",
+  "verification_basis": "Runtime source identical to source commit; final exact-publication CI tracked separately. One final additional c5 semantic-control unit was tested after full-suite collection; runtime source did not change.",
+  "python_full": {
+    "command": "make test-cov-diff VENV_PYTHON=/Users/kudratsingh/Machine-Learning-Projects/arxiv-venv-lock/bin/python",
+    "exit": 0,
+    "passed": 7063,
+    "skipped": 54,
+    "deselected_e2e": 53,
+    "seconds": 1821.49,
+    "global_coverage_pct": 94.61,
+    "patch_coverage_pct": 96,
+    "new_coverage_shape_module_patch_pct": 100,
+    "new_packet_module_patch_pct": 100,
+    "package_percent": {
+      "api": 88,
+      "agents": 96,
+      "security": 100,
+      "eval": 95
+    },
+    "floors_unchanged": true
+  },
+  "schema_unit_final": {
+    "passed": 31,
+    "seconds": 2.87
+  },
+  "maximum_envelope_isolated": {
+    "passed": 1,
+    "seconds": 52.2,
+    "timeout_limit_seconds_unchanged": 60
+  },
+  "earlier_targeted": {
+    "passed": 128,
+    "timeout_failures": 1,
+    "reason": "Existing maximum-envelope case exceeded unchanged60s during competing verification; unchanged full gate and isolated rerun subsequently passed."
+  },
+  "frontend_full": {
+    "test_files": 221,
+    "passed": 4280,
+    "skipped": 9,
+    "statements_pct": 98.16,
+    "branches_pct": 94.4,
+    "functions_pct": 94.14,
+    "lines_pct": 99.52,
+    "floors_unchanged": true,
+    "command": "npm test -- --run --coverage --maxWorkers=2"
+  },
+  "reader_component": {
+    "passed": 4
+  },
+  "storybook_after_dependency_clone": {
+    "passed": 12
+  },
+  "typecheck": "PASS",
+  "web_lint": "PASS",
+  "ruff": "PASS",
+  "mypy": {
+    "source_files": 204,
+    "result": "PASS"
+  },
+  "documentation": {
+    "passed": 95
+  },
+  "workflow_e2e": {
+    "passed": 53,
+    "deselected": 7118,
+    "seconds": 17.21
+  },
+  "simulation": {
+    "succeeded": 20,
+    "errored": 0,
+    "total_usd": "0.0000"
+  },
+  "registry": {
+    "checked": 260,
+    "mismatches": 0,
+    "objects_changed": false
+  },
+  "local_browser_walkthrough": "Not rerun: frontend runtime files are unchanged. Reader component and full frontend gates passed; exact-head CI browser tier tracked separately.",
+  "local_production_build_and_budgets": "Not repeated for backend-only runtime change; exact-head CI web build/budget gate tracked separately; no floor/budget edits.",
+  "logs": {
+    "python_full": {
+      "path": "/private/tmp/coverage-shapes-full-gate.log",
+      "sha256": "6e3944bac1ea6c76ea54a9729c7c5201cc07d6ee18511ebeb3d5a637a553df7e"
+    },
+    "maximum_envelope_isolated": {
+      "path": "/private/tmp/coverage-envelope-isolated.log",
+      "sha256": "13ad17ec2be21020c08d635be22893dba616a03d571fb0abddf924260085ded2"
+    },
+    "new_schema_unit": {
+      "path": "/private/tmp/coverage-shapes-unit-final.log",
+      "sha256": "585d954eb92f3aa84daabc22c2cd62544594ad6af5881dc33375ba210f4e985b"
+    },
+    "earlier_targeted_with_timeout": {
+      "path": "/private/tmp/coverage-shapes-targeted2.log",
+      "sha256": "5e6604e58ed8c5c8bfb0d2cda77cddbdf59e11e1341d0bd5776b12f78932142b"
+    },
+    "mypy": {
+      "path": "/private/tmp/coverage-final-mypy.log",
+      "sha256": "9e351035883a02a67b64a62b90dac743576bf2ce6cfcd195a7d74cb33a0441b1"
+    },
+    "ruff": {
+      "path": "/private/tmp/coverage-final-ruff.log",
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "web_full": {
+      "path": "/private/tmp/coverage-web-coverage-final.log",
+      "sha256": "82a045e27b358b88fe56fc5ce712562cb94030fa77bd591d7e570b05c6861722"
+    },
+    "web_focused": {
+      "path": "/private/tmp/coverage-web-tests.log",
+      "sha256": "0865c9fa4996c746bf2114c377d6429d8ea6f0c843751d310ec5d4f4e2a503a1"
+    },
+    "typecheck": {
+      "path": "/private/tmp/coverage-web-typecheck.log",
+      "sha256": "a7d3e417b6cd1706638232a0866a3d00e29d67d337e100e7c609cec19e0c149d"
+    },
+    "web_lint": {
+      "path": "/private/tmp/coverage-web-lint.log",
+      "sha256": "3abf1d9178e65389b228b48abcf35554976381024c89ace777f11f80205faf37"
+    },
+    "docs": {
+      "path": "/private/tmp/coverage-doc-tests.log",
+      "sha256": "716289d64f0464b928ccf3c2be22c96049c94b0ace3f5c98052b9e1c8e1e72db"
+    },
+    "workflow_e2e": {
+      "path": "/private/tmp/coverage-e2e.log",
+      "sha256": "8c35de0e9b4a6b3adac008032e92ece51f6338feeff3118e6a8bd5821353f0aa"
+    },
+    "simulation": {
+      "path": "/private/tmp/coverage-simulate.log",
+      "sha256": "b2b718c472b3612d850e029def0ab2f2ace8430ac0c1fdb244b284ee6e820e6a"
+    },
+    "registry": {
+      "path": "/private/tmp/coverage-parity.log",
+      "sha256": "ffe3a2763694f735d44ac4b58fee474f7091fa78a56db0f351933f7a88375886"
+    },
+    "sealed_replay": {
+      "path": "/private/tmp/coverage-final-replay.log",
+      "sha256": "0d8b091bcd825905ff1168eeeb1338bbc7edda39897d6f3d3e9f2f587eda50f8"
+    },
+    "storybook_diagnosis": {
+      "path": "/private/tmp/coverage-storybook-diagnosis.log",
+      "sha256": "6ebf373b2b61929fd01ce90ab76cf92fcc30d13c0a8173fda14d7e20e1de1d87"
+    },
+    "storybook_fixed": {
+      "path": "/private/tmp/coverage-storybook-fixed.log",
+      "sha256": "2e384fcaf62aab6d5bfd8d7f49530dc22be73954f58a7f0b50c79bbbf491eba0"
+    }
+  },
+  "new_provider_Messages": 0,
+  "new_provider_counts": 0,
+  "new_spend_usd": "0",
+  "live_grants_created": 0,
+  "human_qualification": false,
+  "documentation_final": {
+    "passed": 95,
+    "seconds": 25.28,
+    "log": "/private/tmp/coverage-docs-final.log",
+    "sha256": "bbf856ce471a7dafb7b2bf56b877474060407c171a54bacbf6c06396a4be4c0e"
+  }
+}

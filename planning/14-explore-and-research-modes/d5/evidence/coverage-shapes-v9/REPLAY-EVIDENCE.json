@@ -1,0 +1,157 @@
+{
+  "basis": "Disposable fixture authority and MockTransport only. Not provider token measurements, semantic truth or human qualification.",
+  "application_commit": "5e51269be259cf0d4ee6eacaddbccc63ace3fa2c",
+  "packet_digest": "22b8e13bc39d78cb1203f2e613c7c488d7f5a403234840d5ae15dcfa3d44a477",
+  "scope_id": "d5-22b8e13bc39d78cb1203f2e6",
+  "database": "workspace_d5_coverage_shapes_v9_final",
+  "raw_report_path": "/private/tmp/arxiv-agent-eng-workspace-coverage-shapes/outputs/d5/coverage-shapes-v9/replay-final/REPLAY.json",
+  "raw_report_sha256": "9e248f2e898648f9385fb205af4a0bd3b4d870ae24747e06ad184421c908dec0",
+  "A": [
+    {
+      "id": "measure-1",
+      "workflow": "development-v9-learn-coverage",
+      "state": "ready",
+      "model": "claude-sonnet-5-5",
+      "request_digest": "84086fe7e0904f5772b88f721b79915c63c9670b697ee2c3d017ec2082d53c42",
+      "receipt_digest": "84086fe7e0904f5772b88f721b79915c63c9670b697ee2c3d017ec2082d53c42",
+      "provider_input_tokens": null,
+      "synthetic_input_tokens": 100,
+      "fits_16000": true,
+      "basis": "synthetic MockTransport integer; unmeasured"
+    }
+  ],
+  "A_funded_jobs": 0,
+  "A_Messages": 0,
+  "B_without_grant": "d5_stage_not_authorized",
+  "B_cases": [
+    {
+      "id": "development-v9-learn-coverage",
+      "cohort": "development",
+      "completion": true,
+      "state": "ready",
+      "request_coverage": [
+        {
+          "id": "p1",
+          "kind": "answer",
+          "request": "Study scope and evaluated conditions",
+          "status": "lacks_evidence",
+          "gap": "source_scope",
+          "context_claim_ids": [
+            "c1"
+          ],
+          "answer_claim_ids": [],
+          "gap_text": "Request the relevant source material."
+        },
+        {
+          "id": "p2",
+          "kind": "answer",
+          "request": "Reported conditional findings",
+          "status": "lacks_evidence",
+          "gap": "source_scope",
+          "context_claim_ids": [],
+          "answer_claim_ids": [],
+          "gap_text": "Request the relevant source material."
+        },
+        {
+          "id": "p3",
+          "kind": "answer",
+          "request": "Unspecified protocol and breakdowns",
+          "status": "lacks_evidence",
+          "gap": "source_scope",
+          "context_claim_ids": [],
+          "answer_claim_ids": [],
+          "gap_text": "Request the relevant source material."
+        }
+      ],
+      "human_review": null
+    }
+  ],
+  "B_stages": [
+    "draft",
+    "check",
+    "repair",
+    "check"
+  ],
+  "B_contacts": [
+    {
+      "stage": "draft",
+      "state": "completed",
+      "ordinal": 0,
+      "endpoint": "messages/count_tokens",
+      "request_digest": "84086fe7e0904f5772b88f721b79915c63c9670b697ee2c3d017ec2082d53c42",
+      "generation_request_digest": "43e62ef8a60d17dbe9e874dbb267b3235a5e3d1732712172da31174728782c63"
+    },
+    {
+      "stage": "draft",
+      "state": "completed",
+      "ordinal": 1,
+      "endpoint": "messages",
+      "request_digest": "43e62ef8a60d17dbe9e874dbb267b3235a5e3d1732712172da31174728782c63",
+      "generation_request_digest": "43e62ef8a60d17dbe9e874dbb267b3235a5e3d1732712172da31174728782c63"
+    },
+    {
+      "stage": "check",
+      "state": "completed",
+      "ordinal": 2,
+      "endpoint": "messages/count_tokens",
+      "request_digest": "c8675f9773919a95cbecf9a51dc6b12103df9897f722b78c6a00d009f60b7c7e",
+      "generation_request_digest": "82e5df245c24ed7a3d26e8052a0b00f550caf348faadf89b6572116073c21719"
+    },
+    {
+      "stage": "check",
+      "state": "completed",
+      "ordinal": 3,
+      "endpoint": "messages",
+      "request_digest": "82e5df245c24ed7a3d26e8052a0b00f550caf348faadf89b6572116073c21719",
+      "generation_request_digest": "82e5df245c24ed7a3d26e8052a0b00f550caf348faadf89b6572116073c21719"
+    },
+    {
+      "stage": "repair",
+      "state": "completed",
+      "ordinal": 4,
+      "endpoint": "messages/count_tokens",
+      "request_digest": "e3d3894b27e205ca00f8195dfced6ea499030d0e12ad4dd567737c054eecb69e",
+      "generation_request_digest": "56fce897d4e9d956533a8901ea3a876d29d99d5dedd2722c9fa7f5fd0d7b77cb"
+    },
+    {
+      "stage": "repair",
+      "state": "completed",
+      "ordinal": 5,
+      "endpoint": "messages",
+      "request_digest": "56fce897d4e9d956533a8901ea3a876d29d99d5dedd2722c9fa7f5fd0d7b77cb",
+      "generation_request_digest": "56fce897d4e9d956533a8901ea3a876d29d99d5dedd2722c9fa7f5fd0d7b77cb"
+    },
+    {
+      "stage": "check",
+      "state": "completed",
+      "ordinal": 6,
+      "endpoint": "messages/count_tokens",
+      "request_digest": "b0cb176a3f2d6f6bfc2ec2ef6bbb324de2fab7661aba49c796e116ba05932951",
+      "generation_request_digest": "1480cb7b18eac377bd2b7d747f7c16245c8b8f770825f50343d45e012778af74"
+    },
+    {
+      "stage": "check",
+      "state": "completed",
+      "ordinal": 7,
+      "endpoint": "messages",
+      "request_digest": "1480cb7b18eac377bd2b7d747f7c16245c8b8f770825f50343d45e012778af74",
+      "generation_request_digest": "1480cb7b18eac377bd2b7d747f7c16245c8b8f770825f50343d45e012778af74"
+    }
+  ],
+  "copied_ledger": {
+    "programme_jobs": 32,
+    "Messages": 66,
+    "counts": 90,
+    "known_usd": "1.802777",
+    "pending_usd": "0",
+    "unknown_usd": "0"
+  },
+  "synthetic_new_funded_jobs": 1,
+  "actual_new_Messages": 0,
+  "actual_new_counts": 0,
+  "actual_new_spend_usd": "0",
+  "acceptance": "HOLD: human qualification is out of scope and model quality is unmeasured",
+  "human_labels": null,
+  "checker_qualified": false,
+  "everyday_generation": false
+}
