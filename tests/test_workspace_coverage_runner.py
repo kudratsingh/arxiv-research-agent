@@ -410,3 +410,35 @@ async def test_invalid_completed_response_stops_scope_without_replay(store):
         b.start(b.inputs.settings["d5_request_id"])
     with store.pool.connection() as c:
         assert census(c, owners(p)[0], members=list(owners(p)))["messages"] == 1
+
+
+@pytest.mark.parametrize(
+    "module_name,table",
+    [
+        ("programme_successors", "workspace_programme_successor_amendments"),
+        ("programme_third_amendment", "workspace_programme_third_amendments"),
+        ("programme_capacity", "workspace_programme_capacity_amendments"),
+    ],
+)
+async def test_validation_audits_predecessor_once_without_cross_operation_cache(
+    store, monkeypatch, module_name, table
+):
+    import importlib
+
+    template, _ = cap.setup(store)
+    activate(store, cap.approved(template))
+    module = importlib.import_module("src.workspace." + module_name)
+    original = module._parent
+    calls = []
+
+    def parent(*args):
+        calls.append(True)
+        return original(*args)
+
+    monkeypatch.setattr(module, "_parent", parent)
+    with store.pool.connection() as c:
+        receipt = c.execute("SELECT record FROM " + table).fetchone()[0]
+        first = module._validate(c, receipt, "evaluation")
+        assert len(calls) == 1
+        second = module._validate(c, receipt, "evaluation")
+        assert len(calls) == 2 and first == second

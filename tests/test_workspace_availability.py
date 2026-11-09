@@ -22,7 +22,12 @@ pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 
 
 async def test_pdf_excerpt_is_discoverable_without_rewriting_metadata(client, store):
-    original = support.ingest(store, access_state="metadata", abstract="", source_scope="metadata")
+    # Availability is the subject here; keep the synthetic observation inside
+    # the live seven-day window instead of expiring on 2026-11-09.
+    original = support.ingest(
+        store, access_state="metadata", abstract="", source_scope="metadata",
+        first_seen_at=store.cutoff(), fetched_at=store.cutoff(),
+    )
     with store.pool.connection() as conn:
         before = conn.execute(
             "SELECT data FROM workspace_versions WHERE version_id=%s", (original["version_id"],)

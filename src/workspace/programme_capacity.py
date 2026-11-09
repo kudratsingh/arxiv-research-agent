@@ -30,7 +30,16 @@ def _parent(conn: Any, program_id: str) -> tuple[dict[str, Any], str, datetime]:
 
 
 def proposal(conn: Any, program_id: str) -> dict[str, Any]:
-    parent, auth, expiry = _parent(conn, program_id)
+    return _proposal(conn, program_id, _parent(conn, program_id))
+
+
+def _proposal(
+    conn: Any, program_id: str, parent_binding: tuple[dict[str, Any], str, datetime]
+) -> dict[str, Any]:
+    # The caller has already verified this predecessor in the same synchronous
+    # operation. Reuse that result instead of recursively auditing it twice.
+    # Nothing is cached across operations, transactions or provider contacts.
+    parent, auth, expiry = parent_binding
     members = sorted(
         r[0]
         for r in conn.execute(
@@ -71,7 +80,7 @@ def _validate(conn: Any, receipt: dict[str, Any], program_id: str) -> dict[str, 
     if not isinstance(core, dict):
         raise AdmissionError("capacity_binding_or_limits_drift")
     parent, auth, expiry = _parent(conn, program_id)
-    fixed = proposal(conn, program_id)["amendment"]
+    fixed = _proposal(conn, program_id, (parent, auth, expiry))["amendment"]
     # Historical basis may acquire new jobs after activation; all other bindings are immutable.
     if (
         set(core) != set(fixed)

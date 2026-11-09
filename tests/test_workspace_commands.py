@@ -27,7 +27,8 @@ def test_real_workspace_commands(store, monkeypatch, capsys, verb):
     closed = []
     monkeypatch.setattr(cli, "close_pool", lambda: closed.append(True))
     monkeypatch.setattr(routes, "repository", lambda: store)
-    monkeypatch.setattr(routes, "fetch_source", lambda source_id, **kw: FetchResult([support.item(source_id=source_id)], {"status": "success"}, {}))
+    # The command test needs a current synthetic fetch, not an aging Nov 2 item.
+    monkeypatch.setattr(routes, "fetch_source", lambda source_id, **kw: FetchResult([support.item(source_id=source_id, fetched_at=store.cutoff())], {"status": "success"}, {}))
     monkeypatch.setattr(sys, "argv", ["workspace", verb, "--owner", "a", "--sources", "arxiv-cs-ai"])
     cli.main()
     output = capsys.readouterr().out
