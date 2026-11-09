@@ -89,6 +89,58 @@ beforeEach(() => { current = null; failures = new Set(); entries = []; hold = nu
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 
 describe("D5 assistance interaction contract", () => {
+  it("records application intent before preview and excludes hidden context after switching intent", async () => {
+    const user = userEvent.setup(); await mount(true); await select(user, true);
+    await user.selectOptions(screen.getByLabelText("Task intent"), "application_assessment");
+    await user.type(screen.getByLabelText("Vehicle and configuration"), "Isolated test vehicle");
+    await preview(user);
+    expect(mock.request.mock.calls.find(([p]) => p === "assistance/preview")![1].input.task_context).toEqual({ intent: "application_assessment", application_context: { vehicle_configuration: "Isolated test vehicle", operating_envelope: "", safety_objectives: "", validation_evidence: "" } });
+    expect(mock.request.mock.calls.filter(([p]) => p === "assistance/jobs")).toHaveLength(0);
+    await user.selectOptions(screen.getByLabelText("Task intent"), "comparison");
+    expect(screen.queryByRole("region", { name: "Sealed assistance request" })).not.toBeInTheDocument();
+    await preview(user);
+    const sent = mock.request.mock.calls.filter(([p]) => p === "assistance/preview").at(-1)![1].input.task_context;
+    expect(sent.intent).toBe("comparison"); expect(Object.values(sent.application_context).every(v => v === "")).toBe(true);
+  });
+  it("renders all missing safety details without factual claim sections or dispatch", async () => {
+    current = job("ready", true);
+    current.assistance_output = { claims: [], background_claims: [], assumption_claims: [], limitation_claims: [], comparison_claims: [], comparison_basis: [], gaps: [], questions: [], proposal: "Request context", abstention: "Application context required", response_disposition: "full_abstention", context_requests: ["Provide vehicle/configuration", "Provide operating envelope", "Provide safety objectives", "Provide validation evidence"] };
+    await mount(true, true);
+    const notice = await screen.findByRole("region", { name: "Full abstention" });
+    for (const text of current.assistance_output.context_requests!) expect(within(notice).getByText(text)).toBeInTheDocument();
+    expect(screen.queryByText(/^Retained claim/)).not.toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "Comparison claim references" })).not.toBeInTheDocument();
+    expect(mock.request.mock.calls.every(([,body]) => body === undefined)).toBe(true);
+  });
+  it("keeps exact cited notes while clearly leaving the comparison unanswered", async () => {
+    current = job("ready", true);
+    Object.assign(current.assistance_output!, { response_disposition: "comparison_abstention", comparison_unanswered: true, background_claims: ["c1", "c2"], assumption_claims: [], limitation_claims: [], comparison_claims: [], comparison_basis: [], abstention: "Selected comparison evidence unavailable" });
+    await mount(true, true);
+    expect(await screen.findByRole("region", { name: "Comparison unanswered" })).toHaveTextContent("Requested comparison remains unanswered");
+    expect(screen.getByRole("region", { name: "Background claim references" })).toHaveTextContent("c1:");
+    expect(screen.queryByRole("region", { name: "Comparison claim references" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open exact cited passage" }).getAttribute("href")).toContain("version=two%3Av2");
+    expect(mock.request.mock.calls.every(([,body]) => body === undefined)).toBe(true);
+  });
+  it("preserves task-context edits separately from existing assistance draft recovery", async () => {
+    const user = userEvent.setup(); const view = await mount(true);
+    await user.type(screen.getByLabelText("Follow-up question"), "Existing question");
+    await user.selectOptions(screen.getByLabelText("Task intent"), "application_assessment");
+    await user.type(screen.getByLabelText("Safety objectives"), "Test acceptance criteria");
+    view.unmount(); await mount(true);
+    expect(screen.getByLabelText("Follow-up question")).toHaveValue("Existing question");
+    expect(screen.getByLabelText("Safety objectives")).toHaveValue("Test acceptance criteria");
+    await user.click(screen.getByRole("button", { name: "Discard assistance edits" }));
+    expect(screen.getByLabelText("Task intent")).toHaveValue("answer");
+    expect(screen.getByLabelText("Follow-up question")).toHaveValue("");
+  });
+  it("reports task-context recovery failure without claiming a save", async () => {
+    const user = userEvent.setup(); await mount(true);
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => { throw new Error("isolated outage"); });
+    await user.selectOptions(screen.getByLabelText("Task intent"), "application_assessment");
+    expect(screen.getByText(/Task context recovery is unavailable/)).toBeInTheDocument();
+    expect(mock.request.mock.calls.every(([,body]) => body === undefined)).toBe(true);
+  });
   it("requires explicit preview and execution, binds editable context, then navigates an exact citation", async () => {
     const user = userEvent.setup(); await mount(); expect(mock.request.mock.calls.every(([, b]) => b === undefined)).toBe(true);
     await user.selectOptions(screen.getByLabelText("Explanation depth"), "technical"); await user.selectOptions(screen.getByLabelText("Dive direction"), "assumptions");

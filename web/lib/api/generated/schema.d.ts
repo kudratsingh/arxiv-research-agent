@@ -1339,6 +1339,29 @@ export interface components {
             /** Updated At */
             updated_at: string;
         };
+        /** ApplicationContext */
+        ApplicationContext: {
+            /**
+             * Vehicle Configuration
+             * @default
+             */
+            vehicle_configuration: string;
+            /**
+             * Operating Envelope
+             * @default
+             */
+            operating_envelope: string;
+            /**
+             * Safety Objectives
+             * @default
+             */
+            safety_objectives: string;
+            /**
+             * Validation Evidence
+             * @default
+             */
+            validation_evidence: string;
+        };
         /** ArtifactData */
         ArtifactData: {
             /**
@@ -1401,6 +1424,7 @@ export interface components {
             /** Parent Job */
             parent_job?: string | null;
             origin?: components["schemas"]["ResumeContext"] | null;
+            task_context?: components["schemas"]["TaskContext"] | null;
         };
         /** BoundSource */
         BoundSource: {
@@ -3991,6 +4015,19 @@ export interface components {
             request_id: string;
             /** Expected Digest */
             expected_digest: string;
+        };
+        /**
+         * TaskContext
+         * @description Application/user input, sealed before generation; never model output.
+         */
+        TaskContext: {
+            /**
+             * Intent
+             * @default answer
+             * @enum {string}
+             */
+            intent: "answer" | "comparison" | "application_assessment";
+            application_context?: components["schemas"]["ApplicationContext"];
         };
         /** UsefulnessFeedback */
         UsefulnessFeedback: {

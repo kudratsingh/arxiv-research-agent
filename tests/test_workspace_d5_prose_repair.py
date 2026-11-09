@@ -59,6 +59,7 @@ def source(store):
     unit = next(u for u in units if u["id"] == wanted)
     ref = unit["reference"]
     value = a.AssistanceInput(
+        task_context=None,  # The archived v5 regression must keep its original schema.
         mode="learn",
         work_id=ref["work_id"],
         version_id=ref["version_id"],

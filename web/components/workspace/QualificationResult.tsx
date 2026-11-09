@@ -1,4 +1,5 @@
 "use client";
+import { AssistanceDisposition } from "./AssistanceTaskContext";
 
 import { ScoredSections } from "./ScoredSections";
 
@@ -82,6 +83,7 @@ export default function QualificationResult({ workId, versionId, returnTo, onSou
       {!job.source_binding_intact && <p role="alert">Retained evidence changed. Claims are hidden; no newer source was substituted.</p>}
       {!output && <p>No completed content is available. Failed, cancelled or uncertain work is not an accepted summary and cannot be replayed from Reader.</p>}
       {output && <>
+        <AssistanceDisposition output={output} />
         {output.abstention && <p>Abstention: {output.abstention}</p>}
         {output.claims.map(claim => <article key={claim.claim_id} id={`${job.id}-${claim.claim_id}`}><h4>Claim {claim.claim_id}</h4><p>{claim.text}</p><p>Machine checker: {job.result?.grounding?.assessments.find(c => c.claim_id === claim.claim_id)?.decision ?? "unscored"}. Human support: unmeasured.</p>{claim.handles.map(handle => {
           const ref = job.request.units[handle]; if (!ref) return null;
@@ -94,7 +96,7 @@ export default function QualificationResult({ workId, versionId, returnTo, onSou
         <h4>Assumptions and missing evidence</h4><ul>{[...(output.assumptions ?? []), ...output.gaps].map((text, i) => <li key={i}>{text}</li>)}</ul>
         </>}
         <h4>Follow-up questions</h4><ul>{output.questions.map(text => <li key={text}>{text}</li>)}</ul>
-        <h4>Proposed experiment · not a finding</h4><p>{output.proposal}</p>
+        <h4>{output.response_disposition === "full_abstention" ? "Missing details · next action" : "Proposed experiment · not a finding"}</h4><p>{output.proposal}</p>
         <button type="button" disabled={busy} onClick={() => void save("thread")}>Save experimental learning thread</button>
         {savedThread && <Link href={contextHref(`/workspace/threads/${savedThread}`, { ...context, mode: job.request.assistance.mode, project: job.request.assistance.project_id })}>Open experimental learning thread →</Link>}
         {job.request.assistance.project_id && <button type="button" disabled={busy} onClick={() => void save("project")}>Link experimental result to project</button>}

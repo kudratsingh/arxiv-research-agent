@@ -38,6 +38,12 @@ from src.workspace.assistance_contract import (
     response_purpose,
     schemas,
 )
+from src.workspace.assistance_policy import (
+    TASK_REVISION,
+    TaskContext,
+    render_task_output,
+    seal_task_policy,
+)
 from src.workspace.context_schemas import ResumeContext
 from src.workspace.context_store import WorkspaceContext
 from src.workspace.executor import (
@@ -77,6 +83,7 @@ def producer_binding() -> dict[str, str]:
     names = (
         "workspace/assistance.py",
         "workspace/assistance_contract.py",
+        "workspace/assistance_policy.py",
         "workspace/executor.py",
         "workspace/grounding.py",
         "workspace/material.py",
@@ -107,6 +114,7 @@ class AssistanceInput(BaseModel):
     project_revision: int | None = Field(default=None, ge=1)
     parent_job: str | None = Field(default=None, pattern=r"^fake-[a-f0-9]{40}$")
     origin: ResumeContext | None = None
+    task_context: TaskContext | None = Field(default_factory=TaskContext)
 
 
 class PreviewWrite(BaseModel):
@@ -189,7 +197,8 @@ def enabled() -> None:
 def build_wire(request: dict[str, Any]) -> dict[str, Any]:
     """Pure candidate wire construction; no client, credential or contact."""
     phase = request["phase"]
-    procedural = request.get("sealed_request", {}).get("schema_revision") == PROCEDURAL_REVISION
+    task_bound = request.get("sealed_request", {}).get("schema_revision") == TASK_REVISION
+    procedural = request.get("sealed_request", {}).get("schema_revision") in {PROCEDURAL_REVISION, TASK_REVISION}
     if procedural:
         request = {
             **request,
@@ -203,7 +212,17 @@ def build_wire(request: dict[str, Any]) -> dict[str, Any]:
     wire = _build_request_kwargs(
         profile=RequestProfile(CANDIDATE_MODEL, None, False, "medium", True),
         prompt=_json({key: value for key, value in request.items() if key != "output_schema"}),
-        system_prompt=CHECK_SYSTEM if phase == "check" else SYSTEM,
+        system_prompt=(CHECK_SYSTEM if phase == "check" else SYSTEM) + (
+            " The application sealed task_policy before generation. Check within that task and "
+            "selected evidence; do not turn source notes into a completed comparison. "
+            "Return only the checker verdict schema, never a new answer or response envelope."
+            if task_bound and phase == "check" else
+            " The application sealed task_policy before generation. Honor only its allowed disposition. "
+            "Full abstention has no claims or claim references. Comparison-only abstention may contain "
+            "separately cited source notes but cannot assert the requested comparison. User-provided "
+            "application context is declared context, never verified source evidence. Return the exact response envelope."
+            if task_bound else ""
+        ),
         cache_system=False,
         max_tokens=4000 if phase != "check" else 1800,
         schema=None,
@@ -338,6 +357,13 @@ class AssistanceExecutor(FakeExecutor):
             candidate_model=CANDIDATE_MODEL,
             semantic_quality="Unqualified local simulation; human review unmeasured",
         )
+        if selection.task_context is not None:
+            policy = seal_task_policy(selection.task_context, selection.mode, len({r.work_id for r in chosen.values()}))
+            request.update(
+                schema_revision=TASK_REVISION,
+                task_policy=policy,
+                response_schemas=schemas(list(chosen), purpose=request["response_purpose"], revision=TASK_REVISION, task_policy=policy),
+            )
         versions = conn.execute(
             "SELECT version_id,data->>'content_hash' FROM workspace_versions WHERE version_id=ANY(%s)",
             ([m.version_id for m in materials],),
@@ -383,6 +409,8 @@ class AssistanceExecutor(FakeExecutor):
             key: original["assistance"][key]
             for key in ("mode", "depth", "background", "direction", "follow_up")
         }
+        if original["schema_revision"] == TASK_REVISION:
+            compact["task_policy"] = original["task_policy"]
         value: dict[str, Any] = {
             "phase": phase,
             "role": original["stage_contracts"][phase]["role"],
@@ -402,6 +430,8 @@ class AssistanceExecutor(FakeExecutor):
                 if record is None:
                     raise ValueError("authoritative_assistance_response_missing")
                 external = json.loads(record[0]["content"][0]["text"])
+                if original["schema_revision"] == TASK_REVISION:
+                    external = render_task_output(external, list(original["units"]), original["response_purpose"], original["task_policy"])
                 value["unscored_prose"] = {
                     k: external[k]
                     for k in (
@@ -543,6 +573,29 @@ class LocalAssistanceTransport(FakeProvider):
             if not research:
                 payload.pop("comparison_claims")
                 payload.pop("comparison_basis")
+            if original.get("schema_revision") == TASK_REVISION:
+                policy = original["task_policy"]
+                if policy["allowed_dispositions"] == ["full_abstention"] or not claims:
+                    full: dict[str, Any] = {
+                        "disposition": "full_abstention",
+                        "reason": "application_context_required" if policy["missing_context"] else "insufficient_selected_evidence",
+                        "next_action": "request_context",
+                    }
+                    if policy["missing_context"]:
+                        full["context_requests"] = {k: "required" for k in policy["missing_context"]}
+                    payload = {"response": full}
+                else:
+                    payload.update(
+                        gaps=["source_scope"],
+                        questions=[{"intent": "methods", "claim_ids": []}],
+                        proposal="request_context",
+                        disposition="answer",
+                    )
+                    if policy["task_intent"] == "comparison":
+                        payload.update(disposition="comparison_abstention", abstention="comparison_evidence_required")
+                        payload.pop("comparison_claims", None)
+                        payload.pop("comparison_basis", None)
+                    payload = {"response": payload}
         return httpx.Response(
             200,
             json={
@@ -636,13 +689,16 @@ class LocalAssistanceTransport(FakeProvider):
             catalog,
             materials,
             purpose=response_purpose(original["assistance"]["mode"], catalog),
+            revision=original["schema_revision"],
+            task_policy=original.get("task_policy"),
         )
+        readable = render_task_output(output, list(catalog), response_purpose(original["assistance"]["mode"], catalog), original["task_policy"]) if original["schema_revision"] == TASK_REVISION else None
         internal = [asdict(c) for c in claims]
         if not internal:
             internal.append(
                 {
                     "claim_id": "abstention",
-                    "text": draft.abstention,
+                    "text": readable["abstention"] if readable else draft.abstention,
                     "kind": "inference",
                     "inference_label": "Explicit abstention; no supported factual answer",
                 }
@@ -656,8 +712,8 @@ class LocalAssistanceTransport(FakeProvider):
                 "prerequisites": list(getattr(draft, "background_claims", ())),
                 "comparison": list(getattr(draft, "comparison_claims", ())),
             },
-            "questions": list(draft.questions),
-            "proposed_actions": [draft.proposal] if draft.proposal else [],
+            "questions": readable["questions"] if readable else list(draft.questions),
+            "proposed_actions": [readable["proposal"]] if readable else [draft.proposal] if draft.proposal else [],
             "limitations": [FAKE_LIMITATION],
         }
 
@@ -763,7 +819,7 @@ class AssistanceService:
 
     def get(self, owner: str, job_id: str) -> dict[str, Any]:
         job = self.executor.get(owner, job_id)
-        if job.request.get("schema_revision") not in {REVISION, RESEARCH_REVISION, CITED_REVISION}:
+        if job.request.get("schema_revision") not in {REVISION, RESEARCH_REVISION, CITED_REVISION, TASK_REVISION}:
             raise ValueError("assistance_job_unavailable")
         with self.store.pool.connection() as conn:
             rows = conn.execute(
@@ -804,6 +860,8 @@ class AssistanceService:
             workflows = [row for row in rows if row[0] in {"draft", "repair"} and row[3]]
             if workflows:
                 output = json.loads(workflows[-1][3]["content"][0]["text"])
+                if job.request["schema_revision"] == TASK_REVISION:
+                    output = render_task_output(output, list(job.request["units"]), job.request["response_purpose"], job.request["task_policy"])
         return {
             **job.model_dump(mode="json"),
             "assistance_output": output,
@@ -834,7 +892,7 @@ class AssistanceService:
         with self.store.pool.connection() as conn:
             rows = conn.execute(
                 "SELECT id FROM workspace_fake_generation_jobs WHERE owner=%s AND request->>'schema_revision'=ANY(%s) AND request->'assistance'->>'work_id'=%s AND request->'assistance'->>'version_id'=%s ORDER BY created_at DESC LIMIT 20",
-                (owner, [REVISION, RESEARCH_REVISION, CITED_REVISION], work, version),
+                (owner, [REVISION, RESEARCH_REVISION, CITED_REVISION, TASK_REVISION], work, version),
             ).fetchall()
         return [self.get(owner, row[0]) for row in rows]
 

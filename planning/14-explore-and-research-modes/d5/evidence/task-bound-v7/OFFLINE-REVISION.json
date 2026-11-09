@@ -1,0 +1,173 @@
+{
+  "approved": false,
+  "archived_packet": "1429b39296792b8bc3d5530d28bcc56600048b149310fc10df30c2ee6048a7a7",
+  "controls": [
+    {
+      "disposition": "full_abstention",
+      "factual_claims": 0,
+      "identity": "v8-research-insufficient",
+      "local_schema_sha256": "d966793e3682371a664cc139921e4fdcf0b19c566cbcbd7dfa010b2709a07a2b",
+      "original_output_sha256": "5f0cf0a8952d2c3971a37d02da7dbda42e95ae4dce275ad859e41082432255ad",
+      "rendered_sha256": "ec0302d69ab48844d6f5dfabf683b49f4875fcb30381fa4cb2de91c82c75b340",
+      "selected_units_sha256": "16633e60b31870808a3bcd907703364717a3b064c45e7852f0c859e6abebad63",
+      "synthetic_projection_sha256": "30305f38b2bd8de33e082c1053bcee173b55a505faced151aa19a0f85968fd6b",
+      "task_policy": {
+        "allowed_dispositions": [
+          "full_abstention"
+        ],
+        "application_context": {
+          "operating_envelope": "",
+          "safety_objectives": "",
+          "validation_evidence": "",
+          "vehicle_configuration": ""
+        },
+        "context_basis": "Explicitly supplied context, not verified source evidence",
+        "missing_context": [
+          "vehicle_configuration",
+          "operating_envelope",
+          "safety_objectives",
+          "validation_evidence"
+        ],
+        "mode": "research",
+        "required_context": [
+          "vehicle_configuration",
+          "operating_envelope",
+          "safety_objectives",
+          "validation_evidence"
+        ],
+        "revision": "workspace-assistance-task-bound-v7",
+        "selected_work_count": 2,
+        "task_intent": "application_assessment"
+      },
+      "wire_schema_sha256": "a008c5778de5693b80ea899a656f6ea0a7d269dd508ba0d961b16e949806d353"
+    },
+    {
+      "disposition": "comparison_abstention",
+      "factual_claims": 6,
+      "identity": "v8-research-retrieval",
+      "local_schema_sha256": "1d0579912535b7daeba0aa1322ec392cbf0d53b367d14a038823a9eecc8aa01d",
+      "original_output_sha256": "ca4ca554c6bfcec5a9920d88874b2c5f627f6f45e668ee02270bc8182164acfe",
+      "rendered_sha256": "0040bc61a198e95b1df1542742d0a046593372fcbc472c61e92ed36dd14f0219",
+      "selected_units_sha256": "bf921e284abc80f6490c954d902a5b60266ab340e0ed50205a9408bc3de4f716",
+      "synthetic_projection_sha256": "3c4aee01821542de69e51bb49a5b3f5f27757aa95861ef473755891631f2c624",
+      "task_policy": {
+        "allowed_dispositions": [
+          "full_abstention",
+          "answer",
+          "comparison_abstention"
+        ],
+        "application_context": {
+          "operating_envelope": "",
+          "safety_objectives": "",
+          "validation_evidence": "",
+          "vehicle_configuration": ""
+        },
+        "context_basis": "Explicitly supplied context, not verified source evidence",
+        "missing_context": [],
+        "mode": "research",
+        "required_context": [],
+        "revision": "workspace-assistance-task-bound-v7",
+        "selected_work_count": 2,
+        "task_intent": "comparison"
+      },
+      "wire_schema_sha256": "a283915b7aef8a7c06f586f8557a4a660bd3cd75d84190a36f4d5ef374716985"
+    },
+    {
+      "disposition": "answer",
+      "factual_claims": 6,
+      "identity": "v8-learn-measurement",
+      "local_schema_sha256": "602689b3f7540f834bd57de61d13160cab5c8fa2b8aa1f0c401d4249f4fd43eb",
+      "original_output_sha256": "32b2097beee45bea3948637285b11e1a3c499b666fdd698dfd54142cbe53a426",
+      "rendered_sha256": "94b6beb0b0a233faf7fdcdf9464ab4be6d9e6dd9b8907f6fbb97353d959fb39d",
+      "selected_units_sha256": "4a4249d014169509bebeb02e12a8d4c7cc170fb21d10d15ab387b4490b40289a",
+      "synthetic_projection_sha256": "aa04707627870a4a294b00af337c1ebdfeca1bd41364e5cb345aca1e7202f32f",
+      "task_policy": {
+        "allowed_dispositions": [
+          "full_abstention",
+          "answer"
+        ],
+        "application_context": {
+          "operating_envelope": "",
+          "safety_objectives": "",
+          "validation_evidence": "",
+          "vehicle_configuration": ""
+        },
+        "context_basis": "Explicitly supplied context, not verified source evidence",
+        "missing_context": [],
+        "mode": "learn",
+        "required_context": [],
+        "revision": "workspace-assistance-task-bound-v7",
+        "selected_work_count": 1,
+        "task_intent": "answer"
+      },
+      "wire_schema_sha256": "59a11a2a5f3cf455ab6351853a316bf40e69d7937178a6c65079ff1ead5a1bee"
+    }
+  ],
+  "human_qualification": false,
+  "offline_revision_digest": "20534ad32ce25002026ecd6bd997f33c06abe5c1e051f23c4b71232fe7fd4e18",
+  "producer": {
+    "llm.py": "sha256:07dc89e847340e65215cb2a9d287f48fa0040273726e4751fa30853d3a098bb4",
+    "llm_models.py": "sha256:610662404098f8e4d5d934db9fdf768014af80cc1eb4e326debfdc20dc01bdad",
+    "workspace/assistance.py": "sha256:f2ee5d4dbcc949431f11428863ea04670687d42757528d17a4454be71a506a7a",
+    "workspace/assistance_contract.py": "sha256:3198b4a557535bd475f314d3d76b1b2516be5f49f28f4be8436cd0e92aa3057e",
+    "workspace/assistance_policy.py": "sha256:5e3cbd32634e252e12f2dde819dc3f0c08d103ceb1ea5511c8e8e5faf74d0ac0",
+    "workspace/executor.py": "sha256:75ddf32188e5897decc12993caee3883dd667ca8ad4b8756a3dfa2eb5b46ac28",
+    "workspace/grounding.py": "sha256:05b9cd7e0c1737b36b731996f2ec20132034b3a233acebe5be64d9e43c260bb7",
+    "workspace/material.py": "sha256:688cbee37fa7007806dad087331672b381f0d3e094d88dc9dc8a7a889b4d7ba2"
+  },
+  "provider_contacts": 0,
+  "qualification_producer": {
+    "code": {
+      "llm.py": "sha256:07dc89e847340e65215cb2a9d287f48fa0040273726e4751fa30853d3a098bb4",
+      "llm_models.py": "sha256:610662404098f8e4d5d934db9fdf768014af80cc1eb4e326debfdc20dc01bdad",
+      "workspace/admission.py": "sha256:12524a9e192cde7d6988e44d57623d946252d5e4c039c14990076f1ba4ac84ac",
+      "workspace/assistance_policy.py": "sha256:5e3cbd32634e252e12f2dde819dc3f0c08d103ceb1ea5511c8e8e5faf74d0ac0",
+      "workspace/d5_adapter.py": "sha256:0e84e3cf3eea8cf5bfe808381e2a255516134b22ac3145bc5688df724fe67614",
+      "workspace/d5_authorization.py": "sha256:6c29af12f103af82495962720a83a19c2b51a4be2848bdd573886ec77fbfa2fc",
+      "workspace/d5_benchmark.py": "sha256:cb2b4bf54ff54158f38a416f541ba35472b893646b9933def7ec0f464fb9b865",
+      "workspace/d5_fixture.py": "sha256:6d7944fd33ed0c04963ad47afda7dce3730a6ae86d885fe5df5d4c290095c68e",
+      "workspace/d5_freeze.py": "sha256:803917a1ab57635cd8e624c776b05ee5e19eb41dd5a3d538e63c89f6a8b38172",
+      "workspace/d5_measurements.py": "sha256:f780b4e16b27e4f52ae18d3390112aa237b6ec83d2dd0478e6f795395b2e01b2",
+      "workspace/d5_operations.py": "sha256:1e9f173b6900275a492545fd079eb04573330d68f4a595d44aaed82da25d96f1",
+      "workspace/d5_operator.py": "sha256:746e61011964043285bda06c0f5d2c9e4ca71ee2b1556d5acdf5411e1daa6e48",
+      "workspace/d5_results.py": "sha256:4491441fa07a8f46a5bf3e11316177b9cbc00ebafaaea1eb6d4d226a84d828d9",
+      "workspace/d5_review_scoring.py": "sha256:0448f64dedc0db431cda1c05f0faf6428a61d145d9abaafbc322e99b9701bcc1",
+      "workspace/d5_reviews.py": "sha256:8d0c642f4026f87c44de3b2c354d8187c3776d2284079cbfe8f6a2290030cab2",
+      "workspace/d5_scope.py": "sha256:2f80099c6f06fed81191fd88e50dd1f4a4d5d61b3ccb39e2b428495150565c6e",
+      "workspace/d5_scoring.py": "sha256:5e80c8a54c5e037afb48cb504cfadd5ddb4ca40354687407ea1394133a1dcd11",
+      "workspace/measurement.py": "sha256:797c13428a924f51e186942a709c6807010083acad60a19ff5baf251f34652ab",
+      "workspace/migrations/012_d5_qualification_scope.sql": "sha256:35b58928738e143daa2e592ea9f81bf93d14b521f3af771337daecef2369eeb3",
+      "workspace/migrations/013_d5_stage_authorizations.sql": "sha256:805ccdc0e518679471e2a12da4bc2a94d37fd28475e1fa96fc6e686c562869ea",
+      "workspace/migrations/014_programme_amendments.sql": "sha256:11a88a4bccc586b3e0800ee60997d4099b6df07ef8b346e9a05406fa877293b0",
+      "workspace/migrations/015_programme_successor_amendments.sql": "sha256:ecfebbf208ad29eb4ce46340d7d17a9fc15c96088a1914257df79f8ff9a485b6",
+      "workspace/migrations/016_programme_third_amendments.sql": "sha256:5fcffc1339f3910706341388054a367d1394e819b9eaf60bf6b8cac687b35cb3",
+      "workspace/migrations/017_programme_capacity_amendments.sql": "sha256:de7fb1e79e52f1c2ff0046254d137acbead5d8bb8d7571de3f9c2a45138a44ba",
+      "workspace/programme_amendments.py": "sha256:1ce1306627253bfa7f8d5e601ca1b631306a8210582a3002148459431babdfab",
+      "workspace/programme_capacity.py": "sha256:ad52b07be66c42a2f279a2083ce7e2fb92a0cf623a0ec11c841935e0a0d4c01b",
+      "workspace/programme_successors.py": "sha256:1b3f50e0d77403656f3cd329a7f35b79ae6bbbc3a75610723f7a73a11bb15ff2",
+      "workspace/programme_third_amendment.py": "sha256:97f869b122ca0f489da987a22c633593fae4f1b84b97a3e3fbb71e037832ddd9",
+      "workspace/provider_adapter.py": "sha256:9095edbb1308340862e00e10b250fdc15854db22ba1d9d555a57829af198aeee",
+      "workspace/qualification_accounting.py": "sha256:14f3baea7fa1695ff22e95ef0114199703d5adcc7bc8d10830729e4f28e4f6d1",
+      "workspace/qualification_budget.py": "sha256:9d36735257ebdbceb51a6b50e964df217b29d51c16c2e338d4712a2826641a44"
+    },
+    "dependencies": {
+      "anthropic": "1.4.0",
+      "httpx": "0.28.1",
+      "pydantic": "2.13.4"
+    }
+  },
+  "regression_and_ui_files": {
+    "tests/test_workspace_task_assistance.py": "08f9a66d6daf21ed2e9356417bd623027f166b0b6b997fb4d2ed9a8f4a998f11",
+    "tests/test_workspace_task_policy.py": "87d012c06fdad827e3d184d1cbcf777455ca8cd96e0bbe18cbca352cff2c24d2",
+    "web/components/workspace/AssistancePanel.tsx": "5d47886265e5675c16e6cadcf04cb3b77dc8e5a8f9a525ad01afe5b265464e18",
+    "web/components/workspace/AssistanceTaskContext.tsx": "53eb59e4df36e3119c8a2737a99fad4d505ea9e6ecabae8be5d6da85a1b7b084",
+    "web/components/workspace/QualificationResult.tsx": "1f4b02e7ea9c1df48f08302addd064c3f24815c968c81840cc7f2d9a822afa74",
+    "web/lib/workspace/assistanceTypes.ts": "2585674e9c190ddca72b3b689c08fb0902318643b8c37e80419d898e4aca28c0",
+    "web/package-lock.json": "34b6ee4917e07a1ce5de40fe4039c58943e4f471c98abc59a6ae53bb689a9a84",
+    "web/tests/workspace/assistance-panel.test.tsx": "82573eddb2d4fb1b149a2e57e09515a7ff7e8bdfcb4e7e752713f6f85f98e26f",
+    "web/tests/workspace/qualification-result.test.tsx": "8fb442a0bd35e49425f5305a98d6aa8fde37416e7e354a6ee88873b8a697394d"
+  },
+  "revision": "workspace-assistance-task-bound-v7",
+  "token_count_contacts": 0,
+  "type": "offline software regression revision, not a provider validation packet"
+}

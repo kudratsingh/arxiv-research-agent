@@ -554,6 +554,7 @@ def freeze(
                     )
                     revision = result["revision"]
             value = AssistanceInput(
+                task_context=None,  # Historical benchmark revisions retain their declared schemas.
                 mode="research" if mode == "research" else "learn",
                 work_id=refs[0]["work_id"],
                 version_id=refs[0]["version_id"],

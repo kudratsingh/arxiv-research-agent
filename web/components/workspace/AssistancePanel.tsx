@@ -1,6 +1,7 @@
 "use client";
 
 import { ScoredSections } from "./ScoredSections";
+import { AssistanceTaskContext, AssistanceDisposition, taskDefaults } from "./AssistanceTaskContext";
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -20,6 +21,8 @@ export default function AssistancePanel({ owner, workId, versionId, returnTo, on
 }) {
   const context = useProductContext();
   const form = useManualForm(owner, `assistance:${workId}:${versionId}:${context.mode}:${context.project ?? ""}`, "assistance", 0, initial);
+  // Separate recovery key preserves existing assistance drafts when adding policy fields.
+  const taskForm = useManualForm(owner, `assistance-task:${workId}:${versionId}:${context.mode}:${context.project ?? ""}`, "assistance-task", 0, taskDefaults);
   const [units, setUnits] = useState<EvidenceUnit[]>([]), [jobs, setJobs] = useState<AssistanceJob[]>([]);
   const [project, setProject] = useState<ProjectDetail | null>(null), [loaded, setLoaded] = useState(false);
   const [preview, setPreview] = useState<AssistancePreview | null>(null), [job, setJob] = useState<AssistanceJob | null>(null);
@@ -49,12 +52,14 @@ export default function AssistancePanel({ owner, workId, versionId, returnTo, on
   function change(field: string, value: string) { form.change(field, value); setPreview(null); }
   function input(): AssistanceInput {
     const chosen = units.filter(unit => selected.includes(unit.id));
+    const intent = context.mode === "research" ? taskForm.values.intent as "answer" | "comparison" | "application_assessment" : "answer";
     return { mode: context.mode, work_id: workId, version_id: versionId,
       material_ids: [...new Set(chosen.map(unit => unit.reference.material_id))], span_ids: [...new Set(chosen.map(unit => unit.reference.span_id))], unit_ids: selected,
       depth: form.values.depth === "technical" ? "technical" : "overview", background: form.values.background!,
       direction: form.values.direction as AssistanceInput["direction"], follow_up: form.values.follow_up!,
       project_id: context.mode === "research" ? context.project : null, project_revision: project?.revision ?? null,
-      parent_job: job?.result ? job.id : null, origin: resumeContext(context, returnTo) };
+      parent_job: job?.result ? job.id : null, origin: resumeContext(context, returnTo),
+      task_context: { intent, application_context: Object.fromEntries(Object.keys(taskDefaults).filter(key => key !== "intent").map(key => [key, intent === "application_assessment" ? taskForm.values[key]! : ""])) } };
   }
   async function prepare() {
     if (form.busy) return;
@@ -81,6 +86,7 @@ export default function AssistancePanel({ owner, workId, versionId, returnTo, on
         const payload = { input: input(), expected_digest: preview!.request_digest };
         value = await workspaceRequest<AssistanceJob>("assistance/jobs", { ...payload, request_id: form.attempt(payload) });
         form.clear(false, { ...form.values });
+        taskForm.clear(false, { ...taskForm.values });
         setPreview(null);
       }
       await continueJob(value);
@@ -121,14 +127,15 @@ export default function AssistancePanel({ owner, workId, versionId, returnTo, on
   return <section className="ws-assistance" aria-label="Grounded assistance · local simulation">
     <h2>{context.mode === "research" ? "Investigate with selected evidence" : "Understand this paper"}</h2>
     <p className="workspace-version-notice">Local simulation · provider execution disabled · $0. These extractive fixtures exercise the pipeline; semantic support, checker reliability and human usefulness are unmeasured.</p>
-    <Message>{notice || form.notice}</Message>
+    <Message>{notice || form.notice || taskForm.notice}</Message>
     <button type="button" disabled={form.busy} onClick={() => { setNotice(""); setAttempt(n => n + 1); }}>Reload assistance context</button>
     {!loaded && notice && <button type="button" onClick={() => { setNotice(""); setAttempt(n => n + 1); }}>Retry loading assistance</button>}
     {context.mode === "research" && <p>{project ? <>Research question: <strong>{project.data.question}</strong></> : !loaded ? notice ? "Research project context is unavailable. Retry before preparing an answer." : "Loading research project context…" : "Select a Research project before preparing an answer."}</p>}
     <form id={form.surfaceId} className="workspace-controls" onSubmit={event => { event.preventDefault(); void prepare(); }}>
+      <div id={taskForm.surfaceId}><AssistanceTaskContext values={taskForm.values} research={context.mode === "research"} busy={form.busy} change={(key, value) => { taskForm.change(key, value); setPreview(null); }} /></div>
       <label>Explanation depth<select disabled={form.busy} value={form.values.depth} onChange={e => change("depth", e.target.value)}><option value="overview">Conceptual overview</option><option value="technical">Technical details</option></select></label>
       <label>Background to include explicitly<textarea maxLength={1000} rows={2} readOnly={form.busy} value={form.values.background} onChange={e => change("background", e.target.value)} /></label>
-      <p className="daily-muted">Private notes, reading history and saved preferences are excluded. Only background entered here and the disclosed project question, scope and constraints enter the request.</p>
+      <p className="daily-muted">Private notes, reading history and saved preferences are excluded. Only background and application context entered here and the disclosed project question, scope and constraints enter the request.</p>
       <label>Dive direction<select disabled={form.busy} value={form.values.direction} onChange={e => change("direction", e.target.value)}>{["overview", "method", "assumptions", "implementation"].map(value => <option key={value}>{value}</option>)}</select></label>
       <label>Follow-up question<textarea rows={2} maxLength={1000} readOnly={form.busy} value={form.values.follow_up} onChange={e => change("follow_up", e.target.value)} /></label>
       <fieldset disabled={form.busy}><legend>Select retained evidence · maximum eight units</legend>
@@ -141,8 +148,9 @@ export default function AssistancePanel({ owner, workId, versionId, returnTo, on
           {unit.warnings.map(warning => <p key={warning}>{warning}</p>)}<details><summary>Exact evidence identity</summary><pre tabIndex={0}>{JSON.stringify(unit.reference, null, 2)}</pre></details>
         </details>)}
       </fieldset>
-      <div className="workspace-toolbar"><button className="daily-button" disabled={form.busy || !selected.length || context.mode === "research" && !project}>Preview assistance request</button><button type="button" className="daily-secondary" disabled={form.busy} onClick={() => { form.clear(true); setPreview(null); }}>Discard assistance edits</button></div>
+      <div className="workspace-toolbar"><button className="daily-button" disabled={form.busy || !selected.length || context.mode === "research" && !project}>Preview assistance request</button><button type="button" className="daily-secondary" disabled={form.busy} onClick={() => { form.clear(true); taskForm.clear(true); setPreview(null); }}>Discard assistance edits</button></div>
       {!form.storage && <p>Draft recovery is unavailable. Copy your edits before reloading.</p>}
+      {!taskForm.storage && <p>Task context recovery is unavailable. Copy your application details before reloading.</p>}
     </form>
     {preview && <section aria-label="Sealed assistance request"><h3>Review the exact context</h3><p>{context.mode === "learn" ? "Learning explanation and guided dive" : "Project answer and source comparison"} · {preview.request.assistance.depth} · {selected.length} selected units</p><p>{preview.request.capacity.basis}. Provider token counts: unmeasured. Four calls reserve draft, mandatory check, one repair and mandatory recheck.</p><details><summary>Exact candidate request · selected evidence only</summary><pre tabIndex={0}>{JSON.stringify(preview.request.candidate_initial_wire, null, 2)}</pre></details><details><summary>Local integrity bindings, schemas and limits</summary><p>This local record retains parent spans for integrity. Only the candidate request above is outbound context; parent text and navigation history are excluded.</p><pre tabIndex={0}>{JSON.stringify(preview.request, null, 2)}</pre></details><button className="daily-button" type="button" disabled={form.busy} onClick={() => void run()}>Run local assistance simulation · $0</button></section>}
     {job && <section aria-label="Durable assistance job"><h3>{running ? "Running local pipeline" : stateLabel[job.state]}</h3><p>{stateLabel[job.state]} · {job.usage.used_calls}/4 simulated calls · provider spend $0</p>
@@ -151,6 +159,7 @@ export default function AssistancePanel({ owner, workId, versionId, returnTo, on
       {job.error && <p className="workspace-version-notice">{job.error}. Failed or interrupted output is not an accepted result.</p>}
       <details><summary>Stage receipts and split accounting</summary><pre tabIndex={0}>{JSON.stringify({ steps: job.steps, usage: job.usage, quality: job.quality, wire_records: job.wire_records }, null, 2)}</pre></details>
       {result && <section aria-label="Simulated assistance result"><h3>Selected-source reading guide · simulated</h3><p>Factual acceptance and checker qualification remain disabled. A machine-supported quotation does not establish the scientific truth of its content.</p>
+        <AssistanceDisposition output={result} />
         {result.abstention && <p>Abstention: {result.abstention}</p>}
         {result.claims.map(claim => <article key={claim.claim_id} id={`${job.id}-${claim.claim_id}`}><h4>Retained claim {claim.claim_id}</h4><p>{claim.text}</p><p className="workspace-version-notice">Simulated checker: {job.quality.claim_checks?.find(check => check.claim_id === claim.claim_id)?.decision ?? "unscored"}. Whole-claim support remains unqualified.</p>{claim.handles.map(handle => { const ref = job.request.units[handle]; if (!ref) return null; const anchor = passageAnchor(ref); return <div key={handle}><blockquote>{ref.quote}</blockquote><p>{ref.scope} · pinned version · {ref.page ? `page ${ref.page}` : "abstract text"}</p>{ref.work_id === workId && ref.version_id === versionId ? <button type="button" onClick={() => onSource(anchor)}>Open exact cited passage</button> : <Link href={contextHref(readerHref({ work_id: ref.work_id }, ref.version_id, anchor, undefined, returnTo), context)}>Open exact cited passage</Link>}<details><summary>Citation identity and offsets</summary><pre tabIndex={0}>{JSON.stringify(ref, null, 2)}</pre></details></div>; })}</article>)}
         {result.background_claims ? <ScoredSections output={result} prefix={job.id} /> : <>
@@ -159,7 +168,7 @@ export default function AssistancePanel({ owner, workId, versionId, returnTo, on
         <h4>Assumptions and missing evidence</h4>{[...(result.assumptions ?? []), ...result.gaps].map((text, i) => <p key={i}>{text}</p>)}
         </>}
         <h4>Choose the next question</h4>{result.questions.map(question => <button key={question} type="button" disabled={form.busy} onClick={() => { change("follow_up", question); change("units", JSON.stringify(job.request.assistance.unit_ids)); }}>{question}</button>)}
-        <h4>Proposed experiment · not a finding</h4><p>{result.proposal}</p>
+        <h4>{result.response_disposition === "full_abstention" ? "Missing details · next action" : "Proposed experiment · not a finding"}</h4><p>{result.proposal}</p>
         <div className="workspace-toolbar"><button type="button" disabled={form.busy} onClick={() => void save("thread")}>Save simulation to a learning thread</button>{job.request.assistance.project_id && <button type="button" disabled={form.busy} onClick={() => void save("project")}>Save simulation to project notes</button>}</div>
         {savedThread && <Link href={contextHref(`/workspace/threads/${savedThread}?mode=learn&thread=${savedThread}`, { ...context, mode: "learn", thread: savedThread, explicit: true })}>Open saved learning thread</Link>}
       </section>}

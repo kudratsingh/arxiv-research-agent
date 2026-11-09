@@ -121,3 +121,20 @@ it("saves a continued result against its sealed origin and exact passage rather 
  expect(entry.context).toEqual(stored.origin);expect(entry.data).toMatchObject({work_id:"one",version_id:"one:v1",anchor:"abstract:0:37"});
  expect(mock.request.mock.calls.find(([p])=>p==="context/threads")![1].data).toMatchObject({origin:stored.origin,goal:"Inspect the retained evidence"});
 });
+
+it("renders task-bound full abstention as missing details without claim sections", async () => {
+ const output=jobs[0]!.assistance_output!;
+ Object.assign(output,{response_disposition:"full_abstention",claims:[],background_claims:[],assumption_claims:[],limitation_claims:[],comparison_claims:[],context_requests:["Provide the vehicle and configuration.","Provide the operating envelope.","Provide safety objectives.","Provide validation evidence."],abstention:"Application context required",comparison_unanswered:false});
+ await mount();await screen.findByRole("heading",{name:"No assessment or factual answer produced"});
+ for(const request of output.context_requests!)expect(screen.getByText(request)).toBeInTheDocument();
+ expect(screen.getByRole("heading",{name:"Missing details · next action"})).toBeInTheDocument();
+ expect(screen.queryByRole("article")).not.toBeInTheDocument();
+ expect(mock.request.mock.calls.every(([,body])=>body===undefined)).toBe(true);
+});
+it("retains cited qualification notes while declaring the comparison unanswered", async () => {
+ Object.assign(jobs[0]!.assistance_output!,{response_disposition:"comparison_abstention",comparison_unanswered:true,background_claims:["c1"],assumption_claims:[],limitation_claims:[],comparison_claims:[],abstention:"Comparison evidence required"});
+ await mount();await screen.findByRole("heading",{name:"Requested comparison remains unanswered"});
+ expect(screen.getByRole("button",{name:"Open qualification passage"})).toBeInTheDocument();
+ expect(screen.getByRole("region",{name:"Background claim references"})).toHaveTextContent(ref.quote);
+ expect(mock.request.mock.calls.every(([,body])=>body===undefined)).toBe(true);
+});

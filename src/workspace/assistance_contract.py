@@ -521,7 +521,14 @@ def response_model(
     *,
     purpose: ResponsePurpose = "research_comparison",
     revision: str | None = None,
-) -> type[SinglePaperDraft] | type[CitedSinglePaperDraft] | type[ProceduralSinglePaperDraft]:
+    task_policy: dict[str, Any] | None = None,
+) -> type[BaseModel]:
+    from src.workspace.assistance_policy import TASK_REVISION, task_response_model
+
+    if revision == TASK_REVISION:
+        if task_policy is None:
+            raise ValueError("sealed_task_policy_required")
+        return task_response_model(list(handles), purpose, task_policy)
     revision = revision or contract_revision(purpose)
     # json_schema_extra keeps even a singleton enum after the SDK transform.
     selected = sorted(set(handles))
@@ -587,8 +594,9 @@ def schemas(
     *,
     purpose: ResponsePurpose = "research_comparison",
     revision: str | None = None,
+    task_policy: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    model = response_model(handles, purpose=purpose, revision=revision)
+    model = response_model(handles, purpose=purpose, revision=revision, task_policy=task_policy)
     return {"local": model.model_json_schema(), "wire": transform_schema(model)}
 
 
@@ -599,11 +607,20 @@ def resolve_draft(
     *,
     purpose: ResponsePurpose = "research_comparison",
     revision: str | None = None,
+    task_policy: dict[str, Any] | None = None,
 ) -> tuple[
     SinglePaperDraft | CitedSinglePaperDraft | ProceduralSinglePaperDraft, tuple[ResearchClaim, ...]
 ]:
-    draft = response_model(list(catalog), purpose=purpose, revision=revision).model_validate(
-        payload
+    from src.workspace.assistance_policy import TASK_REVISION, normalize_task_output
+
+    if revision == TASK_REVISION:
+        if task_policy is None:
+            raise ValueError("sealed_task_policy_required")
+        payload = normalize_task_output(payload, list(catalog), purpose, task_policy)
+        revision = PROCEDURAL_REVISION
+    draft = cast(
+        SinglePaperDraft | CitedSinglePaperDraft | ProceduralSinglePaperDraft,
+        response_model(list(catalog), purpose=purpose, revision=revision).model_validate(payload),
     )
     claims = []
     for claim in draft.claims:

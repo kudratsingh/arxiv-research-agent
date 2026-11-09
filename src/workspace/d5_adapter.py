@@ -36,6 +36,12 @@ from src.workspace.assistance_contract import (
     response_purpose,
     schemas,
 )
+from src.workspace.assistance_policy import (
+    TASK_REVISION,
+    TaskContext,
+    render_task_output,
+    seal_task_policy,
+)
 from src.workspace.context_store import WorkspaceContext
 from src.workspace.d5_scope import D5Admission, guard_scope
 from src.workspace.executor import FakeExecutor
@@ -61,6 +67,7 @@ def qualification_producer() -> dict[str, Any]:
     root = Path(__file__).resolve().parents[1]
     files = (
         "workspace/d5_adapter.py",
+        "workspace/assistance_policy.py",
         "workspace/d5_operations.py",
         "workspace/programme_amendments.py",
         "workspace/programme_successors.py",
@@ -170,6 +177,8 @@ def prepare_input(
     ]
     compact["response_schemas_digest"] = _digest(sealed["response_schemas"])
     compact["response_purpose"] = sealed.get("response_purpose", "research_comparison")
+    if sealed["schema_revision"] == TASK_REVISION:
+        compact["task_policy"] = sealed["task_policy"]
     compact["candidate_initial_wire_digest"] = _digest(sealed["candidate_initial_wire"])
     compact["full_preview_digest"] = _digest(sealed)
     probe_context = None
@@ -351,6 +360,7 @@ class D5Adapter(QualificationAdapter):
             not in {
                 contract_revision(response_purpose(sealed["assistance"]["mode"], sealed["units"])),
                 PROCEDURAL_REVISION,
+                TASK_REVISION,
             }
             or sealed.get("producer", {}).get("code") != producer_binding()
         ):
@@ -396,9 +406,15 @@ class D5Adapter(QualificationAdapter):
                 list(sealed["units"]),
                 purpose=response_purpose(sealed["assistance"]["mode"], sealed["units"]),
                 revision=sealed["schema_revision"],
+                task_policy=sealed.get("task_policy"),
             )
         ):
             raise AdmissionError("d5_local_or_wire_schema_drift")
+        if sealed["schema_revision"] == TASK_REVISION and sealed["task_policy"] != seal_task_policy(
+            TaskContext.model_validate(sealed["assistance"].get("task_context")),
+            sealed["assistance"]["mode"], len({r["work_id"] for r in sealed["units"].values()}),
+        ):
+            raise AdmissionError("d5_sealed_task_policy_drift")
         if sealed["settings"] != {
             "temperature": None,
             "thinking": {"type": "between_tools"},
@@ -443,6 +459,8 @@ class D5Adapter(QualificationAdapter):
             k: sealed["assistance"][k]
             for k in ("mode", "depth", "background", "direction", "follow_up")
         }
+        if sealed["schema_revision"] == TASK_REVISION:
+            compact["task_policy"] = sealed["task_policy"]
         return {
             "phase": "draft",
             "role": "workflow",
@@ -451,6 +469,7 @@ class D5Adapter(QualificationAdapter):
                 list(sealed["units"]),
                 purpose=response_purpose(sealed["assistance"]["mode"], sealed["units"]),
                 revision=sealed["schema_revision"],
+                task_policy=sealed.get("task_policy"),
             )["wire"],
         }
 
@@ -518,7 +537,9 @@ class D5Adapter(QualificationAdapter):
                 materials,
                 purpose=response_purpose(sealed["assistance"]["mode"], sealed["units"]),
                 revision=sealed["schema_revision"],
+                task_policy=sealed.get("task_policy"),
             )
+            workflow_view = render_task_output(workflow, list(sealed["units"]), sealed["response_purpose"], sealed["task_policy"]) if sealed["schema_revision"] == TASK_REVISION else workflow
             if phase == "check":
                 value["role"] = "checker"
                 value["sealed_request"].pop("units")
@@ -529,7 +550,7 @@ class D5Adapter(QualificationAdapter):
                     for c in claims
                 ]
                 value["unscored_prose"] = {
-                    k: workflow[k]
+                    k: workflow_view[k]
                     for k in (
                         "background",
                         "comparison",
@@ -540,9 +561,10 @@ class D5Adapter(QualificationAdapter):
                         "proposal",
                         "abstention",
                     )
-                    if k in workflow
+                    if k in workflow_view
                 }
-                value["unscored_prose"].update(render_procedures(workflow))
+                if sealed["schema_revision"] != TASK_REVISION:
+                    value["unscored_prose"].update(render_procedures(workflow))
             else:
                 checked = self._checks(
                     {
@@ -576,7 +598,7 @@ class D5Adapter(QualificationAdapter):
                 value["previous_grounding"] = asdict(report)
                 value["previous_prose_review"] = checked.model_dump(mode="json")
                 value["procedural_draft"] = {
-                    k: workflow[k] for k in ("gaps", "questions", "proposal", "abstention")
+                    k: workflow_view[k] for k in ("gaps", "questions", "proposal", "abstention")
                 }
         body = self._wire(value)
         if phase == "draft" and _digest(body) != sealed["candidate_initial_wire_digest"]:
@@ -658,8 +680,9 @@ class D5Adapter(QualificationAdapter):
             materials,
             purpose=response_purpose(sealed["assistance"]["mode"], sealed["units"]),
             revision=sealed["schema_revision"],
+            task_policy=sealed.get("task_policy"),
         )
-        procedural = render_procedures(output)
+        procedural = render_task_output(output, list(sealed["units"]), sealed["response_purpose"], sealed["task_policy"]) if sealed["schema_revision"] == TASK_REVISION else render_procedures(output)
         report = validate_claims(claims, materials)
         if any(not item.scope_compatible for item in report.assessments):
             raise AdmissionError("d5_draft_scope_incompatible")
@@ -682,6 +705,12 @@ class D5Adapter(QualificationAdapter):
         return Checks.model_validate(output)
 
     def _review_complete(self, grounding: Any, snapshot: dict[str, Any], checks: Any) -> bool:
+        if (
+            self.inputs.settings["d5_request"]["schema_revision"] == TASK_REVISION
+            and len(snapshot["steps"]) == 3
+            and grounding.total_factual != grounding.supported
+        ):
+            raise AdmissionError("d5_whole_claim_support_unresolved")
         if checks.prose_review != "procedural_only":
             # _response_authorization already bound every finding to an exact
             # existing rendered field/index before this state transition.

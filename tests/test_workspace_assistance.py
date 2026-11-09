@@ -55,6 +55,7 @@ def setup(store, mode="learn"):
     service = a.AssistanceService(store)
     units = service.catalog("a", item["work_id"], item["version_id"])["units"]
     value = a.AssistanceInput(
+        task_context=None,  # This helper pins the historical response contract.
         mode=mode,
         work_id=item["work_id"],
         version_id=item["version_id"],

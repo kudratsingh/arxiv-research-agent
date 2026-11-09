@@ -2,11 +2,11 @@
   "x-provenance": {
     "generated": "DO NOT EDIT BY HAND. Regenerate with the command below.",
     "source": "create_app().openapi() -- src/api/app.py",
-    "commit": "a59c5f8fa87b263b1ed0d20c51ea90a305ae737b",
+    "commit": "35e8eef9d1f3c48a4cda69f5c5001abbb3d31fb0",
     "command": ".venv/bin/python -c \"import json; from src.api.app import create_app; print(json.dumps(create_app().openapi(), indent=2))\" > web/contract/openapi.json  # then re-add this x-provenance header",
     "consumers": "web/lib/api/generated/schema.d.ts via `npm run generate:types`.",
     "note": "JSON has no comment syntax, so this OpenAPI 3.1 x- extension carries the header. Strip the 'x-provenance' key before comparing against a freshly generated create_app().openapi().",
-    "workspace_update": "D5 offline assistance; migration011, no provider contacts; base3859f933"
+    "workspace_update": "Task-bound assistance v7; no migration or provider contacts; source base35e8eef9"
   },
   "openapi": "3.1.0",
   "info": {
@@ -17,8 +17,8 @@
   "paths": {
     "/research": {
       "post": {
-        "summary": "Submit a research query — returns immediately with a job_id.",
-        "description": "Accept a query and kick off a background workflow.\n\nReturns 202 with `job_id`, `status_url`, `stream_url`. The\nworkflow runs behind a semaphore so requests over the concurrent\nceiling queue as `pending` and start when a slot frees.\n\nWhen `conversation_id` is set, the runner retrieves prior-report\nchunks from that conversation before invoking the workflow, and\nappends the completed job to the conversation on succeed. See\nADR 0032.\n\nUnder `settings.enable_api_auth`, `X-API-Key` is required — see\nADR 0033 — and the caller is subject to\n`settings.api_key_hourly_limit`.",
+        "summary": "Submit a research query \u2014 returns immediately with a job_id.",
+        "description": "Accept a query and kick off a background workflow.\n\nReturns 202 with `job_id`, `status_url`, `stream_url`. The\nworkflow runs behind a semaphore so requests over the concurrent\nceiling queue as `pending` and start when a slot frees.\n\nWhen `conversation_id` is set, the runner retrieves prior-report\nchunks from that conversation before invoking the workflow, and\nappends the completed job to the conversation on succeed. See\nADR 0032.\n\nUnder `settings.enable_api_auth`, `X-API-Key` is required \u2014 see\nADR 0033 \u2014 and the caller is subject to\n`settings.api_key_hourly_limit`.",
         "operationId": "submit_research_research_post",
         "requestBody": {
           "content": {
@@ -96,8 +96,8 @@
     },
     "/research/{job_id}/review": {
       "post": {
-        "summary": "Resolve a `pending_review` job — approve, revise, or cancel.",
-        "description": "Signal the paused runner with the client's decision (ADR 0030).\n\n- `approve` — resume as-is.\n- `revise`  — apply `plan` (sub_questions + search_queries) then\n              resume. Both fields required.\n- `cancel`  — abandon the run; job transitions to `cancelled`.",
+        "summary": "Resolve a `pending_review` job \u2014 approve, revise, or cancel.",
+        "description": "Signal the paused runner with the client's decision (ADR 0030).\n\n- `approve` \u2014 resume as-is.\n- `revise`  \u2014 apply `plan` (sub_questions + search_queries) then\n              resume. Both fields required.\n- `cancel`  \u2014 abandon the run; job transitions to `cancelled`.",
         "operationId": "review_plan_research__job_id__review_post",
         "parameters": [
           {
@@ -239,7 +239,7 @@
     "/conversations": {
       "post": {
         "summary": "Create a new conversation.",
-        "description": "Create an empty conversation. `title` is optional — when\nomitted the first job's query auto-populates it. See ADR 0032.\n\nUnder `settings.enable_api_auth` the conversation is owned by\nthe presenting API key; other principals see 404 on\nread/delete. See ADR 0036.",
+        "description": "Create an empty conversation. `title` is optional \u2014 when\nomitted the first job's query auto-populates it. See ADR 0032.\n\nUnder `settings.enable_api_auth` the conversation is owned by\nthe presenting API key; other principals see 404 on\nread/delete. See ADR 0036.",
         "operationId": "create_conversation_conversations_post",
         "requestBody": {
           "required": true,
@@ -287,11 +287,11 @@
               "type": "integer",
               "maximum": 200,
               "minimum": 1,
-              "description": "Page size — at most this many conversations come back.",
+              "description": "Page size \u2014 at most this many conversations come back.",
               "default": 50,
               "title": "Limit"
             },
-            "description": "Page size — at most this many conversations come back."
+            "description": "Page size \u2014 at most this many conversations come back."
           },
           {
             "name": "offset",
@@ -376,7 +376,7 @@
       },
       "delete": {
         "summary": "Delete a conversation + all its jobs.",
-        "description": "Delete one conversation and every job filed under it — 204, no body.\n\nOwnership is part of the delete statement, so the row cannot change\nhands between the check and the destructive call (ADR 0043).",
+        "description": "Delete one conversation and every job filed under it \u2014 204, no body.\n\nOwnership is part of the delete statement, so the row cannot change\nhands between the check and the destructive call (ADR 0043).",
         "operationId": "delete_conversation_conversations__conversation_id__delete",
         "parameters": [
           {
@@ -426,7 +426,7 @@
       },
       "put": {
         "summary": "Replace what the learner has declared about themselves.",
-        "description": "Write the learner's own declarations.\n\nEverything this endpoint writes is `declared` by construction: the\nrequest schema has no provenance field, and the store's\n`replace_declared_skills` refuses a non-declared claim from this\npath. Inferred and assessed claims already on the profile survive\nthe write untouched — the learner edits what they said, and the\nsystem's observations stand on their evidence (01 §1.2).\n\nDurable per-principal writes draw on the same per-key hourly\nbudget as `POST /research`, so a leaked key cannot accrete rows on\nthe shared Postgres with the limiter never firing (ADR 0043).",
+        "description": "Write the learner's own declarations.\n\nEverything this endpoint writes is `declared` by construction: the\nrequest schema has no provenance field, and the store's\n`replace_declared_skills` refuses a non-declared claim from this\npath. Inferred and assessed claims already on the profile survive\nthe write untouched \u2014 the learner edits what they said, and the\nsystem's observations stand on their evidence (01 \u00a71.2).\n\nDurable per-principal writes draw on the same per-key hourly\nbudget as `POST /research`, so a leaked key cannot accrete rows on\nthe shared Postgres with the limiter never firing (ADR 0043).",
         "operationId": "put_learner_profile_learn_profile_put",
         "requestBody": {
           "content": {
@@ -463,7 +463,7 @@
       },
       "delete": {
         "summary": "Delete the calling principal's learner profile.",
-        "description": "Erase the profile — the first-class deletion 01 §1.4 promises.\n\nRemoves the whole `learner_profiles` row: declarations, goals,\ninferred and assessed claims, and the free-text note. 204 whether\nor not a row existed, so the response never confirms whether a\ngiven principal had a profile.\n\n**What the promise does not cover**: the shared paper and\nembedding caches (`paper_cache`, `embedding_cache`) hold public\narXiv text, are not per-user, and are untouched by this call — the\ncaveat MT-01 §7.3 states and 01 §1.4 carries over. Progress events\n(WO-W07) join this promise when that table exists; the account-\nlevel deletion is this operation.",
+        "description": "Erase the profile \u2014 the first-class deletion 01 \u00a71.4 promises.\n\nRemoves the whole `learner_profiles` row: declarations, goals,\ninferred and assessed claims, and the free-text note. 204 whether\nor not a row existed, so the response never confirms whether a\ngiven principal had a profile.\n\n**What the promise does not cover**: the shared paper and\nembedding caches (`paper_cache`, `embedding_cache`) hold public\narXiv text, are not per-user, and are untouched by this call \u2014 the\ncaveat MT-01 \u00a77.3 states and 01 \u00a71.4 carries over. Progress events\n(WO-W07) join this promise when that table exists; the account-\nlevel deletion is this operation.",
         "operationId": "delete_learner_profile_learn_profile_delete",
         "responses": {
           "204": {
@@ -475,7 +475,7 @@
     "/learn/progress": {
       "get": {
         "summary": "The learner's progress ledger, folded from its event log.",
-        "description": "Read this principal's progress events and fold them into a view.\n\nThere is no stored summary: the route reads the raw append-only log\nand hands it to `summarize`, a pure function. Every number that\ncomes back carries the `event_ids` behind it, so a surface can\nexpand any claim into the events that produced it — 01 §4.4's \"no\ndisplayed claim without an event behind it\".\n\nWhat this endpoint deliberately cannot return is a mastery or\nknowledge percentage (01 §4.1). `schedule_progress` is arithmetic\nabout sessions and is named so the client cannot mistake it for\nknowledge.\n\nGated on `settings.enable_learner_profile` (404 when off — the\nsurface does not exist in that deployment) and scoped to the\ncaller's principal (ADR 0036). With the flag on and\n`enable_api_auth` off there is no principal to scope to, and the\nledger has no anonymous rows, so the route refuses with 503 rather\nthan serving someone else's record.",
+        "description": "Read this principal's progress events and fold them into a view.\n\nThere is no stored summary: the route reads the raw append-only log\nand hands it to `summarize`, a pure function. Every number that\ncomes back carries the `event_ids` behind it, so a surface can\nexpand any claim into the events that produced it \u2014 01 \u00a74.4's \"no\ndisplayed claim without an event behind it\".\n\nWhat this endpoint deliberately cannot return is a mastery or\nknowledge percentage (01 \u00a74.1). `schedule_progress` is arithmetic\nabout sessions and is named so the client cannot mistake it for\nknowledge.\n\nGated on `settings.enable_learner_profile` (404 when off \u2014 the\nsurface does not exist in that deployment) and scoped to the\ncaller's principal (ADR 0036). With the flag on and\n`enable_api_auth` off there is no principal to scope to, and the\nledger has no anonymous rows, so the route refuses with 503 rather\nthan serving someone else's record.",
         "operationId": "get_learn_progress_learn_progress_get",
         "parameters": [
           {
@@ -533,7 +533,7 @@
     "/healthz": {
       "get": {
         "summary": "Liveness + dependency status + per-worker concurrency.",
-        "description": "Process liveness plus an honest dependency report (ADR 0042).\n\nDeliberately auth-exempt (orchestrator probes can't send keys)\nand always HTTP 200: this endpoint answers \"is THIS process\nalive\", and restarting the process does not fix a dead Redis —\na probe that 503s on dependency failure turns a backend blip\ninto a rolling-restart storm. Dependency state is reported in\nthe body (`status: degraded` + per-dependency breakdown) so\noperators and smarter probes can see it.\n\n`active_jobs` counts this worker's in-flight job tasks (queued +\nrunning) — store-independent, so it no longer reports a constant\n0 under the shipped Redis store — *plus* any node threads the\nrunner gave up waiting on after a timeout drain expired (ADR\n0047). Those threads still hold a pool slot and still spend, so\nleaving them out would report free capacity this worker does not\nhave; `abandoned_node_threads` breaks them out separately.",
+        "description": "Process liveness plus an honest dependency report (ADR 0042).\n\nDeliberately auth-exempt (orchestrator probes can't send keys)\nand always HTTP 200: this endpoint answers \"is THIS process\nalive\", and restarting the process does not fix a dead Redis \u2014\na probe that 503s on dependency failure turns a backend blip\ninto a rolling-restart storm. Dependency state is reported in\nthe body (`status: degraded` + per-dependency breakdown) so\noperators and smarter probes can see it.\n\n`active_jobs` counts this worker's in-flight job tasks (queued +\nrunning) \u2014 store-independent, so it no longer reports a constant\n0 under the shipped Redis store \u2014 *plus* any node threads the\nrunner gave up waiting on after a timeout drain expired (ADR\n0047). Those threads still hold a pool slot and still spend, so\nleaving them out would report free capacity this worker does not\nhave; `abandoned_node_threads` breaks them out separately.",
         "operationId": "healthz_healthz_get",
         "responses": {
           "200": {
@@ -3038,6 +3038,37 @@
         ],
         "title": "Activity"
       },
+      "ApplicationContext": {
+        "properties": {
+          "vehicle_configuration": {
+            "type": "string",
+            "maxLength": 1000,
+            "title": "Vehicle Configuration",
+            "default": ""
+          },
+          "operating_envelope": {
+            "type": "string",
+            "maxLength": 1000,
+            "title": "Operating Envelope",
+            "default": ""
+          },
+          "safety_objectives": {
+            "type": "string",
+            "maxLength": 1000,
+            "title": "Safety Objectives",
+            "default": ""
+          },
+          "validation_evidence": {
+            "type": "string",
+            "maxLength": 1000,
+            "title": "Validation Evidence",
+            "default": ""
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ApplicationContext"
+      },
       "ArtifactData": {
         "properties": {
           "kind": {
@@ -3204,6 +3235,16 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/ResumeContext"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "task_context": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TaskContext"
               },
               {
                 "type": "null"
@@ -4124,7 +4165,7 @@
         },
         "type": "object",
         "title": "ConversationCreateRequest",
-        "description": "Body for `POST /conversations`. Both fields optional — a\nconversation can be seeded blank (title auto-derives from the\nfirst job's query) or with an explicit title."
+        "description": "Body for `POST /conversations`. Both fields optional \u2014 a\nconversation can be seeded blank (title auto-derives from the\nfirst job's query) or with an explicit title."
       },
       "ConversationDetail": {
         "properties": {
@@ -4160,7 +4201,7 @@
           "updated_at"
         ],
         "title": "ConversationDetail",
-        "description": "`GET /conversations/{id}` — full thread."
+        "description": "`GET /conversations/{id}` \u2014 full thread."
       },
       "ConversationJobSummary": {
         "properties": {
@@ -4194,7 +4235,7 @@
           "created_at"
         ],
         "title": "ConversationJobSummary",
-        "description": "Trimmed view of a conversation's job — sidebar-friendly."
+        "description": "Trimmed view of a conversation's job \u2014 sidebar-friendly."
       },
       "ConversationListItem": {
         "properties": {
@@ -4223,7 +4264,7 @@
           "updated_at"
         ],
         "title": "ConversationListItem",
-        "description": "`GET /conversations` — sidebar entry, no job bodies."
+        "description": "`GET /conversations` \u2014 sidebar entry, no job bodies."
       },
       "Edition": {
         "properties": {
@@ -5355,7 +5396,7 @@
           "status": {
             "type": "string",
             "title": "Status",
-            "description": "`ok` when all checked dependencies ping; `degraded` otherwise. The HTTP status stays 200 either way — see ADR 0042."
+            "description": "`ok` when all checked dependencies ping; `degraded` otherwise. The HTTP status stays 200 either way \u2014 see ADR 0042."
           },
           "active_jobs": {
             "type": "integer",
@@ -5365,7 +5406,7 @@
           "abandoned_node_threads": {
             "type": "integer",
             "title": "Abandoned Node Threads",
-            "description": "Graph-node threads still running after their job was already failed and its concurrency permit released — the drain budget expired before the thread returned (ADR 0047). Sustained non-zero means nodes are ignoring the cancel token, or `api_job_drain_timeout_sec` is too tight.",
+            "description": "Graph-node threads still running after their job was already failed and its concurrency permit released \u2014 the drain budget expired before the thread returned (ADR 0047). Sustained non-zero means nodes are ignoring the cancel token, or `api_job_drain_timeout_sec` is too tight.",
             "default": 0
           },
           "max_concurrent_jobs": {
@@ -5388,7 +5429,7 @@
           "max_concurrent_jobs"
         ],
         "title": "HealthResponse",
-        "description": "`GET /healthz` — process liveness + dependency visibility (ADR 0042).\n\n`status` is `ok` when every checked dependency answered its ping,\n`degraded` otherwise. The endpoint always returns 200 — it\nreports liveness of *this process*, and restarting the process\ndoes not fix a dead Redis. Orchestrators that want to gate\ntraffic on dependencies should parse `status` / `dependencies`."
+        "description": "`GET /healthz` \u2014 process liveness + dependency visibility (ADR 0042).\n\n`status` is `ok` when every checked dependency answered its ping,\n`degraded` otherwise. The endpoint always returns 200 \u2014 it\nreports liveness of *this process*, and restarting the process\ndoes not fix a dead Redis. Orchestrators that want to gate\ntraffic on dependencies should parse `status` / `dependencies`."
       },
       "ImportApply": {
         "properties": {
@@ -5601,7 +5642,7 @@
           "kind": {
             "type": "string",
             "title": "Kind",
-            "description": "Which graph this job drives — `research` or `session` (ADR 0057). Defaulted rather than required so the field is additive: a client written before it, and a recorded fixture captured before it, both stay valid.",
+            "description": "Which graph this job drives \u2014 `research` or `session` (ADR 0057). Defaulted rather than required so the field is additive: a client written before it, and a recorded fixture captured before it, both stay valid.",
             "default": "research"
           },
           "query": {
@@ -5754,7 +5795,7 @@
           "created_at"
         ],
         "title": "JobDetail",
-        "description": "`GET /research/{job_id}` — full lifecycle snapshot."
+        "description": "`GET /research/{job_id}` \u2014 full lifecycle snapshot."
       },
       "LearnAbstract": {
         "properties": {
@@ -5967,7 +6008,7 @@
           "est_minutes"
         ],
         "title": "LearnEntry",
-        "description": "One item on a path, as a client sees it.\n\nThere is no full text and no PDF link here, and there is no field\nthat could carry one: `canonical_url` is the arXiv abs page, and the\nbriefing is our own prose. `provenance` and `attribution` travel with\nevery entry so the surface can label it at the point of display\n(`02` §3.2) without a second request."
+        "description": "One item on a path, as a client sees it.\n\nThere is no full text and no PDF link here, and there is no field\nthat could carry one: `canonical_url` is the arXiv abs page, and the\nbriefing is our own prose. `provenance` and `attribution` travel with\nevery entry so the surface can label it at the point of display\n(`02` \u00a73.2) without a second request."
       },
       "LearnLicensing": {
         "properties": {
@@ -6022,7 +6063,7 @@
           "source"
         ],
         "title": "LearnLicensing",
-        "description": "The posture the path is published under, carried to the surface.\n\nRendered, not merely recorded: a link-out-only posture that the page\ndoes not state is indistinguishable from no posture at all.\n\nThe five posture fields are `Literal`s rather than `str` so the\ngenerated TypeScript types carry the exact values — a frontend\nbranching on `full_text` gets a closed union, and a `full_text`\nfield that could hold a paper never reaches `schema.d.ts`."
+        "description": "The posture the path is published under, carried to the surface.\n\nRendered, not merely recorded: a link-out-only posture that the page\ndoes not state is indistinguishable from no posture at all.\n\nThe five posture fields are `Literal`s rather than `str` so the\ngenerated TypeScript types carry the exact values \u2014 a frontend\nbranching on `full_text` gets a closed union, and a `full_text`\nfield that could hold a paper never reaches `schema.d.ts`."
       },
       "LearnPathDetail": {
         "properties": {
@@ -6121,7 +6162,7 @@
           "paths"
         ],
         "title": "LearnPathList",
-        "description": "`GET /learn/paths` — published paths only, `path_id` order."
+        "description": "`GET /learn/paths` \u2014 published paths only, `path_id` order."
       },
       "LearnPathSummary": {
         "properties": {
@@ -6247,7 +6288,7 @@
           "updated_at"
         ],
         "title": "LearnerProfileResponse",
-        "description": "`GET`/`PUT /learn/profile` — the whole per-principal record.\n\nDeliberately smaller than the design sketch: no `style_signals`\nand no `preferred_days`. Every field here is a field the deletion\npromise has to cover."
+        "description": "`GET`/`PUT /learn/profile` \u2014 the whole per-principal record.\n\nDeliberately smaller than the design sketch: no `style_signals`\nand no `preferred_days`. Every field here is a field the deletion\npromise has to cover."
       },
       "LearnerProgressSummary": {
         "properties": {
@@ -6273,7 +6314,7 @@
             },
             "type": "array",
             "title": "Schedule Progress",
-            "description": "Session arithmetic per path. Named `schedule_progress` so no surface can mistake it for knowledge (01 §4.1)."
+            "description": "Session arithmetic per path. Named `schedule_progress` so no surface can mistake it for knowledge (01 \u00a74.1)."
           },
           "resource_observations": {
             "items": {
@@ -6309,7 +6350,7 @@
           "artifacts"
         ],
         "title": "LearnerProgressSummary",
-        "description": "`GET /learn/progress` — the whole ledger view for one principal.\n\nRecomputable by construction: the route reads raw events and folds\nthem with `src.learning.progress_store.summarize`, a pure function\nwith no clock and no store access. There is no cached aggregate\nanywhere, so the displayed record cannot drift from the log."
+        "description": "`GET /learn/progress` \u2014 the whole ledger view for one principal.\n\nRecomputable by construction: the route reads raw events and folds\nthem with `src.learning.progress_store.summarize`, a pure function\nwith no clock and no store access. There is no cached aggregate\nanywhere, so the displayed record cannot drift from the log."
       },
       "LearningThread": {
         "properties": {
@@ -7119,13 +7160,13 @@
             "type": "string",
             "maxLength": 1000,
             "title": "Profile Note",
-            "description": "Free text the learner wrote about themselves. Untrusted input — isolation-wrapped before it reaches any prompt (ADR 0058).",
+            "description": "Free text the learner wrote about themselves. Untrusted input \u2014 isolation-wrapped before it reaches any prompt (ADR 0058).",
             "default": ""
           }
         },
         "type": "object",
         "title": "ProfileUpdateRequest",
-        "description": "Body for `PUT /learn/profile` — a full replacement of what the\nlearner has declared.\n\nClaims the system inferred or assessed are *not* addressable here:\nthey survive the write untouched, because the learner edits what\nthey said about themselves and the system's own observations stand\nor fall on their evidence."
+        "description": "Body for `PUT /learn/profile` \u2014 a full replacement of what the\nlearner has declared.\n\nClaims the system inferred or assessed are *not* addressable here:\nthey survive the write untouched, because the learner edits what\nthey said about themselves and the system's own observations stand\nor fall on their evidence."
       },
       "ProfileWrite": {
         "properties": {
@@ -7171,7 +7212,7 @@
             },
             "type": "array",
             "title": "Event Ids",
-            "description": "The events this count is made of — exactly `sessions` ids. No displayed claim without an event behind it (01 §4.4)."
+            "description": "The events this count is made of \u2014 exactly `sessions` ids. No displayed claim without an event behind it (01 \u00a74.4)."
           }
         },
         "type": "object",
@@ -7208,7 +7249,7 @@
               }
             ],
             "title": "Evidence Ref",
-            "description": "The session transcript / artifact / plan this event points at. Never null for `assessment` — the store refuses such a write at the boundary."
+            "description": "The session transcript / artifact / plan this event points at. Never null for `assessment` \u2014 the store refuses such a write at the boundary."
           },
           "path_id": {
             "anyOf": [
@@ -7232,7 +7273,7 @@
           "path_id"
         ],
         "title": "ProgressEvidence",
-        "description": "One recorded event, reduced to the fact and what proves it.\n\nCarries no verdict. 01 §4.3 keeps the assessment judge's output as\nadvice to the tutor rather than a score shown to the learner, so\nthe ledger's public view of an assessment is that it happened,\nwhen, and which transcript backs it."
+        "description": "One recorded event, reduced to the fact and what proves it.\n\nCarries no verdict. 01 \u00a74.3 keeps the assessment judge's output as\nadvice to the tutor rather than a score shown to the learner, so\nthe ledger's public view of an assessment is that it happened,\nwhen, and which transcript backs it."
       },
       "ProgressResourceObservation": {
         "properties": {
@@ -7294,7 +7335,7 @@
               }
             ],
             "title": "Sessions Planned",
-            "description": "What the path last declared its length to be, or null when the path has never declared one. Null is reported as null — the view does not guess a denominator."
+            "description": "What the path last declared its length to be, or null when the path has never declared one. Null is reported as null \u2014 the view does not guess a denominator."
           },
           "schedule_label": {
             "type": "string",
@@ -7304,7 +7345,7 @@
           "assessments_recorded": {
             "type": "integer",
             "title": "Assessments Recorded",
-            "description": "Count of `assessment` events on this path. A count of events, never a grade; zero means unobserved, not zero knowledge (00 §5.4)."
+            "description": "Count of `assessment` events on this path. A count of events, never a grade; zero means unobserved, not zero knowledge (00 \u00a75.4)."
           },
           "event_ids": {
             "items": {
@@ -7325,7 +7366,7 @@
           "event_ids"
         ],
         "title": "ProgressSchedule",
-        "description": "Schedule arithmetic for one path. Not a knowledge claim.\n\n01 §4.1 permits \"14 of 21 sessions in this milestone complete\"\nbecause it is arithmetic about sessions, and requires it be\nlabeled as schedule progress rather than knowledge — hence\n`schedule_label` and the `schedule_progress` field name on the\nsummary. There is deliberately no percentage here, and no field\nthat could carry one."
+        "description": "Schedule arithmetic for one path. Not a knowledge claim.\n\n01 \u00a74.1 permits \"14 of 21 sessions in this milestone complete\"\nbecause it is arithmetic about sessions, and requires it be\nlabeled as schedule progress rather than knowledge \u2014 hence\n`schedule_label` and the `schedule_progress` field name on the\nsummary. There is deliberately no percentage here, and no field\nthat could carry one."
       },
       "ProjectArtifact": {
         "properties": {
@@ -7892,7 +7933,7 @@
           "stream_url"
         ],
         "title": "ResearchAccepted",
-        "description": "`POST /research` response — 202 Accepted, work now in flight."
+        "description": "`POST /research` response \u2014 202 Accepted, work now in flight."
       },
       "ResearchClaim": {
         "properties": {
@@ -8488,7 +8529,7 @@
           "status": {
             "type": "string",
             "title": "Status",
-            "description": "Snapshot of the job's status when the review was accepted (always `pending_review`). The action is applied asynchronously — poll the job for the settled state."
+            "description": "Snapshot of the job's status when the review was accepted (always `pending_review`). The action is applied asynchronously \u2014 poll the job for the settled state."
           },
           "action": {
             "type": "string",
@@ -8502,7 +8543,7 @@
           "action"
         ],
         "title": "ReviewResponse",
-        "description": "Response for `POST /research/{job_id}/review`.\n\n`status` is the job's status *at the moment the review was\naccepted* — always `pending_review` — not the post-resume state.\nThe resume is asynchronous: the runner applies the action after\nthis response is written, so clients should poll `status_url`\n(or watch the SSE stream) for the settled outcome rather than\nasserting on this snapshot."
+        "description": "Response for `POST /research/{job_id}/review`.\n\n`status` is the job's status *at the moment the review was\naccepted* \u2014 always `pending_review` \u2014 not the post-resume state.\nThe resume is asynchronous: the runner applies the action after\nthis response is written, so clients should poll `status_url`\n(or watch the SSE stream) for the settled outcome rather than\nasserting on this snapshot."
       },
       "ScheduleData": {
         "properties": {
@@ -8618,7 +8659,7 @@
           "stream_url"
         ],
         "title": "SessionAccepted",
-        "description": "`POST /learn/sessions` response — 202 Accepted, tutor loop in flight.\n\n`stream_url` is the shared SSE transport under `/research`, which the\nsession loop reuses rather than duplicating."
+        "description": "`POST /learn/sessions` response \u2014 202 Accepted, tutor loop in flight.\n\n`stream_url` is the shared SSE transport under `/research`, which the\nsession loop reuses rather than duplicating."
       },
       "SessionCreateRequest": {
         "properties": {
@@ -8656,7 +8697,7 @@
           "resource_id"
         ],
         "title": "SessionCreateRequest",
-        "description": "Body for `POST /learn/sessions` — which resource, and for how long.\n\n`available_minutes` is an override; omitted, the session takes the\nlearner's daily time budget from their profile."
+        "description": "Body for `POST /learn/sessions` \u2014 which resource, and for how long.\n\n`available_minutes` is an override; omitted, the session takes the\nlearner's daily time budget from their profile."
       },
       "SessionDetail": {
         "properties": {
@@ -8861,7 +8902,7 @@
           "llm_calls"
         ],
         "title": "SessionDetail",
-        "description": "`GET /learn/sessions/{id}` — the full state of one guided session.\n\nComposed from the job row plus the graph checkpoint;\n`transcript_status` says which of the two the client actually got."
+        "description": "`GET /learn/sessions/{id}` \u2014 the full state of one guided session.\n\nComposed from the job row plus the graph checkpoint;\n`transcript_status` says which of the two the client actually got."
       },
       "SessionTranscriptEntry": {
         "properties": {
@@ -8885,7 +8926,7 @@
           "text"
         ],
         "title": "SessionTranscriptEntry",
-        "description": "One exchanged line of a guided session: who spoke, and what they said.\n\nThe two roles are the whole cast — there is no system or tool voice on\nthe transcript a learner reads back."
+        "description": "One exchanged line of a guided session: who spoke, and what they said.\n\nThe two roles are the whole cast \u2014 there is no system or tool voice on\nthe transcript a learner reads back."
       },
       "SessionTurnAccepted": {
         "properties": {
@@ -8910,7 +8951,7 @@
           "accepted"
         ],
         "title": "SessionTurnAccepted",
-        "description": "`POST /learn/sessions/{id}/turn` response — the reply was taken.\n\nAcceptance is not an answer: the tutor's response to the turn arrives\nover the session's stream, never in this body."
+        "description": "`POST /learn/sessions/{id}/turn` response \u2014 the reply was taken.\n\nAcceptance is not an answer: the tutor's response to the turn arrives\nover the session's stream, never in this body."
       },
       "SessionTurnRequest": {
         "properties": {
@@ -8929,7 +8970,7 @@
         "additionalProperties": false,
         "type": "object",
         "title": "SessionTurnRequest",
-        "description": "Body for `POST /learn/sessions/{id}/turn` — the learner's reply.\n\nOne of the two fields must carry something: an empty message is only\na valid turn when it is also the request to end the session."
+        "description": "Body for `POST /learn/sessions/{id}/turn` \u2014 the learner's reply.\n\nOne of the two fields must carry something: an empty message is only\na valid turn when it is also the request to end the session."
       },
       "SkillClaim": {
         "properties": {
@@ -8983,7 +9024,7 @@
           "updated_at"
         ],
         "title": "SkillClaim",
-        "description": "One skill claim as the API returns it — provenance mandatory."
+        "description": "One skill claim as the API returns it \u2014 provenance mandatory."
       },
       "SkillDeclaration": {
         "properties": {
@@ -9012,7 +9053,7 @@
           "level"
         ],
         "title": "SkillDeclaration",
-        "description": "One skill the learner says they have.\n\nNo provenance field by design — see the section comment above."
+        "description": "One skill the learner says they have.\n\nNo provenance field by design \u2014 see the section comment above."
       },
       "SourceReference": {
         "properties": {
@@ -9171,6 +9212,27 @@
           "expected_digest"
         ],
         "title": "SubmitWrite"
+      },
+      "TaskContext": {
+        "properties": {
+          "intent": {
+            "type": "string",
+            "enum": [
+              "answer",
+              "comparison",
+              "application_assessment"
+            ],
+            "title": "Intent",
+            "default": "answer"
+          },
+          "application_context": {
+            "$ref": "#/components/schemas/ApplicationContext"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "TaskContext",
+        "description": "Application/user input, sealed before generation; never model output."
       },
       "UsefulnessFeedback": {
         "properties": {

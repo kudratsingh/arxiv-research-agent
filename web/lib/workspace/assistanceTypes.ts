@@ -14,6 +14,7 @@ export interface AssistanceInput {
   direction: "overview" | "method" | "assumptions" | "implementation";
   follow_up: string; project_id: string | null; project_revision: number | null;
   parent_job: string | null; origin: ResumeContext | null;
+  task_context?: { intent: "answer" | "comparison" | "application_assessment"; application_context: Record<string, string> } | null;
 }
 export interface AssistanceOutput {
   claims: { claim_id: string; text: string; handles: string[]; required_scope: string }[];
@@ -21,6 +22,8 @@ export interface AssistanceOutput {
   background_claims?: string[]; assumption_claims?: string[]; limitation_claims?: string[]; comparison_claims?: string[];
   assumptions?: string[]; gaps: string[]; questions: string[];
   proposal: string; abstention: string | null;
+  response_disposition?: "answer" | "full_abstention" | "comparison_abstention";
+  context_requests?: string[]; comparison_unanswered?: boolean;
 }
 export type AssistanceJob = Omit<FakeJob, "request"> & {
   request: { assistance: AssistanceInput; units: Record<string, EvidenceReference>; project_context: { question: string; revision: number } | null; [key: string]: unknown };

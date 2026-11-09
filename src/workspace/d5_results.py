@@ -10,6 +10,7 @@ from typing import Any
 
 from src.workspace.admission import AdmissionError, _digest
 from src.workspace.assistance_contract import PROCEDURAL_REVISION, render_procedures, resolve_draft
+from src.workspace.assistance_policy import TASK_REVISION, render_task_output
 from src.workspace.d5_adapter import ADAPTER_REVISION
 from src.workspace.executor import FakeExecutor
 from src.workspace.grounding import EvidenceRef, validate_claims
@@ -59,6 +60,7 @@ class QualificationResults:
                         materials,
                         purpose=sealed.get("response_purpose", "research_comparison"),
                         revision=sealed["schema_revision"],
+                        task_policy=sealed.get("task_policy"),
                     )
                     report = validate_claims(resolved, materials)
                     intact = _digest(inputs) == fingerprint and all(
@@ -77,6 +79,13 @@ class QualificationResults:
                     intact = False
                 if not intact:
                     output = None
+                elif sealed["schema_revision"] == TASK_REVISION and output is not None:
+                    output = render_task_output(
+                        output,
+                        list(sealed["units"]),
+                        sealed["response_purpose"],
+                        sealed["task_policy"],
+                    )
                 elif sealed["schema_revision"] == PROCEDURAL_REVISION and output is not None:
                     # Reader-facing prose is derived; immutable wire output
                     # and claim-reference intents remain in adapter.steps.
