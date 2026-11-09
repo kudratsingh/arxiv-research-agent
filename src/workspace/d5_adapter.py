@@ -25,7 +25,13 @@ from src.workspace.admission import (
     SourceRef,
     _digest,
 )
-from src.workspace.assistance import CANDIDATE_MODEL, Checks, build_wire, producer_binding
+from src.workspace.assistance import (
+    CANDIDATE_MODEL,
+    Checks,
+    build_wire,
+    checks_model,
+    producer_binding,
+)
 from src.workspace.assistance_contract import (
     PROCEDURAL_REVISION,
     coherent_units,
@@ -36,8 +42,16 @@ from src.workspace.assistance_contract import (
     response_purpose,
     schemas,
 )
+from src.workspace.assistance_coverage import (
+    COVERAGE_REVISION,
+    review_context,
+    review_failed,
+    seal_coverage_policy,
+    validate_review,
+)
 from src.workspace.assistance_policy import (
     TASK_REVISION,
+    CoverageTaskContext,
     TaskContext,
     render_task_output,
     seal_task_policy,
@@ -68,6 +82,7 @@ def qualification_producer() -> dict[str, Any]:
     files = (
         "workspace/d5_adapter.py",
         "workspace/assistance_policy.py",
+        "workspace/assistance_coverage.py",
         "workspace/d5_operations.py",
         "workspace/programme_amendments.py",
         "workspace/programme_successors.py",
@@ -177,7 +192,7 @@ def prepare_input(
     ]
     compact["response_schemas_digest"] = _digest(sealed["response_schemas"])
     compact["response_purpose"] = sealed.get("response_purpose", "research_comparison")
-    if sealed["schema_revision"] == TASK_REVISION:
+    if sealed["schema_revision"] in {TASK_REVISION, COVERAGE_REVISION}:
         compact["task_policy"] = sealed["task_policy"]
     compact["candidate_initial_wire_digest"] = _digest(sealed["candidate_initial_wire"])
     compact["full_preview_digest"] = _digest(sealed)
@@ -361,6 +376,7 @@ class D5Adapter(QualificationAdapter):
                 contract_revision(response_purpose(sealed["assistance"]["mode"], sealed["units"])),
                 PROCEDURAL_REVISION,
                 TASK_REVISION,
+                COVERAGE_REVISION,
             }
             or sealed.get("producer", {}).get("code") != producer_binding()
         ):
@@ -410,11 +426,27 @@ class D5Adapter(QualificationAdapter):
             )
         ):
             raise AdmissionError("d5_local_or_wire_schema_drift")
-        if sealed["schema_revision"] == TASK_REVISION and sealed["task_policy"] != seal_task_policy(
-            TaskContext.model_validate(sealed["assistance"].get("task_context")),
-            sealed["assistance"]["mode"], len({r["work_id"] for r in sealed["units"].values()}),
-        ):
-            raise AdmissionError("d5_sealed_task_policy_drift")
+        if sealed["schema_revision"] in {TASK_REVISION, COVERAGE_REVISION}:
+            selection = sealed["assistance"]
+            count = len({r["work_id"] for r in sealed["units"].values()})
+            if sealed["schema_revision"] == COVERAGE_REVISION:
+                question = (
+                    selection["follow_up"]
+                    or (sealed.get("project_context") or {}).get("question")
+                    or f"Explain the selected paper: {selection['direction']} at {selection['depth']} depth"
+                )
+                expected_policy = seal_coverage_policy(
+                    CoverageTaskContext.model_validate(selection["task_context"]),
+                    selection["mode"],
+                    count,
+                    question,
+                )
+            else:
+                expected_policy = seal_task_policy(
+                    TaskContext.model_validate(selection["task_context"]), selection["mode"], count
+                )
+            if sealed["task_policy"] != expected_policy:
+                raise AdmissionError("d5_sealed_task_policy_drift")
         if sealed["settings"] != {
             "temperature": None,
             "thinking": {"type": "between_tools"},
@@ -459,7 +491,7 @@ class D5Adapter(QualificationAdapter):
             k: sealed["assistance"][k]
             for k in ("mode", "depth", "background", "direction", "follow_up")
         }
-        if sealed["schema_revision"] == TASK_REVISION:
+        if sealed["schema_revision"] in {TASK_REVISION, COVERAGE_REVISION}:
             compact["task_policy"] = sealed["task_policy"]
         return {
             "phase": "draft",
@@ -539,11 +571,20 @@ class D5Adapter(QualificationAdapter):
                 revision=sealed["schema_revision"],
                 task_policy=sealed.get("task_policy"),
             )
-            workflow_view = render_task_output(workflow, list(sealed["units"]), sealed["response_purpose"], sealed["task_policy"]) if sealed["schema_revision"] == TASK_REVISION else workflow
+            workflow_view = (
+                render_task_output(
+                    workflow,
+                    list(sealed["units"]),
+                    sealed["response_purpose"],
+                    sealed["task_policy"],
+                )
+                if sealed["schema_revision"] in {TASK_REVISION, COVERAGE_REVISION}
+                else workflow
+            )
             if phase == "check":
                 value["role"] = "checker"
                 value["sealed_request"].pop("units")
-                value["output_schema"] = transform_schema(Checks)
+                value["output_schema"] = transform_schema(checks_model(sealed["schema_revision"]))
                 value["draft"] = {"claims": [asdict(c) for c in claims]}
                 value["claim_inputs"] = [
                     {"claim_id": c.claim_id, "input_digest": claim_input_digest(c, materials)}
@@ -563,14 +604,21 @@ class D5Adapter(QualificationAdapter):
                     )
                     if k in workflow_view
                 }
-                if sealed["schema_revision"] != TASK_REVISION:
+                if sealed["schema_revision"] not in {TASK_REVISION, COVERAGE_REVISION}:
                     value["unscored_prose"].update(render_procedures(workflow))
+                if sealed["schema_revision"] == COVERAGE_REVISION:
+                    value.update(
+                        review_context(
+                            sealed["task_policy"],
+                            workflow_view,
+                            value["claim_inputs"],
+                            sealed["units"],
+                        )
+                    )
+                    value["review_evidence"] = sealed["units"]
             else:
                 checked = self._checks(
-                    {
-                        k: steps[-1]["output"][k]
-                        for k in ("checks", "prose_review", "prose_findings")
-                    }
+                    {k: steps[-1]["output"][k] for k in steps[-1]["output"] if k != "grounding"}
                 )
                 # Digest/provenance checks happen before this repair is counted.
                 from src.workspace.grounding import SupportCheck
@@ -597,6 +645,8 @@ class D5Adapter(QualificationAdapter):
                 }
                 value["previous_grounding"] = asdict(report)
                 value["previous_prose_review"] = checked.model_dump(mode="json")
+                if sealed["schema_revision"] == COVERAGE_REVISION:
+                    value["previous_declared_coverage"] = workflow_view["request_coverage"]
                 value["procedural_draft"] = {
                     k: workflow_view[k] for k in ("gaps", "questions", "proposal", "abstention")
                 }
@@ -682,7 +732,13 @@ class D5Adapter(QualificationAdapter):
             revision=sealed["schema_revision"],
             task_policy=sealed.get("task_policy"),
         )
-        procedural = render_task_output(output, list(sealed["units"]), sealed["response_purpose"], sealed["task_policy"]) if sealed["schema_revision"] == TASK_REVISION else render_procedures(output)
+        procedural = (
+            render_task_output(
+                output, list(sealed["units"]), sealed["response_purpose"], sealed["task_policy"]
+            )
+            if sealed["schema_revision"] in {TASK_REVISION, COVERAGE_REVISION}
+            else render_procedures(output)
+        )
         report = validate_claims(claims, materials)
         if any(not item.scope_compatible for item in report.assessments):
             raise AdmissionError("d5_draft_scope_incompatible")
@@ -702,11 +758,26 @@ class D5Adapter(QualificationAdapter):
         )
 
     def _checks(self, output: dict[str, Any]) -> Any:
-        return Checks.model_validate(output)
+        return checks_model(self.inputs.settings["d5_request"]["schema_revision"]).model_validate(
+            output
+        )
 
     def _review_complete(self, grounding: Any, snapshot: dict[str, Any], checks: Any) -> bool:
+        sealed = self.inputs.settings["d5_request"]
+        if sealed["schema_revision"] == COVERAGE_REVISION:
+            rendered = render_task_output(
+                snapshot["steps"][-1]["output"],
+                list(sealed["units"]),
+                sealed["response_purpose"],
+                sealed["task_policy"],
+            )
+            if review_failed(checks, rendered):
+                if len(snapshot["steps"]) == 1:
+                    return False
+                raise AdmissionError("d5_request_or_claim_quality_unresolved")
         if (
-            self.inputs.settings["d5_request"]["schema_revision"] == TASK_REVISION
+            self.inputs.settings["d5_request"]["schema_revision"]
+            in {TASK_REVISION, COVERAGE_REVISION}
             and len(snapshot["steps"]) == 3
             and grounding.total_factual != grounding.supported
         ):
@@ -773,7 +844,9 @@ class D5Adapter(QualificationAdapter):
                 parsed = json.loads(text, object_pairs_hook=unique, parse_constant=invalid)
                 if last["stage"] == "check":
                     context = json.loads(last["body"]["messages"][0]["content"])
-                    checks = Checks.model_validate(parsed)
+                    checks = self._checks(parsed)
+                    if self.inputs.settings["d5_request"]["schema_revision"] == COVERAGE_REVISION:
+                        validate_review(checks, context)
                     checks.validate_locations(context.get("unscored_prose", {}))
                     expected = {c["claim_id"]: c["input_digest"] for c in context["claim_inputs"]}
                     actual = {c.claim_id: c.input_digest for c in checks.checks}

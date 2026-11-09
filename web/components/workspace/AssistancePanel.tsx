@@ -1,7 +1,7 @@
 "use client";
 
 import { ScoredSections } from "./ScoredSections";
-import { AssistanceTaskContext, AssistanceDisposition, taskDefaults } from "./AssistanceTaskContext";
+import { AssistanceTaskContext, AssistanceDisposition, RequestCoverage, taskDefaults } from "./AssistanceTaskContext";
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -59,7 +59,7 @@ export default function AssistancePanel({ owner, workId, versionId, returnTo, on
       direction: form.values.direction as AssistanceInput["direction"], follow_up: form.values.follow_up!,
       project_id: context.mode === "research" ? context.project : null, project_revision: project?.revision ?? null,
       parent_job: job?.result ? job.id : null, origin: resumeContext(context, returnTo),
-      task_context: { intent, application_context: Object.fromEntries(Object.keys(taskDefaults).filter(key => key !== "intent").map(key => [key, intent === "application_assessment" ? taskForm.values[key]! : ""])) } };
+      task_context: { intent, requested_parts: (taskForm.values.requested_parts ?? "").split("\n").map(part => part.trim()).filter(Boolean).map((request, i) => ({ id: `p${i + 1}`, request, kind: intent === "comparison" && i === 0 ? "comparison" : "answer" })), application_context: Object.fromEntries(Object.keys(taskDefaults).filter(key => key !== "intent" && key !== "requested_parts").map(key => [key, intent === "application_assessment" ? taskForm.values[key]! : ""])) } };
   }
   async function prepare() {
     if (form.busy) return;
@@ -160,6 +160,7 @@ export default function AssistancePanel({ owner, workId, versionId, returnTo, on
       <details><summary>Stage receipts and split accounting</summary><pre tabIndex={0}>{JSON.stringify({ steps: job.steps, usage: job.usage, quality: job.quality, wire_records: job.wire_records }, null, 2)}</pre></details>
       {result && <section aria-label="Simulated assistance result"><h3>Selected-source reading guide · simulated</h3><p>Factual acceptance and checker qualification remain disabled. A machine-supported quotation does not establish the scientific truth of its content.</p>
         <AssistanceDisposition output={result} />
+        <RequestCoverage output={result} prefix={job.id} />
         {result.abstention && <p>Abstention: {result.abstention}</p>}
         {result.claims.map(claim => <article key={claim.claim_id} id={`${job.id}-${claim.claim_id}`}><h4>Retained claim {claim.claim_id}</h4><p>{claim.text}</p><p className="workspace-version-notice">Simulated checker: {job.quality.claim_checks?.find(check => check.claim_id === claim.claim_id)?.decision ?? "unscored"}. Whole-claim support remains unqualified.</p>{claim.handles.map(handle => { const ref = job.request.units[handle]; if (!ref) return null; const anchor = passageAnchor(ref); return <div key={handle}><blockquote>{ref.quote}</blockquote><p>{ref.scope} · pinned version · {ref.page ? `page ${ref.page}` : "abstract text"}</p>{ref.work_id === workId && ref.version_id === versionId ? <button type="button" onClick={() => onSource(anchor)}>Open exact cited passage</button> : <Link href={contextHref(readerHref({ work_id: ref.work_id }, ref.version_id, anchor, undefined, returnTo), context)}>Open exact cited passage</Link>}<details><summary>Citation identity and offsets</summary><pre tabIndex={0}>{JSON.stringify(ref, null, 2)}</pre></details></div>; })}</article>)}
         {result.background_claims ? <ScoredSections output={result} prefix={job.id} /> : <>

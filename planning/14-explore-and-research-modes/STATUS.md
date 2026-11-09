@@ -1,5 +1,12 @@
 # Two-mode implementation status
 
+## Current offline request-coverage repair
+
+New worktree `/private/tmp/arxiv-agent-eng-workspace-coverage`, branch `codex/workspace-d5-request-coverage`, from published `a7d4198f`. [Engineering repair and per-case follow-up](d5/REQUEST-COVERAGE-REPAIR.md); [separate unexecuted proposal](d5/REQUEST-COVERAGE-VALIDATION-PROPOSAL.md). Contract `workspace-assistance-request-coverage-v8` enforces non-null new HTTP task policy, seals requested parts before generation, separates answered/evidence-gap/omitted parts and context notes, and adds bound atomicity/qualification/coverage reviews to the existing four-call workflow. Human qualification remains out of scope. Final application/packet and verification are recorded in the new gate receipt.
+
+Archived eight-case controls preserve41 original claims and the Codex-attributed synthetic baseline of18 bundled findings,two lost qualifications and7/8 request misses. The synthetic safety projection has zero claims. Seven deliberately unrepaired controls block on their known quality findings; all eight remain partial/unanswered in the engineering projection. No new provider success or semantic-quality evidence is claimed. Original v8r4b/scorer/ledger and v7r2 stopped3/8 remain intact. Read-only baseline30/61/81,USD1.779493, pending/unknown0; Stage D deferred. This batch creates no paid grants or contacts and leaves owner3137/review3178 untouched.
+
+
 ## Current offline task-bound abstention repair
 
 Worktree `/private/tmp/arxiv-agent-eng-workspace-abstention`, branch `codex/workspace-d5-full-abstention`, from `35e8eef9`; verified application **`03c0140bd133eb1208050b7004b499788b8a6f18`**. [Final verification](d5/evidence/task-bound-v7/VERIFICATION.md). [Repair and focused follow-up](d5/FULL-ABSTENTION-REPAIR.md); [separate unapproved proposal](d5/FULL-ABSTENTION-VALIDATION-PROPOSAL.md). New response revision `workspace-assistance-task-bound-v7` seals declared task intent and required application context before generation. Missing assessment context exposes only the full-abstention schema; comparison-only abstention retains checked source notes with an explicit unanswered-comparison notice. Historical v8r4b packet/results/scorer/machine labels stay unchanged. Read-only ledger: **30 jobs / 61 Messages / 81 counts / USD 1.779493 estimated; pending/unknown 0**. Stage D deferred and ungranted; no human qualification. This batch: **0 real provider/count contacts, USD 0 new spend**, no grants or owner-data writes.

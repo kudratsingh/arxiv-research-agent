@@ -1,5 +1,5 @@
 "use client";
-import { AssistanceDisposition } from "./AssistanceTaskContext";
+import { AssistanceDisposition, RequestCoverage } from "./AssistanceTaskContext";
 
 import { ScoredSections } from "./ScoredSections";
 
@@ -84,6 +84,7 @@ export default function QualificationResult({ workId, versionId, returnTo, onSou
       {!output && <p>No completed content is available. Failed, cancelled or uncertain work is not an accepted summary and cannot be replayed from Reader.</p>}
       {output && <>
         <AssistanceDisposition output={output} />
+        <RequestCoverage output={output} prefix={job.id} />
         {output.abstention && <p>Abstention: {output.abstention}</p>}
         {output.claims.map(claim => <article key={claim.claim_id} id={`${job.id}-${claim.claim_id}`}><h4>Claim {claim.claim_id}</h4><p>{claim.text}</p><p>Machine checker: {job.result?.grounding?.assessments.find(c => c.claim_id === claim.claim_id)?.decision ?? "unscored"}. Human support: unmeasured.</p>{claim.handles.map(handle => {
           const ref = job.request.units[handle]; if (!ref) return null;

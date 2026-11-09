@@ -1,13 +1,11 @@
 # Explore & Learn and Research
 
-Current qualification review: [v8r4b implemented capacity extension](d5/PAID-VALIDATION-PROPOSAL-v8r4b.md), application 68c23441. The actual ledger remains 20 jobs / 35 Messages / 54 counts / USD 0.904053. Capacity activation, A and B are separate unapproved requests; no new contacts, spend or live authority.
+Current offline engineering revision: [request coverage, atomic findings and qualification retention](d5/REQUEST-COVERAGE-REPAIR.md), from published `a7d4198f`. [Separate unexecuted development proposal](d5/REQUEST-COVERAGE-VALIDATION-PROPOSAL.md). New HTTP inputs reject explicit null task context; omitted context preserves answer defaults; archived internal replay remains available. Requested parts are sealed before generation, with visible answered/evidence-gap/omitted accounting and bound machine quality reviews. No human qualification is claimed.
+
+Read-only reconciled ledger: **30 jobs / 61 Messages / 81 counts / USD1.779493 estimated; pending/unknown0**. This revision adds zero provider/count contacts, spend or grants. Stage D remains deferred. The historical v8r4b results, scorer and Codex-attributed synthetic review are unchanged; v7r2 remains a separate stopped3/8 diagnostic.
 
 Owner-adopted product direction, recorded **2026-11-04 America/Los_Angeles**.
-Status: **D0–D4 complete; D5 prospective procedural repair and blinded premise calibration verified offline at application `691398bf`. Paid validation remains stopped and requires separate approval.**
-
-Current prereview gate: [independent-review preflight](d5/CALIBRATION-PREFLIGHT.md), application `d3a1d052`; four supplied reviews have been validated and the receipt is READY_FOR_APPROVAL, approved=false.
-
-Previous offline handoff: [premise calibration plan](d5/QUESTION-PREMISE-CALIBRATION.md), [blank independent worksheet](d5/evidence/premise-calibration-v2/smallest-reviewer-blank.md), and [offline runbook](d5/RUNBOOK-v8.md). Historical v7r2 remains stopped at 3/8 Stage C workflows.
+Status: **D0–D4 complete; D5 engineering repair is offline. Everyday generation, recurrence and notifications stay disabled.** See [implementation status](STATUS.md) for exact application/publication identities and local versus remote verification.
 
 The workspace will have two main modes sharing one Library, Reader, source
 identity system and durable personal records. Explore & Learn supports daily

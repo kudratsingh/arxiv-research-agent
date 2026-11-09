@@ -14,7 +14,7 @@ export interface AssistanceInput {
   direction: "overview" | "method" | "assumptions" | "implementation";
   follow_up: string; project_id: string | null; project_revision: number | null;
   parent_job: string | null; origin: ResumeContext | null;
-  task_context?: { intent: "answer" | "comparison" | "application_assessment"; application_context: Record<string, string> } | null;
+  task_context?: { intent: "answer" | "comparison" | "application_assessment"; application_context: Record<string, string>; requested_parts?: { id: string; request: string; kind: "answer" | "comparison" | "source_note" }[] };
 }
 export interface AssistanceOutput {
   claims: { claim_id: string; text: string; handles: string[]; required_scope: string }[];
@@ -23,6 +23,8 @@ export interface AssistanceOutput {
   assumptions?: string[]; gaps: string[]; questions: string[];
   proposal: string; abstention: string | null;
   response_disposition?: "answer" | "full_abstention" | "comparison_abstention";
+  request_coverage?: { id: string; request: string; kind: string; status: "answered" | "lacks_evidence" | "omitted"; gap_text: string; answer_claim_ids?: string[]; context_claim_ids?: string[] }[];
+  coverage_complete?: boolean; coverage_basis?: string;
   context_requests?: string[]; comparison_unanswered?: boolean;
 }
 export type AssistanceJob = Omit<FakeJob, "request"> & {

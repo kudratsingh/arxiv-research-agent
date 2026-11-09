@@ -10,6 +10,8 @@ from typing import Any, Literal
 from anthropic import transform_schema
 from pydantic import BaseModel, ConfigDict, Field, create_model
 
+from src.workspace.assistance_coverage import COVERAGE_REVISION, RequestedPart
+
 TASK_REVISION = "workspace-assistance-task-bound-v7"
 TaskIntent = Literal["answer", "comparison", "application_assessment"]
 CONTEXT_REQUESTS = {
@@ -34,6 +36,10 @@ class TaskContext(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
     intent: TaskIntent = "answer"
     application_context: ApplicationContext = Field(default_factory=ApplicationContext)
+
+
+class CoverageTaskContext(TaskContext):
+    requested_parts: tuple[RequestedPart, ...] = Field(default=(), max_length=8)
 
 
 def seal_task_policy(context: TaskContext, mode: str, source_count: int) -> dict[str, Any]:
@@ -197,6 +203,11 @@ def render_task_output(
     payload: dict[str, Any], handles: list[str], purpose: str, policy: dict[str, Any]
 ) -> dict[str, Any]:
     from src.workspace.assistance_contract import render_gaps, render_procedures
+
+    if policy.get("revision") == COVERAGE_REVISION:
+        from src.workspace.assistance_coverage import render
+
+        return render(payload, handles, purpose, policy)
 
     normalized = normalize_task_output(payload, handles, purpose, policy)
     rendered = render_procedures(normalized)

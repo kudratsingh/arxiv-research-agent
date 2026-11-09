@@ -510,6 +510,9 @@ client = api_support.client
 @pytest.mark.asyncio
 async def test_api_routes_require_explicit_submission_and_preserve_owner_boundaries(client, store):
     service, value = setup(store)
+    # HTTP omission chooses the current policy; explicit null is archived-only.
+    public_input = value.model_dump(mode="json")
+    public_input.pop("task_context")
     catalog = await client.get(
         "/workspace/assistance/catalog",
         params={"work_id": value.work_id, "version_id": value.version_id},
@@ -522,13 +525,13 @@ async def test_api_routes_require_explicit_submission_and_preserve_owner_boundar
         )
     ).json() == []
     preview = await client.post(
-        "/workspace/assistance/preview", json={"input": value.model_dump(mode="json")}
+        "/workspace/assistance/preview", json={"input": public_input}
     )
     assert preview.status_code == 200
     submitted = await client.post(
         "/workspace/assistance/jobs",
         json={
-            "input": value.model_dump(mode="json"),
+            "input": public_input,
             "request_id": "api",
             "expected_digest": preview.json()["request_digest"],
         },

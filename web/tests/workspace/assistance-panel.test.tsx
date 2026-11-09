@@ -94,7 +94,7 @@ describe("D5 assistance interaction contract", () => {
     await user.selectOptions(screen.getByLabelText("Task intent"), "application_assessment");
     await user.type(screen.getByLabelText("Vehicle and configuration"), "Isolated test vehicle");
     await preview(user);
-    expect(mock.request.mock.calls.find(([p]) => p === "assistance/preview")![1].input.task_context).toEqual({ intent: "application_assessment", application_context: { vehicle_configuration: "Isolated test vehicle", operating_envelope: "", safety_objectives: "", validation_evidence: "" } });
+    expect(mock.request.mock.calls.find(([p]) => p === "assistance/preview")![1].input.task_context).toEqual({ intent: "application_assessment", requested_parts: [], application_context: { vehicle_configuration: "Isolated test vehicle", operating_envelope: "", safety_objectives: "", validation_evidence: "" } });
     expect(mock.request.mock.calls.filter(([p]) => p === "assistance/jobs")).toHaveLength(0);
     await user.selectOptions(screen.getByLabelText("Task intent"), "comparison");
     expect(screen.queryByRole("region", { name: "Sealed assistance request" })).not.toBeInTheDocument();

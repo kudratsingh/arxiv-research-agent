@@ -6,11 +6,27 @@ import asyncio
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends
+from pydantic import Field
 
-from src.workspace.assistance import AssistanceService, PreviewWrite, SubmitWrite
+from src.workspace.assistance import AssistanceInput, AssistanceService, PreviewWrite, SubmitWrite
+from src.workspace.assistance_policy import CoverageTaskContext
 from src.workspace.routes import call, owner, repository
 
 router = APIRouter(prefix="/workspace/assistance", tags=["workspace-assistance"])
+
+
+class NewAssistanceInput(AssistanceInput):
+    """New HTTP requests cannot select the nullable archived-input contract."""
+
+    task_context: CoverageTaskContext = Field(default_factory=CoverageTaskContext)
+
+
+class NewPreviewWrite(PreviewWrite):
+    input: NewAssistanceInput
+
+
+class NewSubmitWrite(SubmitWrite):
+    input: NewAssistanceInput
 
 
 @router.get("/catalog")
@@ -26,14 +42,14 @@ async def catalog(
 
 
 @router.post("/preview")
-async def preview(write: PreviewWrite, principal: Annotated[str, Depends(owner)]) -> Any:
+async def preview(write: NewPreviewWrite, principal: Annotated[str, Depends(owner)]) -> Any:
     return await asyncio.to_thread(
         call, AssistanceService(repository()).preview, principal, write.input
     )
 
 
 @router.post("/jobs")
-async def submit(write: SubmitWrite, principal: Annotated[str, Depends(owner)]) -> Any:
+async def submit(write: NewSubmitWrite, principal: Annotated[str, Depends(owner)]) -> Any:
     def submit_and_read() -> Any:
         service = AssistanceService(repository())
         created = service.submit(principal, write)

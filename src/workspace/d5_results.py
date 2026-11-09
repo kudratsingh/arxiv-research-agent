@@ -10,6 +10,7 @@ from typing import Any
 
 from src.workspace.admission import AdmissionError, _digest
 from src.workspace.assistance_contract import PROCEDURAL_REVISION, render_procedures, resolve_draft
+from src.workspace.assistance_coverage import COVERAGE_REVISION
 from src.workspace.assistance_policy import TASK_REVISION, render_task_output
 from src.workspace.d5_adapter import ADAPTER_REVISION
 from src.workspace.executor import FakeExecutor
@@ -79,7 +80,10 @@ class QualificationResults:
                     intact = False
                 if not intact:
                     output = None
-                elif sealed["schema_revision"] == TASK_REVISION and output is not None:
+                elif (
+                    sealed["schema_revision"] in {TASK_REVISION, COVERAGE_REVISION}
+                    and output is not None
+                ):
                     output = render_task_output(
                         output,
                         list(sealed["units"]),
@@ -105,6 +109,12 @@ class QualificationResults:
                 "simulated": adapter.get("mode") == "mock",
                 "quarantined": True,
                 "human_review": None,
+                "request_quality": {
+                    k: adapter.get("steps", [{}])[-1].get("output", {}).get(k)
+                    for k in ("claim_quality", "coverage_checks", "priority_review")
+                }
+                if adapter.get("steps")
+                else None,
                 "factual_acceptance": False,
                 "checker_qualified": False,
                 "source_binding_intact": intact,

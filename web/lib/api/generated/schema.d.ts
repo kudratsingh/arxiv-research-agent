@@ -1378,54 +1378,6 @@ export interface components {
             /** Evidence Link Ids */
             evidence_link_ids?: string[];
         };
-        /** AssistanceInput */
-        AssistanceInput: {
-            /**
-             * Mode
-             * @enum {string}
-             */
-            mode: "learn" | "research";
-            /** Work Id */
-            work_id: string;
-            /** Version Id */
-            version_id: string;
-            /** Material Ids */
-            material_ids: string[];
-            /** Span Ids */
-            span_ids: string[];
-            /** Unit Ids */
-            unit_ids: string[];
-            /**
-             * Depth
-             * @default overview
-             * @enum {string}
-             */
-            depth: "overview" | "technical";
-            /**
-             * Background
-             * @default
-             */
-            background: string;
-            /**
-             * Direction
-             * @default overview
-             * @enum {string}
-             */
-            direction: "overview" | "method" | "assumptions" | "implementation";
-            /**
-             * Follow Up
-             * @default
-             */
-            follow_up: string;
-            /** Project Id */
-            project_id?: string | null;
-            /** Project Revision */
-            project_revision?: number | null;
-            /** Parent Job */
-            parent_job?: string | null;
-            origin?: components["schemas"]["ResumeContext"] | null;
-            task_context?: components["schemas"]["TaskContext"] | null;
-        };
         /** BoundSource */
         BoundSource: {
             /** Work Id */
@@ -1835,6 +1787,21 @@ export interface components {
             created_at: number;
             /** Updated At */
             updated_at: number;
+        };
+        /** CoverageTaskContext */
+        CoverageTaskContext: {
+            /**
+             * Intent
+             * @default answer
+             * @enum {string}
+             */
+            intent: "answer" | "comparison" | "application_assessment";
+            application_context?: components["schemas"]["ApplicationContext"];
+            /**
+             * Requested Parts
+             * @default []
+             */
+            requested_parts: components["schemas"]["RequestedPart"][];
         };
         /** Edition */
         Edition: {
@@ -2967,6 +2934,69 @@ export interface components {
             retained_materials?: components["schemas"]["RetainedAvailability"][];
         };
         /**
+         * NewAssistanceInput
+         * @description New HTTP requests cannot select the nullable archived-input contract.
+         */
+        NewAssistanceInput: {
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "learn" | "research";
+            /** Work Id */
+            work_id: string;
+            /** Version Id */
+            version_id: string;
+            /** Material Ids */
+            material_ids: string[];
+            /** Span Ids */
+            span_ids: string[];
+            /** Unit Ids */
+            unit_ids: string[];
+            /**
+             * Depth
+             * @default overview
+             * @enum {string}
+             */
+            depth: "overview" | "technical";
+            /**
+             * Background
+             * @default
+             */
+            background: string;
+            /**
+             * Direction
+             * @default overview
+             * @enum {string}
+             */
+            direction: "overview" | "method" | "assumptions" | "implementation";
+            /**
+             * Follow Up
+             * @default
+             */
+            follow_up: string;
+            /** Project Id */
+            project_id?: string | null;
+            /** Project Revision */
+            project_revision?: number | null;
+            /** Parent Job */
+            parent_job?: string | null;
+            origin?: components["schemas"]["ResumeContext"] | null;
+            task_context?: components["schemas"]["CoverageTaskContext"];
+        };
+        /** NewPreviewWrite */
+        NewPreviewWrite: {
+            input: components["schemas"]["NewAssistanceInput"];
+        };
+        /** NewSubmitWrite */
+        NewSubmitWrite: {
+            input: components["schemas"]["NewAssistanceInput"];
+            /** Request Id */
+            request_id: string;
+            /** Expected Digest */
+            expected_digest: string;
+        };
+        /**
          * Plan
          * @description The planner's output, exposed for HITL review (ADR 0030).
          *
@@ -3035,10 +3065,6 @@ export interface components {
             researchQuestion: string;
             /** Streams */
             streams: string[];
-        };
-        /** PreviewWrite */
-        PreviewWrite: {
-            input: components["schemas"]["AssistanceInput"];
         };
         /** ProfileData */
         ProfileData: {
@@ -3462,6 +3488,22 @@ export interface components {
         RefreshRequest: {
             /** Source Ids */
             source_ids?: string[];
+        };
+        /** RequestedPart */
+        RequestedPart: {
+            /**
+             * Id
+             * @enum {string}
+             */
+            id: "p1" | "p2" | "p3" | "p4" | "p5" | "p6" | "p7" | "p8";
+            /** Request */
+            request: string;
+            /**
+             * Kind
+             * @default answer
+             * @enum {string}
+             */
+            kind: "answer" | "comparison" | "source_note";
         };
         /**
          * ResearchAccepted
@@ -4007,27 +4049,6 @@ export interface components {
             receipt?: {
                 [key: string]: unknown;
             };
-        };
-        /** SubmitWrite */
-        SubmitWrite: {
-            input: components["schemas"]["AssistanceInput"];
-            /** Request Id */
-            request_id: string;
-            /** Expected Digest */
-            expected_digest: string;
-        };
-        /**
-         * TaskContext
-         * @description Application/user input, sealed before generation; never model output.
-         */
-        TaskContext: {
-            /**
-             * Intent
-             * @default answer
-             * @enum {string}
-             */
-            intent: "answer" | "comparison" | "application_assessment";
-            application_context?: components["schemas"]["ApplicationContext"];
         };
         /** UsefulnessFeedback */
         UsefulnessFeedback: {
@@ -6023,7 +6044,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["PreviewWrite"];
+                "application/json": components["schemas"]["NewPreviewWrite"];
             };
         };
         responses: {
@@ -6088,7 +6109,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["SubmitWrite"];
+                "application/json": components["schemas"]["NewSubmitWrite"];
             };
         };
         responses: {

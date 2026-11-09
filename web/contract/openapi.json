@@ -2,11 +2,11 @@
   "x-provenance": {
     "generated": "DO NOT EDIT BY HAND. Regenerate with the command below.",
     "source": "create_app().openapi() -- src/api/app.py",
-    "commit": "35e8eef9d1f3c48a4cda69f5c5001abbb3d31fb0",
+    "commit": "a7d4198fc23afa3682ef804b8a3906f1178b5806",
     "command": ".venv/bin/python -c \"import json; from src.api.app import create_app; print(json.dumps(create_app().openapi(), indent=2))\" > web/contract/openapi.json  # then re-add this x-provenance header",
     "consumers": "web/lib/api/generated/schema.d.ts via `npm run generate:types`.",
     "note": "JSON has no comment syntax, so this OpenAPI 3.1 x- extension carries the header. Strip the 'x-provenance' key before comparing against a freshly generated create_app().openapi().",
-    "workspace_update": "Task-bound assistance v7; no migration or provider contacts; source base35e8eef9"
+    "workspace_update": "New HTTP assistance context non-null, omitted context default preserved; request-coverage v8, no migrations or provider contacts; base a7d4198f"
   },
   "openapi": "3.1.0",
   "info": {
@@ -2650,7 +2650,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/PreviewWrite"
+                "$ref": "#/components/schemas/NewPreviewWrite"
               }
             }
           },
@@ -2692,7 +2692,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/SubmitWrite"
+                "$ref": "#/components/schemas/NewSubmitWrite"
               }
             }
           }
@@ -3113,156 +3113,6 @@
           "kind"
         ],
         "title": "ArtifactData"
-      },
-      "AssistanceInput": {
-        "properties": {
-          "mode": {
-            "type": "string",
-            "enum": [
-              "learn",
-              "research"
-            ],
-            "title": "Mode"
-          },
-          "work_id": {
-            "type": "string",
-            "maxLength": 300,
-            "minLength": 1,
-            "title": "Work Id"
-          },
-          "version_id": {
-            "type": "string",
-            "maxLength": 300,
-            "minLength": 1,
-            "title": "Version Id"
-          },
-          "material_ids": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "maxItems": 3,
-            "minItems": 1,
-            "title": "Material Ids"
-          },
-          "span_ids": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "maxItems": 8,
-            "minItems": 1,
-            "title": "Span Ids"
-          },
-          "unit_ids": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "maxItems": 8,
-            "minItems": 1,
-            "title": "Unit Ids"
-          },
-          "depth": {
-            "type": "string",
-            "enum": [
-              "overview",
-              "technical"
-            ],
-            "title": "Depth",
-            "default": "overview"
-          },
-          "background": {
-            "type": "string",
-            "maxLength": 1000,
-            "title": "Background",
-            "default": ""
-          },
-          "direction": {
-            "type": "string",
-            "enum": [
-              "overview",
-              "method",
-              "assumptions",
-              "implementation"
-            ],
-            "title": "Direction",
-            "default": "overview"
-          },
-          "follow_up": {
-            "type": "string",
-            "maxLength": 1000,
-            "title": "Follow Up",
-            "default": ""
-          },
-          "project_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "pattern": "^project-[a-f0-9]{32}$"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Project Id"
-          },
-          "project_revision": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "minimum": 1.0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Project Revision"
-          },
-          "parent_job": {
-            "anyOf": [
-              {
-                "type": "string",
-                "pattern": "^fake-[a-f0-9]{40}$"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Parent Job"
-          },
-          "origin": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/ResumeContext"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "task_context": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/TaskContext"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "mode",
-          "work_id",
-          "version_id",
-          "material_ids",
-          "span_ids",
-          "unit_ids"
-        ],
-        "title": "AssistanceInput"
       },
       "BoundSource": {
         "properties": {
@@ -4265,6 +4115,35 @@
         ],
         "title": "ConversationListItem",
         "description": "`GET /conversations` \u2014 sidebar entry, no job bodies."
+      },
+      "CoverageTaskContext": {
+        "properties": {
+          "intent": {
+            "type": "string",
+            "enum": [
+              "answer",
+              "comparison",
+              "application_assessment"
+            ],
+            "title": "Intent",
+            "default": "answer"
+          },
+          "application_context": {
+            "$ref": "#/components/schemas/ApplicationContext"
+          },
+          "requested_parts": {
+            "items": {
+              "$ref": "#/components/schemas/RequestedPart"
+            },
+            "type": "array",
+            "maxItems": 8,
+            "title": "Requested Parts",
+            "default": []
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "CoverageTaskContext"
       },
       "Edition": {
         "properties": {
@@ -6847,6 +6726,188 @@
         ],
         "title": "MaterialVersion"
       },
+      "NewAssistanceInput": {
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "learn",
+              "research"
+            ],
+            "title": "Mode"
+          },
+          "work_id": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Work Id"
+          },
+          "version_id": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Version Id"
+          },
+          "material_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 3,
+            "minItems": 1,
+            "title": "Material Ids"
+          },
+          "span_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 8,
+            "minItems": 1,
+            "title": "Span Ids"
+          },
+          "unit_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 8,
+            "minItems": 1,
+            "title": "Unit Ids"
+          },
+          "depth": {
+            "type": "string",
+            "enum": [
+              "overview",
+              "technical"
+            ],
+            "title": "Depth",
+            "default": "overview"
+          },
+          "background": {
+            "type": "string",
+            "maxLength": 1000,
+            "title": "Background",
+            "default": ""
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "overview",
+              "method",
+              "assumptions",
+              "implementation"
+            ],
+            "title": "Direction",
+            "default": "overview"
+          },
+          "follow_up": {
+            "type": "string",
+            "maxLength": 1000,
+            "title": "Follow Up",
+            "default": ""
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^project-[a-f0-9]{32}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id"
+          },
+          "project_revision": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Revision"
+          },
+          "parent_job": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^fake-[a-f0-9]{40}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Job"
+          },
+          "origin": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResumeContext"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "task_context": {
+            "$ref": "#/components/schemas/CoverageTaskContext"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "mode",
+          "work_id",
+          "version_id",
+          "material_ids",
+          "span_ids",
+          "unit_ids"
+        ],
+        "title": "NewAssistanceInput",
+        "description": "New HTTP requests cannot select the nullable archived-input contract."
+      },
+      "NewPreviewWrite": {
+        "properties": {
+          "input": {
+            "$ref": "#/components/schemas/NewAssistanceInput"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "input"
+        ],
+        "title": "NewPreviewWrite"
+      },
+      "NewSubmitWrite": {
+        "properties": {
+          "input": {
+            "$ref": "#/components/schemas/NewAssistanceInput"
+          },
+          "request_id": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Request Id"
+          },
+          "expected_digest": {
+            "type": "string",
+            "title": "Expected Digest"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "input",
+          "request_id",
+          "expected_digest"
+        ],
+        "title": "NewSubmitWrite"
+      },
       "Plan": {
         "properties": {
           "sub_questions": {
@@ -7013,19 +7074,6 @@
           "streams"
         ],
         "title": "PreviewRecord"
-      },
-      "PreviewWrite": {
-        "properties": {
-          "input": {
-            "$ref": "#/components/schemas/AssistanceInput"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "input"
-        ],
-        "title": "PreviewWrite"
       },
       "ProfileData": {
         "properties": {
@@ -7905,6 +7953,47 @@
         "additionalProperties": false,
         "type": "object",
         "title": "RefreshRequest"
+      },
+      "RequestedPart": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "enum": [
+              "p1",
+              "p2",
+              "p3",
+              "p4",
+              "p5",
+              "p6",
+              "p7",
+              "p8"
+            ],
+            "title": "Id"
+          },
+          "request": {
+            "type": "string",
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Request"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "answer",
+              "comparison",
+              "source_note"
+            ],
+            "title": "Kind",
+            "default": "answer"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "request"
+        ],
+        "title": "RequestedPart"
       },
       "ResearchAccepted": {
         "properties": {
@@ -9187,52 +9276,6 @@
           "name"
         ],
         "title": "SourceStatus"
-      },
-      "SubmitWrite": {
-        "properties": {
-          "input": {
-            "$ref": "#/components/schemas/AssistanceInput"
-          },
-          "request_id": {
-            "type": "string",
-            "maxLength": 120,
-            "minLength": 1,
-            "title": "Request Id"
-          },
-          "expected_digest": {
-            "type": "string",
-            "title": "Expected Digest"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "input",
-          "request_id",
-          "expected_digest"
-        ],
-        "title": "SubmitWrite"
-      },
-      "TaskContext": {
-        "properties": {
-          "intent": {
-            "type": "string",
-            "enum": [
-              "answer",
-              "comparison",
-              "application_assessment"
-            ],
-            "title": "Intent",
-            "default": "answer"
-          },
-          "application_context": {
-            "$ref": "#/components/schemas/ApplicationContext"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "title": "TaskContext",
-        "description": "Application/user input, sealed before generation; never model output."
       },
       "UsefulnessFeedback": {
         "properties": {
