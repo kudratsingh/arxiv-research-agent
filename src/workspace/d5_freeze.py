@@ -158,6 +158,10 @@ def reading_minutes(key: str, mode: str, index: int) -> int:
 
 def execution_owners(packet: dict[str, Any]) -> tuple[str, str]:
     """A new prospective cohort cannot reuse stopped financial identities."""
+    from src.workspace.d5_coverage_packet import is_packet, owners
+
+    if is_packet(packet):
+        return owners(packet)
     if packet.get("cohort_revision") == "procedural-v8":
         return "d5-v8-validation-run", "d5-v8-validation-measure"
     return RUN_OWNER, COUNT_OWNER
@@ -167,6 +171,9 @@ def code_bindings() -> dict[str, str]:
     root = Path(__file__).resolve().parents[2]
     names = [
         "d5_freeze.py",
+        "d5_coverage_policy.py",
+        "d5_coverage_packet.py",
+        "d5_coverage_replay.py",
         "d5_operations.py",
         "programme_amendments.py",
         "programme_successors.py",
@@ -239,6 +246,11 @@ def verify(packet: dict[str, Any]) -> None:
             case["sealed"]["candidate_initial_wire"]
         ):
             raise AdmissionError("d5_wire_digest_changed")
+    from src.workspace.d5_coverage_packet import is_packet, verify_controls
+
+    if is_packet(packet):
+        verify_controls(packet)
+        return
     if packet.get("planned_development_cases", ["dev-learn", "dev-compare"]) not in (
         ["dev-learn"],
         ["dev-learn", "dev-compare"],
@@ -337,6 +349,10 @@ def verify_discovery(packet: dict[str, Any]) -> None:
 
 def compile_inputs(packet: dict[str, Any]) -> dict[str, dict[str, Any]]:
     verify(packet)
+    from src.workspace.d5_coverage_packet import compile_controls, is_packet
+
+    if is_packet(packet):
+        return compile_controls(packet)
     run_owner, count_owner = execution_owners(packet)
     scope_id = "d5-" + packet["packet_digest"][:24]
     compiled = {}

@@ -91,7 +91,11 @@ def _validate(conn: Any, receipt: dict[str, Any], program_id: str) -> dict[str, 
         )
     except (KeyError, TypeError, ValueError):
         time_ok = False
-    fixture = bool(conn.execute("SELECT 1 FROM workspace_d5_fixture_marker").fetchone())
+    marker = conn.execute("SELECT data FROM workspace_d5_fixture_marker").fetchone()
+    fixture = bool(marker)
+    historical_mirror = bool(
+        marker and _digest(receipt) in marker[0].get("historical_capacity_authorizations", [])
+    )
     if (
         receipt.get("approved") is not True
         or not isinstance(receipt.get("approved_by"), str)
@@ -99,8 +103,10 @@ def _validate(conn: Any, receipt: dict[str, Any], program_id: str) -> dict[str, 
         or not isinstance(receipt.get("authorization_reference"), str)
         or not receipt["authorization_reference"].strip()
         or not time_ok
-        or receipt.get("authorization_kind") != ("offline_fixture" if fixture else "owner")
-        or receipt.get("transport_mode") != ("mock" if fixture else "provider")
+        or receipt.get("authorization_kind")
+        != ("offline_fixture" if fixture and not historical_mirror else "owner")
+        or receipt.get("transport_mode")
+        != ("mock" if fixture and not historical_mirror else "provider")
     ):
         raise AdmissionError("capacity_external_approval_or_expiry_required")
     if (

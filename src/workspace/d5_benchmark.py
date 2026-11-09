@@ -75,6 +75,10 @@ def check_storage(store: WorkspaceStore, packet: dict[str, Any]) -> None:
 
 
 def results(store: WorkspaceStore, packet: dict[str, Any]) -> dict[str, Any]:
+    from src.workspace.d5_coverage_packet import is_packet, report_controls
+
+    if is_packet(packet):
+        return report_controls(store, packet)
     from src.workspace.d5_results import QualificationResults
 
     service = QualificationResults(store)
@@ -151,6 +155,10 @@ async def run(
     store: WorkspaceStore, packet: dict[str, Any], stage: str, *, offline: bool
 ) -> dict[str, Any]:
     verify(packet)
+    from src.workspace.d5_coverage_packet import is_packet
+
+    if is_packet(packet) and stage not in {"A", "B"}:
+        raise AdmissionError("coverage_A_B_only")
     check_storage(store, packet)
     compiled = compile_inputs(packet)
     with store.pool.connection() as conn:
@@ -235,9 +243,17 @@ async def run(
             )
             kwargs: dict[str, Any] = {}
             if offline:
+                from src.workspace.d5_coverage_packet import is_packet
                 from src.workspace.d5_fixture import ReplayTransport
 
-                kwargs["transport"] = httpx.MockTransport(ReplayTransport(key))
+                transport: Any
+                if is_packet(packet):
+                    from src.workspace.d5_coverage_replay import CoverageTransport
+
+                    transport = CoverageTransport(key)
+                else:
+                    transport = ReplayTransport(key)
+                kwargs["transport"] = httpx.MockTransport(transport)
             else:
                 # Only this explicit CLI branch reads the configured key. It is
                 # never emitted, persisted or used for an unrelated smoke call.
@@ -331,9 +347,11 @@ def main() -> None:
             return
         packet = read(args.packet)
         if args.verb == "offline":
+            from src.workspace.d5_coverage_packet import is_packet
             from src.workspace.d5_fixture import authorize_fixture
 
-            authorize_fixture(store, packet)
+            if not is_packet(packet):
+                authorize_fixture(store, packet)
         report = (
             asyncio.run(run(store, packet, args.stage, offline=args.verb == "offline"))
             if args.verb in {"offline", "run"}
@@ -342,12 +360,15 @@ def main() -> None:
         if args.out is None:
             parser.error("reporting requires --out (new directory)")
         write(args.out / "results.json", report)
-        (args.out / "REPORT.md").write_text(markdown(report))
+        from src.workspace.d5_coverage_packet import is_packet, markdown_controls
+
+        rendered = markdown_controls(report) if is_packet(packet) else markdown(report)
+        (args.out / "REPORT.md").write_text(rendered)
         from html import escape
 
         (args.out / "index.html").write_text(
             "<!doctype html><meta charset=utf-8><title>D5 quarantined benchmark</title><pre>"
-            + escape(markdown(report))
+            + escape(rendered)
             + "</pre>"
         )
         print(
@@ -356,6 +377,15 @@ def main() -> None:
                     "packet_digest": packet["packet_digest"],
                     "cases": len(report["cases"]),
                     "completed": sum(c["completion"] for c in report["cases"]),
+                    **(
+                        {
+                            "completed_measurements": sum(
+                                m["state"] == "ready" for m in report["measurements"]
+                            )
+                        }
+                        if is_packet(packet)
+                        else {}
+                    ),
                     "report": str(args.out),
                     "acceptance": report["acceptance"],
                 }

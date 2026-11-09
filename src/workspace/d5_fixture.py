@@ -162,14 +162,26 @@ def install(store: WorkspaceStore, captured: dict[str, Any], *, fixture: bool) -
                             "historical_successor_authorizations": [
                                 r["authorization_digest"]
                                 for r in captured.get("recorded_successor_amendments", [])
+                                if r["record"].get("authorization_kind") == "owner"
+                                and r["record"].get("transport_mode") == "provider"
                             ],
                             "historical_amendment_authorizations": [
                                 r["authorization_digest"]
                                 for r in captured.get("recorded_amendments", [])
+                                if r["record"].get("authorization_kind") == "owner"
+                                and r["record"].get("transport_mode") == "provider"
+                            ],
+                            "historical_capacity_authorizations": [
+                                r["authorization_digest"]
+                                for r in captured.get("recorded_capacity_amendments", [])
+                                if r["record"].get("authorization_kind") == "owner"
+                                and r["record"].get("transport_mode") == "provider"
                             ],
                             "historical_third_authorizations": [
                                 r["authorization_digest"]
                                 for r in captured.get("recorded_third_amendments", [])
+                                if r["record"].get("authorization_kind") == "owner"
+                                and r["record"].get("transport_mode") == "provider"
                             ],
                         }
                     ),
@@ -186,6 +198,8 @@ def install(store: WorkspaceStore, captured: dict[str, Any], *, fixture: bool) -
             )
         for name, key in (
             ("workspace_programme_successor_amendments", "recorded_successor_amendments"),
+            ("workspace_programme_third_amendments", "recorded_third_amendments"),
+            ("workspace_programme_capacity_amendments", "recorded_capacity_amendments"),
             ("workspace_d5_scopes", "historical_scopes"),
             ("workspace_d5_stage_authorizations", "historical_stage_grants"),
         ):

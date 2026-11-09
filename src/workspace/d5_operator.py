@@ -26,7 +26,9 @@ from src.workspace.store import WorkspaceStore
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("verb", choices=["template", "record", "stage-template", "grant", "revoke"])
+    parser.add_argument(
+        "verb", choices=["template", "prepare", "record", "stage-template", "grant", "revoke"]
+    )
     parser.add_argument("--packet", type=Path, required=True)
     parser.add_argument("--receipt", type=Path, required=True)
     parser.add_argument(
@@ -59,7 +61,49 @@ def main() -> None:
     with database(os.environ["D5_POSTGRES_URL"]) as pool:
         store = WorkspaceStore(pool)
         store.migrate()
-        if args.verb == "stage-template":
+        if args.verb == "prepare":
+            from datetime import datetime
+
+            from src.workspace.admission import AdmissionError
+            from src.workspace.d5_benchmark import check_storage
+            from src.workspace.d5_coverage_packet import is_packet
+            from src.workspace.d5_coverage_policy import validate_programme
+            from src.workspace.d5_fixture import prepare_projects
+            from src.workspace.qualification_budget import census
+
+            if not is_packet(packet):
+                raise AdmissionError("coverage_prepare_requires_development_packet")
+            check_storage(store, packet)
+            with pool.connection() as conn:
+                validate_programme(
+                    conn,
+                    packet["program_id"],
+                    packet["programme"],
+                    datetime.fromisoformat(packet["programme"]["expires_at"]),
+                )
+                members = [
+                    r[0]
+                    for r in conn.execute(
+                        "SELECT owner FROM workspace_evaluation_members WHERE program_id=%s",
+                        (packet["program_id"],),
+                    )
+                ]
+                history = census(conn, members[0], members=members)
+                if history != packet["history"]:
+                    raise AdmissionError("d5_historical_ledger_drift")
+            prepare_projects(store, packet)
+            write(
+                args.receipt,
+                {
+                    "prepared": sorted({e["owner"] for e in compiled.values()}),
+                    "packet_digest": packet["packet_digest"],
+                    "scope_id": scope_id,
+                    "history_digest": history["history_digest"],
+                    "approval_created": False,
+                    "provider_contacts": 0,
+                },
+            )
+        elif args.verb == "stage-template":
             write(args.receipt, stage_template(store, scope_id, (args.stages or "B").split(",")))
         elif args.verb == "grant":
             print(json.dumps(grant_external(store, scope_id, read(args.receipt))))

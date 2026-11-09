@@ -81,6 +81,9 @@ def qualification_producer() -> dict[str, Any]:
     root = Path(__file__).resolve().parents[1]
     files = (
         "workspace/d5_adapter.py",
+        "workspace/d5_coverage_policy.py",
+        "workspace/d5_coverage_packet.py",
+        "workspace/d5_coverage_replay.py",
         "workspace/assistance_policy.py",
         "workspace/assistance_coverage.py",
         "workspace/d5_operations.py",
@@ -160,6 +163,8 @@ def prepare_input(
     programme_amendment_digest: str | None = None,
     operation_routes: dict[str, Any] | None = None,
     repair_located_prose: bool = False,
+    scope_profile: str | None = None,
+    programme_binding: dict[str, Any] | None = None,
 ) -> GenerationInput:
     if operation not in {"workflow", "measurement", "probe"}:
         raise AdmissionError("d5_operation_required")
@@ -237,6 +242,13 @@ def prepare_input(
     }
     if repair_located_prose or sealed["schema_revision"] == PROCEDURAL_REVISION:
         settings["located_prose_repair"] = "first-check-only-v1"
+    if scope_profile is not None:
+        from src.workspace.d5_coverage_policy import PROFILE
+
+        if scope_profile != PROFILE or programme_binding is None or operation == "probe":
+            raise AdmissionError("d5_coverage_profile_binding_required")
+        settings["d5_scope_profile"] = scope_profile
+        settings["d5_programme_binding"] = programme_binding
     model = CANDIDATE_MODEL
     if operation_routes is not None and operation != "measurement":
         from src.workspace.d5_operations import route, validate

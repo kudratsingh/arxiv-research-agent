@@ -104,6 +104,10 @@ def record_external(
         ).fetchone()
         if program is None:
             raise AdmissionError("d5_preserved_program_required")
+        if any(e["input"]["settings"].get("d5_scope_profile") for e in compiled.values()):
+            from src.workspace.d5_coverage_policy import registration
+
+            registration(conn, program_id, compiled, receipt)
         prior = conn.execute(
             "SELECT packet_digest,authorization_digest,data FROM workspace_d5_scopes WHERE scope_id=%s",
             (scope_id,),
@@ -243,6 +247,9 @@ def stage_template(store: WorkspaceStore, scope_id: str, stages: list[str]) -> d
             )
         ]
         history = census(conn, members[0], members=members)
+        from src.workspace.d5_coverage_policy import stages as coverage_stages
+
+        coverage_stages(row[2]["limits"], stages)
     return {
         "approved": False,
         "approved_by": None,
@@ -310,6 +317,9 @@ def grant_external(store: WorkspaceStore, scope_id: str, receipt: dict[str, Any]
         if row is None or row[3] != "active" or not now < expiry <= row[4]:
             raise AdmissionError("d5_parent_scope_inactive_or_expiry_extended")
         data = row[2]
+        from src.workspace.d5_coverage_policy import stages as coverage_stages
+
+        coverage_stages(data["limits"], receipt["stages"])
         if (
             receipt.get("packet_digest") != row[0]
             or receipt.get("parent_authorization_digest") != row[1]
