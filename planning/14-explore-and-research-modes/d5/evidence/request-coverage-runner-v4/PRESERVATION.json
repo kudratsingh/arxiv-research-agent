@@ -1,0 +1,43 @@
+{
+  "verified_at": "2026-11-09T11:10:16.102618+00:00",
+  "preserved": true,
+  "jobs": 30,
+  "messages": 61,
+  "counts": 81,
+  "known_usd": "1.779493",
+  "pending_usd": "0",
+  "unknown_usd": "0",
+  "limits": {
+    "usd": "10",
+    "counts": 99,
+    "messages": 80,
+    "new_jobs": 34,
+    "concurrency": 1
+  },
+  "expiry": "2026-11-14T07:24:01+00:00",
+  "D_granted": false,
+  "permission_table_hashes": {
+    "workspace_evaluation_programs": "f6d40179f6615c3bd9dbe8e548fa90c3baa3c9376d6d2345b7c603bb46c101c9",
+    "workspace_evaluation_members": "403ce929e5c45f30f07162e5edfdad73b2850233e51abf1cae6d0a252b67fa1b",
+    "workspace_programme_amendments": "4b1d0f493afdf3a66f48e696e190d2fbca9a9ed2d01189dcac3b473e32854335",
+    "workspace_programme_successor_amendments": "38df5c126446c6f770b9abaae07b929b31e15a2a1a9e2db581072e8ae08af457",
+    "workspace_programme_third_amendments": "576fd398a4b4304eb617d37d291db82c5331c77a28b36a06bea6b87289c5d8ac",
+    "workspace_programme_capacity_amendments": "3a63839d5d067da137f079bbcf1f42ff4d1a4b684b92e42ff10328ef114f46d9",
+    "workspace_d5_scopes": "afd8276d5d4909ae090b473ef96af5bbf9d891154947669e3053b06396052b55",
+    "workspace_d5_stage_authorizations": "32536b00a2b74fa40395658ed028c6ada5eadffb8bd93ed2656625070c3f2941"
+  },
+  "files": {
+    "/private/tmp/arxiv-agent-eng-programme-capacity/outputs/d5/review-v8r4b-20261109/codex-machine-review/stage_c-codex-machine-review.json": "004a89d701df01f7a970b529a9b23627f1005d075ddfbfd5e55094c13ddda35d",
+    "/private/tmp/arxiv-agent-eng-programme-capacity/outputs/d5/review-v8r4b-20261109/codex-machine-review/stage_d-codex-machine-review.json": "19a48c7c149260078880f3aeb43a7f8872e4ff7a40f19a18532d2b202aac3121",
+    "/private/tmp/arxiv-agent-eng-programme-capacity/outputs/d5/stage-c-v8r4b-20261108/STAGE-C-RESULTS.json": "d73e59844d1e6bdd1a4cc6a99e2e4efb6e720aca51bc2f43253269a28c4772e4",
+    "/private/tmp/arxiv-agent-eng-programme-capacity/outputs/d5/stage-c-v8r4b-20261108/provider-results/results.json": "6b2d3a90f86fa689e7927fb4e0efe3dc67a62ffb16ecf483ed6ba044b851e729",
+    "/private/tmp/arxiv-agent-eng-programme-capacity/planning/14-explore-and-research-modes/d5/evidence/qualification-v8r4b/packet.json.gz": "08f30514e24464ac4a5f48821d73f33dacd4bd431a1f11de04b26b92d2696e36",
+    "/private/tmp/arxiv-agent-eng-programme-capacity/src/workspace/d5_scoring.py": "5e80c8a54c5e037afb48cb504cfadd5ddb4ca40354687407ea1394133a1dcd11",
+    "/private/tmp/arxiv-agent-eng-workspace-assistance/outputs/d5/ACTIVE-QUALIFICATION-LEDGER.json": "b78aefac83c314fb1adc71fa5f8f8d7b6a28552ee419849c8de2b9394f4f653f"
+  },
+  "before_sha256": "b40b2c7c1b8a61679490c4210b7f52bfb9e3057a5f7fc4c99fce55485326107d",
+  "new_scope_recorded": false,
+  "new_provider_contacts": 0,
+  "new_count_contacts": 0,
+  "new_spend_usd": "0"
+}

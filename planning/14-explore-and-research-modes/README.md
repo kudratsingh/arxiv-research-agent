@@ -1,5 +1,7 @@
 # Explore & Learn and Research
 
+Current protected-runner handoff: [three request-coverage development controls](d5/COVERAGE-RUNNER.md), [exact packet and offline evidence](d5/evidence/request-coverage-runner-v4/VERIFICATION.md). The new scope separates A's three count-only requests from B's separately granted three workflows; no live grant/contact is created. [Copyable A-only request](d5/COVERAGE-STAGE-A-APPROVAL-REQUEST.md); [B proposal](d5/COVERAGE-STAGE-B-PROPOSAL.md) remains a later decision. All three cases remain development controls; human qualification is out of scope.
+
 Current offline engineering revision: [request coverage, atomic findings and qualification retention](d5/REQUEST-COVERAGE-REPAIR.md), from published `a7d4198f`. [Separate unexecuted development proposal](d5/REQUEST-COVERAGE-VALIDATION-PROPOSAL.md). New HTTP inputs reject explicit null task context; omitted context preserves answer defaults; archived internal replay remains available. Requested parts are sealed before generation, with visible answered/evidence-gap/omitted accounting and bound machine quality reviews. No human qualification is claimed.
 
 Read-only reconciled ledger: **30 jobs / 61 Messages / 81 counts / USD1.779493 estimated; pending/unknown0**. This revision adds zero provider/count contacts, spend or grants. Stage D remains deferred. The historical v8r4b results, scorer and Codex-attributed synthetic review are unchanged; v7r2 remains a separate stopped3/8 diagnostic.

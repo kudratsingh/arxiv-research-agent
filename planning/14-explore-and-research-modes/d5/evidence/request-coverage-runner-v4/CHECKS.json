@@ -1,0 +1,150 @@
+{
+  "application_commit": "6803cd34b90943f2c70974615e2ea51e58f02010",
+  "verified_test_commit": "58839a7afc2ba50e42085baa0e24fabd694c5f43",
+  "packet_digest": "f48b3f24fd7c831d76aed787faebc4e64b2c322ef80657d0a2f6bd8ea6ee0b86",
+  "python": {
+    "command": "make test-cov-diff VENV_PYTHON=/Users/kudratsingh/Machine-Learning-Projects/arxiv-venv-lock/bin/python",
+    "result_line": "7020 passed, 54 skipped, 53 deselected in 1198.94s (0:19:58)",
+    "total_coverage_percent": "94.59",
+    "patch_coverage_percent": "96",
+    "package_floors": {
+      "api": {
+        "floor": 86,
+        "actual": "88",
+        "exit": 0
+      },
+      "agents": {
+        "floor": 92,
+        "actual": "96",
+        "exit": 0
+      },
+      "security": {
+        "floor": 97,
+        "actual": "100",
+        "exit": 0
+      },
+      "eval": {
+        "floor": 91,
+        "actual": "95",
+        "exit": 0
+      }
+    },
+    "log": "outputs/d5/coverage-runner-v1/python-coverage-canonical-final.log",
+    "sha256": "045a8e4e96d9f60e8c5e831cf3e3f27841a240b5c80ef36af72b28e942eef474",
+    "modules": {
+      "src/workspace/d5_coverage_packet.py": {
+        "covered_lines": 112,
+        "num_statements": 118,
+        "percent_covered": 93.42105263157895,
+        "percent_covered_display": "93",
+        "missing_lines": 6,
+        "excluded_lines": 0,
+        "percent_statements_covered": 94.91525423728814,
+        "percent_statements_covered_display": "95",
+        "num_branches": 34,
+        "num_partial_branches": 4,
+        "covered_branches": 30,
+        "missing_branches": 4,
+        "percent_branches_covered": 88.23529411764706,
+        "percent_branches_covered_display": "88"
+      },
+      "src/workspace/d5_coverage_policy.py": {
+        "covered_lines": 82,
+        "num_statements": 83,
+        "percent_covered": 98.4251968503937,
+        "percent_covered_display": "98",
+        "missing_lines": 1,
+        "excluded_lines": 0,
+        "percent_statements_covered": 98.79518072289157,
+        "percent_statements_covered_display": "99",
+        "num_branches": 44,
+        "num_partial_branches": 1,
+        "covered_branches": 43,
+        "missing_branches": 1,
+        "percent_branches_covered": 97.72727272727273,
+        "percent_branches_covered_display": "98"
+      },
+      "src/workspace/d5_coverage_replay.py": {
+        "covered_lines": 105,
+        "num_statements": 132,
+        "percent_covered": 78.57142857142857,
+        "percent_covered_display": "79",
+        "missing_lines": 27,
+        "excluded_lines": 2,
+        "percent_statements_covered": 79.54545454545455,
+        "percent_statements_covered_display": "80",
+        "num_branches": 36,
+        "num_partial_branches": 5,
+        "covered_branches": 27,
+        "missing_branches": 9,
+        "percent_branches_covered": 75.0,
+        "percent_branches_covered_display": "75"
+      }
+    }
+  },
+  "checks": {
+    "targeted": {
+      "log": "outputs/d5/coverage-runner-v1/canonical-targeted-final.log",
+      "sha256": "86d8c588b956a0affe1ffaf643419aa2136a108718d163ca8c6d36dbd187dfd9",
+      "result_lines": [
+        "124 passed in 156.80s (0:02:36)"
+      ]
+    },
+    "documentation": {
+      "log": "outputs/d5/coverage-runner-v1/docs-publication.log",
+      "sha256": "2eec1cb0d24a04c8d1937e9833edca69dd14d942f9bcb01bea8412380bc85681",
+      "result_lines": [
+        "95 passed in 22.39s"
+      ]
+    },
+    "workflow_e2e": {
+      "log": "outputs/d5/coverage-runner-v1/e2e-canonical-final.log",
+      "sha256": "b0ce5df478fec94dd26278ac3e4cdfdc13037e7d608a0ad4cf6bb6acd1ba7edc",
+      "result_lines": [
+        "===================== 53 passed, 7074 deselected in 25.19s ====================="
+      ]
+    },
+    "simulation": {
+      "log": "outputs/d5/coverage-runner-v1/simulation-canonical-final.log",
+      "sha256": "8c571a40be34c27c2dccff265248c5f8b03089d9a6cb9b72567391001a1ce350",
+      "result_lines": [
+        "[20/20] agentic-memory-architectures: What memory architectures have been proposed for long-horizon LLM agents?",
+        "20/20 succeeded, 0 errored, total $0.0000"
+      ]
+    },
+    "registry": {
+      "log": "outputs/d5/coverage-runner-v1/parity-canonical-final.log",
+      "sha256": "ffe3a2763694f735d44ac4b58fee474f7091fa78a56db0f351933f7a88375886",
+      "result_lines": [
+        "  objects checked  260",
+        "  mismatches       0"
+      ]
+    },
+    "ruff": {
+      "log": "outputs/d5/coverage-runner-v1/ruff-final-published.log",
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+      "result_lines": [
+        "All checks passed!"
+      ]
+    },
+    "mypy": {
+      "log": "outputs/d5/coverage-runner-v1/mypy-final-published.log",
+      "sha256": "cbb4d59ac8d399777ef0a1e1260eddd4b81f582ebb38df0e966e5935bca13669",
+      "result_lines": [
+        "Success: no issues found in 202 source files"
+      ]
+    },
+    "packet_verify": {
+      "log": "outputs/d5/coverage-runner-v1/final-verify-published.log",
+      "sha256": "5368341aaf747b01e2a2a30ec4ec157589597444ab40afab059a364a09cdb213",
+      "result_lines": []
+    }
+  },
+  "new_provider_contacts": 0,
+  "new_count_contacts": 0,
+  "new_spend_usd": "0",
+  "live_grants_created": false,
+  "human_qualification": false,
+  "stage_D": "deferred",
+  "local_frontend_retest": "unrun; frontend/API contracts/dependencies unchanged, remote CI tracked separately"
+}

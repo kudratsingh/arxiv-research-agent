@@ -1,0 +1,43 @@
+{
+  "read_only": true,
+  "selected_versions": [
+    "arxiv:2610.40700:v1:metadata-c05b44ce3bd6d5f0",
+    "arxiv:2610.40740:v1:metadata-b471d2e5f0142ad7",
+    "arxiv:2610.40798:v1:metadata-c1a34fa53cba3d51",
+    "arxiv:2610.41012:v1:metadata-f20dbad8ce03c4ef",
+    "arxiv:2610.41552:v1:metadata-1c364e8ae805a931"
+  ],
+  "retained_materials_unchanged": true,
+  "financial_history_unchanged": true,
+  "canonical_metadata": [
+    {
+      "version_id": "arxiv:2610.40700:v1:metadata-c05b44ce3bd6d5f0",
+      "content_hash": "74ad2c6018c6778fefa8c9fdfc2d8be7a5fe1cc0d117d3cc8f1032d6d01a2f14",
+      "full_metadata_digest": "6704558c9cc1f3c70de96f82fc2540efb236a81872aeefd00e879d3f14924d85"
+    },
+    {
+      "version_id": "arxiv:2610.40740:v1:metadata-b471d2e5f0142ad7",
+      "content_hash": "ccd8f3f9e0bacd1d857b45286c31209ffc3be3ad200fab54f37d7c6732afb785",
+      "full_metadata_digest": "ed403a593db22b33b15afcd0d430ca352718e5eb79891f2fc22f74da703a21c1"
+    },
+    {
+      "version_id": "arxiv:2610.40798:v1:metadata-c1a34fa53cba3d51",
+      "content_hash": "b77eda4278705b9a4d62a312176df3e7d751fd0dc1f1a4c3c345b0c60167e443",
+      "full_metadata_digest": "fa25ed5e870fab58f55b78f259bc3e00ba9d90df0fc6213b118de43a2bf5a54a"
+    },
+    {
+      "version_id": "arxiv:2610.41012:v1:metadata-f20dbad8ce03c4ef",
+      "content_hash": "5cc7c83004150acced228d795f5ee57c61326e06291ad6cb29eba90279e67b71",
+      "full_metadata_digest": "9a13c0537e7c495968c8fd4ebabeef5b974c8654a016974e73ef9190e54e7bbf"
+    },
+    {
+      "version_id": "arxiv:2610.41552:v1:metadata-1c364e8ae805a931",
+      "content_hash": "4a84195f230117468fde9ce304a07c0bfed8928617343ff452191d66a9657dc7",
+      "full_metadata_digest": "1b4436911603e33fb8183d6f754ccff102a41df9b79e9b134243a74e779562eb"
+    }
+  ],
+  "snapshot_digest": "c2c299b93750d99780fcdf90b72fd383909b7630e25fd878002e6947410c8190",
+  "new_provider_contacts": 0,
+  "new_count_contacts": 0,
+  "live_writes": 0
+}

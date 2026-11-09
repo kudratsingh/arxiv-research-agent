@@ -1,0 +1,545 @@
+{
+  "packet_digest": "f48b3f24fd7c831d76aed787faebc4e64b2c322ef80657d0a2f6bd8ea6ee0b86",
+  "scope_id": "d5-f48b3f24fd7c831d76aed787",
+  "application_commit": "6803cd34b90943f2c70974615e2ea51e58f02010",
+  "verified_test_commit": "58839a7afc2ba50e42085baa0e24fabd694c5f43",
+  "raw_replay_sha256": "12c3a808f3ba45c5beb15ae98cdb660c6aa476f11e24736900582f4578d62041",
+  "raw_replay_local_path": "outputs/d5/coverage-runner-v1/verified-replay-v4/REPLAY.json",
+  "basis": "Disposable PostgreSQL, same production protected adapter, mocked transport. No provider token fit or semantic qualification established. Canonical metadata and retained-material hashes remain distinct.",
+  "A": {
+    "measurements": [
+      {
+        "id": "measure-1",
+        "workflow": "development-v8-learn-conditions",
+        "state": "ready",
+        "model": "claude-sonnet-5-5",
+        "request_digest": "c2019e0ebdb94ed884a579114fe195e8b15b3618e262d21c2801c2c93a4f0a27",
+        "receipt_digest": "c2019e0ebdb94ed884a579114fe195e8b15b3618e262d21c2801c2c93a4f0a27",
+        "provider_input_tokens": null,
+        "synthetic_input_tokens": 100,
+        "fits_16000": true,
+        "basis": "synthetic MockTransport integer; unmeasured"
+      },
+      {
+        "id": "measure-2",
+        "workflow": "development-v8-research-retrieval",
+        "state": "ready",
+        "model": "claude-sonnet-5-5",
+        "request_digest": "a86294e790c02199b97fe8d0c6540f2c84b67ce78fc39ddc74e196009e667d78",
+        "receipt_digest": "a86294e790c02199b97fe8d0c6540f2c84b67ce78fc39ddc74e196009e667d78",
+        "provider_input_tokens": null,
+        "synthetic_input_tokens": 100,
+        "fits_16000": true,
+        "basis": "synthetic MockTransport integer; unmeasured"
+      },
+      {
+        "id": "measure-3",
+        "workflow": "development-v8-research-insufficient",
+        "state": "ready",
+        "model": "claude-sonnet-5-5",
+        "request_digest": "fc9096b7eb1442902482ea7280a3a35da24f6609f2902af93cffd5f2b1c24ba1",
+        "receipt_digest": "fc9096b7eb1442902482ea7280a3a35da24f6609f2902af93cffd5f2b1c24ba1",
+        "provider_input_tokens": null,
+        "synthetic_input_tokens": 100,
+        "fits_16000": true,
+        "basis": "synthetic MockTransport integer; unmeasured"
+      }
+    ],
+    "accounting": {
+      "cumulative_programme_jobs": 30,
+      "new_funded_jobs": 0,
+      "actual_new_messages": 0,
+      "actual_new_counts": 0,
+      "workflow_usd": "0",
+      "checker_usd": "0",
+      "unknown_usd": "0",
+      "cumulative": {
+        "messages": 61,
+        "counts": 84,
+        "known_usd": "1.779493",
+        "pending_usd": "0",
+        "unknown_usd": "0"
+      },
+      "new_scope": {
+        "messages": 0,
+        "counts": 3,
+        "known_usd": "0",
+        "pending_usd": "0",
+        "active_jobs": [],
+        "uncertain_contacts": false,
+        "unknown_usd": "0",
+        "generation_job_ids": [],
+        "models": [
+          "claude-sonnet-5-5"
+        ],
+        "contact_checkpoints": {
+          "gen-0813fce32e9c1140725e3d943741229c4a27692d": {
+            "length": 1,
+            "digest": "e126033685dd721258f36c8b0c7ace9152c88dc08dc16f0228fac90b9ed75a75"
+          },
+          "gen-0f92445f10fa963565e89298c692890ee70563e1": {
+            "length": 1,
+            "digest": "d6396f372734ac3b2b72b00ae407371faf408537c50212548b5ad238358cdac6"
+          },
+          "gen-703dd292a1c28297c4f3cf9ea8665c14d38dec0a": {
+            "length": 1,
+            "digest": "cf55e1981b829c6670ab9701d8295b36542132e1fcf1c68220cbadbbf7abd300"
+          }
+        },
+        "history_digest": "fd0701f10970401973e24093d9ad1ffab992ff1109b56981a5b4c68aeef60b01"
+      }
+    }
+  },
+  "B_without_grant": "d5_stage_not_authorized",
+  "B_fixture_grant": {
+    "basis": "Synthetic operator fixture in permanently marked disposable storage, never owner authority",
+    "grant_id": "d5-grant-f48b3f24fd7c831d-B",
+    "authorization_digest": "de41202f090cabd94583df0a44d79d3a8f0f7f58c15e83abad82b6ecd6257edf",
+    "stages": [
+      "B"
+    ],
+    "provider_contacts": 0
+  },
+  "B": {
+    "cases": [
+      {
+        "id": "development-v8-learn-conditions",
+        "cohort": "development",
+        "completion": true,
+        "state": "ready",
+        "request_coverage": [
+          {
+            "id": "p1",
+            "kind": "answer",
+            "request": "Study scope and evaluated conditions",
+            "status": "lacks_evidence",
+            "answer_claim_ids": [],
+            "context_claim_ids": [
+              "c1"
+            ],
+            "gap": "source_scope",
+            "gap_text": "Request the relevant source material."
+          },
+          {
+            "id": "p2",
+            "kind": "answer",
+            "request": "Reported conditional findings",
+            "status": "lacks_evidence",
+            "answer_claim_ids": [],
+            "context_claim_ids": [],
+            "gap": "source_scope",
+            "gap_text": "Request the relevant source material."
+          },
+          {
+            "id": "p3",
+            "kind": "answer",
+            "request": "Unspecified protocol and breakdowns",
+            "status": "lacks_evidence",
+            "answer_claim_ids": [],
+            "context_claim_ids": [],
+            "gap": "source_scope",
+            "gap_text": "Request the relevant source material."
+          }
+        ],
+        "human_review": null
+      },
+      {
+        "id": "development-v8-research-retrieval",
+        "cohort": "development",
+        "completion": true,
+        "state": "ready",
+        "request_coverage": [
+          {
+            "id": "p1",
+            "kind": "comparison",
+            "request": "Compare retrieval relevance using compatible tasks and judgments",
+            "status": "lacks_evidence",
+            "answer_claim_ids": [],
+            "context_claim_ids": [
+              "c1",
+              "c2"
+            ],
+            "gap": "common_evaluation",
+            "gap_text": "Request common tasks, metrics and relevance judgments before comparing."
+          },
+          {
+            "id": "p2",
+            "kind": "source_note",
+            "request": "Separately cited source evaluation context",
+            "status": "lacks_evidence",
+            "answer_claim_ids": [],
+            "context_claim_ids": [],
+            "gap": "source_scope",
+            "gap_text": "Request the relevant source material."
+          }
+        ],
+        "human_review": null
+      },
+      {
+        "id": "development-v8-research-insufficient",
+        "cohort": "development",
+        "completion": true,
+        "state": "ready",
+        "request_coverage": [
+          {
+            "id": "p1",
+            "kind": "answer",
+            "request": "Establish a safe learned controller for the specified application",
+            "status": "lacks_evidence",
+            "gap": "application_context",
+            "gap_text": "Provide the missing application context."
+          }
+        ],
+        "human_review": null
+      }
+    ],
+    "accounting": {
+      "cumulative_programme_jobs": 33,
+      "new_funded_jobs": 3,
+      "actual_new_messages": 0,
+      "actual_new_counts": 0,
+      "workflow_usd": "0",
+      "checker_usd": "0",
+      "unknown_usd": "0",
+      "cumulative": {
+        "messages": 69,
+        "counts": 92,
+        "known_usd": "1.779493",
+        "pending_usd": "0",
+        "unknown_usd": "0"
+      },
+      "new_scope": {
+        "messages": 8,
+        "counts": 11,
+        "known_usd": "0",
+        "pending_usd": "0",
+        "active_jobs": [],
+        "uncertain_contacts": false,
+        "unknown_usd": "0",
+        "generation_job_ids": [
+          "gen-060397a7971b7d55d439f8245369a668a38a145f",
+          "gen-1cc932ad98e9153941dd556ba9869ec7a6e62979",
+          "gen-480315ae93b2454087b9c75593096c9b58301191"
+        ],
+        "models": [
+          "claude-sonnet-5-5"
+        ],
+        "contact_checkpoints": {
+          "gen-060397a7971b7d55d439f8245369a668a38a145f": {
+            "length": 4,
+            "digest": "3bb7a9bc4ae0504a6139ffc5596a8f6b7f4057df17febe1941bec6ee586a5ac7"
+          },
+          "gen-0813fce32e9c1140725e3d943741229c4a27692d": {
+            "length": 1,
+            "digest": "e126033685dd721258f36c8b0c7ace9152c88dc08dc16f0228fac90b9ed75a75"
+          },
+          "gen-0f92445f10fa963565e89298c692890ee70563e1": {
+            "length": 1,
+            "digest": "d6396f372734ac3b2b72b00ae407371faf408537c50212548b5ad238358cdac6"
+          },
+          "gen-1cc932ad98e9153941dd556ba9869ec7a6e62979": {
+            "length": 4,
+            "digest": "2a6eff656dceae78f5970924b92f82b7cc1cec51f623d9ab71e68f3c9d0cf771"
+          },
+          "gen-480315ae93b2454087b9c75593096c9b58301191": {
+            "length": 8,
+            "digest": "2f904082cd77d22d384682d40be36d1c9c8fb4803459291c08525a11632c0c07"
+          },
+          "gen-703dd292a1c28297c4f3cf9ea8665c14d38dec0a": {
+            "length": 1,
+            "digest": "cf55e1981b829c6670ab9701d8295b36542132e1fcf1c68220cbadbbf7abd300"
+          }
+        },
+        "history_digest": "3cebb0f9de6a48cebff3c15cca856cb7fa9c0f79465528e8783766fddcbea7db"
+      }
+    },
+    "acceptance": "HOLD: human qualification is out of scope and model quality is unmeasured",
+    "stage_receipts": [
+      {
+        "id": "development-v8-learn-conditions",
+        "state": "ready",
+        "steps": [
+          {
+            "role": "workflow",
+            "stage": "draft",
+            "model_id": "claude-sonnet-5-5",
+            "count_estimate": 100,
+            "request_digest": "219ed35921c21ad734ae83058be57fcf2cc5a69c2edccbb6a17b898d54b18ed0",
+            "usage": {
+              "input_tokens": 100,
+              "output_tokens": 100
+            }
+          },
+          {
+            "role": "checker",
+            "stage": "check",
+            "model_id": "claude-opus-5-5",
+            "count_estimate": 100,
+            "request_digest": "67348a87cd78ea77ef39e9f821c57ffa13d8225d44b2ec9357b93c12a18ebad4",
+            "usage": {
+              "input_tokens": 100,
+              "output_tokens": 100
+            }
+          },
+          {
+            "role": "workflow",
+            "stage": "repair",
+            "model_id": "claude-sonnet-5-5",
+            "count_estimate": 100,
+            "request_digest": "ffe6476cf1634f2eaded564d0c6d3d776b99f460e486b1dd4346187fd6a16f0f",
+            "usage": {
+              "input_tokens": 100,
+              "output_tokens": 100
+            }
+          },
+          {
+            "role": "checker",
+            "stage": "check",
+            "model_id": "claude-opus-5-5",
+            "count_estimate": 100,
+            "request_digest": "502835031f2524c8bd330d1e67e6047cae1c8f84f6788739bc1574f49d800a8e",
+            "usage": {
+              "input_tokens": 100,
+              "output_tokens": 100
+            }
+          }
+        ],
+        "contacts": [
+          {
+            "endpoint": "messages/count_tokens",
+            "stage": "draft",
+            "state": "completed",
+            "model": null,
+            "model_id": null,
+            "request_digest": "c2019e0ebdb94ed884a579114fe195e8b15b3618e262d21c2801c2c93a4f0a27",
+            "generation_request_digest": "219ed35921c21ad734ae83058be57fcf2cc5a69c2edccbb6a17b898d54b18ed0",
+            "usage": null
+          },
+          {
+            "endpoint": "messages",
+            "stage": "draft",
+            "state": "completed",
+            "model": null,
+            "model_id": null,
+            "request_digest": "219ed35921c21ad734ae83058be57fcf2cc5a69c2edccbb6a17b898d54b18ed0",
+            "generation_request_digest": "219ed35921c21ad734ae83058be57fcf2cc5a69c2edccbb6a17b898d54b18ed0",
+            "usage": null
+          },
+          {
+            "endpoint": "messages/count_tokens",
+            "stage": "check",
+            "state": "completed",
+            "model": null,
+            "model_id": null,
+            "request_digest": "0da555b31a4e4f4a1ec0cb6bcb4920e2dc973b90d42015a8893dce1fbe1ed614",
+            "generation_request_digest": "67348a87cd78ea77ef39e9f821c57ffa13d8225d44b2ec9357b93c12a18ebad4",
+            "usage": null
+          },
+          {
+            "endpoint": "messages",
+            "stage": "check",
+            "state": "completed",
+            "model": null,
+            "model_id": null,
+            "request_digest": "67348a87cd78ea77ef39e9f821c57ffa13d8225d44b2ec9357b93c12a18ebad4",
+            "generation_request_digest": "67348a87cd78ea77ef39e9f821c57ffa13d8225d44b2ec9357b93c12a18ebad4",
+            "usage": null
+          },
+          {
+            "endpoint": "messages/count_tokens",
+            "stage": "repair",
+            "state": "completed",
+            "model": null,
+            "model_id": null,
+            "request_digest": "daa9b776313b4f5f3770c6718c3de061fcd8c5251c80cd83df6c9d774ff7cc55",
+            "generation_request_digest": "ffe6476cf1634f2eaded564d0c6d3d776b99f460e486b1dd4346187fd6a16f0f",
+            "usage": null
+          },
+          {
+            "endpoint": "messages",
+            "stage": "repair",
+            "state": "completed",
+            "model": null,
+            "model_id": null,
+            "request_digest": "ffe6476cf1634f2eaded564d0c6d3d776b99f460e486b1dd4346187fd6a16f0f",
+            "generation_request_digest": "ffe6476cf1634f2eaded564d0c6d3d776b99f460e486b1dd4346187fd6a16f0f",
+            "usage": null
+          },
+          {
+            "endpoint": "messages/count_tokens",
+            "stage": "check",
+            "state": "completed",
+            "model": null,
+            "model_id": null,
+            "request_digest": "f547c0ca4e65a1a6fb4d6cbc4e1d7732692d503b0b04ab1ca94baa098cba6ad6",
+            "generation_request_digest": "502835031f2524c8bd330d1e67e6047cae1c8f84f6788739bc1574f49d800a8e",
+            "usage": null
+          },
+          {
+            "endpoint": "messages",
+            "stage": "check",
+            "state": "completed",
+            "model": null,
+            "model_id": null,
+            "request_digest": "502835031f2524c8bd330d1e67e6047cae1c8f84f6788739bc1574f49d800a8e",
+            "generation_request_digest": "502835031f2524c8bd330d1e67e6047cae1c8f84f6788739bc1574f49d800a8e",
+            "usage": null
+          }
+        ],
+        "source_binding_intact": true,
+        "human_review": null,
+        "factual_acceptance": false
+      },
+      {
+        "id": "development-v8-research-retrieval",
+        "state": "ready",
+        "steps": [
+          {
+            "role": "workflow",
+            "stage": "draft",
+            "model_id": "claude-sonnet-5-5",
+            "count_estimate": 100,
+            "request_digest": "b7d9c42e9d6f6a4b57e9278d6f78ae0c1b5ab0cd67e987b5eff01a5307d67d0d",
+            "usage": {
+              "input_tokens": 100,
+              "output_tokens": 100
+            }
+          },
+          {
+            "role": "checker",
+            "stage": "check",
+            "model_id": "claude-opus-5-5",
+            "count_estimate": 100,
+            "request_digest": "b3883389c5b21c529a4aa9dc0cb0b5a69f822d159424c977540248f6e65720af",
+            "usage": {
+              "input_tokens": 100,
+              "output_tokens": 100
+            }
+          }
+        ],
+        "contacts": [
+          {
+            "endpoint": "messages/count_tokens",
+            "stage": "draft",
+            "state": "completed",
+            "model": null,
+            "model_id": null,
+            "request_digest": "a86294e790c02199b97fe8d0c6540f2c84b67ce78fc39ddc74e196009e667d78",
+            "generation_request_digest": "b7d9c42e9d6f6a4b57e9278d6f78ae0c1b5ab0cd67e987b5eff01a5307d67d0d",
+            "usage": null
+          },
+          {
+            "endpoint": "messages",
+            "stage": "draft",
+            "state": "completed",
+            "model": null,
+            "model_id": null,
+            "request_digest": "b7d9c42e9d6f6a4b57e9278d6f78ae0c1b5ab0cd67e987b5eff01a5307d67d0d",
+            "generation_request_digest": "b7d9c42e9d6f6a4b57e9278d6f78ae0c1b5ab0cd67e987b5eff01a5307d67d0d",
+            "usage": null
+          },
+          {
+            "endpoint": "messages/count_tokens",
+            "stage": "check",
+            "state": "completed",
+            "model": null,
+            "model_id": null,
+            "request_digest": "341103a63101be7c96a60872bab1c890fcd28e40ec18e058c7f30b0a2a397eda",
+            "generation_request_digest": "b3883389c5b21c529a4aa9dc0cb0b5a69f822d159424c977540248f6e65720af",
+            "usage": null
+          },
+          {
+            "endpoint": "messages",
+            "stage": "check",
+            "state": "completed",
+            "model": null,
+            "model_id": null,
+            "request_digest": "b3883389c5b21c529a4aa9dc0cb0b5a69f822d159424c977540248f6e65720af",
+            "generation_request_digest": "b3883389c5b21c529a4aa9dc0cb0b5a69f822d159424c977540248f6e65720af",
+            "usage": null
+          }
+        ],
+        "source_binding_intact": true,
+        "human_review": null,
+        "factual_acceptance": false
+      },
+      {
+        "id": "development-v8-research-insufficient",
+        "state": "ready",
+        "steps": [
+          {
+            "role": "workflow",
+            "stage": "draft",
+            "model_id": "claude-sonnet-5-5",
+            "count_estimate": 100,
+            "request_digest": "62f4114656c76e3bfbd67a705e9e7393b08249437822835387389d40003f931f",
+            "usage": {
+              "input_tokens": 100,
+              "output_tokens": 100
+            }
+          },
+          {
+            "role": "checker",
+            "stage": "check",
+            "model_id": "claude-opus-5-5",
+            "count_estimate": 100,
+            "request_digest": "151765c1bfb3d4f26cb1070161229d2e77b20addd1b764724c91e2ce3b8cb8c0",
+            "usage": {
+              "input_tokens": 100,
+              "output_tokens": 100
+            }
+          }
+        ],
+        "contacts": [
+          {
+            "endpoint": "messages/count_tokens",
+            "stage": "draft",
+            "state": "completed",
+            "model": null,
+            "model_id": null,
+            "request_digest": "fc9096b7eb1442902482ea7280a3a35da24f6609f2902af93cffd5f2b1c24ba1",
+            "generation_request_digest": "62f4114656c76e3bfbd67a705e9e7393b08249437822835387389d40003f931f",
+            "usage": null
+          },
+          {
+            "endpoint": "messages",
+            "stage": "draft",
+            "state": "completed",
+            "model": null,
+            "model_id": null,
+            "request_digest": "62f4114656c76e3bfbd67a705e9e7393b08249437822835387389d40003f931f",
+            "generation_request_digest": "62f4114656c76e3bfbd67a705e9e7393b08249437822835387389d40003f931f",
+            "usage": null
+          },
+          {
+            "endpoint": "messages/count_tokens",
+            "stage": "check",
+            "state": "completed",
+            "model": null,
+            "model_id": null,
+            "request_digest": "f6a67d3bab22479031f8fa26d578d997a9634fc014d9a320c44ccb85545dc50f",
+            "generation_request_digest": "151765c1bfb3d4f26cb1070161229d2e77b20addd1b764724c91e2ce3b8cb8c0",
+            "usage": null
+          },
+          {
+            "endpoint": "messages",
+            "stage": "check",
+            "state": "completed",
+            "model": null,
+            "model_id": null,
+            "request_digest": "151765c1bfb3d4f26cb1070161229d2e77b20addd1b764724c91e2ce3b8cb8c0",
+            "generation_request_digest": "151765c1bfb3d4f26cb1070161229d2e77b20addd1b764724c91e2ce3b8cb8c0",
+            "usage": null
+          }
+        ],
+        "source_binding_intact": true,
+        "human_review": null,
+        "factual_acceptance": false
+      }
+    ]
+  },
+  "new_provider_contacts": 0,
+  "new_count_contacts": 0,
+  "new_spend_usd": "0",
+  "human_qualification": false
+}

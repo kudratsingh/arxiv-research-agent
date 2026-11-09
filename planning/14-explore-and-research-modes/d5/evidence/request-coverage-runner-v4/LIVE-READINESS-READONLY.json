@@ -1,0 +1,11 @@
+{
+  "read_only": true,
+  "packet_digest": "f48b3f24fd7c831d76aed787faebc4e64b2c322ef80657d0a2f6bd8ea6ee0b86",
+  "source_storage_matches": true,
+  "all_sealed_metadata_hashes_match": true,
+  "active_programme_matches": true,
+  "new_scope_absent": true,
+  "new_provider_contacts": 0,
+  "new_count_contacts": 0,
+  "new_spend_usd": "0"
+}
