@@ -39,7 +39,8 @@ from src.workspace.assistance_contract import (
     schemas,
 )
 from src.workspace.assistance_coverage import (
-    COVERAGE_REVISION,
+    COVERAGE_REVISIONS,
+    SHAPED_COVERAGE_REVISION,
     ClaimQuality,
     PartReview,
     fixture_checks,
@@ -96,6 +97,7 @@ def producer_binding() -> dict[str, str]:
         "workspace/assistance_contract.py",
         "workspace/assistance_policy.py",
         "workspace/assistance_coverage.py",
+        "workspace/assistance_coverage_shapes.py",
         "workspace/executor.py",
         "workspace/grounding.py",
         "workspace/material.py",
@@ -207,7 +209,7 @@ class CoverageChecks(Checks):
 
 
 def checks_model(revision: str) -> type[Checks]:
-    return CoverageChecks if revision == COVERAGE_REVISION else Checks
+    return CoverageChecks if revision in COVERAGE_REVISIONS else Checks
 
 
 def enabled() -> None:
@@ -221,12 +223,12 @@ def build_wire(request: dict[str, Any]) -> dict[str, Any]:
     phase = request["phase"]
     task_bound = request.get("sealed_request", {}).get("schema_revision") in {
         TASK_REVISION,
-        COVERAGE_REVISION,
+        *COVERAGE_REVISIONS,
     }
     procedural = request.get("sealed_request", {}).get("schema_revision") in {
         PROCEDURAL_REVISION,
         TASK_REVISION,
-        COVERAGE_REVISION,
+        *COVERAGE_REVISIONS,
     }
     if procedural:
         request = {
@@ -238,10 +240,15 @@ def build_wire(request: dict[str, Any]) -> dict[str, Any]:
                 "rule": "Emit bounded intents, not free procedural prose. A factual premise requires emitted scored claim_ids. Repair only within the sealed schema/evidence. All rendered text remains checked; a residual or uncertain prose finding blocks acceptance.",
             },
         }
-    if request.get("sealed_request", {}).get("schema_revision") == COVERAGE_REVISION:
+    if request.get("sealed_request", {}).get("schema_revision") in COVERAGE_REVISIONS:
         request = {
             **request,
             "request_quality_rule": "Answer the user's sealed requested parts in priority order. Exactly one independently testable finding per claim, maximum six claims total. Retain study/task scope, comparator, metric definition and conditions in each factual text. Do not bundle separate measurements to evade the cap. Every part must declare answered, lacks_evidence, or omitted. Available but unreported information is omitted, not absent evidence. Source notes can support context while a comparison remains unanswered. All semantic/qualification/coverage criteria require independent checker verdicts; do not infer truth from a resolving citation.",
+        }
+    if request.get("sealed_request", {}).get("schema_revision") == SHAPED_COVERAGE_REVISION:
+        request = {
+            **request,
+            "coverage_wire_rule": "Use the exact status-specific object. answered requires one to six answer_claim_ids, context_claim_ids, gap=none. lacks_evidence and omitted forbid answer_claim_ids entirely; context_claim_ids are source notes only, never an answer. Evidence gaps use only evidence reasons; omissions use claim_budget or not_prioritized. Full abstention forbids all claim references. A reported result is context only for a request for unspecified protocol details. Every reference must reciprocate claims.part_ids; no duplicate or overlapping references. Wire maxItems descriptions and the six-claim/8000-byte local limits remain mandatory. Questions and actions use bounded neutral intents; every factual statement remains a scored claim.",
         }
     wire = _build_request_kwargs(
         profile=RequestProfile(CANDIDATE_MODEL, None, False, "medium", True),
@@ -406,6 +413,7 @@ class AssistanceExecutor(FakeExecutor):
                     selection.mode,
                     len({r.work_id for r in chosen.values()}),
                     question_text,
+                    revision=SHAPED_COVERAGE_REVISION,
                 )
                 if coverage
                 else seal_task_policy(
@@ -414,7 +422,7 @@ class AssistanceExecutor(FakeExecutor):
                     len({r.work_id for r in chosen.values()}),
                 )
             )
-            revision = COVERAGE_REVISION if coverage else TASK_REVISION
+            revision = SHAPED_COVERAGE_REVISION if coverage else TASK_REVISION
             request.update(
                 schema_revision=revision,
                 task_policy=policy,
@@ -473,7 +481,7 @@ class AssistanceExecutor(FakeExecutor):
             key: original["assistance"][key]
             for key in ("mode", "depth", "background", "direction", "follow_up")
         }
-        if original["schema_revision"] in {TASK_REVISION, COVERAGE_REVISION}:
+        if original["schema_revision"] in {TASK_REVISION, *COVERAGE_REVISIONS}:
             compact["task_policy"] = original["task_policy"]
         value: dict[str, Any] = {
             "phase": phase,
@@ -494,7 +502,7 @@ class AssistanceExecutor(FakeExecutor):
                 if record is None:
                     raise ValueError("authoritative_assistance_response_missing")
                 external = json.loads(record[0]["content"][0]["text"])
-                if original["schema_revision"] in {TASK_REVISION, COVERAGE_REVISION}:
+                if original["schema_revision"] in {TASK_REVISION, *COVERAGE_REVISIONS}:
                     external = render_task_output(
                         external,
                         list(original["units"]),
@@ -519,7 +527,7 @@ class AssistanceExecutor(FakeExecutor):
                     "claims": [c for c in parent["draft"]["claims"] if c["kind"] == "factual"]
                 }
                 value["claim_inputs"] = parent["claim_inputs"]
-                if original["schema_revision"] == COVERAGE_REVISION:
+                if original["schema_revision"] in COVERAGE_REVISIONS:
                     value.update(
                         review_context(
                             original["task_policy"],
@@ -652,7 +660,7 @@ class LocalAssistanceTransport(FakeProvider):
             if not research:
                 payload.pop("comparison_claims")
                 payload.pop("comparison_basis")
-            if original.get("schema_revision") in {TASK_REVISION, COVERAGE_REVISION}:
+            if original.get("schema_revision") in {TASK_REVISION, *COVERAGE_REVISIONS}:
                 policy = original["task_policy"]
                 if policy["allowed_dispositions"] == ["full_abstention"] or not claims:
                     full: dict[str, Any] = {
@@ -682,7 +690,7 @@ class LocalAssistanceTransport(FakeProvider):
                         payload.pop("comparison_claims", None)
                         payload.pop("comparison_basis", None)
                     payload = {"response": payload}
-        if original.get("schema_revision") == COVERAGE_REVISION:
+        if original.get("schema_revision") in COVERAGE_REVISIONS:
             if context["phase"] == "check":
                 payload = fixture_checks(payload, context)
             else:
@@ -792,7 +800,7 @@ class LocalAssistanceTransport(FakeProvider):
                 response_purpose(original["assistance"]["mode"], catalog),
                 original["task_policy"],
             )
-            if original["schema_revision"] in {TASK_REVISION, COVERAGE_REVISION}
+            if original["schema_revision"] in {TASK_REVISION, *COVERAGE_REVISIONS}
             else None
         )
         internal = [asdict(c) for c in claims]
@@ -936,7 +944,7 @@ class AssistanceService:
             RESEARCH_REVISION,
             CITED_REVISION,
             TASK_REVISION,
-            COVERAGE_REVISION,
+            *COVERAGE_REVISIONS,
         }:
             raise ValueError("assistance_job_unavailable")
         with self.store.pool.connection() as conn:
@@ -978,7 +986,7 @@ class AssistanceService:
             workflows = [row for row in rows if row[0] in {"draft", "repair"} and row[3]]
             if workflows:
                 output = json.loads(workflows[-1][3]["content"][0]["text"])
-                if job.request["schema_revision"] in {TASK_REVISION, COVERAGE_REVISION}:
+                if job.request["schema_revision"] in {TASK_REVISION, *COVERAGE_REVISIONS}:
                     output = render_task_output(
                         output,
                         list(job.request["units"]),
@@ -1017,7 +1025,13 @@ class AssistanceService:
                 "SELECT id FROM workspace_fake_generation_jobs WHERE owner=%s AND request->>'schema_revision'=ANY(%s) AND request->'assistance'->>'work_id'=%s AND request->'assistance'->>'version_id'=%s ORDER BY created_at DESC LIMIT 20",
                 (
                     owner,
-                    [REVISION, RESEARCH_REVISION, CITED_REVISION, TASK_REVISION, COVERAGE_REVISION],
+                    [
+                        REVISION,
+                        RESEARCH_REVISION,
+                        CITED_REVISION,
+                        TASK_REVISION,
+                        *COVERAGE_REVISIONS,
+                    ],
                     work,
                     version,
                 ),

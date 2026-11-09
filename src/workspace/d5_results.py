@@ -10,7 +10,7 @@ from typing import Any
 
 from src.workspace.admission import AdmissionError, _digest
 from src.workspace.assistance_contract import PROCEDURAL_REVISION, render_procedures, resolve_draft
-from src.workspace.assistance_coverage import COVERAGE_REVISION
+from src.workspace.assistance_coverage import COVERAGE_REVISIONS
 from src.workspace.assistance_policy import TASK_REVISION, render_task_output
 from src.workspace.d5_adapter import ADAPTER_REVISION
 from src.workspace.executor import FakeExecutor
@@ -81,7 +81,7 @@ class QualificationResults:
                 if not intact:
                     output = None
                 elif (
-                    sealed["schema_revision"] in {TASK_REVISION, COVERAGE_REVISION}
+                    sealed["schema_revision"] in {TASK_REVISION, *COVERAGE_REVISIONS}
                     and output is not None
                 ):
                     output = render_task_output(

@@ -69,12 +69,11 @@ def test_canonical_metadata_hashes_do_not_replace_retained_evidence_or_wire(pack
         for version in original["version_hashes"]
     ]
     corrected = canonical_request(original, corpus)
-    assert corrected["version_hashes"] == {
-        row["version_id"]: row["content_hash"] for row in corpus
-    }
-    assert corrected["source_version_hash"] == corrected["version_hashes"][
-        original["assistance"]["version_id"]
-    ]
+    assert corrected["version_hashes"] == {row["version_id"]: row["content_hash"] for row in corpus}
+    assert (
+        corrected["source_version_hash"]
+        == corrected["version_hashes"][original["assistance"]["version_id"]]
+    )
     for key in original.keys() - {"version_hashes", "source_version_hash"}:
         assert corrected[key] == original[key]
     assert corrected["units"] == original["units"]
@@ -246,12 +245,18 @@ def test_parent_A_only_24h_and_exact_schedule(monkeypatch):
     compiled = {
         str(i): {
             "stage": "A" if i < 3 else "B",
-            "input": {"settings": {"d5_programme_binding": {"sealed": "programme"}}},
+            "input": {
+                "settings": {
+                    "d5_scope_profile": policy.PROFILE,
+                    "d5_programme_binding": {"sealed": "programme"},
+                }
+            },
         }
         for i in range(6)
     }
     receipt = {
         "stages": ["A"],
+        "limits": policy.LIMITS,
         "approved_at": now.isoformat(),
         "expires_at": (now + timedelta(hours=1)).isoformat(),
     }
@@ -315,6 +320,7 @@ def test_stage_caps_and_complete_workflow_spend(
         "members": ["unit"],
     }
     settings = {
+        "d5_scope_profile": policy.PROFILE,
         "program_amendment_proposal_digest": "capacity",
         "d5_programme_binding": {"capacity_proposal_digest": "capacity"},
     }

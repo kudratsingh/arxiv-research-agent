@@ -19,7 +19,7 @@ from psycopg import sql
 
 from src.workspace.admission import AdmissionError, _digest
 from src.workspace.d5_coverage_packet import CASE_IDS, freeze_controls, is_packet
-from src.workspace.d5_coverage_policy import LIMITS, programme
+from src.workspace.d5_coverage_policy import programme
 
 
 class CoverageTransport:
@@ -39,21 +39,20 @@ class CoverageTransport:
         context = json.loads(body["messages"][0]["content"])
         response = LocalAssistanceTransport.fixture(request).json()
         payload = json.loads(response["content"][0]["text"])
-        repair = self.case_id == CASE_IDS[0] or self.repair_all
-        if context["phase"] == "draft" and self.case_id == CASE_IDS[0]:
+        learn = self.case_id in {CASE_IDS[0], "development-v9-learn-coverage"}
+        repair = learn or self.repair_all
+        if context["phase"] == "draft" and learn:
             payload["response"]["claims"][0]["text"] = "Synthetic unsupported development control."
         if context["phase"] == "check":
             self.checks += 1
             for c in payload["checks"]:
                 c["decision"] = (
-                    "unsupported"
-                    if repair and self.checks == 1 and self.case_id == CASE_IDS[0]
-                    else "supported"
+                    "unsupported" if repair and self.checks == 1 and learn else "supported"
                 )
                 c["reason"] = (
                     "Synthetic software verdict; semantic quality and human support unmeasured."
                 )
-            if repair and self.checks == 1 and self.case_id != CASE_IDS[0]:
+            if repair and self.checks == 1 and not learn:
                 payload["coverage_checks"][0]["decision"] = "uncertain"
         response.update(
             model=body["model"],
@@ -64,7 +63,13 @@ class CoverageTransport:
         return httpx.Response(200, json=response)
 
 
-def capture(public: Any, ledger: Any, program_id: str) -> dict[str, Any]:
+def capture(
+    public: Any,
+    ledger: Any,
+    program_id: str,
+    *,
+    expected: tuple[int, int, int, str] = (30, 61, 81, "1.779493"),
+) -> dict[str, Any]:
     from src.workspace.d5_fixture import FINANCIAL_TABLES, PUBLIC_TABLES, financial_rows
     from src.workspace.qualification_budget import census
 
@@ -110,9 +115,9 @@ def capture(public: Any, ledger: Any, program_id: str) -> dict[str, Any]:
             )
         }
     if (
-        history["messages"] != 61
-        or history["counts"] != 81
-        or history["known_usd"] != "1.779493"
+        history["messages"] != expected[1]
+        or history["counts"] != expected[2]
+        or history["known_usd"] != expected[3]
         or history["pending_usd"] != "0"
         or history["unknown_usd"] != "0"
         or history["active_jobs"]
@@ -124,7 +129,7 @@ def capture(public: Any, ledger: Any, program_id: str) -> dict[str, Any]:
         base = conn.execute(
             "SELECT baseline FROM workspace_evaluation_programs WHERE program_id=%s", (program_id,)
         ).fetchone()[0]
-        if len(set(history["generation_job_ids"]) - set(base["generation_job_ids"])) != 30:
+        if len(set(history["generation_job_ids"]) - set(base["generation_job_ids"])) != expected[0]:
             raise AdmissionError("coverage_expected_programme_job_census_required")
     from src.workspace.schemas import ProfileData
 
@@ -159,7 +164,7 @@ def fixture_A(store: Any, packet: dict[str, Any]) -> dict[str, Any]:
         "expires_at": expiry.isoformat(),
         "packet_digest": packet["packet_digest"],
         "scope_id": "d5-" + packet["packet_digest"][:24],
-        "limits": LIMITS,
+        "limits": packet["limits"],
         "members": sorted({e["owner"] for e in compiled.values()}),
         "case_bindings_digest": _digest(case_bindings(compiled)),
         "transport_mode": "mock",

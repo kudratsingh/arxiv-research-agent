@@ -29,12 +29,9 @@ LIMITS: dict[str, Any] = {
 
 def limits_for(settings: dict[str, Any]) -> dict[str, Any]:
     if settings.get("d5_scope_profile"):
-        from src.workspace.d5_coverage_policy import LIMITS as coverage_limits
-        from src.workspace.d5_coverage_policy import PROFILE
+        from src.workspace.d5_coverage_policy import profile_limits
 
-        if settings["d5_scope_profile"] != PROFILE:
-            raise AdmissionError("d5_scope_profile_not_supported")
-        return coverage_limits
+        return profile_limits(settings["d5_scope_profile"])
     if settings.get("operation_routes"):
         from src.workspace.d5_operations import OPUS_LIMITS, validate
 
@@ -44,10 +41,10 @@ def limits_for(settings: dict[str, Any]) -> dict[str, Any]:
 
 
 def valid_limits(value: Any) -> bool:
-    from src.workspace.d5_coverage_policy import LIMITS as coverage_limits
+    from src.workspace.d5_coverage_policy import PROFILES
     from src.workspace.d5_operations import OPUS_LIMITS
 
-    return value in (LIMITS, OPUS_LIMITS, coverage_limits)
+    return value in (LIMITS, OPUS_LIMITS, *PROFILES.values())
 
 
 def stage_authorizations(

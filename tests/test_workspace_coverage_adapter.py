@@ -7,7 +7,7 @@ import pytest
 from jsonschema import validate
 
 from src.workspace.admission import AdmissionError
-from src.workspace.assistance_coverage import COVERAGE_REVISION, decorate_fixture, fixture_checks
+from src.workspace.assistance_coverage import SHAPED_COVERAGE_REVISION, decorate_fixture, fixture_checks
 from src.workspace.assistance_policy import CoverageTaskContext
 from src.workspace.d5_adapter import D5Adapter
 from src.workspace.d5_operations import ROUTES
@@ -112,7 +112,7 @@ async def test_production_adapter_coverage_and_durable_rendering(store, case):
     t = Transport(case)
     a, inputs = runtime(store, case, t)
     ctx = json.loads(a.request()["body"]["messages"][0]["content"])
-    assert ctx["sealed_request"]["schema_revision"] == COVERAGE_REVISION
+    assert ctx["sealed_request"]["schema_revision"] == SHAPED_COVERAGE_REVISION
     assert (
         ctx["sealed_request"]["task_policy"]["requested_parts"][0]["request"]
         == ARCHIVE["cases"][case]["question"]

@@ -523,13 +523,15 @@ def response_model(
     revision: str | None = None,
     task_policy: dict[str, Any] | None = None,
 ) -> type[BaseModel]:
-    from src.workspace.assistance_coverage import COVERAGE_REVISION
+    from src.workspace.assistance_coverage import COVERAGE_REVISIONS
     from src.workspace.assistance_coverage import response_model as coverage_model
     from src.workspace.assistance_policy import TASK_REVISION, task_response_model
 
-    if revision == COVERAGE_REVISION:
+    if revision in COVERAGE_REVISIONS:
         if task_policy is None:
             raise ValueError("sealed_task_policy_required")
+        if task_policy.get("revision") != revision:
+            raise ValueError("sealed_coverage_revision_mismatch")
         return coverage_model(list(handles), purpose, task_policy)
 
     if revision == TASK_REVISION:
@@ -618,10 +620,14 @@ def resolve_draft(
 ) -> tuple[
     SinglePaperDraft | CitedSinglePaperDraft | ProceduralSinglePaperDraft, tuple[ResearchClaim, ...]
 ]:
-    from src.workspace.assistance_coverage import COVERAGE_REVISION, normalize, prior_policy
+    from src.workspace.assistance_coverage import (
+        COVERAGE_REVISIONS,
+        normalize,
+        prior_policy,
+    )
     from src.workspace.assistance_policy import TASK_REVISION, normalize_task_output
 
-    if revision == COVERAGE_REVISION:
+    if revision in COVERAGE_REVISIONS:
         if task_policy is None:
             raise ValueError("sealed_task_policy_required")
         payload, _ = normalize(payload, list(catalog), purpose, task_policy)

@@ -10,7 +10,7 @@ from typing import Any, Literal
 from anthropic import transform_schema
 from pydantic import BaseModel, ConfigDict, Field, create_model
 
-from src.workspace.assistance_coverage import COVERAGE_REVISION, RequestedPart
+from src.workspace.assistance_coverage import COVERAGE_REVISIONS, RequestedPart
 
 TASK_REVISION = "workspace-assistance-task-bound-v7"
 TaskIntent = Literal["answer", "comparison", "application_assessment"]
@@ -204,7 +204,7 @@ def render_task_output(
 ) -> dict[str, Any]:
     from src.workspace.assistance_contract import render_gaps, render_procedures
 
-    if policy.get("revision") == COVERAGE_REVISION:
+    if policy.get("revision") in COVERAGE_REVISIONS:
         from src.workspace.assistance_coverage import render
 
         return render(payload, handles, purpose, policy)

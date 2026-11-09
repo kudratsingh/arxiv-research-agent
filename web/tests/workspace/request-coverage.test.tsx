@@ -32,3 +32,13 @@ it("records editable parts before generation and leaves old recovered drafts usa
  view.rerender(<AssistanceTaskContext values={taskDefaults} research={false} busy={true} change={change} />);
  expect(screen.getByLabelText(/Requested parts/)).toBeDisabled();
 });
+
+ it("renders normalized v9 missing-protocol c5 as context only, never an answer", async () => {
+  const normalized = await import("./fixtures/coverage-shapes.json");
+  render(<RequestCoverage prefix="v9" output={{ ...output, coverage_complete: false, request_coverage: normalized.request_coverage as AssistanceOutput["request_coverage"] }} />);
+  expect(screen.getByText("Unspecified protocol and breakdowns")).toBeVisible();
+  expect(screen.getByText(/Lacks evidence/)).toBeVisible();
+  expect(screen.getByText(/Context only · does not answer/)).toBeVisible();
+  expect(screen.getByRole("link", {name:"c5"})).toHaveAttribute("href", "#v9-c5");
+  expect(screen.queryByText("Declared answered")).toBeNull();
+ });

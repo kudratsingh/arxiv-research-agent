@@ -13,6 +13,8 @@ from typing import Any, Literal, get_args
 from pydantic import BaseModel, ConfigDict, Field, create_model, model_validator
 
 COVERAGE_REVISION = "workspace-assistance-request-coverage-v8"
+SHAPED_COVERAGE_REVISION = "workspace-assistance-coverage-shapes-v9"
+COVERAGE_REVISIONS = frozenset({COVERAGE_REVISION, SHAPED_COVERAGE_REVISION})
 PartId = Literal["p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8"]
 ClaimId = Literal["c1", "c2", "c3", "c4", "c5", "c6"]
 Status = Literal["answered", "lacks_evidence", "omitted"]
@@ -85,7 +87,9 @@ def requested_parts(context: Any, question: str) -> tuple[list[dict[str, Any]], 
     return [p.model_dump(mode="json") for p in values], basis
 
 
-def seal_coverage_policy(context: Any, mode: str, count: int, question: str) -> dict[str, Any]:
+def seal_coverage_policy(
+    context: Any, mode: str, count: int, question: str, *, revision: str = COVERAGE_REVISION
+) -> dict[str, Any]:
     from src.workspace.assistance_policy import TaskContext, seal_task_policy
 
     old = seal_task_policy(
@@ -94,7 +98,9 @@ def seal_coverage_policy(context: Any, mode: str, count: int, question: str) -> 
         count,
     )
     parts, basis = requested_parts(context, question)
-    return {**old, "revision": COVERAGE_REVISION, "requested_parts": parts, "parts_basis": basis}
+    if revision not in COVERAGE_REVISIONS:
+        raise ValueError("coverage_revision_required")
+    return {**old, "revision": revision, "requested_parts": parts, "parts_basis": basis}
 
 
 def prior_policy(policy: dict[str, Any]) -> dict[str, Any]:
@@ -108,7 +114,7 @@ def prior_policy(policy: dict[str, Any]) -> dict[str, Any]:
         f"p{i + 1}" for i in range(len(parts))
     ]:
         raise ValueError("sealed_request_parts_invalid")
-    if policy["revision"] != COVERAGE_REVISION:
+    if policy["revision"] not in COVERAGE_REVISIONS:
         raise ValueError("coverage_revision_required")
     if old["task_intent"] == "comparison" and not any(p.kind == "comparison" for p in parts):
         raise ValueError("comparison_request_part_required")
@@ -157,7 +163,7 @@ def response_model(handles: list[str], purpose: str, policy: dict[str, Any]) -> 
     branches = []
     for original in variants:
         full = get_args(original.model_fields["disposition"].annotation) == ("full_abstention",)
-        record: type[BaseModel] = NoReferenceCoverage if full else CoverageRecord
+        record: Any = NoReferenceCoverage if full else CoverageRecord
         if full and policy["missing_context"]:
             record = create_model(
                 "MissingContextCoverage_" + identity,
@@ -165,6 +171,10 @@ def response_model(handles: list[str], purpose: str, policy: dict[str, Any]) -> 
                 status=(Literal["lacks_evidence"], ...),
                 gap=(Literal["application_context"], ...),
             )
+        if policy["revision"] == SHAPED_COVERAGE_REVISION:
+            from src.workspace.assistance_coverage_shapes import coverage_type
+
+            record = coverage_type(full=full, missing_context=bool(policy["missing_context"]))
         coverage_fields: dict[str, Any] = {
             p["id"]: (record, ...) for p in policy["requested_parts"]
         }
@@ -207,8 +217,11 @@ def response_model(handles: list[str], purpose: str, policy: dict[str, Any]) -> 
     from functools import reduce
     from operator import or_
 
+    from src.workspace.assistance_coverage_shapes import ShapedEnvelope as shaped_envelope
+
     return create_model(
         "CoveredResponse_" + identity,
+        __base__=shaped_envelope if policy["revision"] == SHAPED_COVERAGE_REVISION else BaseModel,
         __config__=ConfigDict(extra="forbid", frozen=True),
         response=(
             reduce(or_, branches),
@@ -236,8 +249,11 @@ def normalize(
     referenced = set()
     for p in policy["requested_parts"]:
         row = coverage[p["id"]]
-        if full:
-            CoverageRecord.model_validate({**row, "answer_claim_ids": [], "context_claim_ids": []})
+        if policy["revision"] == SHAPED_COVERAGE_REVISION:
+            row.setdefault("answer_claim_ids", [])
+            row.setdefault("context_claim_ids", [])
+        if full or policy["revision"] == SHAPED_COVERAGE_REVISION:
+            CoverageRecord.model_validate({"answer_claim_ids": [], "context_claim_ids": [], **row})
         for role in ("answer_claim_ids", "context_claim_ids"):
             refs = row.get(role, [])
             for claim_id in refs:
@@ -432,6 +448,8 @@ def decorate_fixture(payload: dict[str, Any], policy: dict[str, Any]) -> dict[st
                 if part["id"] == first
                 else [],
             )
+        if policy["revision"] == SHAPED_COVERAGE_REVISION:
+            row.pop("answer_claim_ids", None)
         coverage[part["id"]] = row
     value["coverage"] = coverage
     return {"response": value}

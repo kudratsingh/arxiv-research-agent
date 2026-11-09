@@ -27,6 +27,26 @@ LIMITS: dict[str, Any] = {
 }
 PROGRAM_LIMITS = {"new_jobs": 34, "messages": 80, "counts": 99, "usd": "10", "concurrency": 1}
 
+SHAPED_PROFILE = "coverage-shapes-learn-development-v2"
+SHAPED_LIMITS = {
+    **LIMITS,
+    "jobs": 1,
+    "messages": 4,
+    "counts": 5,
+    "new_usd": "0.45",
+    "stages": {
+        "A": {"jobs": 0, "messages": 0, "counts": 1},
+        "B": {"jobs": 1, "messages": 4, "counts": 4},
+    },
+}
+PROFILES = {PROFILE: LIMITS, SHAPED_PROFILE: SHAPED_LIMITS}
+
+
+def profile_limits(profile: str) -> dict[str, Any]:
+    if profile not in PROFILES:
+        raise AdmissionError("d5_scope_profile_not_supported")
+    return PROFILES[profile]
+
 
 def programme(conn: Any, program_id: str) -> dict[str, Any]:
     """Verify the existing original authority and its append-only capacity receipt."""
@@ -104,13 +124,21 @@ def registration(
     )
     if expiry > start + timedelta(days=1):
         raise AdmissionError("coverage_approval_max_24_hours")
-    if len(compiled) != 6 or sorted(e["stage"] for e in compiled.values()) != ["A"] * 3 + ["B"] * 3:
+    limits = receipt["limits"]
+    profiles = {e["input"]["settings"].get("d5_scope_profile") for e in compiled.values()}
+    if len(profiles) != 1 or profile_limits(next(iter(profiles))) != limits:
+        raise AdmissionError("coverage_scope_profile_binding_drift")
+    count = limits["jobs"]
+    if (
+        len(compiled) != count * 2
+        or sorted(e["stage"] for e in compiled.values()) != ["A"] * count + ["B"] * count
+    ):
         raise AdmissionError("coverage_exact_development_schedule_required")
     validate_programme(conn, program_id, bindings[0], expiry)
 
 
 def stages(limits: dict[str, Any], requested: list[str]) -> None:
-    if limits == LIMITS and requested != ["B"]:
+    if limits in PROFILES.values() and requested != ["B"]:
         raise AdmissionError("coverage_separate_B_only_grant_required")
 
 
@@ -179,8 +207,9 @@ def guard(
         != settings["d5_programme_binding"]["capacity_proposal_digest"]
     ):
         raise AdmissionError("coverage_programme_binding_drift")
+    limits = profile_limits(settings["d5_scope_profile"])
     stage = bound["case"]["stage"]
-    if stage not in LIMITS["stages"] or set(bound["stage_authorizations"]) - {"A", "B"}:
+    if stage not in limits["stages"] or set(bound["stage_authorizations"]) - {"A", "B"}:
         raise AdmissionError("coverage_A_B_only")
     if stage == "B":
         measurements(conn, bound)
@@ -192,7 +221,7 @@ def guard(
         )
     ]
     history = census(conn, owner, members=bound["members"], job_ids=ids)
-    maximum = LIMITS["stages"][stage]
+    maximum = limits["stages"][stage]
     if (
         history["messages"] + (endpoint == "messages") > maximum["messages"]
         or history["counts"] + (endpoint == "messages/count_tokens") > maximum["counts"]
@@ -209,5 +238,5 @@ def guard(
             raise AdmissionError("coverage_stage_job_cap_exceeded")
         if sum(
             Decimal(history[k]) for k in ("known_usd", "pending_usd", "unknown_usd")
-        ) + amount > Decimal(LIMITS["new_usd"]):
+        ) + amount > Decimal(limits["new_usd"]):
             raise AdmissionError("coverage_new_spend_cap_exceeded")

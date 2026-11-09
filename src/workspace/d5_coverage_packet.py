@@ -27,7 +27,7 @@ CASE_IDS = [
 
 
 def is_packet(packet: dict[str, Any]) -> bool:
-    return packet.get("revision") == REVISION
+    return packet.get("revision") in {REVISION, "d5-coverage-shapes-development-packet-v2"}
 
 
 def owners(packet: dict[str, Any]) -> tuple[str, str]:
@@ -73,7 +73,22 @@ def canonical_request(sealed: dict[str, Any], corpus: list[dict[str, Any]]) -> d
     return result
 
 
+def current_request(sealed: dict[str, Any], corpus: list[dict[str, Any]]) -> dict[str, Any]:
+    """Fresh local replay binds current producer, without rewriting an old packet."""
+    from src.workspace.assistance import producer_binding
+
+    result = canonical_request(sealed, corpus)
+    result["producer"]["code"] = producer_binding()
+    return result
+
+
 def verify_controls(packet: dict[str, Any]) -> None:
+    if packet.get("revision") == "d5-coverage-shapes-development-packet-v2":
+        from src.workspace.d5_coverage_shapes_packet import verify_shapes
+
+        verify_shapes(packet)
+        return
+
     from pathlib import Path
 
     from anthropic import transform_schema
@@ -126,7 +141,7 @@ def verify_controls(packet: dict[str, Any]) -> None:
             not reference
             or case.get("cohort") != "development"
             or case.get("pipeline") != "fixed_evidence_diagnostic"
-            or case["sealed"] != canonical_request(reference["sealed"], packet["corpus"])
+            or case["sealed"] != current_request(reference["sealed"], packet["corpus"])
             or case["mode"] != reference["input"]["mode"]
             or case["question"] != reference["input"]["follow_up"]
         ):
@@ -175,7 +190,7 @@ def compile_controls(packet: dict[str, Any]) -> dict[str, Any]:
                     programme_amendment_digest=packet["programme"]["capacity_proposal_digest"],
                     operation_routes=packet["operation_routes"],
                     repair_located_prose=True,
-                    scope_profile=PROFILE,
+                    scope_profile=packet["scope_profile"],
                     programme_binding=packet["programme"],
                 ).snapshot(),
             }
@@ -199,7 +214,7 @@ def freeze_controls(
             "pipeline": "fixed_evidence_diagnostic",
             "mode": c["input"]["mode"],
             "question": c["input"]["follow_up"],
-            "sealed": canonical_request(c["sealed"], corpus),
+            "sealed": current_request(c["sealed"], corpus),
             "wire_digest": _digest(c["initial_wire"]),
             "human_review": None,
         }

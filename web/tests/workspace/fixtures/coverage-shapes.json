@@ -1,0 +1,17 @@
+{
+  "provenance": "SYNTHETIC v9 normalization of archived failed Learn draft; no accepted model/human result",
+  "request_coverage": [
+    {
+      "id": "p3",
+      "request": "Unspecified protocol and breakdowns",
+      "kind": "answer",
+      "status": "lacks_evidence",
+      "gap": "protocol",
+      "gap_text": "Request evaluation scope, protocol and condition breakdowns.",
+      "answer_claim_ids": [],
+      "context_claim_ids": [
+        "c5"
+      ]
+    }
+  ]
+}

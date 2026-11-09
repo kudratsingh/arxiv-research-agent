@@ -43,7 +43,7 @@ from src.workspace.assistance_contract import (
     schemas,
 )
 from src.workspace.assistance_coverage import (
-    COVERAGE_REVISION,
+    COVERAGE_REVISIONS,
     review_context,
     review_failed,
     seal_coverage_policy,
@@ -83,9 +83,11 @@ def qualification_producer() -> dict[str, Any]:
         "workspace/d5_adapter.py",
         "workspace/d5_coverage_policy.py",
         "workspace/d5_coverage_packet.py",
+        "workspace/d5_coverage_shapes_packet.py",
         "workspace/d5_coverage_replay.py",
         "workspace/assistance_policy.py",
         "workspace/assistance_coverage.py",
+        "workspace/assistance_coverage_shapes.py",
         "workspace/d5_operations.py",
         "workspace/programme_amendments.py",
         "workspace/programme_successors.py",
@@ -197,7 +199,7 @@ def prepare_input(
     ]
     compact["response_schemas_digest"] = _digest(sealed["response_schemas"])
     compact["response_purpose"] = sealed.get("response_purpose", "research_comparison")
-    if sealed["schema_revision"] in {TASK_REVISION, COVERAGE_REVISION}:
+    if sealed["schema_revision"] in {TASK_REVISION, *COVERAGE_REVISIONS}:
         compact["task_policy"] = sealed["task_policy"]
     compact["candidate_initial_wire_digest"] = _digest(sealed["candidate_initial_wire"])
     compact["full_preview_digest"] = _digest(sealed)
@@ -243,9 +245,9 @@ def prepare_input(
     if repair_located_prose or sealed["schema_revision"] == PROCEDURAL_REVISION:
         settings["located_prose_repair"] = "first-check-only-v1"
     if scope_profile is not None:
-        from src.workspace.d5_coverage_policy import PROFILE
+        from src.workspace.d5_coverage_policy import PROFILES
 
-        if scope_profile != PROFILE or programme_binding is None or operation == "probe":
+        if scope_profile not in PROFILES or programme_binding is None or operation == "probe":
             raise AdmissionError("d5_coverage_profile_binding_required")
         settings["d5_scope_profile"] = scope_profile
         settings["d5_programme_binding"] = programme_binding
@@ -388,7 +390,7 @@ class D5Adapter(QualificationAdapter):
                 contract_revision(response_purpose(sealed["assistance"]["mode"], sealed["units"])),
                 PROCEDURAL_REVISION,
                 TASK_REVISION,
-                COVERAGE_REVISION,
+                *COVERAGE_REVISIONS,
             }
             or sealed.get("producer", {}).get("code") != producer_binding()
         ):
@@ -438,10 +440,10 @@ class D5Adapter(QualificationAdapter):
             )
         ):
             raise AdmissionError("d5_local_or_wire_schema_drift")
-        if sealed["schema_revision"] in {TASK_REVISION, COVERAGE_REVISION}:
+        if sealed["schema_revision"] in {TASK_REVISION, *COVERAGE_REVISIONS}:
             selection = sealed["assistance"]
             count = len({r["work_id"] for r in sealed["units"].values()})
-            if sealed["schema_revision"] == COVERAGE_REVISION:
+            if sealed["schema_revision"] in COVERAGE_REVISIONS:
                 question = (
                     selection["follow_up"]
                     or (sealed.get("project_context") or {}).get("question")
@@ -452,6 +454,7 @@ class D5Adapter(QualificationAdapter):
                     selection["mode"],
                     count,
                     question,
+                    revision=sealed["schema_revision"],
                 )
             else:
                 expected_policy = seal_task_policy(
@@ -503,7 +506,7 @@ class D5Adapter(QualificationAdapter):
             k: sealed["assistance"][k]
             for k in ("mode", "depth", "background", "direction", "follow_up")
         }
-        if sealed["schema_revision"] in {TASK_REVISION, COVERAGE_REVISION}:
+        if sealed["schema_revision"] in {TASK_REVISION, *COVERAGE_REVISIONS}:
             compact["task_policy"] = sealed["task_policy"]
         return {
             "phase": "draft",
@@ -590,7 +593,7 @@ class D5Adapter(QualificationAdapter):
                     sealed["response_purpose"],
                     sealed["task_policy"],
                 )
-                if sealed["schema_revision"] in {TASK_REVISION, COVERAGE_REVISION}
+                if sealed["schema_revision"] in {TASK_REVISION, *COVERAGE_REVISIONS}
                 else workflow
             )
             if phase == "check":
@@ -616,9 +619,9 @@ class D5Adapter(QualificationAdapter):
                     )
                     if k in workflow_view
                 }
-                if sealed["schema_revision"] not in {TASK_REVISION, COVERAGE_REVISION}:
+                if sealed["schema_revision"] not in {TASK_REVISION, *COVERAGE_REVISIONS}:
                     value["unscored_prose"].update(render_procedures(workflow))
-                if sealed["schema_revision"] == COVERAGE_REVISION:
+                if sealed["schema_revision"] in COVERAGE_REVISIONS:
                     value.update(
                         review_context(
                             sealed["task_policy"],
@@ -657,7 +660,7 @@ class D5Adapter(QualificationAdapter):
                 }
                 value["previous_grounding"] = asdict(report)
                 value["previous_prose_review"] = checked.model_dump(mode="json")
-                if sealed["schema_revision"] == COVERAGE_REVISION:
+                if sealed["schema_revision"] in COVERAGE_REVISIONS:
                     value["previous_declared_coverage"] = workflow_view["request_coverage"]
                 value["procedural_draft"] = {
                     k: workflow_view[k] for k in ("gaps", "questions", "proposal", "abstention")
@@ -748,7 +751,7 @@ class D5Adapter(QualificationAdapter):
             render_task_output(
                 output, list(sealed["units"]), sealed["response_purpose"], sealed["task_policy"]
             )
-            if sealed["schema_revision"] in {TASK_REVISION, COVERAGE_REVISION}
+            if sealed["schema_revision"] in {TASK_REVISION, *COVERAGE_REVISIONS}
             else render_procedures(output)
         )
         report = validate_claims(claims, materials)
@@ -776,7 +779,7 @@ class D5Adapter(QualificationAdapter):
 
     def _review_complete(self, grounding: Any, snapshot: dict[str, Any], checks: Any) -> bool:
         sealed = self.inputs.settings["d5_request"]
-        if sealed["schema_revision"] == COVERAGE_REVISION:
+        if sealed["schema_revision"] in COVERAGE_REVISIONS:
             rendered = render_task_output(
                 snapshot["steps"][-1]["output"],
                 list(sealed["units"]),
@@ -789,7 +792,7 @@ class D5Adapter(QualificationAdapter):
                 raise AdmissionError("d5_request_or_claim_quality_unresolved")
         if (
             self.inputs.settings["d5_request"]["schema_revision"]
-            in {TASK_REVISION, COVERAGE_REVISION}
+            in {TASK_REVISION, *COVERAGE_REVISIONS}
             and len(snapshot["steps"]) == 3
             and grounding.total_factual != grounding.supported
         ):
@@ -857,7 +860,7 @@ class D5Adapter(QualificationAdapter):
                 if last["stage"] == "check":
                     context = json.loads(last["body"]["messages"][0]["content"])
                     checks = self._checks(parsed)
-                    if self.inputs.settings["d5_request"]["schema_revision"] == COVERAGE_REVISION:
+                    if self.inputs.settings["d5_request"]["schema_revision"] in COVERAGE_REVISIONS:
                         validate_review(checks, context)
                     checks.validate_locations(context.get("unscored_prose", {}))
                     expected = {c["claim_id"]: c["input_digest"] for c in context["claim_inputs"]}
