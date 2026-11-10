@@ -125,3 +125,28 @@ both new source modules100%. `ruff check .` passes repository-wide. The earlier
 additional c5 control and complete committed-source comparison. Details and log
 hash: [PUBLICATION-CORRECTION.json](PUBLICATION-CORRECTION.json). Application and
 packet remain5e51269b /22b8e13b; final publication is a test/docs correction only.
+
+## Measured aggregate CI deadline correction
+
+The first Python job was **cancelled by its30-minute aggregate ceiling**, not
+by a failed assertion: Linux coverage completed7117pass/1skip/53E2Edeselected
+in1660.01s (94.99% project,97%patch), then E2E was cancelled at7/53. Safety and
+simulation steps could not report. Seven other substantive jobs passed; the
+separate lint failure was fixed in4cf1050e. No cancelled tier is called green.
+
+The bounded operational correction is **only tests-job30→35minutes**. Parsed
+YAML equality proves every other workflow setting/step/command/selection/input/
+floor unchanged. The60-second per-test limit, network step bounds, nine jobs,
+all coverage and web budgets, and all provider/contact/spend limits are unchanged.
+This aggregate CI exception is distinct from qualification workflow timeouts.
+Packet22b8e13b and runtime source5e51269b still verify unchanged.
+
+Before pushing this correction, the required full gate ran again:
+**7064 passed,54 skipped,53 deselected in1355.29s**,94.61%project/**97%patch**.
+Final workflow/documentation/harness guards: **170 passed in23.32s**.
+[Measured cancellation and correction receipt](CI-DEADLINE-DIAGNOSIS.json).
+A preliminary local command used the system Python without PyYAML; the ensuing
+early gate was interrupted at210pass and restarted with the locked interpreter
+against the final configuration. That partial diagnostic is not a passing gate.
+No shared environment was installed into. Final exact-head CI is reported in the
+handoff/publication receipt, not inferred from the earlier cancelled run.

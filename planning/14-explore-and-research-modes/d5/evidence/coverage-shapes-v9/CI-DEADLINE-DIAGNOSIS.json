@@ -1,0 +1,57 @@
+{
+  "run_id": 42723324148,
+  "job_id": 129522515165,
+  "head": "601a96ffc2753b39a0402699962bebab33df0620",
+  "url": "https://github.com/kudratsingh/arxiv-research-agent/actions/runs/42723324148/job/129522515165",
+  "unit_integration": {
+    "passed": 7117,
+    "skipped": 1,
+    "deselected_e2e": 53,
+    "seconds": 1660.01,
+    "project_pct": 94.99,
+    "patch_pct": 97,
+    "floors_passed": true
+  },
+  "job_start": "2026-11-09T23:48:08Z",
+  "coverage_finished": "2026-11-10T00:17:35Z",
+  "E2E_step_started": "2026-11-10T00:17:49Z",
+  "cancelled": "2026-11-10T00:18:08Z",
+  "E2E_before_cancel": {
+    "passed": 7,
+    "selected": 53
+  },
+  "cause": "Thirty-minute aggregate job deadline, after coverage passed; no failed Python assertion. Separate lint failure fixed in test-only commit4cf1050e.",
+  "correction": {
+    "tests_job_minutes_before": 30,
+    "tests_job_minutes_after": 35,
+    "additional_minutes": 5,
+    "parsed_workflow_only_timeout_diff": true,
+    "all_job_names_steps_commands_selections_coverage_inputs_and_floors_unchanged": true,
+    "per_test_timeout_seconds": 60,
+    "all_other_timeouts_unchanged": true
+  },
+  "runtime_source_and_packet_changed": false,
+  "model_contacts": 0,
+  "count_contacts": 0,
+  "new_spend_usd": "0",
+  "qualification_caps_changed": false,
+  "required_local_gate_after_config_change": {
+    "passed": 7064,
+    "skipped": 54,
+    "deselected_e2e": 53,
+    "seconds": 1355.29,
+    "project_pct": 94.61,
+    "patch_pct": 97,
+    "exit": 0,
+    "log_path": "/private/tmp/coverage-ci-budget-final-gate.log",
+    "log_sha256": "5aa98dc862b68ef0561a48a3ac165b6c725907975a30fc2f3db0634525465603"
+  },
+  "workflow_doc_harness_tests": {
+    "passed": 170,
+    "seconds": 23.32,
+    "log_path": "/private/tmp/coverage-ci-config-final-tests.log",
+    "log_sha256": "bf773505e4f41c2ce4ae6374d8aba5b125b862c4d242570124c48102452cdd41"
+  },
+  "packet_digest_unchanged": "22b8e13bc39d78cb1203f2e613c7c488d7f5a403234840d5ae15dcfa3d44a477",
+  "runtime_application_unchanged": "5e51269be259cf0d4ee6eacaddbccc63ace3fa2c"
+}

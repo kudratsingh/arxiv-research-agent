@@ -213,7 +213,13 @@ jobs:
     # Keep a bounded 30-minute ceiling for the enlarged suite plus cold
     # install, and publish slow-test timings to measure the corrected run.
     # This is headroom, not evidence of a successful remote coverage run.
-    timeout-minutes: 30
+    # Run 42723324148: 7,117 tests and all coverage floors passed in
+    # 1,660.01 s (94.99% project, 97% patch). Setup/coverage used almost
+    # the whole 30-minute job; its deadline cancelled E2E at 7/53 before
+    # safety/simulation could report. Keep every selection, coverage input,
+    # floor, install bound and 60-second per-test timeout. Five additional
+    # aggregate minutes let the remaining tiers finish with bounded margin.
+    timeout-minutes: 35
     env:
       # Never a real key, in a job that now runs the e2e tier and the
       # adversarial safety suite as well as the unit and integration
