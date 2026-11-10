@@ -1,0 +1,32 @@
+{
+  "application_commit": "5e51269be259cf0d4ee6eacaddbccc63ace3fa2c",
+  "packet_digest": "22b8e13bc39d78cb1203f2e613c7c488d7f5a403234840d5ae15dcfa3d44a477",
+  "runtime_source_changed": false,
+  "packet_verified_unchanged": true,
+  "initial_publication": "601a96ffc2753b39a0402699962bebab33df0620",
+  "initial_ci": "https://github.com/kudratsingh/arxiv-research-agent/actions/runs/42723324148",
+  "confirmed_failure": "Ruff I001 in tests/test_workspace_coverage_adapter.py import block; corrected without changing assertions.",
+  "repo_wide_ruff": "ruff check . PASS",
+  "required_gate": {
+    "command": "make test-cov-diff VENV_PYTHON=/Users/kudratsingh/Machine-Learning-Projects/arxiv-venv-lock/bin/python",
+    "exit": 0,
+    "passed": 7064,
+    "skipped": 54,
+    "deselected_e2e": 53,
+    "seconds": 1630.57,
+    "project_pct": 94.61,
+    "patch_pct": 97,
+    "source_modules_new_patch_pct": {
+      "assistance_coverage_shapes": 100,
+      "d5_coverage_shapes_packet": 100
+    },
+    "all_floors_preserved": true,
+    "log_path": "/private/tmp/coverage-final-import-gate.log",
+    "log_sha256": "c18002303228b453e49cd0874a6821cc7960017671f44e0e8add18051783e637"
+  },
+  "new_Messages": 0,
+  "new_counts": 0,
+  "new_spend_usd": "0",
+  "live_authorizations": 0,
+  "final_publication_and_CI": "Exact final head and run recorded in the final handoff and local PUBLICATION.json; neither inferred from first publication."
+}

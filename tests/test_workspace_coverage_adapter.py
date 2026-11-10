@@ -7,7 +7,11 @@ import pytest
 from jsonschema import validate
 
 from src.workspace.admission import AdmissionError
-from src.workspace.assistance_coverage import SHAPED_COVERAGE_REVISION, decorate_fixture, fixture_checks
+from src.workspace.assistance_coverage import (
+    SHAPED_COVERAGE_REVISION,
+    decorate_fixture,
+    fixture_checks,
+)
 from src.workspace.assistance_policy import CoverageTaskContext
 from src.workspace.d5_adapter import D5Adapter
 from src.workspace.d5_operations import ROUTES

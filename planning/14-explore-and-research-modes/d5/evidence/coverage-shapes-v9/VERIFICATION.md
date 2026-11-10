@@ -108,3 +108,20 @@ in the final handoff and local outputs/d5/coverage-shapes-v9 publication receipt
 Read [this branch's CI records](https://github.com/kudratsingh/arxiv-research-agent/actions/workflows/ci.yml?query=branch%3Acodex%2Fworkspace-d5-coverage-shapes)
 for that exact head. Local success is not asserted as remote CI success here.
 No PR is opened; nothing merged/deployed. Paid steps remain separate decisions.
+
+## Test-only publication correction
+
+First publication601a96ff / CI42723324148 found **Ruff I001** in the updated
+coverage-adapter test's import block. This was reproduced with `ruff check .`
+and corrected by formatting that import; no assertion, runtime source, schema,
+sealed request, price, packet or ledger binding changed. The initial failed CI
+is retained, not reported green. All other completed jobs passed; the remaining
+Python job was allowed to finish before the new dispatch to avoid cancellation.
+
+Before the correction push, the **entire required gate was rerun** unchanged:
+**7064 passed,54 skipped,53 deselected in1630.57s**, project94.61%, **patch97%**,
+both new source modules100%. `ruff check .` passes repository-wide. The earlier
+7063-test/96% report is retained in CHECKS.json; this final run includes the last
+additional c5 control and complete committed-source comparison. Details and log
+hash: [PUBLICATION-CORRECTION.json](PUBLICATION-CORRECTION.json). Application and
+packet remain5e51269b /22b8e13b; final publication is a test/docs correction only.
