@@ -1,6 +1,44 @@
 # Two-mode implementation status
 
-## Current offline coverage-shapes v9 repair
+## Current coverage-authority v10 offline successor
+
+Application **`3c94e566228e6dc536518887e93c41d8832f8478`**, isolated branch
+`codex/workspace-d5-coverage-authority`. [Contract and exact commands](d5/COVERAGE-AUTHORITY.md),
+[separate A-only proposal](d5/COVERAGE-AUTHORITY-A-APPROVAL-REQUEST.md),
+[B-only later proposal](d5/COVERAGE-AUTHORITY-B-APPROVAL-REQUEST.md),
+[sealed evidence](d5/evidence/coverage-authority-v10/VERIFICATION.md).
+
+Coverage is now the single model-authored mapping. V10 rejects claims.part_ids
+and derives answer/context reverse associations in code, including checker inputs.
+Status-specific schemas, unique IDs/references, no orphans/overlap, full abstention,
+comparison limits, intent/priority/six-claim limits and mandatory quality/prose/
+provenance checking remain. Existing v8/v9 replay stays versioned. The v9 provider
+draft remains failed; its immutable regression is distinct from the synthetic
+successor that deletes only part_ids. No paid or human success is claimed.
+
+Packet **`880e4794cd08d26a4a9e63231d5d0d82ec99a267e65ff60dfc5f0994875fb864`**,
+scope `d5-880e4794cd08d26a4a9e6323`, approved=false. Baseline **32 funded jobs /
+63 Messages / 87 counts / $1.828877 estimated**, pending/unknown zero. Existing
+caps **34 / 80 / 99 / $10**, concurrency one and expiry2026-11-14T07:24:01Z
+unchanged. Fresh A1 count plus separately approved B1 Learn/4Messages/4counts/
+$0.45 reaches at most **33 / 67 / 92**. Old measurements cannot establish fit for
+the changed request. No live grants, provider/count contacts, cap changes or spend.
+
+Focused63 regression tests passed. Full local gate7096passed/54skipped/53deselected,
+94.62%total/97%patch; all package floors pass, new packet module100%.
+Frontend4280passed/9skipped, E2E53, simulation20/20USD0, parity260/0;
+Ruff/mypy205files and frontend type/lint pass. Final publication/CI is recorded
+against the exact published head in the owner handoff and local publication receipt. Disposable marked-database CLI replay
+completed A1 then B draft/check/repair/check, and refused B before its separate
+synthetic grant. Copy reached33/67/92 with historical copied spend unchanged;
+all transport counts/verdicts synthetic, human fields null, quality HOLD.
+
+Historical v7r2 3/8, v8r4b machine-review records, archived producers, failed
+attempts and real accounting are preserved. No held-out denominator is filled by
+this development work. Owner3137/review3178 untouched; everyday generation,
+recurrence and notifications disabled; no merge/deployment or PR.
+
+## Historical offline coverage-shapes v9 repair
 
 From publication0592bec4, isolated `codex/workspace-d5-coverage-shapes`. [Contract/runbook](d5/COVERAGE-SHAPES.md), [unexecuted one-case proposal and capacity choices](d5/COVERAGE-SHAPES-PROPOSAL.md), [verification](d5/evidence/coverage-shapes-v9/VERIFICATION.md). The original f48b3f24 Stage A completed; Stage B stopped on Learn's local coverage invariant before checking. Learn remains failed, the two later cases unrun, and the scope revoked. Historical pre-run sections below are preserved snapshots, not current authority/status.
 

@@ -1,0 +1,79 @@
+{
+  "packet_digest": "880e4794cd08d26a4a9e63231d5d0d82ec99a267e65ff60dfc5f0994875fb864",
+  "application_commit": "3c94e566228e6dc536518887e93c41d8832f8478",
+  "raw_replay_path": "/private/tmp/arxiv-agent-eng-workspace-coverage-authority/outputs/d5/coverage-authority-v10/replay/REPLAY.json",
+  "raw_replay_sha256": "a1cdbdf0a1ed62906b9ce72593448fc06d354ef39442204fadbad646ebc0c881",
+  "fixture_database": "workspace_d5_coverage_authority_v10",
+  "offline_marker_permanent": true,
+  "B_without_grant": "d5_stage_not_authorized",
+  "stages": [
+    "draft",
+    "check",
+    "repair",
+    "check"
+  ],
+  "copied_ledger_after": {
+    "jobs": 33,
+    "Messages": 67,
+    "counts": 92,
+    "estimated_usd": "1.828877",
+    "pending_usd": "0",
+    "unknown_usd": "0"
+  },
+  "synthetic_journal": [
+    {
+      "endpoint": "messages/count_tokens",
+      "stage": "draft",
+      "request_digest": "80fb9cb6f20ee54c95a2bd77ee93c6115bb4c34e8644fe8eeb30ab77e3766f08",
+      "receipt_digest": "264e4776a67ea69995188d6125365eef67a3177fbd66c18188f37397775d19ab"
+    },
+    {
+      "endpoint": "messages",
+      "stage": "draft",
+      "request_digest": "8a3f0aaf9ccd8ab437d973560e068d54f93ba178e5bc0e1f8e32cc9b78c0c893",
+      "receipt_digest": "8a2adeb3fae097a8ad59ebfe37e1b1d76494d154c241b18c0bbd45b0aeb645a7"
+    },
+    {
+      "endpoint": "messages/count_tokens",
+      "stage": "check",
+      "request_digest": "ed023cdaae46ad5cb1fd275829625b123773b4a896b2d6d96dc372f43b7ec0bc",
+      "receipt_digest": "9b3dc5022a30b00c39fc962cd0f05b4c16c25b040d9cafde2f6516232a5e9811"
+    },
+    {
+      "endpoint": "messages",
+      "stage": "check",
+      "request_digest": "223737c037cedcf011f757b96657db4cffb14b844d30bb4888e5e72a28b78342",
+      "receipt_digest": "00cf74a92d6ff8044312e02cee54e3b0f1a9f02b27c9c02da72eb0766ad8c911"
+    },
+    {
+      "endpoint": "messages/count_tokens",
+      "stage": "repair",
+      "request_digest": "b9d18688a3847d0ca0e425c8b58b2e7a0a1a61f3991a5db6254734d6fd66ac66",
+      "receipt_digest": "508e1025908a971489dff916dadcb6b2474544a0e1563b765334482f14cb1da3"
+    },
+    {
+      "endpoint": "messages",
+      "stage": "repair",
+      "request_digest": "980a3c9db5ce34ccd6147d914298e4510ba50c89c1e521b79245192166266d1d",
+      "receipt_digest": "f2941cee924a9bbd1693c149f4233101b2f3e24f566eee0aaf56ab87a67a5ab8"
+    },
+    {
+      "endpoint": "messages/count_tokens",
+      "stage": "check",
+      "request_digest": "420268b059b4ac23e03f1ee0073bcd84ff65b6d276089174a367c69698726804",
+      "receipt_digest": "94b403e3caa6828d9c67671e2432f94aac319856f0ad33e2816928514009d036"
+    },
+    {
+      "endpoint": "messages",
+      "stage": "check",
+      "request_digest": "901af5e1639ba425fd75fa721e5b65c9e5b29226e84c2a1a160c310c8e270d42",
+      "receipt_digest": "498c6a23b636d9e945d2fbacedc8117fbe914ab72f26f8efb0f9db102ea64cef"
+    }
+  ],
+  "new_actual_provider_contacts": 0,
+  "new_actual_count_contacts": 0,
+  "new_spend_usd": "0",
+  "human_labels": null,
+  "semantic_quality": "UNMEASURED",
+  "basis": "Software control flow and protected capacity only; synthetic counts/usage/verdicts do not measure tokens or quality"
+}

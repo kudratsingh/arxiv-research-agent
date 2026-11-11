@@ -1,0 +1,92 @@
+{
+  "original_text_sha256": "dc3a1f792d0fbeb0dab73dac2c9e4df5e9460f778705cef117f1997c329600d9",
+  "original_receipt_sha256": "9507463d2fdb483f509a29810b8f3f3011d8637cb5adc76b607fd0e898edf045",
+  "original_response_digest": "2226448e3d858170c7138fa7a569547bc34b4fc0fb7c8644be9d2fda252e2bc4",
+  "original_failure": "request_part_claim_binding_mismatch",
+  "original_accepted": false,
+  "synthetic_change": "Delete claims.part_ids only; coverage and factual texts unchanged",
+  "derived_claim_request_index": {
+    "c1": {
+      "answer": [
+        "p1"
+      ],
+      "context": []
+    },
+    "c2": {
+      "answer": [
+        "p1",
+        "p2"
+      ],
+      "context": []
+    },
+    "c3": {
+      "answer": [
+        "p2"
+      ],
+      "context": []
+    },
+    "c4": {
+      "answer": [
+        "p2"
+      ],
+      "context": [
+        "p3"
+      ]
+    },
+    "c5": {
+      "answer": [
+        "p2"
+      ],
+      "context": [
+        "p3"
+      ]
+    }
+  },
+  "coverage": [
+    {
+      "id": "p1",
+      "request": "Study scope and evaluated conditions",
+      "kind": "answer",
+      "status": "answered",
+      "answer_claim_ids": [
+        "c1",
+        "c2"
+      ],
+      "context_claim_ids": [],
+      "gap": "none",
+      "gap_text": "No evidence gap declared."
+    },
+    {
+      "id": "p2",
+      "request": "Reported conditional findings",
+      "kind": "answer",
+      "status": "answered",
+      "answer_claim_ids": [
+        "c2",
+        "c3",
+        "c4",
+        "c5"
+      ],
+      "context_claim_ids": [],
+      "gap": "none",
+      "gap_text": "No evidence gap declared."
+    },
+    {
+      "id": "p3",
+      "request": "Unspecified protocol and breakdowns",
+      "kind": "answer",
+      "status": "lacks_evidence",
+      "gap": "protocol",
+      "context_claim_ids": [
+        "c4",
+        "c5"
+      ],
+      "answer_claim_ids": [],
+      "gap_text": "Request evaluation scope, protocol and condition breakdowns."
+    }
+  ],
+  "whole_claim_support": null,
+  "relevance": null,
+  "human_labels": null,
+  "mechanical_mapping_not_semantic_evidence": true
+}

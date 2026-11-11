@@ -179,6 +179,12 @@ async def test_preserved_actual_draft_through_production_adapter(store, monkeypa
         row = result["cases"][0]["request_coverage"][2]
         assert row["answer_claim_ids"] == [] and row["context_claim_ids"] == ["c4", "c5"]
         assert row["status"] == "lacks_evidence"
+        observed = result["raw_results"][CASE_ID]
+        checker = next(c for c in observed["contacts"] if c["endpoint"] == "messages" and c["stage"] == "check")
+        context = json.loads(checker["body"]["messages"][0]["content"])
+        assert context["claim_request_index"]["c5"] == {"answer": ["p2"], "context": ["p3"]}
+        assert context["declared_coverage"][2]["answer_claim_ids"] == []
+        assert "unqualified" in result["basis"] or "quarantined" in result["basis"]
     assert result["accounting"]["actual_new_messages"] == 0
 
 

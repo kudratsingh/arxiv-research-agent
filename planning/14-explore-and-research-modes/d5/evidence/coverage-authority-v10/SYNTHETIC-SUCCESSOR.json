@@ -1,0 +1,114 @@
+{
+  "provenance": "SYNTHETIC: only claims.part_ids removed from rejected draft; no credit as provider success or human judgment",
+  "original_text_sha256": "dc3a1f792d0fbeb0dab73dac2c9e4df5e9460f778705cef117f1997c329600d9",
+  "provider_result_accepted": false,
+  "synthetic_output": {
+    "response": {
+      "claims": [
+        {
+          "claim_id": "c1",
+          "text": "The abstract introduces SafeWebWorld, a benchmark evaluating safety sufficiency (whether a predictive interface preserves policy-decisive information to separate EXECUTE, ASK, and BLOCK actions) across five web-safety domains via action-conditioned futures, policy-decisive evidence, and policy-conditioned decisions.",
+          "handles": [
+            "u199bc87ac63c4d9e8535"
+          ],
+          "required_scope": "abstract"
+        },
+        {
+          "claim_id": "c2",
+          "text": "In a matched human evaluation of 3,000 predictions from ten frozen open models, 86.1% were judged semantically plausible, yet several models showed highly asymmetric authorisation behaviour: low false-safe execution, poor recall of clarifiable ASK cases, and a strong preference for BLOCK.",
+          "handles": [
+            "u199bc87ac63c4d9e8535"
+          ],
+          "required_scope": "abstract"
+        },
+        {
+          "claim_id": "c3",
+          "text": "Under a controlled Security-Aligned Supervised Fine-Tuning protocol, evidence preservation can improve substantially while authorisation-sensitive decisions deteriorate.",
+          "handles": [
+            "u199bc87ac63c4d9e8535"
+          ],
+          "required_scope": "abstract"
+        },
+        {
+          "claim_id": "c4",
+          "text": "Under Latent Authorisation Recovery (LAR), frozen-score recalibration reveals substantial but backbone-dependent recovery, while paired recovery provides only a modest additional gain.",
+          "handles": [
+            "u199bc87ac63c4d9e8535"
+          ],
+          "required_scope": "abstract"
+        },
+        {
+          "claim_id": "c5",
+          "text": "Within-family and matched-authorisation evaluations remain poor, so aggregate recoverability does not imply robust fine-grained authorisation behaviour.",
+          "handles": [
+            "u199bc87ac63c4d9e8535"
+          ],
+          "required_scope": "abstract"
+        }
+      ],
+      "background_claims": [
+        "c2"
+      ],
+      "assumption_claims": [],
+      "limitation_claims": [
+        "c4",
+        "c5"
+      ],
+      "gaps": [
+        "methods",
+        "evaluation",
+        "full_text"
+      ],
+      "questions": [
+        {
+          "intent": "methods",
+          "claim_ids": []
+        },
+        {
+          "intent": "qualifications",
+          "claim_ids": [
+            "c3",
+            "c4"
+          ]
+        },
+        {
+          "intent": "implementation",
+          "claim_ids": []
+        }
+      ],
+      "proposal": "inspect_methods",
+      "abstention": null,
+      "disposition": "answer",
+      "coverage": {
+        "p1": {
+          "status": "answered",
+          "answer_claim_ids": [
+            "c1",
+            "c2"
+          ],
+          "context_claim_ids": [],
+          "gap": "none"
+        },
+        "p2": {
+          "status": "answered",
+          "answer_claim_ids": [
+            "c2",
+            "c3",
+            "c4",
+            "c5"
+          ],
+          "context_claim_ids": [],
+          "gap": "none"
+        },
+        "p3": {
+          "status": "lacks_evidence",
+          "gap": "protocol",
+          "context_claim_ids": [
+            "c4",
+            "c5"
+          ]
+        }
+      }
+    }
+  }
+}

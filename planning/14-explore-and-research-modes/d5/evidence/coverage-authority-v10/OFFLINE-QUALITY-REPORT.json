@@ -1,0 +1,63 @@
+{
+  "cohort": "offline development controls only",
+  "human_qualification": false,
+  "human_labels": null,
+  "provider_quality_credit": 0,
+  "cases": [
+    {
+      "case": "Original v9 rejected Learn response",
+      "input": "unchanged archived text and original wire schema",
+      "outcome": "wire/local shape valid; legacy semantic rejection remains request_part_claim_binding_mismatch",
+      "accepted": false
+    },
+    {
+      "case": "Synthetic v10 copy, only part_ids deleted",
+      "outcome": "closed new schema accepted; deterministic answer/context index reaches actual checker request through production adapter; synthetic first check and mandatory repair/recheck mechanically exercised",
+      "semantic_support": null,
+      "relevance": null,
+      "human_labels": null,
+      "provider_success": false
+    },
+    {
+      "case": "Result incorrectly classified as protocol answer",
+      "outcome": "synthetic checker declares lacks_evidence; first check permits bounded repair; residual mismatch after mandatory recheck fails d5_request_or_claim_quality_unresolved",
+      "accepted": false
+    },
+    {
+      "case": "Comparison-only source notes",
+      "outcome": "notes retained with exact evidence; comparison remains unanswered; claiming answered comparison is refused",
+      "human_labels": null
+    },
+    {
+      "case": "Missing application context / full abstention",
+      "outcome": "no claims or references allowed; request_context remains visible",
+      "human_labels": null
+    },
+    {
+      "case": "Malformed references/statuses/IDs/removed field",
+      "outcome": "rejected by transformed wire and/or local semantic checks, as appropriate",
+      "schema_proof_is_not_semantic_proof": true
+    }
+  ],
+  "limitations": [
+    "Original claims were not rewritten or scored as better science",
+    "Synthetic checker support/atomicity/qualification opinions are fixture decisions, not checker qualification",
+    "Actual new request token fit and provider wire acceptance remain unmeasured",
+    "One Learn development proposal cannot validate comparison performance or fill held-out/human minimums",
+    "Historical stopped runs and original frozen denominators remain unchanged"
+  ],
+  "code_review": {
+    "reviewer": "implementing agent; not independent human qualification",
+    "checks": [
+      "closed claim shape removes part_ids",
+      "legacy v9 wire JSON equals archived transmitted schema",
+      "deterministic roles derive only from validated coverage",
+      "unique IDs/no orphans/no duplicate or overlapping references",
+      "full abstention and comparison-only separation",
+      "selected source/provenance and whole-claim checking retained",
+      "mandatory quality/prose review and bounded repair retained",
+      "fresh packet/count body and unchanged budget/profile expiry",
+      "no real provider credentials loaded or approval activated"
+    ]
+  }
+}

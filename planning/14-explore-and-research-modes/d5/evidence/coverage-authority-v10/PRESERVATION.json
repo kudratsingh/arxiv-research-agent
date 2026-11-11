@@ -1,0 +1,23 @@
+{
+  "packet_digest": "880e4794cd08d26a4a9e63231d5d0d82ec99a267e65ff60dfc5f0994875fb864",
+  "immutable_files": 135,
+  "all_unchanged": true,
+  "before_full_snapshot_digest": "a26f21e44f1a1dfeedf5412da697a434bdd014822dd980e4fc92657d1227437a",
+  "after_full_snapshot_digest": "a26f21e44f1a1dfeedf5412da697a434bdd014822dd980e4fc92657d1227437a",
+  "original_scope_stays_revoked": true,
+  "new_live_scope_absent": true,
+  "live_grants_created": 0,
+  "real_provider_contacts": 0,
+  "real_token_count_contacts": 0,
+  "new_spend_usd": "0",
+  "baseline": {
+    "jobs": 32,
+    "Messages": 63,
+    "counts": 87,
+    "known_estimated_usd": "1.828877",
+    "pending_usd": "0",
+    "unknown_usd": "0"
+  },
+  "active_expiry_unchanged": "2026-11-14T07:24:01+00:00",
+  "owner3137_review3178_untouched": true
+}

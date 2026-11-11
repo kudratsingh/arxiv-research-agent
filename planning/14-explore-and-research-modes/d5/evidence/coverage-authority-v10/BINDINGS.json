@@ -1,0 +1,179 @@
+{
+  "packet_digest": "880e4794cd08d26a4a9e63231d5d0d82ec99a267e65ff60dfc5f0994875fb864",
+  "application_commit": "3c94e566228e6dc536518887e93c41d8832f8478",
+  "scope_id": "d5-880e4794cd08d26a4a9e6323",
+  "code": {
+    "src/workspace/d5_freeze.py": "sha256:b9242c004fc8e9dc6116c896cac1c451c1710fd2f5dbe4c188bce27ff9ebbc9f",
+    "src/workspace/d5_coverage_policy.py": "sha256:9ea386fd1e4e0d2ea65ac9bb5246850c93ae65296b47b5adbaab8f4c08107432",
+    "src/workspace/d5_coverage_packet.py": "sha256:27fe6410cf077e27eca9e4660124efcf13f0082c555802258f4bf8f528ab7c8d",
+    "src/workspace/d5_coverage_shapes_packet.py": "sha256:aa878cbcf7f3f7982ea65af035386143d2ad2bada67108c750560d622abaf2fd",
+    "src/workspace/d5_coverage_authority_packet.py": "sha256:a6ad7deba984095d0032cd8b569f12aebbc4c89c327202fe76bb39dcae246abd",
+    "src/workspace/d5_coverage_replay.py": "sha256:36fa3b5385900012e1c8bcb0c954549d648ee9a8e692b793d32cebf9c239a13f",
+    "src/workspace/d5_operations.py": "sha256:1e9f173b6900275a492545fd079eb04573330d68f4a595d44aaed82da25d96f1",
+    "src/workspace/programme_amendments.py": "sha256:1ce1306627253bfa7f8d5e601ca1b631306a8210582a3002148459431babdfab",
+    "src/workspace/programme_successors.py": "sha256:89960446fde450c557cf691681c50878b22303e9697ead19335d2e17502004d3",
+    "src/workspace/programme_third_amendment.py": "sha256:946c61da30a22ceb79c0aec89fed56a314c53652b2e05c172a4b283fb739472e",
+    "src/workspace/programme_capacity.py": "sha256:585b44553b24502c5b777c2e940d1f0ec3920066b32ebf895cb828b3685f9b27",
+    "src/workspace/migrations/017_programme_capacity_amendments.sql": "sha256:de7fb1e79e52f1c2ff0046254d137acbead5d8bb8d7571de3f9c2a45138a44ba",
+    "src/workspace/migrations/016_programme_third_amendments.sql": "sha256:5fcffc1339f3910706341388054a367d1394e819b9eaf60bf6b8cac687b35cb3",
+    "src/workspace/migrations/015_programme_successor_amendments.sql": "sha256:ecfebbf208ad29eb4ce46340d7d17a9fc15c96088a1914257df79f8ff9a485b6",
+    "src/workspace/d5_measurements.py": "sha256:f780b4e16b27e4f52ae18d3390112aa237b6ec83d2dd0478e6f795395b2e01b2",
+    "src/workspace/migrations/014_programme_amendments.sql": "sha256:11a88a4bccc586b3e0800ee60997d4099b6df07ef8b346e9a05406fa877293b0",
+    "src/workspace/d5_benchmark.py": "sha256:ea466fd11d3d8a943931f463191867a2f06ff2dad867b347ccd8a2ea83c61cde",
+    "src/workspace/d5_scope.py": "sha256:583e01d96280199365fbdee274ba8e7d7ef7fec55e060d3a5a76ca3f881448fe",
+    "src/workspace/d5_authorization.py": "sha256:e7a78fb9454399a912f14b12ba285845d6c0fc0ea6a109822a9011310cf7b8fe",
+    "src/workspace/d5_scoring.py": "sha256:5e80c8a54c5e037afb48cb504cfadd5ddb4ca40354687407ea1394133a1dcd11",
+    "src/workspace/d5_reviews.py": "sha256:8d0c642f4026f87c44de3b2c354d8187c3776d2284079cbfe8f6a2290030cab2",
+    "src/workspace/d5_review_scoring.py": "sha256:0448f64dedc0db431cda1c05f0faf6428a61d145d9abaafbc322e99b9701bcc1",
+    "src/workspace/d5_fixture.py": "sha256:5ad7269a5040b9f2673ed87fef03c70db882be7506b0a18a50ec94433af58494",
+    "src/workspace/d5_results.py": "sha256:c6ef92b0bda78e5b5e7f5722a73f3bade15307c7fba391ed52458c4abee44ce7",
+    "src/workspace/d5_routes.py": "sha256:0bc7c7803b7f9f9d18f7fc4c605b5a7bbfc93b053cb5caf7e996622e3e7f3523",
+    "src/workspace/d5_operator.py": "sha256:d3faa0534ea8a3abf6ba1ea3252a3f159ecb9b4920fe4ab2f3b231ab393a3c28",
+    "src/workspace/d5_evidence.py": "sha256:c110b023b415b72faac0e9dd88b3876bf67e5e84db44472a6ba089a87cd53e42",
+    "src/workspace/mode_ranking.py": "sha256:07a911a3c99c5cf3f1de694279187a813bde98c7c316e316b16547d536cbe3e4",
+    "src/workspace/ranking.py": "sha256:e0313d315cbd2d6684e40d1ab5277c2d56fa48fd6a5a97c41177c6d08417226d",
+    "src/workspace/grounding.py": "sha256:05b9cd7e0c1737b36b731996f2ec20132034b3a233acebe5be64d9e43c260bb7",
+    "src/workspace/material.py": "sha256:688cbee37fa7007806dad087331672b381f0d3e094d88dc9dc8a7a889b4d7ba2",
+    "src/workspace/assistance.py": "sha256:c8b74fa84e8e03df0eb0edf70db1c97f7439f34b5edf9bb8737e37c906dfce7a",
+    "src/workspace/assistance_contract.py": "sha256:882e8d4fd21ba8c16f2be8668e585cfca5f573f1f6e029d6e525f9c7bcee6372",
+    "src/workspace/assistance_coverage_shapes.py": "sha256:a60ac883652a5dbb36347b06d2ee8416e723c5c801a44f1d2436a094f15c6308",
+    "src/workspace/executor.py": "sha256:75ddf32188e5897decc12993caee3883dd667ca8ad4b8756a3dfa2eb5b46ac28",
+    "src/workspace/context_store.py": "sha256:0054c6247b5620eb723d727b740cb2c6cc05a2c22f834ea129955c72498a982c",
+    "src/workspace/migrations/012_d5_qualification_scope.sql": "sha256:35b58928738e143daa2e592ea9f81bf93d14b521f3af771337daecef2369eeb3",
+    "src/workspace/migrations/013_d5_stage_authorizations.sql": "sha256:805ccdc0e518679471e2a12da4bc2a94d37fd28475e1fa96fc6e686c562869ea",
+    "web/components/workspace/QualificationResult.tsx": "sha256:6eaf61713c937a1a843f1372a6f96e3aade48ef067d7417205920e4db830ed0b",
+    "web/components/workspace/ScoredSections.tsx": "sha256:42fd4045746836233cfbc51cee5b8630685efb7b772a6fe6b3d1c147c6465073",
+    "web/components/workspace/AssistancePanel.tsx": "sha256:3910024b14e1934d83f70e72b99bc57673234e12c5730175907eee1c64b1119b",
+    "planning/14-explore-and-research-modes/d5/tools/prepare-opus-v5.py": "sha256:2803d8d9ed85f9976b499cdb852138f0f75b80f3a61550fcbf75c1ad0167f323",
+    "planning/14-explore-and-research-modes/d5/tools/prepare-capacity-v8.py": "sha256:70391c6d91a1046e00d0c35945438a0cdfd1dc8f3650da827b929ed2dc9fb92b",
+    "planning/14-explore-and-research-modes/d5/tools/prepare-prose-v6.py": "sha256:6041ddbf6016323ce0c4c2908f24b53fb75d5cf2b7b38291964c66893c8fd05e",
+    "planning/14-explore-and-research-modes/d5/tools/prepare-gap-v7.py": "sha256:49f5f4c8d637a99f01c5b438c52254bbca0bb0207eed7cff4e46bf9203eb7089",
+    "web/components/workspace/ReaderContent.tsx": "sha256:21e35c1ae47abd35042e4735d239d474d8ac78c052c37e84df2f81eec80941ef",
+    "web/components/workspace/LearningThread.tsx": "sha256:4eed510674f83180a8e89946ba62f3913e031cefc4823ea174d3775373831d85",
+    "web/lib/workspace/assistanceTypes.ts": "sha256:8a4330391be9c1817c274b683f57829f827cbc97e07ae12afe25f06d30a3a727",
+    "web/lib/workspace/assistanceLinks.ts": "sha256:30eb243ed4653d8808f048f50ffa23d11d6fd3f34f5974b180158e20d5829f22",
+    "web/contract/openapi.json": "sha256:c10135b6af9224c73dc5cd3a928545e952e9e7bc5721bf5e866d19e95c5cee08",
+    "src/api/app.py": "sha256:1d08f09e87d12f90f5d49d7e9d22a8715c3e59b20a249d4d543fae63400e2b38"
+  },
+  "adapter": {
+    "code": {
+      "workspace/d5_adapter.py": "sha256:15f11a9c894efc1aa97759a7313525b51c0232e6333c6118a637763446f95b4d",
+      "workspace/d5_coverage_policy.py": "sha256:9ea386fd1e4e0d2ea65ac9bb5246850c93ae65296b47b5adbaab8f4c08107432",
+      "workspace/d5_coverage_packet.py": "sha256:27fe6410cf077e27eca9e4660124efcf13f0082c555802258f4bf8f528ab7c8d",
+      "workspace/d5_coverage_shapes_packet.py": "sha256:aa878cbcf7f3f7982ea65af035386143d2ad2bada67108c750560d622abaf2fd",
+      "workspace/d5_coverage_authority_packet.py": "sha256:a6ad7deba984095d0032cd8b569f12aebbc4c89c327202fe76bb39dcae246abd",
+      "workspace/d5_coverage_replay.py": "sha256:36fa3b5385900012e1c8bcb0c954549d648ee9a8e692b793d32cebf9c239a13f",
+      "workspace/assistance_policy.py": "sha256:e834ff29c57aa12be7c6d343f3aab9428f6638525b37c39b99cd7a5eaa2f239c",
+      "workspace/assistance_coverage.py": "sha256:b254f0237a7c6ed2ac0e3d9edfa039015493a72d0d3f92d6a624089536a12b86",
+      "workspace/assistance_coverage_shapes.py": "sha256:a60ac883652a5dbb36347b06d2ee8416e723c5c801a44f1d2436a094f15c6308",
+      "workspace/d5_operations.py": "sha256:1e9f173b6900275a492545fd079eb04573330d68f4a595d44aaed82da25d96f1",
+      "workspace/programme_amendments.py": "sha256:1ce1306627253bfa7f8d5e601ca1b631306a8210582a3002148459431babdfab",
+      "workspace/programme_successors.py": "sha256:89960446fde450c557cf691681c50878b22303e9697ead19335d2e17502004d3",
+      "workspace/programme_third_amendment.py": "sha256:946c61da30a22ceb79c0aec89fed56a314c53652b2e05c172a4b283fb739472e",
+      "workspace/programme_capacity.py": "sha256:585b44553b24502c5b777c2e940d1f0ec3920066b32ebf895cb828b3685f9b27",
+      "workspace/migrations/017_programme_capacity_amendments.sql": "sha256:de7fb1e79e52f1c2ff0046254d137acbead5d8bb8d7571de3f9c2a45138a44ba",
+      "workspace/migrations/016_programme_third_amendments.sql": "sha256:5fcffc1339f3910706341388054a367d1394e819b9eaf60bf6b8cac687b35cb3",
+      "workspace/migrations/015_programme_successor_amendments.sql": "sha256:ecfebbf208ad29eb4ce46340d7d17a9fc15c96088a1914257df79f8ff9a485b6",
+      "workspace/d5_measurements.py": "sha256:f780b4e16b27e4f52ae18d3390112aa237b6ec83d2dd0478e6f795395b2e01b2",
+      "workspace/migrations/014_programme_amendments.sql": "sha256:11a88a4bccc586b3e0800ee60997d4099b6df07ef8b346e9a05406fa877293b0",
+      "workspace/d5_scope.py": "sha256:583e01d96280199365fbdee274ba8e7d7ef7fec55e060d3a5a76ca3f881448fe",
+      "workspace/d5_authorization.py": "sha256:e7a78fb9454399a912f14b12ba285845d6c0fc0ea6a109822a9011310cf7b8fe",
+      "workspace/provider_adapter.py": "sha256:9095edbb1308340862e00e10b250fdc15854db22ba1d9d555a57829af198aeee",
+      "workspace/measurement.py": "sha256:797c13428a924f51e186942a709c6807010083acad60a19ff5baf251f34652ab",
+      "workspace/admission.py": "sha256:12524a9e192cde7d6988e44d57623d946252d5e4c039c14990076f1ba4ac84ac",
+      "workspace/qualification_budget.py": "sha256:9d36735257ebdbceb51a6b50e964df217b29d51c16c2e338d4712a2826641a44",
+      "workspace/qualification_accounting.py": "sha256:14f3baea7fa1695ff22e95ef0114199703d5adcc7bc8d10830729e4f28e4f6d1",
+      "workspace/d5_freeze.py": "sha256:b9242c004fc8e9dc6116c896cac1c451c1710fd2f5dbe4c188bce27ff9ebbc9f",
+      "workspace/d5_benchmark.py": "sha256:ea466fd11d3d8a943931f463191867a2f06ff2dad867b347ccd8a2ea83c61cde",
+      "workspace/d5_scoring.py": "sha256:5e80c8a54c5e037afb48cb504cfadd5ddb4ca40354687407ea1394133a1dcd11",
+      "workspace/d5_reviews.py": "sha256:8d0c642f4026f87c44de3b2c354d8187c3776d2284079cbfe8f6a2290030cab2",
+      "workspace/d5_review_scoring.py": "sha256:0448f64dedc0db431cda1c05f0faf6428a61d145d9abaafbc322e99b9701bcc1",
+      "workspace/d5_fixture.py": "sha256:5ad7269a5040b9f2673ed87fef03c70db882be7506b0a18a50ec94433af58494",
+      "workspace/d5_results.py": "sha256:c6ef92b0bda78e5b5e7f5722a73f3bade15307c7fba391ed52458c4abee44ce7",
+      "workspace/d5_operator.py": "sha256:d3faa0534ea8a3abf6ba1ea3252a3f159ecb9b4920fe4ab2f3b231ab393a3c28",
+      "workspace/migrations/012_d5_qualification_scope.sql": "sha256:35b58928738e143daa2e592ea9f81bf93d14b521f3af771337daecef2369eeb3",
+      "workspace/migrations/013_d5_stage_authorizations.sql": "sha256:805ccdc0e518679471e2a12da4bc2a94d37fd28475e1fa96fc6e686c562869ea",
+      "llm.py": "sha256:07dc89e847340e65215cb2a9d287f48fa0040273726e4751fa30853d3a098bb4",
+      "llm_models.py": "sha256:610662404098f8e4d5d934db9fdf768014af80cc1eb4e326debfdc20dc01bdad"
+    },
+    "dependencies": {
+      "anthropic": "1.4.0",
+      "httpx": "0.28.1",
+      "pydantic": "2.13.4"
+    }
+  },
+  "operation_routes": {
+    "revision": "d5-sonnet-opus-high-v1",
+    "draft_repair": {
+      "model": "claude-sonnet-5-5",
+      "thinking": {
+        "type": "between_tools"
+      },
+      "effort": "medium",
+      "input_tokens": 20000,
+      "output_tokens": 4000,
+      "prices": {
+        "input": "2",
+        "output": "10",
+        "verified_at": "2026-11-06"
+      }
+    },
+    "check_recheck_probe": {
+      "model": "claude-opus-5-5",
+      "thinking": {
+        "type": "adaptive"
+      },
+      "effort": "high",
+      "input_tokens": 20000,
+      "output_tokens": 3200,
+      "prices": {
+        "input": "4",
+        "output": "20",
+        "verified_at": "2026-11-06"
+      }
+    }
+  },
+  "case_bindings": {
+    "development-v10-learn-coverage": {
+      "input_digest": "3e6046d812d5c936f54f2f4b960f00f5680b915a3f2d83c1b9ee86d9547797b0",
+      "owner": "d5-coverage-880e4794cd08d26a-run",
+      "stage": "B"
+    },
+    "measure-1": {
+      "input_digest": "d4db97ce73651986178de53e8b45e310cf0bc1f51f28dfdcbfd3d31e7bfe268b",
+      "owner": "d5-coverage-880e4794cd08d26a-measure",
+      "stage": "A"
+    }
+  },
+  "count_requests": [
+    {
+      "id": "measure-1",
+      "workflow": "development-v10-learn-coverage",
+      "request_digest": "80fb9cb6f20ee54c95a2bd77ee93c6115bb4c34e8644fe8eeb30ab77e3766f08",
+      "model": "claude-sonnet-5-5"
+    }
+  ],
+  "schema_digests": {
+    "local": "24c1d0f28c44e305ce65ae52e2f38b6239a7d2bd8b848c595d7275ada0a7e2e5",
+    "wire": "53bc57ef237b06312f8f204daff9ad85459c73e8e30ce673efed144a2d082815"
+  },
+  "historical_measurements_reused": false,
+  "no_reuse_reason": "Exact draft/count body, schema and coverage prompt changed; old measurements remain historical",
+  "baseline": {
+    "funded_jobs": 32,
+    "Messages": 63,
+    "counts": 87,
+    "estimated_usd": "1.828877",
+    "pending_usd": "0",
+    "unknown_usd": "0"
+  },
+  "max_after_A_B": {
+    "funded_jobs": 33,
+    "Messages": 67,
+    "counts": 92,
+    "estimated_usd": "2.278877"
+  },
+  "provider_contacts": 0,
+  "live_grants": 0,
+  "approved": false
+}

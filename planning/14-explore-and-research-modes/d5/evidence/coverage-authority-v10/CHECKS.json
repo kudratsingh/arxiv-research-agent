@@ -1,0 +1,119 @@
+{
+  "application_commit": "3c94e566228e6dc536518887e93c41d8832f8478",
+  "packet_digest": "880e4794cd08d26a4a9e63231d5d0d82ec99a267e65ff60dfc5f0994875fb864",
+  "logs": {
+    "full-coverage.log": {
+      "raw_sha256": "43d72d158c62c864c3e4db3811d7f2918797de1e6b255729d731f2b05de3033b",
+      "evidence_file": "planning/14-explore-and-research-modes/d5/evidence/coverage-authority-v10/checks/full-coverage.log.gz",
+      "summary_lines": [
+        "Required test coverage of 89.0% reached. Total coverage: 94.62%",
+        "7096 passed, 54 skipped, 53 deselected in 1137.09s (0:18:57)",
+        "Coverage: 97%"
+      ]
+    },
+    "focused.log": {
+      "raw_sha256": "8276a39ee5cb7af3dd5e1f2d64fc1a94660d3a0b0ce2e4bce98ce9c53bf528df",
+      "evidence_file": "planning/14-explore-and-research-modes/d5/evidence/coverage-authority-v10/checks/focused.log.gz",
+      "summary_lines": [
+        "63 passed in 96.47s (0:01:36)"
+      ]
+    },
+    "unit-final.log": {
+      "raw_sha256": "aa20a5f01ce83fbe832e875eddc4d0672a071cd2253b277f4e42cd537f189cf7",
+      "evidence_file": "planning/14-explore-and-research-modes/d5/evidence/coverage-authority-v10/checks/unit-final.log.gz",
+      "summary_lines": [
+        "18 passed in 1.23s"
+      ]
+    },
+    "archive-checker-final.log": {
+      "raw_sha256": "670787c3a2253bcd1106616620bbbac1a907a13d50c0d564ed5cf29eb2783ba8",
+      "evidence_file": "planning/14-explore-and-research-modes/d5/evidence/coverage-authority-v10/checks/archive-checker-final.log.gz",
+      "summary_lines": [
+        "2 passed in 12.01s"
+      ]
+    },
+    "mypy-all.log": {
+      "raw_sha256": "818ae3656b46f85d83b5659f47a0ceca113dd2a7f21fc13b83a23748e55da3c3",
+      "evidence_file": "planning/14-explore-and-research-modes/d5/evidence/coverage-authority-v10/checks/mypy-all.log.gz",
+      "summary_lines": [
+        "Success: no issues found in 205 source files"
+      ]
+    },
+    "ruff.log": {
+      "raw_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+      "evidence_file": "planning/14-explore-and-research-modes/d5/evidence/coverage-authority-v10/checks/ruff.log.gz",
+      "summary_lines": [
+        "All checks passed!"
+      ]
+    },
+    "web-typecheck.log": {
+      "raw_sha256": "a7d3e417b6cd1706638232a0866a3d00e29d67d337e100e7c609cec19e0c149d",
+      "evidence_file": "planning/14-explore-and-research-modes/d5/evidence/coverage-authority-v10/checks/web-typecheck.log.gz",
+      "summary_lines": []
+    },
+    "web-lint.log": {
+      "raw_sha256": "3abf1d9178e65389b228b48abcf35554976381024c89ace777f11f80205faf37",
+      "evidence_file": "planning/14-explore-and-research-modes/d5/evidence/coverage-authority-v10/checks/web-lint.log.gz",
+      "summary_lines": []
+    },
+    "web-coverage.log": {
+      "raw_sha256": "de1fc089d52d3a466a02946db35a9cce1e43fd53fe9ac0a1db9e4381818f11d1",
+      "evidence_file": "planning/14-explore-and-research-modes/d5/evidence/coverage-authority-v10/checks/web-coverage.log.gz",
+      "summary_lines": [
+        " Test Files  221 passed (221)",
+        "      Tests  4280 passed | 9 skipped (4289)",
+        "Statements   : 98.16% ( 6694/6819 )",
+        "Branches     : 94.35% ( 5814/6162 )",
+        "Functions    : 94.06% ( 2233/2374 )",
+        "Lines        : 99.48% ( 5226/5253 )"
+      ]
+    },
+    "e2e.log": {
+      "raw_sha256": "e894f3a1ff10b641b8cab96e221966c86b30a81a618d9685956caf9a18bfdba4",
+      "evidence_file": "planning/14-explore-and-research-modes/d5/evidence/coverage-authority-v10/checks/e2e.log.gz",
+      "summary_lines": [
+        "tests/e2e/test_hitl_review.py::TestPlanReview::test_a_bypassed_run_never_offers_a_review PASSED [ 43%]",
+        "===================== 53 passed, 7150 deselected in 16.72s ====================="
+      ]
+    },
+    "simulation.log": {
+      "raw_sha256": "b05922590d35703263d28c5eb5354f04bc189220d3cb1d63325b1af92df32d1b",
+      "evidence_file": "planning/14-explore-and-research-modes/d5/evidence/coverage-authority-v10/checks/simulation.log.gz",
+      "summary_lines": [
+        "20/20 succeeded, 0 errored, total $0.0000"
+      ]
+    },
+    "parity.log": {
+      "raw_sha256": "ffe3a2763694f735d44ac4b58fee474f7091fa78a56db0f351933f7a88375886",
+      "evidence_file": "planning/14-explore-and-research-modes/d5/evidence/coverage-authority-v10/checks/parity.log.gz",
+      "summary_lines": [
+        "  objects checked  260",
+        "  mismatches       0"
+      ]
+    },
+    "docs-check.log": {
+      "raw_sha256": "c26815ea0a51004dcc6e5128ea3604ab7777914e682da421a439434889e67e31",
+      "evidence_file": "planning/14-explore-and-research-modes/d5/evidence/coverage-authority-v10/checks/docs-check.log.gz",
+      "summary_lines": [
+        "80 passed in 11.87s"
+      ]
+    },
+    "package-floors.log": {
+      "raw_sha256": "f5efe46329c6d8233d19ebf469a6e74bac787984b0bced33ef4ea46c2d44150c",
+      "evidence_file": "planning/14-explore-and-research-modes/d5/evidence/coverage-authority-v10/checks/package-floors.log.gz",
+      "summary_lines": [
+        "TOTAL                            3836    342   1014    141    88%",
+        "TOTAL                          1438     42    454     36    96%",
+        "TOTAL                                 80      0     26      0   100%",
+        "TOTAL                                   4841    160   1544    155    95%"
+      ]
+    }
+  },
+  "scope": "Disabled-key offline tests; Postgres isolated schemas, MockTransport for all provider paths",
+  "floors_and_budgets_unchanged": true,
+  "local_production_build_browser_unrun": "No frontend runtime file changed; exact-head CI performs browser/build/budgets. Local frontend type/lint/full coverage passed.",
+  "initial_attempt_note": "First sandboxed unit run49passed but mirakuru cleanup process inventory lacked OS permission; subsequent checks ran with permitted subprocess/loopback access. No test/timeout/coverage assertion changed.",
+  "real_provider_contacts": 0,
+  "new_live_grants": 0,
+  "spend_usd": "0"
+}
