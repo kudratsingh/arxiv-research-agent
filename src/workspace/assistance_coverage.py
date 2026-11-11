@@ -14,7 +14,9 @@ from pydantic import BaseModel, ConfigDict, Field, create_model, model_validator
 
 COVERAGE_REVISION = "workspace-assistance-request-coverage-v8"
 SHAPED_COVERAGE_REVISION = "workspace-assistance-coverage-shapes-v9"
-COVERAGE_REVISIONS = frozenset({COVERAGE_REVISION, SHAPED_COVERAGE_REVISION})
+AUTHORITATIVE_COVERAGE_REVISION = "workspace-assistance-coverage-authority-v10"
+SHAPED_REVISIONS = frozenset({SHAPED_COVERAGE_REVISION, AUTHORITATIVE_COVERAGE_REVISION})
+COVERAGE_REVISIONS = frozenset({COVERAGE_REVISION, *SHAPED_REVISIONS})
 PartId = Literal["p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8"]
 ClaimId = Literal["c1", "c2", "c3", "c4", "c5", "c6"]
 Status = Literal["answered", "lacks_evidence", "omitted"]
@@ -171,7 +173,7 @@ def response_model(handles: list[str], purpose: str, policy: dict[str, Any]) -> 
                 status=(Literal["lacks_evidence"], ...),
                 gap=(Literal["application_context"], ...),
             )
-        if policy["revision"] == SHAPED_COVERAGE_REVISION:
+        if policy["revision"] in SHAPED_REVISIONS:
             from src.workspace.assistance_coverage_shapes import coverage_type
 
             record = coverage_type(full=full, missing_context=bool(policy["missing_context"]))
@@ -205,6 +207,9 @@ def response_model(handles: list[str], purpose: str, policy: dict[str, Any]) -> 
                     ),
                 ),
             )
+            if policy["revision"] == AUTHORITATIVE_COVERAGE_REVISION:
+                # The base claim forbids extras, including the retired part_ids.
+                claim = original_claim
             fields["claims"] = (
                 GenericAlias(tuple, (claim, ...)),
                 Field(min_length=1, max_length=6),
@@ -221,7 +226,7 @@ def response_model(handles: list[str], purpose: str, policy: dict[str, Any]) -> 
 
     return create_model(
         "CoveredResponse_" + identity,
-        __base__=shaped_envelope if policy["revision"] == SHAPED_COVERAGE_REVISION else BaseModel,
+        __base__=shaped_envelope if policy["revision"] in SHAPED_REVISIONS else BaseModel,
         __config__=ConfigDict(extra="forbid", frozen=True),
         response=(
             reduce(or_, branches),
@@ -246,18 +251,23 @@ def normalize(
     full = value["disposition"] == "full_abstention"
     claims = value.get("claims", [])
     by_id = {c["claim_id"]: c for c in claims}
+    authoritative = policy["revision"] == AUTHORITATIVE_COVERAGE_REVISION
+    if authoritative and len(by_id) != len(claims):
+        raise ValueError("duplicate_claim_id")
     referenced = set()
     for p in policy["requested_parts"]:
         row = coverage[p["id"]]
-        if policy["revision"] == SHAPED_COVERAGE_REVISION:
+        if policy["revision"] in SHAPED_REVISIONS:
             row.setdefault("answer_claim_ids", [])
             row.setdefault("context_claim_ids", [])
-        if full or policy["revision"] == SHAPED_COVERAGE_REVISION:
+        if full or policy["revision"] in SHAPED_REVISIONS:
             CoverageRecord.model_validate({"answer_claim_ids": [], "context_claim_ids": [], **row})
         for role in ("answer_claim_ids", "context_claim_ids"):
             refs = row.get(role, [])
             for claim_id in refs:
-                if claim_id not in by_id or p["id"] not in by_id[claim_id]["part_ids"]:
+                if claim_id not in by_id or (
+                    not authoritative and p["id"] not in by_id[claim_id]["part_ids"]
+                ):
                     raise ValueError("request_part_claim_binding_mismatch")
             referenced.update(refs)
         if (
@@ -271,7 +281,7 @@ def normalize(
             raise ValueError("source_notes_cannot_answer_comparison")
     if referenced != set(by_id):
         raise ValueError("orphaned_claim_outside_request")
-    for c in claims:
+    for c in (() if authoritative else claims):
         if len(set(c["part_ids"])) != len(c["part_ids"]):
             raise ValueError("duplicate_claim_part")
         for part_id in c["part_ids"]:
@@ -304,7 +314,18 @@ def render(
         "request_coverage": rows,
         "coverage_complete": all(r["status"] == "answered" for r in rows),
         "coverage_basis": "Declared coverage; machine checks are unqualified and human review is unmeasured",
+        **({"claim_request_index": reverse_index(coverage)} if policy["revision"] == AUTHORITATIVE_COVERAGE_REVISION else {}),
     }
+
+
+def reverse_index(coverage: dict[str, Any]) -> dict[str, dict[str, list[str]]]:
+    """Derived roles only; associations establish neither relevance nor support."""
+    result: dict[str, dict[str, list[str]]] = {}
+    for part_id, row in coverage.items():
+        for role in ("answer", "context"):
+            for claim_id in row.get(role + "_claim_ids", []):
+                result.setdefault(claim_id, {"answer": [], "context": []})[role].append(part_id)
+    return {claim_id: result[claim_id] for claim_id in sorted(result)}
 
 
 class Retention(BaseModel):
@@ -358,6 +379,7 @@ def review_context(
         "request_parts": policy["requested_parts"],
         "coverage_inputs": parts,
         "declared_coverage": rendered["request_coverage"],
+        **({"claim_request_index": rendered["claim_request_index"]} if policy["revision"] == AUTHORITATIVE_COVERAGE_REVISION else {}),
         "quality_rubric": {
             "atomicity": "one independently testable finding per claim, not separate outcomes joined together",
             "qualifications": list(QUALIFICATIONS),
@@ -430,7 +452,8 @@ def decorate_fixture(payload: dict[str, Any], policy: dict[str, Any]) -> dict[st
     full = value["disposition"] == "full_abstention"
     first = policy["requested_parts"][0]["id"]
     for claim in value.get("claims", []):
-        claim["part_ids"] = [first]
+        if policy["revision"] != AUTHORITATIVE_COVERAGE_REVISION:
+            claim["part_ids"] = [first]
     coverage = {}
     for part in policy["requested_parts"]:
         row: dict[str, Any] = {
@@ -448,7 +471,7 @@ def decorate_fixture(payload: dict[str, Any], policy: dict[str, Any]) -> dict[st
                 if part["id"] == first
                 else [],
             )
-        if policy["revision"] == SHAPED_COVERAGE_REVISION:
+        if policy["revision"] in SHAPED_REVISIONS:
             row.pop("answer_claim_ids", None)
         coverage[part["id"]] = row
     value["coverage"] = coverage

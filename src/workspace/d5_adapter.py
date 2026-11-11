@@ -84,6 +84,7 @@ def qualification_producer() -> dict[str, Any]:
         "workspace/d5_coverage_policy.py",
         "workspace/d5_coverage_packet.py",
         "workspace/d5_coverage_shapes_packet.py",
+        "workspace/d5_coverage_authority_packet.py",
         "workspace/d5_coverage_replay.py",
         "workspace/assistance_policy.py",
         "workspace/assistance_coverage.py",

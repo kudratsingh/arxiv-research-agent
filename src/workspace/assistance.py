@@ -39,6 +39,7 @@ from src.workspace.assistance_contract import (
     schemas,
 )
 from src.workspace.assistance_coverage import (
+    AUTHORITATIVE_COVERAGE_REVISION,
     COVERAGE_REVISIONS,
     SHAPED_COVERAGE_REVISION,
     ClaimQuality,
@@ -250,6 +251,11 @@ def build_wire(request: dict[str, Any]) -> dict[str, Any]:
             **request,
             "coverage_wire_rule": "Use the exact status-specific object. answered requires one to six answer_claim_ids, context_claim_ids, gap=none. lacks_evidence and omitted forbid answer_claim_ids entirely; context_claim_ids are source notes only, never an answer. Evidence gaps use only evidence reasons; omissions use claim_budget or not_prioritized. Full abstention forbids all claim references. A reported result is context only for a request for unspecified protocol details. Every reference must reciprocate claims.part_ids; no duplicate or overlapping references. Wire maxItems descriptions and the six-claim/8000-byte local limits remain mandatory. Questions and actions use bounded neutral intents; every factual statement remains a scored claim.",
         }
+    if request.get("sealed_request", {}).get("schema_revision") == AUTHORITATIVE_COVERAGE_REVISION:
+        request = {
+            **request,
+            "coverage_wire_rule": "Coverage is the ONLY claim-to-request mapping. Do not emit claims.part_ids; it is forbidden. Every part names its existing answer_claim_ids and context_claim_ids, with no duplicates or overlap within a part. Every emitted claim must occur in coverage. answered requires nonempty answer_claim_ids and gap=none; lacks_evidence and omitted forbid answer_claim_ids and use their own gap reasons. Full abstention forbids claims and all claim references. Context is not an answer, including when only a comparison is unavailable. Claim associations do not establish relevance or support: all claims still require whole-claim, atomicity, qualification, coverage and prose checking. Prioritize sealed parts within six atomic claims/8000 UTF-8 bytes; preserve study scope, comparator, metric definition and conditions. Questions/actions use neutral bounded intents.",
+        }
     wire = _build_request_kwargs(
         profile=RequestProfile(CANDIDATE_MODEL, None, False, "medium", True),
         prompt=_json({key: value for key, value in request.items() if key != "output_schema"}),
@@ -413,7 +419,7 @@ class AssistanceExecutor(FakeExecutor):
                     selection.mode,
                     len({r.work_id for r in chosen.values()}),
                     question_text,
-                    revision=SHAPED_COVERAGE_REVISION,
+                    revision=AUTHORITATIVE_COVERAGE_REVISION,
                 )
                 if coverage
                 else seal_task_policy(
@@ -422,7 +428,7 @@ class AssistanceExecutor(FakeExecutor):
                     len({r.work_id for r in chosen.values()}),
                 )
             )
-            revision = SHAPED_COVERAGE_REVISION if coverage else TASK_REVISION
+            revision = AUTHORITATIVE_COVERAGE_REVISION if coverage else TASK_REVISION
             request.update(
                 schema_revision=revision,
                 task_policy=policy,

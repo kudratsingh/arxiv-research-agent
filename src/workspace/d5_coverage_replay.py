@@ -39,7 +39,7 @@ class CoverageTransport:
         context = json.loads(body["messages"][0]["content"])
         response = LocalAssistanceTransport.fixture(request).json()
         payload = json.loads(response["content"][0]["text"])
-        learn = self.case_id in {CASE_IDS[0], "development-v9-learn-coverage"}
+        learn = self.case_id in {CASE_IDS[0], "development-v9-learn-coverage", "development-v10-learn-coverage"}
         repair = learn or self.repair_all
         if context["phase"] == "draft" and learn:
             payload["response"]["claims"][0]["text"] = "Synthetic unsupported development control."

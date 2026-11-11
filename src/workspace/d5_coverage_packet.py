@@ -27,7 +27,7 @@ CASE_IDS = [
 
 
 def is_packet(packet: dict[str, Any]) -> bool:
-    return packet.get("revision") in {REVISION, "d5-coverage-shapes-development-packet-v2"}
+    return packet.get("revision") in {REVISION, "d5-coverage-shapes-development-packet-v2", "d5-coverage-authority-development-packet-v3"}
 
 
 def owners(packet: dict[str, Any]) -> tuple[str, str]:
@@ -83,6 +83,11 @@ def current_request(sealed: dict[str, Any], corpus: list[dict[str, Any]]) -> dic
 
 
 def verify_controls(packet: dict[str, Any]) -> None:
+    if packet.get("revision") == "d5-coverage-authority-development-packet-v3":
+        from src.workspace.d5_coverage_authority_packet import verify_shapes
+
+        verify_shapes(packet)
+        return
     if packet.get("revision") == "d5-coverage-shapes-development-packet-v2":
         from src.workspace.d5_coverage_shapes_packet import verify_shapes
 

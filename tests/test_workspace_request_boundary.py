@@ -5,7 +5,7 @@ from copy import deepcopy
 import pytest
 
 from src.workspace import assistance as a
-from src.workspace.assistance_coverage import SHAPED_COVERAGE_REVISION
+from src.workspace.assistance_coverage import AUTHORITATIVE_COVERAGE_REVISION
 from src.workspace.assistance_policy import TASK_REVISION
 from tests import test_workspace_api as api
 from tests import test_workspace_assistance as support
@@ -27,7 +27,7 @@ async def test_http_omission_default_null_rejection_and_binding(client, store):
     body = value.model_dump(mode="json")
     body.pop("task_context")
     preview = (await client.post("/workspace/assistance/preview", json={"input": body})).json()
-    assert preview["request"]["schema_revision"] == SHAPED_COVERAGE_REVISION
+    assert preview["request"]["schema_revision"] == AUTHORITATIVE_COVERAGE_REVISION
     assert preview["request"]["task_policy"]["task_intent"] == "answer"
     for endpoint in ("preview", "jobs"):
         result = await client.post(
