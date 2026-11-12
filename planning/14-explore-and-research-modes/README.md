@@ -1,8 +1,19 @@
 # Explore & Learn and Research
 
-Current offline revision (application`5e51269b`, packet`22b8e13bc39d78cb1203f2e613c7c488d7f5a403234840d5ae15dcfa3d44a477`): [status-specific coverage wire shapes v9](d5/COVERAGE-SHAPES.md), [smallest unexecuted development follow-up and capacity choices](d5/COVERAGE-SHAPES-PROPOSAL.md), [verification and final bindings](d5/evidence/coverage-shapes-v9/VERIFICATION.md). From publication0592bec4; no provider contact or live authority is created. The new proposal is one fresh Learn control, with separate A1 count-only and B1 workflow decisions. Research comparison and full abstention have offline controls; no held-out or human qualification is claimed.
+Current offline revision: [sealed operation deadlines](d5/OPERATION-DEADLINES.md),
+[uncertainty-resolution plan](d5/UNCERTAINTY-RESOLUTION.md), and
+[blocked one-case proposal](d5/OPERATION-DEADLINES-PROPOSAL.md).
+Application`92c5a9eafa81bbaa279a5b44312f1519a1bd522c`; proposed Opus checks/rechecks120s,
+counts/drafts/repairs30s, durable workflow480s. Ledger unchanged **33 funded jobs /
+65 Messages /90 counts /$1.853811 known estimated**, with **one overlapping
+$0.425066 pending/unknown hold**. Dispatch remains blocked. The v10 scope is
+revoked and its parent expired; no authority is renewed. Human qualification
+is out of scope. [Status and verification](STATUS.md) distinguish application,
+publication, local checks and exact-head CI.
 
-Reconciled ledger: **31 funded programme jobs /62 Messages /85 counts /USD1.802777 estimated; pending/unknown0**. The prior f48b3f24 Stage A completed, then Stage B stopped on a wire-valid/local-invalid Learn coverage object. The draft remains rejected, two cases unrun, and the scope revoked. Original receipts/accounting, frozen v8r4b results/scorer/Codex synthetic review and v7r2's separate stopped3/8 diagnostic are preserved. Stage D remains deferred.
+Historical offline v9 revision (application`5e51269b`, packet`22b8e13bc39d78cb1203f2e613c7c488d7f5a403234840d5ae15dcfa3d44a477`): [status-specific coverage wire shapes v9](d5/COVERAGE-SHAPES.md), [smallest unexecuted development follow-up and capacity choices](d5/COVERAGE-SHAPES-PROPOSAL.md), [verification and final bindings](d5/evidence/coverage-shapes-v9/VERIFICATION.md). From publication0592bec4; no provider contact or live authority was created by that offline revision. Its proposal was one fresh Learn control, with separate A1 count-only and B1 workflow decisions. Research comparison and full abstention have offline controls; no held-out or human qualification is claimed.
+
+Historical v9 starting ledger: **31 funded programme jobs /62 Messages /85 counts /USD1.802777 estimated; pending/unknown0**. The prior f48b3f24 Stage A completed, then Stage B stopped on a wire-valid/local-invalid Learn coverage object. The draft remains rejected, two cases unrun, and the scope revoked. Original receipts/accounting, frozen v8r4b results/scorer/Codex synthetic review and v7r2's separate stopped3/8 diagnostic are preserved. Stage D remains deferred.
 
 Historical implementation and pre-run proposals: [three-case runner](d5/COVERAGE-RUNNER.md), [v8 evidence](d5/evidence/request-coverage-runner-v4/VERIFICATION.md), [initial coverage engineering repair](d5/REQUEST-COVERAGE-REPAIR.md). New HTTP task context is still mandatory/non-null, omitted context keeps defaults, and archived internal replay remains available. Fixed wire shapes strengthen structural coverage checks while whole-claim support, qualifications and semantic request coverage still require checking.
 

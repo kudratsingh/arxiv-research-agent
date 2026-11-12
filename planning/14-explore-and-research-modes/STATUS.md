@@ -1,5 +1,47 @@
 # Two-mode implementation status
 
+## Current offline operation-deadline repair
+
+Application **`92c5a9eafa81bbaa279a5b44312f1519a1bd522c`**, isolated branch
+`codex/workspace-d5-operation-deadlines`, from publicatione046fba8.
+[Policy/runbook](d5/OPERATION-DEADLINES.md),
+[uncertainty-resolution options](d5/UNCERTAINTY-RESOLUTION.md),
+[blocked one-case proposal](d5/OPERATION-DEADLINES-PROPOSAL.md),
+[evidence](d5/evidence/operation-deadlines-v11/VERIFICATION.md).
+
+Sealed deadlines: counts/drafts/repairs30s, Opus checks/rechecks120s, durable
+whole-workflow480s. Legacy scalar30s inputs retain their behavior. Controlled-time
+tests use the production adapter, paired counts, admission and disposable
+Postgres. Final targeted31pass:31seconds completes,121seconds stays uncertain;
+cancellation/expiry/restart preserve liability, and no duplicate dispatch occurs.
+Full draft/check/repair/recheck and remaining-horizon refusal are exercised.
+These are software controls, not real latency/token-fit or quality evidence.
+
+Read-only ledger remains **33jobs/65Messages/90counts/$1.853811known estimated**
+plus **one overlapping $0.425066 pending/unknown hold**. All251 preserved files,
+original public/financial rows, scopes and grants unchanged. No hold release,
+accounting mutation, live grant, provider/count contact or new spend. V10 remains
+stopped/revoked and its parent expiry2026-11-12T02:59:48Z is not renewed.
+Programme34/80/99/$10/concurrency1, expiry2026-11-14T07:24:01Z unchanged.
+
+Candidate packet **`079748d34931142270f947038df90dc1dcae135adf0b1b88d153324d3a1a5ef3`**
+retains the uncertain history, approved=false and reconciliation_required=true.
+Preparation/authorization refuse that history. It needs authoritative uncertainty
+resolution, a new actual-history freeze and separate A/B approvals before any
+future experiment. One fresh preliminary count and one Learn job with up to four
+Messages/four paired counts/$0.45 would reach34/69/95; no amendment proposed.
+Old7877-token preliminary measurement passes exact-body reuse audit, but the
+candidate conservatively retains fresh-scope A and mandatory paired counts.
+
+Full local Python gate7127pass/54skip/53separateE2Edeselected in1124.88s,
+97%patch; all package floors pass, new packet module100%. Local mypy207, Ruff,
+frontend4280pass/9skip with coverage, type/lint/build and budgets, E2E53,
+simulation20/20USD0 and registry260/0 pass. Exact-published-head CI is recorded
+separately in the evidence/final handoff;
+prior-head CI is not evidence for this revision. Owner3137/review3178 unchanged,
+human qualification out of scope, everyday generation/recurrence/notifications
+disabled. No PR, merge or deployment.
+
 ## Current coverage-authority v10 offline successor
 
 Application **`3c94e566228e6dc536518887e93c41d8832f8478`**, isolated branch

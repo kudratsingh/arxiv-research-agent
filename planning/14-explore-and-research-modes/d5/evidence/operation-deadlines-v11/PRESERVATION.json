@@ -1,0 +1,26 @@
+{
+  "revision": "d5-read-only-preservation-v1",
+  "application_commit": "92c5a9eafa81bbaa279a5b44312f1519a1bd522c",
+  "preserved_files": 251,
+  "changed_files": [],
+  "original_manifest_digest": "60e541129d67d40c82a0b0e7eb5de2ca3f7bbfbafee35a018b4e0d37b2560d0e",
+  "tables_programme_history_scopes_grants_equal": true,
+  "capture_wrapper_copy_changes_only": [
+    "profile_authority",
+    "provenance"
+  ],
+  "history": {
+    "messages": 65,
+    "counts": 90,
+    "known_usd": "1.853811",
+    "pending_usd": "0.425066",
+    "unknown_usd": "0.425066",
+    "uncertain_contacts": true,
+    "active_jobs": []
+  },
+  "funded_programme_jobs": 33,
+  "pending_and_unknown_are_same_hold": true,
+  "new_provider_contacts": 0,
+  "new_live_grants": 0,
+  "accounting_mutations": 0
+}

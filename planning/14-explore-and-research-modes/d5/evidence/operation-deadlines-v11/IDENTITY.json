@@ -1,0 +1,27 @@
+{
+  "application_commit": "92c5a9eafa81bbaa279a5b44312f1519a1bd522c",
+  "packet_digest": "079748d34931142270f947038df90dc1dcae135adf0b1b88d153324d3a1a5ef3",
+  "approved": false,
+  "reconciliation_required": true,
+  "scope_id": "d5-079748d34931142270f94703",
+  "operation_deadlines": {
+    "revision": "d5-operation-deadlines-v1",
+    "count_seconds": 30,
+    "draft_seconds": 30,
+    "repair_seconds": 30,
+    "check_seconds": 120,
+    "recheck_seconds": 120,
+    "workflow_seconds": 480,
+    "origin": "durable_reservation_created_at"
+  },
+  "inputs": {
+    "development-v11-learn-deadlines": {
+      "stage": "B",
+      "input_digest": "b17f6bc85fab6c74c46476d7f8bd6d4339562141653716d3028764edffa561e2"
+    },
+    "measure-1": {
+      "stage": "A",
+      "input_digest": "5910aef8c6b7bedf24e1e872ab0a965eb9fdeb65efb82b247de1c086faa4144d"
+    }
+  }
+}

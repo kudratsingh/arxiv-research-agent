@@ -1,0 +1,7 @@
+{
+  "metric": "coverage.py total including branches; separate from XML statement line-rate",
+  "project_coverage_percent": 94.64,
+  "patch_coverage_percent": 97,
+  "project_floor": 89,
+  "patch_floor": 90
+}

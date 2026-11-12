@@ -1,0 +1,36 @@
+{
+  "purpose": "Local installed SDK inspection only; no client constructed or request sent",
+  "anthropic_sdk_version": "1.4.0",
+  "resources": {
+    "resources/messages/messages.py": {
+      "sha256": "1eee67efbfc99d467369affb3374a1a761b4f2247c43091d30fd0f2053edb1e1",
+      "public_method_names": [
+        "batches",
+        "count_tokens",
+        "create",
+        "parse",
+        "parser",
+        "stream",
+        "with_raw_response",
+        "with_streaming_response"
+      ],
+      "single_message_retrieve_method": false
+    },
+    "resources/beta/messages/messages.py": {
+      "sha256": "eb2f2b5b9b0069bfe20f7306657b18c60b9dc9c362dfa38944a1c83a67b7f74e",
+      "public_method_names": [
+        "batches",
+        "count_tokens",
+        "create",
+        "parse",
+        "parser",
+        "stream",
+        "tool_runner",
+        "with_raw_response",
+        "with_streaming_response"
+      ],
+      "single_message_retrieve_method": false
+    }
+  },
+  "limitation": "Inspection of installed resources, not verification of all current provider reporting facilities; no sealed recovery implementation exists here."
+}

@@ -1,0 +1,66 @@
+{
+  "application_commit": "92c5a9eafa81bbaa279a5b44312f1519a1bd522c",
+  "verified_at": "2026-11-12T23:36:38.318087+00:00",
+  "provider_contacts": 0,
+  "live_accounting_mutations": 0,
+  "full_gate": "7127 passed, 54 skipped, 53 deselected in 1124.88s (0:18:44)",
+  "project_line_coverage_percent": 96.05,
+  "patch_coverage_percent": 97,
+  "package_floors": {
+    "api": {
+      "floor": 86,
+      "actual": 88
+    },
+    "agents": {
+      "floor": 92,
+      "actual": 96
+    },
+    "security": {
+      "floor": 97,
+      "actual": 100
+    },
+    "eval": {
+      "floor": 91,
+      "actual": 95
+    }
+  },
+  "focused_final": "31 passed in 42.78s",
+  "mypy": "Success: no issues found in 207 source files",
+  "ruff": "All checks passed!",
+  "frontend_tests": [
+    "Test Files  221 passed (221)",
+    "Tests  4280 passed | 9 skipped (4289)"
+  ],
+  "e2e": "===================== 53 passed, 7181 deselected in 16.55s =====================",
+  "simulation": "20/20 succeeded, 0 errored, total $0.0000",
+  "docs": "95 passed in 24.22s",
+  "registry": [
+    "  objects checked  260",
+    "  mismatches       0",
+    "  every id, order, field and score semantic matches."
+  ],
+  "logs_sha256": {
+    "docs-final.log": "57c2f54203d4f737d242a22786f4e4c6f82e33955213192b0017d6f4b2494b7a",
+    "package-floors.log": "913ccf08549901fc78a3cae0799267e19c6309f63fe96caf2987658de319fb7e",
+    "route-budgets.log": "2de8c23feaf7c2fac5c5368bcdc7591d08dd9bed25f11a3aa8dd2ec96d8dcf7d",
+    "focused-final.log": "4b848afaa32a9c270ee106fc45c7badefd2c1fd292d12609bd63f325b6556614",
+    "mypy-second.log": "71144743c83babea384888a735db0c4daba3d4d7b7942b6839984bd5c21b52bb",
+    "docs-tests.log": "88d018107b8370d3006cb6c52a79bfb6a47808b1c4efab0044bc107393ca66e3",
+    "mypy-all.log": "39a150ed6c86b1432bf68ac3768438f34e090ed8d676bd929dd5d762b6b38178",
+    "deadlines-second.log": "6d6c9bdcc7303ff67fb073ffcb93155d93c48f61bd83f281ff29b7d256b5f74b",
+    "full-coverage-authorized.log": "bb62df47377da3753e4fc3beafde5377672e78aa99e2ccc5f737fe028614f2a3",
+    "build-budgets.log": "a4648841e7fd2cc20c0aeb9991dd37e99212bbeeb189f5f9876e8c24881e6696",
+    "full-coverage.log": "4e31f4994bf5bb005b793b8bd9b04719e9198d514139c56908e58dbeb038bb3e",
+    "mypy.log": "71144743c83babea384888a735db0c4daba3d4d7b7942b6839984bd5c21b52bb",
+    "ruff.log": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+    "focused-first.log": "bfc9a74c9c5ce4239ee557c2bcc63e2b2f6d46289d6b0171065a85e182407d81",
+    "frontend-tests.log": "06e0f3dba8670dd575fc1a5eca77b29b356bea8ff93922a0006c64cbbe14da96",
+    "focused-final-policy.log": "471306d30647ddd9402998f3ff41a8e89f76ee927995a6e118c04af7f73c30a6",
+    "frontend-typecheck.log": "a7d3e417b6cd1706638232a0866a3d00e29d67d337e100e7c609cec19e0c149d",
+    "mypy-final.log": "39a150ed6c86b1432bf68ac3768438f34e090ed8d676bd929dd5d762b6b38178",
+    "e2e.log": "5ff1022915750f037ca395d53c812a5eda08d80b77321539ec99b1e3f197741b",
+    "frontend-lint.log": "3abf1d9178e65389b228b48abcf35554976381024c89ace777f11f80205faf37",
+    "parity.log": "ffe3a2763694f735d44ac4b58fee474f7091fa78a56db0f351933f7a88375886",
+    "simulation.log": "5a983b19829512560e7ddf1a9b762843dbe5a4bc5c6909a79872510cb10470ec"
+  }
+}

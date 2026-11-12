@@ -1,0 +1,133 @@
+{
+  "purpose": "Read-only exact-body audit, not active reuse or authorization",
+  "proof": {
+    "historical_job_id": "gen-dee395e2c66179cb055782964205509bc2e14f8e",
+    "historical_packet_digest": "880e4794cd08d26a4a9e63231d5d0d82ec99a267e65ff60dfc5f0994875fb864",
+    "historical_contact_receipt_digest": "a46f0d328aa60633407bf1a86217d71ffee98d5977d2ef3f06dcfc84acdd9370",
+    "count_request_digest": "80fb9cb6f20ee54c95a2bd77ee93c6115bb4c34e8644fe8eeb30ab77e3766f08",
+    "input_tokens": 7877,
+    "measured_allowance": 16000,
+    "reused": true,
+    "new_contacts": 0
+  },
+  "historical_link": {
+    "revision": "d5-explicit-measurement-link-v1",
+    "job_id": "gen-dee395e2c66179cb055782964205509bc2e14f8e",
+    "owner": "d5-coverage-880e4794cd08d26a-measure",
+    "input_digest": "d4db97ce73651986178de53e8b45e310cf0bc1f51f28dfdcbfd3d31e7bfe268b",
+    "packet_digest": "880e4794cd08d26a4a9e63231d5d0d82ec99a267e65ff60dfc5f0994875fb864",
+    "request_id": "d5-880e4794cd08d26a4a9e6323-measure-1",
+    "authorization_record": {
+      "approved": true,
+      "approved_by": "Kudrat Singh (owner), explicit coverage-authority Stage A-only approval in this conversation",
+      "approved_at": "2026-11-11T02:59:48+00:00",
+      "expires_at": "2026-11-12T02:59:48+00:00",
+      "authorization_kind": "owner",
+      "transport_mode": "provider",
+      "packet_digest": "880e4794cd08d26a4a9e63231d5d0d82ec99a267e65ff60dfc5f0994875fb864",
+      "scope_id": "d5-880e4794cd08d26a4a9e6323",
+      "limits": {
+        "jobs": 1,
+        "messages": 4,
+        "counts": 5,
+        "usd": "10",
+        "concurrency": 1,
+        "workflow_usd": "0.45",
+        "probe_usd": "0",
+        "headroom_usd": "1.00",
+        "new_usd": "0.45",
+        "stages": {
+          "A": {
+            "jobs": 0,
+            "messages": 0,
+            "counts": 1
+          },
+          "B": {
+            "jobs": 1,
+            "messages": 4,
+            "counts": 4
+          }
+        }
+      },
+      "members": [
+        "d5-coverage-880e4794cd08d26a-measure",
+        "d5-coverage-880e4794cd08d26a-run"
+      ],
+      "case_bindings_digest": "7d26dd866fb403f95d132bfffd4e2990976307ad4702a8cc4e958bfc38d5ebeb",
+      "stages": [
+        "A"
+      ],
+      "stage_a_restrictions": {
+        "case_ids": [
+          "measure-1"
+        ],
+        "count_requests_max": 1,
+        "messages_max": 0,
+        "funded_jobs_max": 0,
+        "new_spend_max_usd": "0",
+        "automatic_retries": 0,
+        "sequential": true,
+        "B_C_D_authorized": false,
+        "human_qualification": false
+      },
+      "approval_source": "Explicit owner Stage A-only approval of packet880e4794 and exact request80fb9cb6 in this conversation; fresh owner permission, no fixture authorization reused"
+    },
+    "count_request_digest": "80fb9cb6f20ee54c95a2bd77ee93c6115bb4c34e8644fe8eeb30ab77e3766f08",
+    "response_digest": "09d26e325773498fb4cf58b5b766f17b335c4bec414fb374dfbbb268b38bbba8",
+    "contact_receipt_digest": "a46f0d328aa60633407bf1a86217d71ffee98d5977d2ef3f06dcfc84acdd9370",
+    "input_tokens": 7877,
+    "binding": {
+      "model": "claude-sonnet-5-5",
+      "prompt_revision": "workspace-d5-qualification-v1",
+      "candidate_wire_digest": "8a3f0aaf9ccd8ab437d973560e068d54f93ba178e5bc0e1f8e32cc9b78c0c893",
+      "settings": {
+        "input_tokens": 20000,
+        "output_tokens": 4000,
+        "timeout_seconds": 30,
+        "response_bytes": 131072,
+        "max_calls": 1,
+        "max_repairs": 0,
+        "price_estimate_usd_per_million": {
+          "input": "2",
+          "output": "10",
+          "verified_at": "2026-11-06"
+        },
+        "selection": {
+          "span_ids": [
+            "span-19ef61ad682feb5985a67c51ff803347"
+          ],
+          "material_ids": [
+            "mat-4c16f701f33831a7541e340a65c12a24"
+          ]
+        }
+      },
+      "sealed_settings": {
+        "effort": "medium",
+        "thinking": {
+          "type": "between_tools"
+        },
+        "max_repairs": 1,
+        "temperature": null,
+        "structured_outputs": true
+      },
+      "sources": [
+        {
+          "scope": "abstract",
+          "work_id": "arxiv:2610.40798",
+          "version_id": "arxiv:2610.40798:v1:metadata-c1a34fa53cba3d51",
+          "material_id": "mat-4c16f701f33831a7541e340a65c12a24",
+          "content_hash": "sha256:72ca1d08561346342c461199096f870740f39c33103274e66d694df7b4ad7368"
+        }
+      ],
+      "units_digest": "be3f5f1b3ba454670284f2bdf3bd8af654b7a307d9c3f239bd831bf394e4524e",
+      "version_hashes": {
+        "arxiv:2610.40798:v1:metadata-c1a34fa53cba3d51": "b77eda4278705b9a4d62a312176df3e7d751fd0dc1f1a4c3c345b0c60167e443"
+      },
+      "schema_digest": "e9f405d85a49c8149bdc67c77fe826e8c837ecd0f94bfcaa55e9c91a78b8a64e"
+    }
+  },
+  "candidate_packet_digest": "079748d34931142270f947038df90dc1dcae135adf0b1b88d153324d3a1a5ef3",
+  "fresh_scope_A_required": true,
+  "paired_counts_still_required": true,
+  "new_provider_contacts": 0
+}

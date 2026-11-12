@@ -1,6 +1,17 @@
 # D5 qualification and offline development
 
-Current offline revision (application`5e51269b`, packet`22b8e13bc39d78cb1203f2e613c7c488d7f5a403234840d5ae15dcfa3d44a477`): [coverage-shapes v9](COVERAGE-SHAPES.md), [one-case unexecuted proposal and capacity choices](COVERAGE-SHAPES-PROPOSAL.md), [verification](evidence/coverage-shapes-v9/VERIFICATION.md). From0592bec4; preserves stopped f48b3f24 Learn failure and revoked scope. Current reconciled ledger31/62/85/USD1.802777, pending/unknown0. No new contacts/spend/authority; Stage D deferred, human qualification out of scope.
+Current offline revision: [operation deadlines](OPERATION-DEADLINES.md),
+[preserved uncertain contact and resolution options](UNCERTAINTY-RESOLUTION.md),
+[blocked one-case proposal](OPERATION-DEADLINES-PROPOSAL.md),
+[verification](evidence/operation-deadlines-v11/VERIFICATION.md).
+Application92c5a9eafa81bbaa279a5b44312f1519a1bd522c. Ledger33jobs/65Messages/90counts,
+$1.853811known estimated plus one overlapping $0.425066 pending/unknown hold;
+no reconciliation, release or live authority. Proposed120s Opus deadlines and
+durable480s workflow are offline-tested. Dispatch stays stopped, Stage D deferred,
+human qualification out of scope. Exact published-head CI is separate from local
+verification and the historical provider result.
+
+Historical offline v9 revision (application`5e51269b`, packet`22b8e13bc39d78cb1203f2e613c7c488d7f5a403234840d5ae15dcfa3d44a477`): [coverage-shapes v9](COVERAGE-SHAPES.md), [one-case unexecuted proposal and capacity choices](COVERAGE-SHAPES-PROPOSAL.md), [verification](evidence/coverage-shapes-v9/VERIFICATION.md). From0592bec4; preserves stopped f48b3f24 Learn failure and revoked scope. Its starting ledger was31/62/85/USD1.802777, pending/unknown0. No contacts/spend/authority were created by that offline revision; Stage D deferred, human qualification out of scope.
 
 Historical pre-run handoff: [protected request-coverage development runner](COVERAGE-RUNNER.md), [exact packet and verification](evidence/request-coverage-runner-v4/VERIFICATION.md). Packet `f48b3f24fd7c831d76aed787faebc4e64b2c322ef80657d0a2f6bd8ea6ee0b86`, application `6803cd34b90943f2c70974615e2ea51e58f02010`. Three development controls; A3 count-only requests, then separately approved B3 workflows/12 Messages/12 paired counts/USD1.35. [A-only approval request](COVERAGE-STAGE-A-APPROVAL-REQUEST.md); [separate B proposal](COVERAGE-STAGE-B-PROPOSAL.md). No live authority or provider contact is created. Read-only ledger30/61/81/USD1.779493 preserved; Stage D deferred and human qualification out of scope.
 
