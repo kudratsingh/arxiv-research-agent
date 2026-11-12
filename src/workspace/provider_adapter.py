@@ -282,6 +282,10 @@ class QualificationAdapter:
     def _dispatch_scope(self, conn: Any, job_id: str) -> None:
         """Recheck external scope at the point of dispatch."""
 
+    def _timeout_seconds(self, path: str, contact: dict[str, Any], data: dict[str, Any]) -> float:
+        """Historical wire adapters retain their original scalar timeout."""
+        return float(self.inputs.settings["timeout_seconds"])
+
     def _complete_http_body(self, job_id: str, ordinal: int, status: int, body: bytes) -> None:
         """Optional receipt for a complete body before envelope decoding."""
 
@@ -584,16 +588,19 @@ class QualificationAdapter:
                     or estimate * 5 > int(self.inputs.settings["input_tokens"]) * 4
                 ):
                     raise AdmissionError("bound_count_receipt_required")
+            timeout_seconds = self._timeout_seconds(path, contacts[ordinal], data)
+            if "operation_deadlines" in self.inputs.settings:
+                contacts[ordinal]["timeout_seconds"] = timeout_seconds
             contacts[ordinal]["state"] = "dispatching"
             conn.execute(
                 "UPDATE workspace_generation_jobs SET data=%s WHERE id=%s", (Jsonb(data), job_id)
             )
-        async with asyncio.timeout(float(self.inputs.settings["timeout_seconds"])):
+        async with asyncio.timeout(timeout_seconds):
             async with httpx.AsyncClient(
                 transport=self.transport,
                 trust_env=False,
                 follow_redirects=False,
-                timeout=float(self.inputs.settings["timeout_seconds"]),
+                timeout=timeout_seconds,
                 headers={"x-api-key": self.api_key, "anthropic-version": "2023-06-01"},
             ) as client:
                 async with client.stream(

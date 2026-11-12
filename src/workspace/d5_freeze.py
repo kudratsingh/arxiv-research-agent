@@ -175,6 +175,8 @@ def code_bindings() -> dict[str, str]:
         "d5_coverage_packet.py",
         "d5_coverage_shapes_packet.py",
         "d5_coverage_authority_packet.py",
+        "d5_deadlines.py",
+        "d5_timeout_packet.py",
         "d5_coverage_replay.py",
         "d5_operations.py",
         "programme_amendments.py",

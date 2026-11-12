@@ -6,6 +6,7 @@ execution share context, admission, contact journal, pricing and recovery code.
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import json
 from dataclasses import asdict
@@ -85,6 +86,8 @@ def qualification_producer() -> dict[str, Any]:
         "workspace/d5_coverage_packet.py",
         "workspace/d5_coverage_shapes_packet.py",
         "workspace/d5_coverage_authority_packet.py",
+        "workspace/d5_deadlines.py",
+        "workspace/d5_timeout_packet.py",
         "workspace/d5_coverage_replay.py",
         "workspace/assistance_policy.py",
         "workspace/assistance_coverage.py",
@@ -168,6 +171,7 @@ def prepare_input(
     repair_located_prose: bool = False,
     scope_profile: str | None = None,
     programme_binding: dict[str, Any] | None = None,
+    operation_deadlines: dict[str, Any] | None = None,
 ) -> GenerationInput:
     if operation not in {"workflow", "measurement", "probe"}:
         raise AdmissionError("d5_operation_required")
@@ -243,6 +247,11 @@ def prepare_input(
         "probe_context": probe_context,
         "probe_wire_digest": _digest(probe_wire) if probe_wire else None,
     }
+    if operation_deadlines is not None:
+        from src.workspace.d5_deadlines import validate as validate_deadlines
+
+        validate_deadlines(operation_deadlines)
+        settings["operation_deadlines"] = dict(operation_deadlines)
     if repair_located_prose or sealed["schema_revision"] == PROCEDURAL_REVISION:
         settings["located_prose_repair"] = "first-check-only-v1"
     if scope_profile is not None:
@@ -346,6 +355,13 @@ class D5Adapter(QualificationAdapter):
 
     async def advance(self, job_id: str, *, cancelled: Any = lambda: False) -> dict[str, Any]:
         try:
+            if "operation_deadlines" in self.inputs.settings:
+                from src.workspace.d5_deadlines import remaining
+
+                with self.store.pool.connection() as conn:
+                    _, _, data = self.control._job(conn, self.owner, job_id)
+                async with asyncio.timeout(remaining(data)):
+                    return await QualificationAdapter.advance(self, job_id, cancelled=cancelled)
             return await QualificationAdapter.advance(self, job_id, cancelled=cancelled)
         except BaseException as exc:
             self._quarantine_failure(job_id, type(exc).__name__)
@@ -356,6 +372,12 @@ class D5Adapter(QualificationAdapter):
         sealed = settings.get("d5_request", {})
         operation = settings.get("d5_operation")
         routes = settings.get("operation_routes")
+        if "operation_deadlines" in settings:
+            from src.workspace.d5_deadlines import validate as validate_deadlines
+
+            validate_deadlines(settings["operation_deadlines"])
+            if not routes and operation != "measurement":
+                raise AdmissionError("d5_operation_deadlines_require_sealed_routes")
         if routes:
             from src.workspace.d5_operations import route, validate
 
@@ -826,8 +848,25 @@ class D5Adapter(QualificationAdapter):
         )
         guard_scope(conn, self.owner, self.inputs.snapshot(), policy, job_id=job_id)
 
+    def _timeout_seconds(self, path: str, contact: dict[str, Any], data: dict[str, Any]) -> float:
+        if "operation_deadlines" in self.inputs.settings:
+            from src.workspace.d5_deadlines import timeout
+
+            return timeout(path, contact, data)
+        return super()._timeout_seconds(path, contact, data)
+
     def _response_authorization(self, job_id: str) -> None:
         with self.store.pool.connection() as conn:
+            if "operation_deadlines" in self.inputs.settings:
+                from src.workspace.d5_deadlines import remaining
+
+                # The snapshot reader below owns the job-row lock. Reading
+                # the durable origin here must not lock it on another connection.
+                row = conn.execute(
+                    "SELECT data FROM workspace_generation_jobs WHERE id=%s AND owner=%s",
+                    (job_id, self.owner),
+                ).fetchone()
+                remaining(row[0] if row else {})
             _, policy = self.control._policy(
                 conn, self.owner, self.inputs.snapshot(), datetime.now(UTC)
             )

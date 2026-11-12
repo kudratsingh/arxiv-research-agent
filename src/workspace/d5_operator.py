@@ -63,6 +63,7 @@ def main() -> None:
         store.migrate()
         if args.verb == "prepare":
             from datetime import datetime
+            from decimal import Decimal
 
             from src.workspace.admission import AdmissionError
             from src.workspace.d5_benchmark import check_storage
@@ -91,6 +92,10 @@ def main() -> None:
                 history = census(conn, members[0], members=members)
                 if history != packet["history"]:
                     raise AdmissionError("d5_historical_ledger_drift")
+                if history["uncertain_contacts"] or history["active_jobs"] or any(
+                    Decimal(history[k]) for k in ("pending_usd", "unknown_usd")
+                ):
+                    raise AdmissionError("d5_unresolved_liability_requires_reconciliation")
             prepare_projects(store, packet)
             write(
                 args.receipt,
