@@ -468,6 +468,9 @@ def test_migration_from_v3_preserves_predecessors_and_does_not_activate(store):
     with store.pool.connection() as c:
         # Simulate the actual pre-017 schema, removing later children first.
         # Keep real FK constraints and recreate the whole upgrade sequence.
+        c.execute("DROP TABLE workspace_d5_campaign_successor_revocations")
+        c.execute("DROP TABLE workspace_d5_campaign_successors")
+        c.execute("DELETE FROM workspace_schema WHERE revision='019_d5_campaign_successor'")
         c.execute("DROP TABLE workspace_d5_campaign_outcomes")
         c.execute("DROP TABLE workspace_d5_campaign_revocations")
         c.execute("DROP TABLE workspace_d5_campaign_extensions")
@@ -489,6 +492,8 @@ def test_migration_from_v3_preserves_predecessors_and_does_not_activate(store):
         )
         assert original.effective_limits(c, "evaluation")["counts"] == 80
         assert c.execute("SELECT count(*) FROM workspace_d5_campaign_extensions").fetchone()[0] == 0
+        assert c.execute("SELECT count(*) FROM workspace_d5_campaign_successors").fetchone()[0] == 0
+        assert c.execute("SELECT count(*) FROM workspace_d5_campaign_successor_revocations").fetchone()[0] == 0
 
 
 @pytest.mark.parametrize("field", ["new_jobs", "counts", "concurrency", "version"])
