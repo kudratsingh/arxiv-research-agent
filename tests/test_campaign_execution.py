@@ -2050,7 +2050,9 @@ class TestTheCampaignReport:
             )
             assert cost.model_calls == sum(record.model_calls for record in mine)
             latencies = sorted(record.elapsed_seconds for record in mine)
-            assert cost.latency_max_seconds == pytest.approx(latencies[-1], abs=5e-4)
+            # The report contract displays milliseconds. Exact quantization
+            # avoids a floating epsilon rejecting a legitimate half-ms value.
+            assert cost.latency_max_seconds == round(latencies[-1], 3)
             assert cost.latency_p50_seconds is not None
             assert cost.latency_p95_seconds is not None
             assert cost.latency_p50_seconds <= cost.latency_p95_seconds

@@ -221,7 +221,7 @@ async def run(
 
 def main() -> None:
     from src.workspace.d5_benchmark import database, read, write
-    from src.workspace.d5_campaign_packet import freeze
+    from src.workspace.d5_campaign_packet import freeze, verify_dispatch_identity
     from src.workspace.d5_campaign_report import markdown, results
     from src.workspace.d5_fixture import install
     from src.workspace.store import WorkspaceStore
@@ -255,6 +255,9 @@ def main() -> None:
             write(args.packet, freeze(store, captured))
             return
         packet = read(args.packet)
+        # Reports may be recomputed after expiry, but never from mutated inputs
+        # or another producer. This does not grant execution permission.
+        verify_dispatch_identity(packet)
         if args.verb == "offline":
             from src.workspace.d5_benchmark import check_storage
             from src.workspace.d5_campaign_operator import authorize_fixture

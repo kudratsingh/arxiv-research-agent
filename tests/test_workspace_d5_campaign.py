@@ -63,7 +63,7 @@ def setup(store, *, authorize=True):
             )
     snapshot = capture(store, "evaluation")
     packet = freeze(store, snapshot)
-    verify(packet)
+    # freeze validates its plan; recorder and runner independently revalidate.
     if authorize:
         authorize_fixture(store, packet)
     return packet
@@ -241,6 +241,30 @@ async def test_last_programme_job_and_contacts_admitted_then_next_refused(store)
                 guard_program(
                     conn, actor, policy, reserve_usd=None, current_job=None, next_endpoint=endpoint
                 )
+        # Independent budget pressure: do not shrink the 14-case batch to fit.
+        # This extra closed row and all finance in this schema are synthetic.
+        conn.execute(
+            "UPDATE workspace_spend_reservations SET amount=4,workflow=4 WHERE job_id='synthetic-failed-programme-46'"
+        )
+        from src.workspace.d5_campaign_policy import guard
+
+        scope = policy["d5_scope_id"]
+        bound = conn.execute(
+            "SELECT data FROM workspace_d5_scopes WHERE scope_id=%s", (scope,)
+        ).fetchone()[0]
+        first = next(iter(compile_inputs(packet).values()))
+        with pytest.raises(
+            AdmissionError, match="remaining_batch_requires_consolidated_budget_adjustment"
+        ):
+            guard(
+                conn,
+                {**bound, "id": scope},
+                actor,
+                first["input"]["settings"],
+                amount=Decimal("0.45"),
+                endpoint=None,
+            )
+        assert len(bound["cases"]) == 14 and packet["limits"]["new_usd"] == "5.10"
 
 
 async def test_exception_drift_or_revocation_blocks_before_transport(store):
@@ -350,25 +374,34 @@ async def test_completed_outcome_financial_mutation_is_detected(store):
             audit_outcomes(conn, "d5-" + packet["packet_digest"][:24])
 
 
+def configure_cli(monkeypatch, store):
+    from contextlib import contextmanager
+
+    from src.workspace import d5_benchmark
+
+    @contextmanager
+    def database(_):
+        yield store.pool
+
+    monkeypatch.setattr(d5_benchmark, "database", database)
+    monkeypatch.setenv("D5_POSTGRES_URL", "disposable-store-fixture")
+
+
 async def test_operator_template_is_not_authorization_and_cannot_change_bound_limits(
     store, monkeypatch, tmp_path
 ):
     import sys
-    from contextlib import contextmanager
 
-    from src.workspace import d5_benchmark, d5_campaign, d5_campaign_operator
-    from src.workspace.d5_campaign_extension import active, record_external
+    from src.workspace import d5_benchmark, d5_campaign_operator
     from src.workspace.d5_campaign_operator import record
 
     packet = setup(store, authorize=False)
     receipt = template(packet)
     receipt["limits"]["messages"] += 1
-    # Template must not alias the packet's immutable dictionaries.
     assert packet["limits"]["messages"] == 44
     with pytest.raises(AdmissionError, match="packet_binding_drift"):
         record(store, packet, receipt)
-    path = tmp_path / "packet.json.gz"
-    auth = tmp_path / "authorization.json"
+    path, auth = tmp_path / "packet.json.gz", tmp_path / "authorization.json"
     d5_benchmark.write(path, packet)
     monkeypatch.setattr(
         sys, "argv", ["operator", "template", "--packet", str(path), "--authorization", str(auth)]
@@ -378,20 +411,22 @@ async def test_operator_template_is_not_authorization_and_cannot_change_bound_li
     monkeypatch.setenv("WORKSPACE_D5_OFFLINE", "0")
     with pytest.raises(AdmissionError, match="offline_disabled_key"):
         authorize_fixture(store, packet)
-    monkeypatch.setenv("WORKSPACE_D5_OFFLINE", "1")
-    authorize_fixture(store, packet)
+
+
+async def test_operator_record_is_idempotent_and_revocable(store, monkeypatch, tmp_path):
+    import sys
+
+    from src.workspace import d5_benchmark, d5_campaign_operator
+    from src.workspace.d5_campaign_extension import active, record_external
+
+    packet = setup(store)
+    configure_cli(monkeypatch, store)
     with store.pool.connection() as conn:
         approved = active(conn, "evaluation")[0]
     assert record_external(store, approved)["duplicate"] is True
-    approved_path = tmp_path / "synthetic-approved.json"
+    path, approved_path = tmp_path / "packet.json.gz", tmp_path / "synthetic-approved.json"
+    d5_benchmark.write(path, packet)
     d5_benchmark.write(approved_path, approved)
-
-    @contextmanager
-    def database(_):
-        yield store.pool
-
-    monkeypatch.setattr(d5_benchmark, "database", database)
-    monkeypatch.setenv("D5_POSTGRES_URL", "disposable-store-fixture")
     monkeypatch.setattr(
         sys,
         "argv",
@@ -407,24 +442,9 @@ async def test_operator_template_is_not_authorization_and_cannot_change_bound_li
         ],
     )
     d5_campaign_operator.main()
-    assert d5_benchmark.read(tmp_path / "duplicate.json")["scope"]["duplicate"] is True
-    monkeypatch.setattr(sys, "argv", ["campaign", "verify", "--packet", str(path)])
-    d5_campaign.main()
-    monkeypatch.setattr(
-        sys,
-        "argv",
-        ["campaign", "report", "--packet", str(path), "--out", str(tmp_path / "report")],
-    )
-    d5_campaign.main()
-    assert (tmp_path / "report/index.html").exists()
-    assert (
-        d5_benchmark.read(tmp_path / "report/results.json")["denominators"]["unrun_evaluation"] == 8
-    )
-    monkeypatch.setattr(
-        sys, "argv", ["campaign", "run", "--packet", str(path), "--fixture-repair-all"]
-    )
-    with pytest.raises(AdmissionError, match="fixture_option_offline_only"):
-        d5_campaign.main()
+    duplicate = d5_benchmark.read(tmp_path / "duplicate.json")
+    assert duplicate["scope"]["duplicate"] is True
+    assert duplicate["expires_at"] == approved["expires_at"]
     monkeypatch.setattr(
         sys,
         "argv",
@@ -442,3 +462,52 @@ async def test_operator_template_is_not_authorization_and_cannot_change_bound_li
     d5_campaign_operator.main()
     with store.pool.connection() as conn, pytest.raises(AdmissionError, match="revocation_drift"):
         active(conn, "evaluation")
+
+
+async def test_report_cli_binds_packet_and_exports_readable_unreviewed_results(
+    store, monkeypatch, tmp_path
+):
+    import sys
+
+    from src.workspace import d5_benchmark, d5_campaign
+
+    packet = setup(store)
+    configure_cli(monkeypatch, store)
+    path = tmp_path / "packet.json.gz"
+    d5_benchmark.write(path, packet)
+    monkeypatch.setattr(sys, "argv", ["campaign", "verify", "--packet", str(path)])
+    d5_campaign.main()
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["campaign", "report", "--packet", str(path), "--out", str(tmp_path / "report")],
+    )
+    d5_campaign.main()
+    assert (tmp_path / "report/index.html").exists()
+    report = d5_benchmark.read(tmp_path / "report/results.json")
+    assert report["denominators"]["unrun_evaluation"] == 8
+    assert report["machine_quality"] == "HOLD" and report["human_labels"] is None
+    bad_packet = deepcopy(packet)
+    bad_packet["limits"]["messages"] = 45
+    bad_path = tmp_path / "mutated-packet.json"
+    d5_benchmark.write(bad_path, bad_packet)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "campaign",
+            "report",
+            "--packet",
+            str(bad_path),
+            "--out",
+            str(tmp_path / "invalid-report"),
+        ],
+    )
+    with pytest.raises(AdmissionError, match="frozen_packet_or_producer_drift"):
+        d5_campaign.main()
+    assert not (tmp_path / "invalid-report").exists()
+    monkeypatch.setattr(
+        sys, "argv", ["campaign", "run", "--packet", str(path), "--fixture-repair-all"]
+    )
+    with pytest.raises(AdmissionError, match="fixture_option_offline_only"):
+        d5_campaign.main()
