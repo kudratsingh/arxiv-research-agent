@@ -1,0 +1,121 @@
+{
+  "basis": "Synthetic immutable archived production replay and separately labelled successor mock contexts; no provider success or independent support evidence",
+  "application": "a3cf3d7c579ec61cd628d758b341c34daaad3dc0",
+  "valid_repair_recheck": {
+    "completion": true,
+    "assessment_binding": {
+      "status": "bound",
+      "current_response_digest": "7e8547b6e8a433dcafa4d9fd478fd1ce6b4c0c561d3c57cade578416e6531413",
+      "current_response_ordinal": 5,
+      "checker_ordinal": 7,
+      "checker_request_digest": "d118f91b4054eb6a83472696eafee1b665280c98a6d1ca39473d0ee60d69e1b5",
+      "checked_context_digest": "e574323af6560a3d65b4ac0279485619133ba86144ae40e417c3d42a33c0c929",
+      "completed_checker_after_current_response": true
+    },
+    "mechanical_provenance": true,
+    "machine_coverage": [
+      {
+        "decision": "lacks_evidence",
+        "input_digest": "sha256:53ebc8a8dd6dec91a24385e5b02b25d3ed9e08d12c94f18717a3b225d21533cc",
+        "part_id": "p1",
+        "reason": "Synthetic software fixture; coverage unmeasured."
+      },
+      {
+        "decision": "lacks_evidence",
+        "input_digest": "sha256:85fe6d62ec679870728e322c8afcbfc498244f04ae26790d29580b38f4201a49",
+        "part_id": "p2",
+        "reason": "Synthetic software fixture; coverage unmeasured."
+      },
+      {
+        "decision": "lacks_evidence",
+        "input_digest": "sha256:73174280381ddb5283d9e2c51b4a73adf57ca92e54a3cbb8e4ccbc423e5c0189",
+        "part_id": "p3",
+        "reason": "Synthetic software fixture; coverage unmeasured."
+      }
+    ],
+    "claim_quality": [
+      {
+        "atomicity": "atomic",
+        "claim_id": "c1",
+        "input_digest": "sha256:e080b26c98bbd4863c387ccbbb3b7df862c5b43691529aaa0d895173cc774882",
+        "qualifications": {
+          "comparator": "retained",
+          "conditions": "retained",
+          "metric_definition": "retained",
+          "study_scope": "retained"
+        },
+        "reason": "Synthetic software fixture; semantic accuracy unmeasured."
+      }
+    ],
+    "prose_review": "procedural_only",
+    "prose_findings": []
+  },
+  "coverage_only_uncertain_recheck": {
+    "completion": false,
+    "assessment_binding": {
+      "status": "unavailable",
+      "reason": "no_completed_check_after_current_response"
+    },
+    "mechanical_provenance": true,
+    "machine_coverage": null,
+    "claim_quality": null,
+    "prose_review": null,
+    "prose_findings": null
+  },
+  "completed_current_recheck": {
+    "completion": true,
+    "assessment_binding": {
+      "status": "bound",
+      "current_response_digest": "cb293cbb564b27c0214f8f39819db106b9cf6567fd1dfbe51ccfed62b0df1686",
+      "current_response_ordinal": 5,
+      "checker_ordinal": 7,
+      "checker_request_digest": "66135344eb133113640a432073d248e988bdbde3842f8677165d578e32e2dbe2",
+      "checked_context_digest": "cc6682691fbb848caa2e2db0dc0a170d2e523872404f2fe8b3f832780cc84d63",
+      "completed_checker_after_current_response": true
+    },
+    "mechanical_provenance": true,
+    "machine_coverage": [
+      {
+        "part_id": "p1",
+        "input_digest": "sha256:cd02a211318bacfcd7b01e08a04fbc845ccd058c05a5532a4fad5a808d50b992",
+        "decision": "answered",
+        "reason": "Synthetic software fixture; coverage unmeasured."
+      },
+      {
+        "part_id": "p2",
+        "input_digest": "sha256:85fe6d62ec679870728e322c8afcbfc498244f04ae26790d29580b38f4201a49",
+        "decision": "lacks_evidence",
+        "reason": "Synthetic software fixture; coverage unmeasured."
+      },
+      {
+        "part_id": "p3",
+        "input_digest": "sha256:73174280381ddb5283d9e2c51b4a73adf57ca92e54a3cbb8e4ccbc423e5c0189",
+        "decision": "lacks_evidence",
+        "reason": "Synthetic software fixture; coverage unmeasured."
+      }
+    ],
+    "claim_quality": [
+      {
+        "claim_id": "c1",
+        "input_digest": "sha256:e080b26c98bbd4863c387ccbbb3b7df862c5b43691529aaa0d895173cc774882",
+        "atomicity": "atomic",
+        "qualifications": {
+          "study_scope": "retained",
+          "comparator": "retained",
+          "metric_definition": "retained",
+          "conditions": "retained"
+        },
+        "reason": "Synthetic software fixture; semantic accuracy unmeasured."
+      }
+    ],
+    "prose_review": "procedural_only",
+    "prose_findings": []
+  },
+  "factual_claims_unchanged": true,
+  "coverage_changed": true,
+  "current_response_digest": "cb293cbb564b27c0214f8f39819db106b9cf6567fd1dfbe51ccfed62b0df1686",
+  "new_recheck_response": null,
+  "real_contacts": 0,
+  "historical_provider_result_modified": false,
+  "human_labels": null
+}

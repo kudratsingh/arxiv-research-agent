@@ -1,0 +1,15 @@
+{
+  "passed": true,
+  "maximal_repair_envelope": true,
+  "jobs": 14,
+  "messages": 44,
+  "paired_counts": 44,
+  "cumulative_jobs": 47,
+  "cumulative_messages": 109,
+  "cumulative_counts": 134,
+  "historical_hold_retained": "0.425066",
+  "repeat_dispatches": 0,
+  "real_provider_contacts": 0,
+  "human_qualification": false,
+  "elapsed_seconds": 128.90699987497646
+}

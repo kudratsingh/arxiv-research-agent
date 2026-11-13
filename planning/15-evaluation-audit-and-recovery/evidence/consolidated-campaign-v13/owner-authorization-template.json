@@ -1,0 +1,603 @@
+{
+  "approved": false,
+  "approved_by": null,
+  "approved_at": null,
+  "approval_source": null,
+  "expires_at": "2026-11-14T07:24:01+00:00",
+  "authorization_kind": "owner",
+  "transport_mode": "provider",
+  "packet_digest": "97d24567bc98753122315f135a621eb886cebb2b81c32eb5762572589f037e08",
+  "scope_id": "d5-97d24567bc98753122315f13",
+  "limits": {
+    "jobs": 14,
+    "messages": 44,
+    "counts": 44,
+    "usd": "10",
+    "concurrency": 1,
+    "workflow_usd": "0.45",
+    "probe_usd": "0.15",
+    "headroom_usd": "1.00",
+    "new_usd": "5.10"
+  },
+  "members": [
+    "d5-campaign-97d24567bc987531-run"
+  ],
+  "stages": [
+    "B",
+    "C",
+    "D"
+  ],
+  "case_order": [
+    "campaign-dev-learn",
+    "campaign-dev-compare",
+    "campaign-eval-learn-mechanism",
+    "campaign-eval-learn-conditions",
+    "campaign-eval-learn-experiment",
+    "campaign-eval-learn-measurement",
+    "campaign-eval-research-memory",
+    "campaign-eval-research-retrieval",
+    "campaign-eval-research-verification",
+    "campaign-eval-research-insufficient",
+    "campaign-probe-1",
+    "campaign-probe-2",
+    "campaign-probe-3",
+    "campaign-probe-4"
+  ],
+  "case_bindings_digest": "e8191ffb2e08313482ec59b767ad5b823a1d2203cddeffbde10ee4e3b292d335",
+  "code_bindings": {
+    "src/workspace/d5_freeze.py": "sha256:b28aab93afbca8286cf5f34b7c69c2231c33f640099c4ff6817dcf087c7fbbe7",
+    "src/workspace/d5_coverage_policy.py": "sha256:9ea386fd1e4e0d2ea65ac9bb5246850c93ae65296b47b5adbaab8f4c08107432",
+    "src/workspace/d5_coverage_packet.py": "sha256:7171e1a0c32f12df678382f729bb6cdf36ae5be2ec78aa5b9d895553695f6dee",
+    "src/workspace/d5_coverage_shapes_packet.py": "sha256:aa878cbcf7f3f7982ea65af035386143d2ad2bada67108c750560d622abaf2fd",
+    "src/workspace/d5_coverage_authority_packet.py": "sha256:a6ad7deba984095d0032cd8b569f12aebbc4c89c327202fe76bb39dcae246abd",
+    "src/workspace/d5_deadlines.py": "sha256:205c3e197eb3f19c730e036706f57610dbf52984ab0d08a7250d6301752159ac",
+    "src/workspace/d5_timeout_packet.py": "sha256:fc4d98ccb9a1f1425fe1fe88059f762f4d887ef4ad919b14cefdcda83c552363",
+    "src/workspace/d5_campaign_policy.py": "sha256:14a424f6356b04751a64df61bc16b39681577d63b5a5f79ab4f592fe493695fe",
+    "src/workspace/d5_campaign_extension.py": "sha256:cb77aadd84c8c920962fb4516d4199629face8f70101ec24e9770e93678c210c",
+    "src/workspace/d5_campaign_packet.py": "sha256:4ebf31aef462850eeacce3ffdf3055119ac0b853dd7420bdc72ba8456575ba5c",
+    "src/workspace/d5_campaign_operator.py": "sha256:c1b76aab4c9c71767651912ea1d427538b33c427b45f8a364fed85b349aa8180",
+    "src/workspace/d5_campaign.py": "sha256:0da4ddf94cd9ec3414e739829776fcbd182d683474eac5ac732f01560a9351d2",
+    "src/workspace/d5_campaign_report.py": "sha256:58c0c2c8684f7d55e74fa5dba25c9edc8783ea2933b29925a18cf4acb0fe39ae",
+    "src/workspace/d5_report_binding.py": "sha256:8b54b16fe2ac4e611d1122c9c0ae273d7091f1d8731f08a10a6b40786f385c5b",
+    "src/workspace/d5_answerability.py": "sha256:927897b1ebe1fdd3a460e3db8f5c66518c6fa55458a6f35f6b2c322d4d420920",
+    "src/workspace/migrations/018_d5_campaign_extension.sql": "sha256:c393131a11b5fa324cc38b065fdcc8b52c727167a487d793b4b2ff8e008708be",
+    "src/workspace/d5_coverage_replay.py": "sha256:36fa3b5385900012e1c8bcb0c954549d648ee9a8e692b793d32cebf9c239a13f",
+    "src/workspace/d5_operations.py": "sha256:1e9f173b6900275a492545fd079eb04573330d68f4a595d44aaed82da25d96f1",
+    "src/workspace/programme_amendments.py": "sha256:1ce1306627253bfa7f8d5e601ca1b631306a8210582a3002148459431babdfab",
+    "src/workspace/programme_successors.py": "sha256:89960446fde450c557cf691681c50878b22303e9697ead19335d2e17502004d3",
+    "src/workspace/programme_third_amendment.py": "sha256:946c61da30a22ceb79c0aec89fed56a314c53652b2e05c172a4b283fb739472e",
+    "src/workspace/programme_capacity.py": "sha256:c782489f270342a346f5843a9a12602597d9dab414d9351568f3777b5299809e",
+    "src/workspace/migrations/017_programme_capacity_amendments.sql": "sha256:de7fb1e79e52f1c2ff0046254d137acbead5d8bb8d7571de3f9c2a45138a44ba",
+    "src/workspace/migrations/016_programme_third_amendments.sql": "sha256:5fcffc1339f3910706341388054a367d1394e819b9eaf60bf6b8cac687b35cb3",
+    "src/workspace/migrations/015_programme_successor_amendments.sql": "sha256:ecfebbf208ad29eb4ce46340d7d17a9fc15c96088a1914257df79f8ff9a485b6",
+    "src/workspace/d5_measurements.py": "sha256:f780b4e16b27e4f52ae18d3390112aa237b6ec83d2dd0478e6f795395b2e01b2",
+    "src/workspace/migrations/014_programme_amendments.sql": "sha256:11a88a4bccc586b3e0800ee60997d4099b6df07ef8b346e9a05406fa877293b0",
+    "src/workspace/d5_benchmark.py": "sha256:ea466fd11d3d8a943931f463191867a2f06ff2dad867b347ccd8a2ea83c61cde",
+    "src/workspace/d5_scope.py": "sha256:053c481bcef2026139dce94ec6fded306b9ac268912b1f6ca7992aa2a25b3564",
+    "src/workspace/d5_authorization.py": "sha256:4519f8e98ad3522bbba6e40a33a7d822c1962d4dcdcde595aaceb26d54d127cc",
+    "src/workspace/d5_scoring.py": "sha256:5e80c8a54c5e037afb48cb504cfadd5ddb4ca40354687407ea1394133a1dcd11",
+    "src/workspace/d5_reviews.py": "sha256:8d0c642f4026f87c44de3b2c354d8187c3776d2284079cbfe8f6a2290030cab2",
+    "src/workspace/d5_review_scoring.py": "sha256:0448f64dedc0db431cda1c05f0faf6428a61d145d9abaafbc322e99b9701bcc1",
+    "src/workspace/d5_fixture.py": "sha256:8f7c3d834ce408fa07fb1e285be1109dbd673b66836dc6c5c2b658a4330a8fbb",
+    "src/workspace/d5_results.py": "sha256:c6ef92b0bda78e5b5e7f5722a73f3bade15307c7fba391ed52458c4abee44ce7",
+    "src/workspace/d5_routes.py": "sha256:0bc7c7803b7f9f9d18f7fc4c605b5a7bbfc93b053cb5caf7e996622e3e7f3523",
+    "src/workspace/d5_operator.py": "sha256:5c3dd36a6cf08a2a766a285eee7f19e50446c6da9eb65482104758e21c2830ba",
+    "src/workspace/d5_evidence.py": "sha256:c110b023b415b72faac0e9dd88b3876bf67e5e84db44472a6ba089a87cd53e42",
+    "src/workspace/mode_ranking.py": "sha256:07a911a3c99c5cf3f1de694279187a813bde98c7c316e316b16547d536cbe3e4",
+    "src/workspace/ranking.py": "sha256:e0313d315cbd2d6684e40d1ab5277c2d56fa48fd6a5a97c41177c6d08417226d",
+    "src/workspace/grounding.py": "sha256:05b9cd7e0c1737b36b731996f2ec20132034b3a233acebe5be64d9e43c260bb7",
+    "src/workspace/material.py": "sha256:688cbee37fa7007806dad087331672b381f0d3e094d88dc9dc8a7a889b4d7ba2",
+    "src/workspace/assistance.py": "sha256:c8b74fa84e8e03df0eb0edf70db1c97f7439f34b5edf9bb8737e37c906dfce7a",
+    "src/workspace/assistance_contract.py": "sha256:ec65480d5a3e1a9c6f5a2aeb64adba462634881245f26fb3f9676d30b9812351",
+    "src/workspace/assistance_coverage_shapes.py": "sha256:a60ac883652a5dbb36347b06d2ee8416e723c5c801a44f1d2436a094f15c6308",
+    "src/workspace/executor.py": "sha256:75ddf32188e5897decc12993caee3883dd667ca8ad4b8756a3dfa2eb5b46ac28",
+    "src/workspace/context_store.py": "sha256:0054c6247b5620eb723d727b740cb2c6cc05a2c22f834ea129955c72498a982c",
+    "src/workspace/migrations/012_d5_qualification_scope.sql": "sha256:35b58928738e143daa2e592ea9f81bf93d14b521f3af771337daecef2369eeb3",
+    "src/workspace/migrations/013_d5_stage_authorizations.sql": "sha256:805ccdc0e518679471e2a12da4bc2a94d37fd28475e1fa96fc6e686c562869ea",
+    "planning/15-evaluation-audit-and-recovery/reference/answerability-v1.json": "sha256:e81ec1484c277753ca3470f7e3d12617fa5cd0b06fc1a379f8dc5fe5f3fb08c6",
+    "web/components/workspace/QualificationResult.tsx": "sha256:6eaf61713c937a1a843f1372a6f96e3aade48ef067d7417205920e4db830ed0b",
+    "web/components/workspace/ScoredSections.tsx": "sha256:42fd4045746836233cfbc51cee5b8630685efb7b772a6fe6b3d1c147c6465073",
+    "web/components/workspace/AssistancePanel.tsx": "sha256:3910024b14e1934d83f70e72b99bc57673234e12c5730175907eee1c64b1119b",
+    "planning/14-explore-and-research-modes/d5/tools/prepare-opus-v5.py": "sha256:2803d8d9ed85f9976b499cdb852138f0f75b80f3a61550fcbf75c1ad0167f323",
+    "planning/14-explore-and-research-modes/d5/tools/prepare-capacity-v8.py": "sha256:70391c6d91a1046e00d0c35945438a0cdfd1dc8f3650da827b929ed2dc9fb92b",
+    "planning/14-explore-and-research-modes/d5/tools/prepare-prose-v6.py": "sha256:6041ddbf6016323ce0c4c2908f24b53fb75d5cf2b7b38291964c66893c8fd05e",
+    "planning/14-explore-and-research-modes/d5/tools/prepare-gap-v7.py": "sha256:49f5f4c8d637a99f01c5b438c52254bbca0bb0207eed7cff4e46bf9203eb7089",
+    "web/components/workspace/ReaderContent.tsx": "sha256:21e35c1ae47abd35042e4735d239d474d8ac78c052c37e84df2f81eec80941ef",
+    "web/components/workspace/LearningThread.tsx": "sha256:4eed510674f83180a8e89946ba62f3913e031cefc4823ea174d3775373831d85",
+    "web/lib/workspace/assistanceTypes.ts": "sha256:8a4330391be9c1817c274b683f57829f827cbc97e07ae12afe25f06d30a3a727",
+    "web/lib/workspace/assistanceLinks.ts": "sha256:30eb243ed4653d8808f048f50ffa23d11d6fd3f34f5974b180158e20d5829f22",
+    "web/contract/openapi.json": "sha256:c10135b6af9224c73dc5cd3a928545e952e9e7bc5721bf5e866d19e95c5cee08",
+    "src/api/app.py": "sha256:1d08f09e87d12f90f5d49d7e9d22a8715c3e59b20a249d4d543fae63400e2b38"
+  },
+  "adapter_binding": {
+    "code": {
+      "workspace/d5_adapter.py": "sha256:f4130a85bc9275fd86b81388304c4a69e5a3b60f100c93de0b229c2ad78e5277",
+      "workspace/d5_coverage_policy.py": "sha256:9ea386fd1e4e0d2ea65ac9bb5246850c93ae65296b47b5adbaab8f4c08107432",
+      "workspace/d5_coverage_packet.py": "sha256:7171e1a0c32f12df678382f729bb6cdf36ae5be2ec78aa5b9d895553695f6dee",
+      "workspace/d5_coverage_shapes_packet.py": "sha256:aa878cbcf7f3f7982ea65af035386143d2ad2bada67108c750560d622abaf2fd",
+      "workspace/d5_coverage_authority_packet.py": "sha256:a6ad7deba984095d0032cd8b569f12aebbc4c89c327202fe76bb39dcae246abd",
+      "workspace/d5_deadlines.py": "sha256:205c3e197eb3f19c730e036706f57610dbf52984ab0d08a7250d6301752159ac",
+      "workspace/d5_timeout_packet.py": "sha256:fc4d98ccb9a1f1425fe1fe88059f762f4d887ef4ad919b14cefdcda83c552363",
+      "workspace/d5_campaign_policy.py": "sha256:14a424f6356b04751a64df61bc16b39681577d63b5a5f79ab4f592fe493695fe",
+      "workspace/d5_campaign_extension.py": "sha256:cb77aadd84c8c920962fb4516d4199629face8f70101ec24e9770e93678c210c",
+      "workspace/d5_campaign_packet.py": "sha256:4ebf31aef462850eeacce3ffdf3055119ac0b853dd7420bdc72ba8456575ba5c",
+      "workspace/d5_campaign_operator.py": "sha256:c1b76aab4c9c71767651912ea1d427538b33c427b45f8a364fed85b349aa8180",
+      "workspace/d5_campaign.py": "sha256:0da4ddf94cd9ec3414e739829776fcbd182d683474eac5ac732f01560a9351d2",
+      "workspace/d5_campaign_report.py": "sha256:58c0c2c8684f7d55e74fa5dba25c9edc8783ea2933b29925a18cf4acb0fe39ae",
+      "workspace/d5_report_binding.py": "sha256:8b54b16fe2ac4e611d1122c9c0ae273d7091f1d8731f08a10a6b40786f385c5b",
+      "workspace/d5_answerability.py": "sha256:927897b1ebe1fdd3a460e3db8f5c66518c6fa55458a6f35f6b2c322d4d420920",
+      "workspace/d5_coverage_replay.py": "sha256:36fa3b5385900012e1c8bcb0c954549d648ee9a8e692b793d32cebf9c239a13f",
+      "workspace/assistance_policy.py": "sha256:e834ff29c57aa12be7c6d343f3aab9428f6638525b37c39b99cd7a5eaa2f239c",
+      "workspace/assistance_coverage.py": "sha256:b254f0237a7c6ed2ac0e3d9edfa039015493a72d0d3f92d6a624089536a12b86",
+      "workspace/assistance_coverage_shapes.py": "sha256:a60ac883652a5dbb36347b06d2ee8416e723c5c801a44f1d2436a094f15c6308",
+      "workspace/d5_operations.py": "sha256:1e9f173b6900275a492545fd079eb04573330d68f4a595d44aaed82da25d96f1",
+      "workspace/programme_amendments.py": "sha256:1ce1306627253bfa7f8d5e601ca1b631306a8210582a3002148459431babdfab",
+      "workspace/programme_successors.py": "sha256:89960446fde450c557cf691681c50878b22303e9697ead19335d2e17502004d3",
+      "workspace/programme_third_amendment.py": "sha256:946c61da30a22ceb79c0aec89fed56a314c53652b2e05c172a4b283fb739472e",
+      "workspace/programme_capacity.py": "sha256:c782489f270342a346f5843a9a12602597d9dab414d9351568f3777b5299809e",
+      "workspace/migrations/017_programme_capacity_amendments.sql": "sha256:de7fb1e79e52f1c2ff0046254d137acbead5d8bb8d7571de3f9c2a45138a44ba",
+      "workspace/migrations/016_programme_third_amendments.sql": "sha256:5fcffc1339f3910706341388054a367d1394e819b9eaf60bf6b8cac687b35cb3",
+      "workspace/migrations/015_programme_successor_amendments.sql": "sha256:ecfebbf208ad29eb4ce46340d7d17a9fc15c96088a1914257df79f8ff9a485b6",
+      "workspace/d5_measurements.py": "sha256:f780b4e16b27e4f52ae18d3390112aa237b6ec83d2dd0478e6f795395b2e01b2",
+      "workspace/migrations/014_programme_amendments.sql": "sha256:11a88a4bccc586b3e0800ee60997d4099b6df07ef8b346e9a05406fa877293b0",
+      "workspace/d5_scope.py": "sha256:053c481bcef2026139dce94ec6fded306b9ac268912b1f6ca7992aa2a25b3564",
+      "workspace/d5_authorization.py": "sha256:4519f8e98ad3522bbba6e40a33a7d822c1962d4dcdcde595aaceb26d54d127cc",
+      "workspace/provider_adapter.py": "sha256:04ec11d1573cd1b10f163de645bd1ca84418f731f61427c633e41cf4b8fbd37f",
+      "workspace/measurement.py": "sha256:797c13428a924f51e186942a709c6807010083acad60a19ff5baf251f34652ab",
+      "workspace/admission.py": "sha256:12524a9e192cde7d6988e44d57623d946252d5e4c039c14990076f1ba4ac84ac",
+      "workspace/qualification_budget.py": "sha256:89812b5f2c5097e11a5ec74c1965164e2c9a7799bda32af26dc91a237cb9b1d0",
+      "workspace/qualification_accounting.py": "sha256:14f3baea7fa1695ff22e95ef0114199703d5adcc7bc8d10830729e4f28e4f6d1",
+      "workspace/d5_freeze.py": "sha256:b28aab93afbca8286cf5f34b7c69c2231c33f640099c4ff6817dcf087c7fbbe7",
+      "workspace/d5_benchmark.py": "sha256:ea466fd11d3d8a943931f463191867a2f06ff2dad867b347ccd8a2ea83c61cde",
+      "workspace/d5_scoring.py": "sha256:5e80c8a54c5e037afb48cb504cfadd5ddb4ca40354687407ea1394133a1dcd11",
+      "workspace/d5_reviews.py": "sha256:8d0c642f4026f87c44de3b2c354d8187c3776d2284079cbfe8f6a2290030cab2",
+      "workspace/d5_review_scoring.py": "sha256:0448f64dedc0db431cda1c05f0faf6428a61d145d9abaafbc322e99b9701bcc1",
+      "workspace/d5_fixture.py": "sha256:8f7c3d834ce408fa07fb1e285be1109dbd673b66836dc6c5c2b658a4330a8fbb",
+      "workspace/d5_results.py": "sha256:c6ef92b0bda78e5b5e7f5722a73f3bade15307c7fba391ed52458c4abee44ce7",
+      "workspace/d5_operator.py": "sha256:5c3dd36a6cf08a2a766a285eee7f19e50446c6da9eb65482104758e21c2830ba",
+      "workspace/migrations/012_d5_qualification_scope.sql": "sha256:35b58928738e143daa2e592ea9f81bf93d14b521f3af771337daecef2369eeb3",
+      "workspace/migrations/013_d5_stage_authorizations.sql": "sha256:805ccdc0e518679471e2a12da4bc2a94d37fd28475e1fa96fc6e686c562869ea",
+      "llm.py": "sha256:07dc89e847340e65215cb2a9d287f48fa0040273726e4751fa30853d3a098bb4",
+      "llm_models.py": "sha256:610662404098f8e4d5d934db9fdf768014af80cc1eb4e326debfdc20dc01bdad"
+    },
+    "dependencies": {
+      "anthropic": "1.4.0",
+      "httpx": "0.28.1",
+      "pydantic": "2.13.4"
+    }
+  },
+  "source_bindings": {
+    "versions": {
+      "arxiv:2210.03629:v3": "906a030d40549cdb8dbc297df8f1b294eac46978975db5cf73fd0fb76393480b",
+      "arxiv:2310.11511:v1": "8fa7d11aeb22f668fe4e40e54166b4178768d725bb52d8905cd713719e026779",
+      "arxiv:2610.40700:v1:metadata-c05b44ce3bd6d5f0": "6704558c9cc1f3c70de96f82fc2540efb236a81872aeefd00e879d3f14924d85",
+      "arxiv:2610.40728:v1:metadata-cb0c65fffb216247": "c165d63a57ad45685095c5defb94a08a34f731ed320db00cb494325136f4bbb4",
+      "arxiv:2610.40740:v1:metadata-b471d2e5f0142ad7": "ed403a593db22b33b15afcd0d430ca352718e5eb79891f2fc22f74da703a21c1",
+      "arxiv:2610.40747:v1:metadata-be0a1828c70df62e": "21045886d5aea08f40e78be28841f4217824773dc4b3a7d084dfeeb214cc4183",
+      "arxiv:2610.40758:v1:metadata-96148d2d4e4a4093": "0977db4f8495bdb5d92d02a2bcfa3630d5a19320641d366dd009a269c74f7d83",
+      "arxiv:2610.40798:v1:metadata-c1a34fa53cba3d51": "fa25ed5e870fab58f55b78f259bc3e00ba9d90df0fc6213b118de43a2bf5a54a",
+      "url:b49ec3bd8394c6fb4c19e7973ae4b411:observed-42d6cea8785311a4": "230eb174342a6cd6808815fd418e10283f843d1acd7b4f269e0a7180bfee2e84",
+      "arxiv:2610.40857:v1:metadata-ad6a5ab2673194a3": "7c914865718326cca6a68e18d0e7413e8355860a8e5d4360ae8e55882cf0ab96",
+      "arxiv:2610.40871:v1:metadata-0be4ee69b6741057": "0b6dcf75b4d9a04b237749fad9251ed1fb8278bc0a06eed332a4fcfd6da0b484",
+      "arxiv:2610.40893:v1:metadata-018e69b4ec3841a0": "206906805d13a6a94dbb9463570918701d095e181d80bf8b97c72655bfe3e8c5",
+      "arxiv:2610.40901:v1:metadata-b94f57a0b8a51165": "81aa6e87d215c58054d18fa1a342df2f7527af9cb118ff9826dba8c421a1844a",
+      "arxiv:2610.40906:v1:metadata-289de52681520e8e": "ca6532582794783abd07833d8626134c2c42acb77a6d779d3e6a143b53db826b",
+      "arxiv:2610.40917:v1:metadata-ed88c851cf4b1810": "85566b9efd563f5da291088a4a6a98d898a7945030a123e23ebd0872cfd82a8c",
+      "arxiv:2610.40927:v1:metadata-b09108e19893972e": "007d10d7a6b21c0a8649e54ce414eccfecc7afe37f347c89fb374455816b9133",
+      "arxiv:2610.40930:v1:metadata-b45059ef8928ae02": "b0caaffc26e1dd108f7016cfe0b87c62755825c392f7619e6e42fd0c634c2b4e",
+      "arxiv:2610.40939:v1:metadata-a24c81ca3638415c": "7c7eefcb551bd87d64af2238e8ad401e16ac42f1ed46c721f8e260eedaa2a293",
+      "arxiv:2610.40940:v1:metadata-21d8200059afcd01": "b226c05e2627d93945fc814bc15b4526a80ae886146c570dceaad4cf20e6e1cc",
+      "arxiv:2610.40943:v1:metadata-9449877c1e5f5e99": "3c64ceb48e14371af95175104791d4ea1b421349e8d63bdbbe8cf67eca4cc5f7",
+      "arxiv:2610.40946:v1:metadata-fe7eb688ec7eee7b": "5e030007154ea9cfb63fc503337977b7a4ac477b9d0c54a60f778b41a0ee7b58",
+      "arxiv:2610.40959:v1:metadata-a78f18ab927d7ec9": "abe57d0a0a39ea132839db51ab5163c3add33c0c17eb3db5b8a76ff9149d6ecf",
+      "arxiv:2610.40966:v1:metadata-55c0a56c8750035c": "78aabdb5c2ce83833f553ea94d0fd074eefea2d0f6aa6f845b11af39f98fb1ce",
+      "arxiv:2610.40984:v1:metadata-0667d01675a6b6ec": "1ee047e06d822c7c564bc281b73f8943f684a191c744c21973a458b713e050c6",
+      "arxiv:2610.40992:v1:metadata-ab88b833815a1f0e": "79ada659ed9e2cdf33e23e68dc934d7fdd96daf47f8fcec6793ff2bc28c2ed5e",
+      "arxiv:2610.41012:v1:metadata-f20dbad8ce03c4ef": "9a13c0537e7c495968c8fd4ebabeef5b974c8654a016974e73ef9190e54e7bbf",
+      "arxiv:2610.41014:v1:metadata-db1a32505c4d09a1": "e3cc47215b25ec742090eeec2c23a85935cc3211a90064009bef279f1aaef9db",
+      "arxiv:2610.41015:v1:metadata-9d3401c4c7c1014c": "94fa8b97c94f57deca78bff5c86a661aef13bd7d09c0edd79ee96e063909114a",
+      "arxiv:2610.41022:v1:metadata-1d7490e908ceb729": "d1cc416379f01a60347608e8332da529a3c459441d7aa1ae68adff79726142ad",
+      "arxiv:2610.41025:v1:metadata-1aa9801b0aa16243": "63fe15f29e726799b5ef453281f5799aa5525e8dcbc4d74958f07401e8a464b0",
+      "arxiv:2610.41040:v1:metadata-74eebd3cc589eed0": "eb91209585db4772acdf441da824f8783b60be0995a4b9f0e7ce0a1352de1c22",
+      "arxiv:2610.41076:v1:metadata-b07e88facba4e8cb": "048669f2e45421e178467fd725a9ba258cc72f9b54c5ab9fd04700d7a9c49f03",
+      "arxiv:2610.41089:v1:metadata-6ed2313462efea73": "59eed8579b0afa59a9db2106307082c9304a0c5f8f9679788364b65b88fe345f",
+      "arxiv:2610.41177:v1:metadata-f12968377b0c70f8": "2ad3163fb44e430422604218460c98a47acd7f9300cd23d9b64f991417ae96ad",
+      "arxiv:2610.41291:v1:metadata-540221e5b83d286b": "75dda4d3db8d7f675da83c34de883d2d947487a92d3eda690bfab8adf93cf093",
+      "arxiv:2610.41391:v1:metadata-be875cebfaa26052": "b1f0d63e5a7d5f7c92323f13ef0d8bea329a3a4878339a70c3ea99abfedba466",
+      "arxiv:2610.41435:v1:metadata-beb2da6bb778a0f0": "0a809b364faac11bae5ca2cd3f41d2ef536ab1c5f6fec86f7581e5d445fddfba",
+      "arxiv:2610.41482:v1:metadata-e5c832a06d88973f": "19ed6a027c1fbb6e2dc9057feda3ec1e5b1868fa4b9e9008fc6ad15cae06cf8e",
+      "arxiv:2610.41552:v1:metadata-1c364e8ae805a931": "1b4436911603e33fb8183d6f754ccff102a41df9b79e9b134243a74e779562eb",
+      "url:1d6c5c59e46e52b936cbc7b983785a69:observed-90d0651966e90e2e": "e5c1380d3d4c4060e9a4341d2f79ed9d0a8dc7c38e8cb3eb88848ab533d04506"
+    },
+    "materials": {
+      "mat-f215cad7235629deacb40965a6cc68c5": "a0ebd4e46b5a789547dcfbef4f546fae405ec1ae41cfadf887655ecba44a6cde",
+      "mat-4c16f701f33831a7541e340a65c12a24": "abaa7ea408b929e548fe1e9622e09e1b4c6bc991a07ac845c0153ae2c00c527d",
+      "mat-87a598790424ed922764c982f309a43e": "9693aa3d2fa65d970b7f60a564f9c02748f6096906a763b0eac43a4a76320838",
+      "mat-48780ffb91b68f22cf607c5650336baf": "ea5543c519bdc94ba891bc9fc860453d274b6920073ccc76de29191a1f46d0c4",
+      "mat-c35118081c1369f460cb4c41adbc185a": "363fbb9810eaa244f4e328308201b105030bd5723c507e78c324dc7e7bd860a8",
+      "mat-6fd91ac7a4d590f9500cc5b123d0d91a": "44c4ae42116c490fb316b000c8107177cdfb0576ae5ac80abb9d449650f87fa1",
+      "mat-e4adcf0135fbaa3982584da87b0040b2": "54f8163bf47ec158e3f5793deabd2f307c90e8e5c79d7c7583d46c932d5e828d",
+      "mat-e0471e7f635e5d75e96b25bdee5fe807": "e44f5304a4013fafdf5a213e918ae2b2eb1fc2f672b061427b2a253f7230d544",
+      "mat-7c5d45b31f4da5928986ff0ad3193693": "c3016eedba071a4c2f004e1e1fe2a9b811acc16c2a4386327e68a0915894418b",
+      "mat-a722330404855072b6b7fb9b13004998": "ac6e687590d2847733fb4fd307d9989a4d7d54304c3e4015c425cd37102b9bec",
+      "mat-1c5ecdf06434f317157b2e5fce1b3b0e": "123e5558e7262038af807cffaa7af5e1644de46b83dc49581f72f4dee53dd0bf",
+      "mat-f21ad4e80c44211991e82a95f45998cd": "44d978f113c379656337abb8f5f8d1584d32e56cecd0e32e42f6c4df5058e829",
+      "mat-54f2f6e0645f499458d5030d06e35a59": "c3d7648a451de726a5a1cc2833917ddb4dfe80fe77fe99da69e00b7320656540",
+      "mat-2b7a38f3cfa1449f7728f044688ca2c2": "fc9068e75acf5b6fb5de6db9af5d33abbc31ed03b5e03e959ea2c2bf92c94050",
+      "mat-f98fbd73f423776117f60cac36edc90a": "c9c15a0e27d946c0f63f0e4c3b13125c4b84822adeb2a5f60b8e76b60302ab42"
+    }
+  },
+  "campaign_extension": {
+    "core": {
+      "revision": "programme-consolidated-campaign-v5",
+      "extension_id": "research-evaluation-20261105-v1-campaign-v5",
+      "program_id": "research-evaluation-20261105-v1",
+      "parent": {
+        "authorization_digest": "4e279c5f8cdae6dfda61e4b350a8649ea67df6a1a89a18d7285123100b42c376",
+        "proposal_digest": "8d699885e58d228f00fe2a9edadd13a14f4d7d58b54393875bd6f3693b7e34dc",
+        "original_authorization_digest": "791c57d58f6425a14845d18b6563200e932b3869de59805b586727916fbff7ae",
+        "limits": {
+          "new_jobs": 34,
+          "messages": 80,
+          "counts": 99,
+          "usd": "10",
+          "concurrency": 1
+        },
+        "expires_at": "2026-11-14T07:24:01+00:00",
+        "predecessor_seal": {
+          "workspace_programme_amendments": "b3d01317d4fd160d06407c5053129d5b2241270b6b670b51868ce98c4ee92ba4",
+          "workspace_programme_amendment_revocations": [],
+          "workspace_programme_successor_amendments": "996a0b58c21a365888f27bd98c85868e2f2b2064aedad2e2d055292734590fd5",
+          "workspace_programme_successor_revocations": [],
+          "workspace_programme_third_amendments": "35e13f1a90604d3f17ab7e31993f5ef8dfee9560d5a0e787b7645b32b9b9c85e",
+          "workspace_programme_third_revocations": [],
+          "workspace_programme_capacity_amendments": "68ac090361900bdc87aa6edf5cc15d95a380ab4088fa8e40a0ff32785c893e8a",
+          "workspace_programme_capacity_revocations": [],
+          "original_programme": "b1150c1927f380fe9ae2a2976b9785468a6242e7a47abdf2fdd5c0b494db94c0"
+        }
+      },
+      "limits": {
+        "new_jobs": 47,
+        "messages": 109,
+        "counts": 134,
+        "usd": "10",
+        "concurrency": 1
+      },
+      "campaign_limits": {
+        "jobs": 14,
+        "messages": 44,
+        "counts": 44,
+        "usd": "10",
+        "concurrency": 1,
+        "workflow_usd": "0.45",
+        "probe_usd": "0.15",
+        "headroom_usd": "1.00",
+        "new_usd": "5.10"
+      },
+      "plan_digest": "42124d00607484f919f6196ec2219362988d79dc9a7f5b19f6b13d6592f6ac97",
+      "basis_members": [
+        "d5-coverage-22b8e13bc39d78cb-measure",
+        "d5-coverage-22b8e13bc39d78cb-run",
+        "d5-coverage-880e4794cd08d26a-measure",
+        "d5-coverage-880e4794cd08d26a-run",
+        "d5-coverage-f48b3f24fd7c831d-measure",
+        "d5-coverage-f48b3f24fd7c831d-run",
+        "d5-premise-calibration",
+        "d5-v4-validation-measure",
+        "d5-v4-validation-run",
+        "d5-v5-validation-measure",
+        "d5-v5-validation-run",
+        "d5-v6-validation-measure",
+        "d5-v6-validation-run",
+        "d5-v7-validation-measure",
+        "d5-v7-validation-run",
+        "d5-v8-validation-measure",
+        "d5-v8-validation-run",
+        "d5-validation-measure",
+        "d5-validation-run",
+        "qualification-live-20261104-8e7a98248e"
+      ],
+      "basis": {
+        "messages": 65,
+        "counts": 90,
+        "known_usd": "1.853811",
+        "pending_usd": "0.425066",
+        "active_jobs": [],
+        "uncertain_contacts": true,
+        "unknown_usd": "0.425066",
+        "generation_job_ids": [
+          "gen-0a0756e574da57efb1b6244165d87504470bcfce",
+          "gen-0cf039bbfdc03c9a08958f0a9089e2b67c645aa5",
+          "gen-1ae5d8a9cd5808e8b5bca05f95f363fbd3782772",
+          "gen-26dc8be29ba9c0a74d1e02ae2c1d57c005d66f74",
+          "gen-2f64ba5588f7a3df99085c3fc68fe696035c65c8",
+          "gen-378d931b8ad5787f881828fec67fca3520417a7c",
+          "gen-3ac1a5edd8d1276351cee7cd6f0c133db9c7fa34",
+          "gen-40911bfbdb66e3aa6d05a0ddbe0e2c823887fb43",
+          "gen-448eff85475394def77c8d0b203b42f4bfe53a3f",
+          "gen-480315ae93b2454087b9c75593096c9b58301191",
+          "gen-59a784e9e2548c7448ef9e1c6e726feb4f6edd18",
+          "gen-6b0167f1654114cce615297572ab0bb5ddb62d52",
+          "gen-6defba66e2fc59332aad58049ef299464813d331",
+          "gen-6f7631b6a95b2e9ac9746a6cf3c0b4ef0a796c47",
+          "gen-6fe4732362247bf9388f778a00f5ed8889896467",
+          "gen-72851cb9f039596ab65ab9488fb56bb13b8fac91",
+          "gen-7d0785430608343f9c579202ca892ae4fe7187f7",
+          "gen-7d39f01ef595dc04a764c3783a42a57d4a8d5903",
+          "gen-810a3a3a4fed2c70baba06fcfaec0b2156b07875",
+          "gen-82c609340b161fa70538e80dbc87b3bdd4479933",
+          "gen-862e8a4f57d20319f405c9252f0ca16060075236",
+          "gen-90a08bb9f5726011228e0f8fd55d011b0525c755",
+          "gen-91955b98a9f847b22bda23714362d8802aa3cb04",
+          "gen-a3473725a88993a7fe978fecbe12f5e3fcb4478a",
+          "gen-abb68e9ee3f284b5e16fcbd71a90f1e85a4969a5",
+          "gen-af7b921f6a2353e0aef9e3961557b71a8a609c85",
+          "gen-af9b33efe0e4bc088d96f8d2944c9fd9db6b0088",
+          "gen-b8e1580d32c5e20451ab4ffe15d3a79475f62f22",
+          "gen-ba107fcfecc532337aee5cbd543259e045ae6c78",
+          "gen-ba942321c16d5ed10cc41cff7f6c1ac9f5a98877",
+          "gen-e3355b8b602aec7e22bec91564c8006c83bd8053",
+          "gen-ef60144947c5f8ce5dee6a5fef9643558a0e227b",
+          "gen-f2a85c37db51510bb30628789e356cd77eb988a3",
+          "gen-f31d8b935a20430b6fd67277450cbbe1d30c7e6e"
+        ],
+        "models": [
+          "claude-opus-5-5",
+          "claude-sonnet-4-6",
+          "claude-sonnet-5-5"
+        ],
+        "contact_checkpoints": {
+          "gen-0813fce32e9c1140725e3d943741229c4a27692d": {
+            "length": 1,
+            "digest": "720d5099f8b67996691f8867f551fe7939c9ee7408bc9edaf4ef22ffab0ef33c"
+          },
+          "gen-0a0756e574da57efb1b6244165d87504470bcfce": {
+            "length": 8,
+            "digest": "8a045d0262ddf24d35a740c4fe464a5290829acd428b555dfbc066d20e7d4e5d"
+          },
+          "gen-0cf039bbfdc03c9a08958f0a9089e2b67c645aa5": {
+            "length": 2,
+            "digest": "46866e052e5c8ae751a80afc2d2f1b589e8fe23d79a5117fbb01aecaa08b51f8"
+          },
+          "gen-0f92445f10fa963565e89298c692890ee70563e1": {
+            "length": 1,
+            "digest": "1f4ac48c050941c100be33e5cdf3e53131d55e21c5911e4ca384792db6675621"
+          },
+          "gen-168ffaa4899d154c0162c615df5b31a91eb9c5aa": {
+            "length": 1,
+            "digest": "2aa8f576ca9546ed3ca4bc06573ee9ea2d471e23bf4b0bfa2b3a08a65c979243"
+          },
+          "gen-1ae5d8a9cd5808e8b5bca05f95f363fbd3782772": {
+            "length": 2,
+            "digest": "dd15b181fd6c94884db460da593321fd55fc1f960aff521d2606d234cf0b753b"
+          },
+          "gen-233100d330e7808d330e1c0e959700c8bcdda5a5": {
+            "length": 1,
+            "digest": "56ca13d7b9685a24ae9176c8c75b9c191f78ca7d08a7184413d35aef88bd7aa3"
+          },
+          "gen-24f2f4274836d24d9de5502859d82b738b2900b6": {
+            "length": 1,
+            "digest": "7c8fdd04dd5cd040264e272d970f0b241c05c46ec974a4a2da49397b73a6c6d6"
+          },
+          "gen-24f8607eb6ecaccc8cef0b9c2d600eb2c05fcd5a": {
+            "length": 1,
+            "digest": "d46283e5a29288c91cd2d523765860bffa5cf7c4f8d6e58ce269c40da275bb78"
+          },
+          "gen-26dc8be29ba9c0a74d1e02ae2c1d57c005d66f74": {
+            "length": 4,
+            "digest": "2c80cf2e7e31177b6c0162fd15f2863a5f64cb67b2a09cdd7db98602947aa9cf"
+          },
+          "gen-2836658dfc2d3d1287a90e8fdcece3ad09404dbd": {
+            "length": 1,
+            "digest": "469924583a3da8d50131d0acf9c55e3e45462096f473d8bdffdcb5ac5ea76e78"
+          },
+          "gen-2f64ba5588f7a3df99085c3fc68fe696035c65c8": {
+            "length": 2,
+            "digest": "1352bdaf48bdfe29b2c6cac78d4930e43af3056979d9c7d2cafc5935ad078a27"
+          },
+          "gen-378d931b8ad5787f881828fec67fca3520417a7c": {
+            "length": 4,
+            "digest": "f8b0adafc1957e3b0032eaf97e6281983744c86a65f91dd0580a7f39318767db"
+          },
+          "gen-3ac1a5edd8d1276351cee7cd6f0c133db9c7fa34": {
+            "length": 2,
+            "digest": "32cc5c5f98654acd9619aa9b9c2d4a1bd56a17e8a33f96ed0d267a4e0c4d208c"
+          },
+          "gen-3ee85c3cd28648a631f434ed4d098882ce8be768": {
+            "length": 1,
+            "digest": "dc9e8032e9bcb15af63b0d471f28aee659b6ac47a9fe35348a83df9eb5817dda"
+          },
+          "gen-40911bfbdb66e3aa6d05a0ddbe0e2c823887fb43": {
+            "length": 3,
+            "digest": "4fea58d87001e3f79e0cb2daec11780c3c8f6980798a2dcdedd3cd3ccd52c485"
+          },
+          "gen-448eff85475394def77c8d0b203b42f4bfe53a3f": {
+            "length": 2,
+            "digest": "17d8797e464cf7a9adfa7d8c100539b47fa29c99e310b2af4af15db510930653"
+          },
+          "gen-480315ae93b2454087b9c75593096c9b58301191": {
+            "length": 2,
+            "digest": "691220e2019f912fafdcfeb1df88c75e99dbd98819ce3845f1dcc044c567056e"
+          },
+          "gen-4e097f3377b755e8d496a76b0753d2a9906cb9ef": {
+            "length": 1,
+            "digest": "2d5312001403f8fa636cf96cea46e77a484cbae32fa8538f3a2556bf6e0e2bed"
+          },
+          "gen-59a784e9e2548c7448ef9e1c6e726feb4f6edd18": {
+            "length": 2,
+            "digest": "291e134246ff408fb09d87248d7a0c7c4d9ad498a6fa5f4db8281488a6931b68"
+          },
+          "gen-67617f529186d6472ea5f07462ca3b28df8594f6": {
+            "length": 1,
+            "digest": "164bb68ed3073f676f2b91de6f4502cbe45e1ab830811bfc5076a7b636d2391d"
+          },
+          "gen-6b0167f1654114cce615297572ab0bb5ddb62d52": {
+            "length": 4,
+            "digest": "14ccfd643d38681f28f61e0a994209f22833c8dcb428c58d36605716f62f2e1c"
+          },
+          "gen-6defba66e2fc59332aad58049ef299464813d331": {
+            "length": 4,
+            "digest": "9481f6286e8c27e97e80258980ce4cd6193c13b054e1ae4c6dfebc0f6b057e70"
+          },
+          "gen-6f7631b6a95b2e9ac9746a6cf3c0b4ef0a796c47": {
+            "length": 8,
+            "digest": "7caa2934d4820534847c7166df7c63c81e43b493eed25b8819f4a27a613ef79d"
+          },
+          "gen-6fe4732362247bf9388f778a00f5ed8889896467": {
+            "length": 4,
+            "digest": "00c055e9dd97a14991fb628b66d264caea19721a1e8b1584219e4983bcf42993"
+          },
+          "gen-703dd292a1c28297c4f3cf9ea8665c14d38dec0a": {
+            "length": 1,
+            "digest": "b48c1342841520dd07ad63ff8894c2804b5c863b7fe4a7088b1c0cedb630bc81"
+          },
+          "gen-7187c1ef62b567113806c01509f15742ec635be6": {
+            "length": 1,
+            "digest": "26946391d5a1127d771e84eed6e9392199b1cc49f1959b0ebaae86cd17700e5a"
+          },
+          "gen-72851cb9f039596ab65ab9488fb56bb13b8fac91": {
+            "length": 8,
+            "digest": "c5c9595ce189a26aa02ad961ff2ce390cbcbf869fce5eee51ab6d09c02168c58"
+          },
+          "gen-7bc1c41bdbfabfb3dd2d36e16d1d7c2a3812cf37": {
+            "length": 1,
+            "digest": "b763d0fa7f464b80cf92f7409f8ebda180cfc34ed01e014eea923587d20ee33b"
+          },
+          "gen-7d0785430608343f9c579202ca892ae4fe7187f7": {
+            "length": 4,
+            "digest": "013290455077349ee23715573fd25f379bf724897e0e91062082837a47f352cf"
+          },
+          "gen-7d39f01ef595dc04a764c3783a42a57d4a8d5903": {
+            "length": 2,
+            "digest": "c07f677b3d90ee09bfd5cf611bf0a6670b34f7f7582b3818690cf7f7af3a6bc1"
+          },
+          "gen-804e573d60d8f1c4a755c7084395c2ab5f5984eb": {
+            "length": 1,
+            "digest": "bef8f251d6183432dd38e2598ec85c275f1aba34b99587957ec66961a4a26a79"
+          },
+          "gen-810a3a3a4fed2c70baba06fcfaec0b2156b07875": {
+            "length": 8,
+            "digest": "c3429896296be9902b229f33b2361f45f55e8150f6e4196b3422f4d3efb32ba6"
+          },
+          "gen-81caf070f44eb27bd0572ddf0ee18d4a61ae9e28": {
+            "length": 1,
+            "digest": "66c64ec25538c87dd71e375bef628d38c369fe9997d53201a9b3fbca04b882ca"
+          },
+          "gen-82c609340b161fa70538e80dbc87b3bdd4479933": {
+            "length": 5,
+            "digest": "61d4886104c3c6faa56a69b5c57b75c0ff293e7d041167de6648bd98c4cf50f2"
+          },
+          "gen-851991b06fbb1a0f27824b39bffe360f22624cdb": {
+            "length": 1,
+            "digest": "a2234aafc290e441e61dbb17b698c275b656d8837c8bd0dcf53bc2b33343c5bb"
+          },
+          "gen-862e8a4f57d20319f405c9252f0ca16060075236": {
+            "length": 2,
+            "digest": "02db4fae01375e54c05a6159598db6b666faece19c2807944c568f8761afd229"
+          },
+          "gen-90a08bb9f5726011228e0f8fd55d011b0525c755": {
+            "length": 4,
+            "digest": "671080f32df39fb1595306a7ff0c9a4cc2c8bf85dccb140f4614f4ad1d31909a"
+          },
+          "gen-91955b98a9f847b22bda23714362d8802aa3cb04": {
+            "length": 4,
+            "digest": "d03c8c6fe4c9243a82678cf989839a777b84f5bb122e9f781f16ac9a77abd03b"
+          },
+          "gen-98c11075af7601190e1dc54cf368e07127d97b17": {
+            "length": 1,
+            "digest": "7ee23c7395b5f602ba1586937fb85ae40e83df46f7d00951945c606b84a34abe"
+          },
+          "gen-9a3f929f1d81b3c2b5e34828b0fd2bdfd241acd1": {
+            "length": 1,
+            "digest": "fee0d365bfd50456946e58aa9a66bbc04d3df410fb2eb9579a9c4def6a31c447"
+          },
+          "gen-9d97fc3fa512695baa130bbf1abe5cb09da9694a": {
+            "length": 1,
+            "digest": "3c05388a340cc7120d666ee0993ce9023393a53c1d833f736936174f3f66950d"
+          },
+          "gen-9f76d047e060eda8e8caed7a119fd78d67d832d1": {
+            "length": 1,
+            "digest": "8e63a08fd1698e2f42162dde72a4cd5d72905d6f00dae55690a780e1eb742a6e"
+          },
+          "gen-a3473725a88993a7fe978fecbe12f5e3fcb4478a": {
+            "length": 4,
+            "digest": "cc199f7d55e1b5ef4279458f712468c41153eaa3fe4801988088454269f2fa24"
+          },
+          "gen-abb68e9ee3f284b5e16fcbd71a90f1e85a4969a5": {
+            "length": 8,
+            "digest": "41a6f814001acf5ad1759c2fd221835a6dcdedcd8b9aca97606c3870ab393def"
+          },
+          "gen-af7b921f6a2353e0aef9e3961557b71a8a609c85": {
+            "length": 2,
+            "digest": "b488169ecdfbd9818d52d71e4557cf3fe98d38622345760478fd4bd00110d451"
+          },
+          "gen-af9b33efe0e4bc088d96f8d2944c9fd9db6b0088": {
+            "length": 2,
+            "digest": "2ef7cb6aa0445a8aac413544970f835a4701c9d154c142c962cc16d95361cfe4"
+          },
+          "gen-b8e1580d32c5e20451ab4ffe15d3a79475f62f22": {
+            "length": 4,
+            "digest": "ad9bb406205a9274f929b274ae2f2ba3d4bf2965da507d005da463391c337455"
+          },
+          "gen-ba107fcfecc532337aee5cbd543259e045ae6c78": {
+            "length": 2,
+            "digest": "35adece8143c629d78aacfbdb9448f21743ff4a3f8160d3b4acf2098b7dfa4d2"
+          },
+          "gen-ba942321c16d5ed10cc41cff7f6c1ac9f5a98877": {
+            "length": 4,
+            "digest": "593d501fb81e69769ade5c72b2f76ac1b303b641368c76cc5c40ef8c102d11d6"
+          },
+          "gen-dee395e2c66179cb055782964205509bc2e14f8e": {
+            "length": 1,
+            "digest": "a2ea0cc6a7539dfbfc425140f89aa5e84d2860a28b3ddd92a1ae1d5d2ad95664"
+          },
+          "gen-e3355b8b602aec7e22bec91564c8006c83bd8053": {
+            "length": 4,
+            "digest": "d9c583b0fec0206ebf2922865a7e69f46d89d080670983daf5a33ada4365500c"
+          },
+          "gen-ef60144947c5f8ce5dee6a5fef9643558a0e227b": {
+            "length": 4,
+            "digest": "5b68247aa93b9efa21f8cea591cb572cf982a3670f9084b27b6b3610a4f9c33c"
+          },
+          "gen-f2a85c37db51510bb30628789e356cd77eb988a3": {
+            "length": 4,
+            "digest": "a9ced50acdae0b523f2567c2aaee16e3e89926e51d4ee0b26da2397b23dd38a8"
+          },
+          "gen-f31d8b935a20430b6fd67277450cbbe1d30c7e6e": {
+            "length": 4,
+            "digest": "509f63020f32badf471a89a052311ef57b49209ab5453b5c3f29a780051fb26f"
+          },
+          "gen-f42d0d3f7b3958554b6a4c1cc164459dede6a93a": {
+            "length": 1,
+            "digest": "b2376e53c64b9fed5560cea6b50d0796529c450a9414d9b889c354a32b40c297"
+          },
+          "gen-fa7054d6752ccf5f888df7fa7024929134e09d46": {
+            "length": 1,
+            "digest": "c5f8643b20a9b8376bfa8bc415a1ad7a55b46140c252505c3dd1876d688e6715"
+          }
+        },
+        "history_digest": "03b33b7f8bbcf301e8fe0ef71e86ad98bdc2cd9989e8c130b9e8ae3e4efbb942"
+      },
+      "historical_exception": {
+        "job_id": "gen-ba942321c16d5ed10cc41cff7f6c1ac9f5a98877",
+        "owner": "d5-coverage-880e4794cd08d26a-run",
+        "original_row_digest": "30b1ace19dd9cd74734ad8682e261574e4cae16f6a3777cdb31e845bdb28c0da",
+        "original_scope_digest": "8646335b5767eebd96c060f576f65437998aa3ab7a04ddce5b170b9190b469d3",
+        "contact_digest": "76ae7c38953cd859d081fc49c721f3137f0bbb9f7e0e83adab02df1d3b38e471",
+        "request_digest": "1cadf794e80188f2807316fe73542a685eeea1660e742ba28af53a710b015f4f",
+        "hold_usd": "0.425066",
+        "original_state": "uncertain",
+        "result_available": false,
+        "settled": false,
+        "upstream_completion_established": false,
+        "billing_established": false,
+        "policy": "Exclude only this immutable historical contact from the operational uncertainty veto for the bound campaign. Retain its entire hold in cumulative exposure exactly once. Any new uncertainty stops dispatch."
+      },
+      "programme_expiry": "2026-11-14T07:24:01+00:00"
+    },
+    "proposal_digest": "c582b5f64dfb515ca079f17a179365208f00dd1f098fa2c081f46aeec4d8b028",
+    "approved": false
+  },
+  "capacity_amendment_approved": false,
+  "historical_uncertainty_exception_approved": false
+}

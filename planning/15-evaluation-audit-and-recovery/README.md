@@ -44,12 +44,12 @@ The earlier read-only audit remains a historical observation. Recovery archives 
 - [x] W0 Existing durable evidence inventory verified.
 - [x] W1 Current-response checker bindings repaired and negatively tested.
 - [x] W2 Per-part answerability and prospective scoring rules frozen.
-- [ ] W3 Final offline gates and exact-head CI pass; execution proposal refreshed.
+- W3 Local gates complete and proposal refreshed. Exact published-head CI is recorded in the permanent publication receipt and completion handoff.
 - [ ] W4 Owner-approved consolidated campaign executed and reported.
 - [ ] W5 Product walkthrough and actual-day pilot completed under their own approved operating scope.
 - [ ] L1 Original-agent metric and source identity repaired before original-agent results are used.
 - [ ] L2 Original-agent termination, truncation and judge-coverage reporting repaired.
-- [ ] E1 Runtime and test-isolation provenance recorded.
+- [x] E1 Runtime and test-isolation provenance recorded; parity remains unproven.
 
 Human qualification is outside the current implementation scope. Machine-reference labels, independent factual validation and owner usefulness remain distinct evidence categories.
 

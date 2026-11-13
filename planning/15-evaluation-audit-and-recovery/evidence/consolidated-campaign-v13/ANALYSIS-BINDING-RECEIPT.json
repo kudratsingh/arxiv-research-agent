@@ -1,0 +1,15 @@
+{
+  "revision": "workspace-campaign-analysis-v1",
+  "original_packet_digest": "97d24567bc98753122315f135a621eb886cebb2b81c32eb5762572589f037e08",
+  "raw_results_digest": "89eec8383b98e4ccb0fd1f0a663f943d13ea6318c500c3c9d4413055a5034c04",
+  "report_digest_excluding_receipt": "9adb9626345438c2945da6a9ea1d0d4d40fe928515a3549a2f9f88de98bf9b0a",
+  "scoring_policy": "workspace-campaign-scoring-v13",
+  "answerability_matrix_digest": "fdf88e73d7a5691a9cc503f89cdd82dadb868b82344f416afb7032c3a485a8a5",
+  "scorer_code": {
+    "src/workspace/d5_campaign_report.py": "sha256:58c0c2c8684f7d55e74fa5dba25c9edc8783ea2933b29925a18cf4acb0fe39ae",
+    "src/workspace/d5_report_binding.py": "sha256:8b54b16fe2ac4e611d1122c9c0ae273d7091f1d8731f08a10a6b40786f385c5b",
+    "src/workspace/d5_answerability.py": "sha256:927897b1ebe1fdd3a460e3db8f5c66518c6fa55458a6f35f6b2c322d4d420920"
+  },
+  "human_review_digest": null,
+  "historical_records_modified": false
+}

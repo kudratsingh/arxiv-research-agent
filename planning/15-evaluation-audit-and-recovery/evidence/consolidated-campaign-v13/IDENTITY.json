@@ -1,0 +1,13 @@
+{
+  "packet_digest": "97d24567bc98753122315f135a621eb886cebb2b81c32eb5762572589f037e08",
+  "application": "a3cf3d7c579ec61cd628d758b341c34daaad3dc0",
+  "scope": "d5-97d24567bc98753122315f13",
+  "proposal_digest": "c582b5f64dfb515ca079f17a179365208f00dd1f098fa2c081f46aeec4d8b028",
+  "matrix_digest": "fdf88e73d7a5691a9cc503f89cdd82dadb868b82344f416afb7032c3a485a8a5",
+  "scoring_policy": "workspace-campaign-scoring-v13",
+  "source_snapshot_digest": "28c045e30d5cc318fb552c36d5755c025291bc29d0e236e36d6e9dbddd55225c",
+  "authority": false,
+  "provider_contacts": 0,
+  "count_contacts": 0,
+  "preparation_completed_at": "2026-11-13T06:25:53.679512+00:00"
+}

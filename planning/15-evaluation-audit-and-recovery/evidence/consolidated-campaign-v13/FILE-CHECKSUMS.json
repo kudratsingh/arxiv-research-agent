@@ -1,0 +1,30 @@
+{
+  "packet_digest": "97d24567bc98753122315f135a621eb886cebb2b81c32eb5762572589f037e08",
+  "application": "a3cf3d7c579ec61cd628d758b341c34daaad3dc0",
+  "files": {
+    "ANALYSIS-BINDING-RECEIPT.json": "fc0f3c71080758261e3148e73268965cabddba978934d51626836bfc51f3fb29",
+    "APPROVAL-REQUEST.md": "8c0d01c3bb4c318e98cefb9a343fbbda1b010ccd4cdaaa52e3af5f9363ce293c",
+    "AUD01-BINDING-DEMONSTRATION.json": "b2ffe09ae8115fc5a3d48ef07f75152a40c3962e321e0d8d7d793e5d0d22211e",
+    "BINDING-PROOF.json": "ed4f2769e602d757eb0981760ddc279bfa7ca6572db390d4fb5fe0bfb16aafa8",
+    "CAMPAIGN-SCOPE.md": "13886a5a22519145eaa6b2a50e08bbc25f258c343fea5b9d42d7a5b3e9f3e099",
+    "IDENTITY.json": "5effa8d7fda487065e9dd181f728672c509f49f82516dfa8effccd9a64f7d4da",
+    "LOCAL-CHECKS.json": "2c26cb3564d7607e1dd9b5bd8c0b42f028ea3e2eeecb0d167e1030d0efcef9f9",
+    "LOCAL-COVERAGE.json": "e7da413a36c30481d5e9352834f41fe55758e066e26969eef9dd4eed201767fc",
+    "OFFLINE-GATE.json": "0531f50f08dd499bb9b0491da8d9a9d03e95935259f7f358a72b07e3fe3b366f",
+    "OFFLINE-REPLAY.json": "81332b1363f99dd5910c64ac5faa56f83efb68ef6fc79f14002058ac1b434349",
+    "PRESERVATION.json": "4323fedb637f1079955480a8edd99128ab739967ec62e4eb98c5dcae1842ea8b",
+    "PRODUCER-BINDING-PROOF.json": "6b71867f99192390b34a6c55374f3558b42f34f08830de3353eab746ab934ba3",
+    "REAL-LEDGER-UNCHANGED.json": "615d7c437616d5ebe6dd386a6e6a619c25e02f99b67dd600619ddf08e889edbc",
+    "VERIFICATION.md": "087f5874749e2e8041ee77e9f938fa7c9d01602ea8a646c6b9bd4432c30c67c5",
+    "answerability-matrix.json": "716172f31ca15735130023767d4b74afe0bc1f567924360059ad085d08b31a7f",
+    "blinded-checker-requests.json.gz": "32b5b433fb735cf0ee111a14801d39ffdfbb363343523fa3be95b2f5c6e0ed81",
+    "capacity-and-exception-proposal.json": "46d95f7ab81893ba08ba2186feaf17cbb25e7d2da14100ebf5b963de3a143d23",
+    "compiled-inputs.json.gz": "4d5d494f4a3922c1e1fb452e4da5159ca7b2b421a24adb386ff7ce0653d313c5",
+    "machine-reference-set.json": "1953db46283e5cd3947fd1fd2893fb1aecec035883d9a1a92b30234ae1513e0c",
+    "owner-authorization-template.json": "daf1a6707cd612179a0ed2b7660a7a83380c0cd702c949a2b3876b6ed36aa0d7",
+    "packet.json.gz": "9176d174cb73cef929da0764896d58fb6d7624f3f9a13739c20f7f97d9233ff2"
+  },
+  "human_qualification": false,
+  "owner_authorization_activated": false,
+  "real_contacts": 0
+}

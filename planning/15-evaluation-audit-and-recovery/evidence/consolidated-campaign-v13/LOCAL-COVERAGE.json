@@ -1,0 +1,51 @@
+{
+  "application": "a3cf3d7c579ec61cd628d758b341c34daaad3dc0",
+  "full_gate": "make test-cov-diff VENV_PYTHON=/Users/kudratsingh/Machine-Learning-Projects/arxiv-venv-lock/bin/python",
+  "pytest_result": "7206 passed, 54 skipped, 53 deselected in 1865.71s (0:31:05)",
+  "project": {
+    "covered_lines": 36456,
+    "num_statements": 38017,
+    "percent_covered": 94.41271011199149,
+    "percent_covered_display": "94",
+    "missing_lines": 1561,
+    "excluded_lines": 255,
+    "percent_statements_covered": 95.89394218375989,
+    "percent_statements_covered_display": "96",
+    "num_branches": 10826,
+    "num_partial_branches": 984,
+    "covered_branches": 9658,
+    "missing_branches": 1168,
+    "percent_branches_covered": 89.21115832255681,
+    "percent_branches_covered_display": "89"
+  },
+  "patch": {
+    "report_name": "XML",
+    "diff_name": "origin/main...HEAD, staged and unstaged changes",
+    "total_num_lines": 10977,
+    "total_num_violations": 391,
+    "total_percent_covered": 96,
+    "num_changed_lines": 763356
+  },
+  "package_floor_results": {
+    "api": {
+      "floor": 86,
+      "actual_report_percent": "88"
+    },
+    "agents": {
+      "floor": 92,
+      "actual_report_percent": "96"
+    },
+    "security": {
+      "floor": 97,
+      "actual_report_percent": "100"
+    },
+    "eval": {
+      "floor": 91,
+      "actual_report_percent": "95"
+    }
+  },
+  "provider_contacts": 0,
+  "token_count_contacts": 0,
+  "CI_result": null,
+  "runtime_parity_claim": false
+}

@@ -1,0 +1,18 @@
+{
+  "packet_digest": "97d24567bc98753122315f135a621eb886cebb2b81c32eb5762572589f037e08",
+  "earlier_proof_digest": "2d4267416f91cba955c35e41fc79b945ffe104a1c67d9a1b296dc5fa3d8a147b",
+  "qualification_producer_digest": "88e862d81e6de80f3c0ed0526f60cd3b7464f97e7bfab7320fb4d031a2544020",
+  "changed_qualification_adapter_files": {
+    "workspace/d5_adapter.py": "sha256:f4130a85bc9275fd86b81388304c4a69e5a3b60f100c93de0b229c2ad78e5277",
+    "workspace/d5_campaign_packet.py": "sha256:4ebf31aef462850eeacce3ffdf3055119ac0b853dd7420bdc72ba8456575ba5c",
+    "workspace/d5_campaign_report.py": "sha256:58c0c2c8684f7d55e74fa5dba25c9edc8783ea2933b29925a18cf4acb0fe39ae",
+    "workspace/d5_report_binding.py": "sha256:8b54b16fe2ac4e611d1122c9c0ae273d7091f1d8731f08a10a6b40786f385c5b",
+    "workspace/d5_answerability.py": "sha256:927897b1ebe1fdd3a460e3db8f5c66518c6fa55458a6f35f6b2c322d4d420920",
+    "workspace/provider_adapter.py": "sha256:04ec11d1573cd1b10f163de645bd1ca84418f731f61427c633e41cf4b8fbd37f",
+    "workspace/d5_freeze.py": "sha256:b28aab93afbca8286cf5f34b7c69c2231c33f640099c4ff6817dcf087c7fbbe7"
+  },
+  "dependency_bindings_unchanged": true,
+  "qualification_producer_separately_checked_on_every_operation": true,
+  "model_and_settings_substitution": false,
+  "live_contacts": 0
+}

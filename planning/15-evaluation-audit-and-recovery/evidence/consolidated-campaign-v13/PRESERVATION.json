@@ -1,0 +1,17 @@
+{
+  "independently_rehashed": true,
+  "manifest_entries": 28519,
+  "unique_original_version_pairs": 28233,
+  "entries_overlap": true,
+  "required_captured_versions_available": 28519,
+  "new_evidence_copies": 0,
+  "original_deletions": 0,
+  "predecessor_overwrites": 0,
+  "symlink_targets_reverified": 5,
+  "symlink_target_files": 10,
+  "audit_named_ledger_and_timeout_SHA256_verified": true,
+  "exact_historic_284_membership": "Unresolved: path list absent from supplied kit",
+  "archive_root": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-evidence",
+  "receipt_index": "evaluation-audit-recovery-20261113/EXPECTED-ORIGINALS-RECONCILIATION.json",
+  "new_final_CI_evidence_retained_separately": true
+}

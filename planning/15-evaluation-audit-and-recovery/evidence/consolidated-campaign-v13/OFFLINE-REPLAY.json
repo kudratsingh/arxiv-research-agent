@@ -1,0 +1,16 @@
+{
+  "packet_digest": "97d24567bc98753122315f135a621eb886cebb2b81c32eb5762572589f037e08",
+  "application": "a3cf3d7c579ec61cd628d758b341c34daaad3dc0",
+  "synthetic_jobs": 14,
+  "synthetic_messages": 44,
+  "synthetic_paired_counts": 44,
+  "all_current_workflow_checks_bound": true,
+  "answerability_rows": 24,
+  "repeat_dispatches": 0,
+  "retained_hold_usd": "0.425066",
+  "real_provider_contacts": 0,
+  "real_count_contacts": 0,
+  "real_ledger_mutated": false,
+  "report_digest": "66ac4fe382e007b713f86dfc68236182365351b3c632d34d167a1b39d79bad34",
+  "human_qualification": false
+}

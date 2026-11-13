@@ -1,0 +1,77 @@
+{
+  "revision": "audit-recovery-binding-proof-v1",
+  "application": "a3cf3d7c579ec61cd628d758b341c34daaad3dc0",
+  "packet_digest": "97d24567bc98753122315f135a621eb886cebb2b81c32eb5762572589f037e08",
+  "supersedes_unapproved_proposal": "fe3d1d63f0886f1d7d3b48153f2fb696fbd3938b34c0328050ad31d407572afa",
+  "corpus_baseline_packet": "1429b39296792b8bc3d5530d28bcc56600048b149310fc10df30c2ee6048a7a7",
+  "matrix_digest": "fdf88e73d7a5691a9cc503f89cdd82dadb868b82344f416afb7032c3a485a8a5",
+  "scoring_policy": "workspace-campaign-scoring-v13",
+  "models_deadlines_limits_unchanged": true,
+  "initial_requests": {
+    "campaign-dev-learn": {
+      "new": "607b5b489a2b39017385c5b6a9f28f7274965cb931299293a436ac9c68355f8c",
+      "old": "607b5b489a2b39017385c5b6a9f28f7274965cb931299293a436ac9c68355f8c",
+      "exact_body_unchanged": true
+    },
+    "campaign-dev-compare": {
+      "new": "272200ce13b3506be46a9fc9f1ea60480e2d64e577281d6d64d59b72f087b1ba",
+      "old": "272200ce13b3506be46a9fc9f1ea60480e2d64e577281d6d64d59b72f087b1ba",
+      "exact_body_unchanged": true
+    },
+    "campaign-eval-learn-mechanism": {
+      "new": "a9ee31cd8cb221bcede3c42b4215197fb1a662902e0ed485445d10fb763676fd",
+      "old": "a9ee31cd8cb221bcede3c42b4215197fb1a662902e0ed485445d10fb763676fd",
+      "exact_body_unchanged": true
+    },
+    "campaign-eval-learn-conditions": {
+      "new": "1bb3ba11a2ddacc97d32171eaafaeeaa6de7d02541233819bbfdd09a71c88cd1",
+      "old": "1bb3ba11a2ddacc97d32171eaafaeeaa6de7d02541233819bbfdd09a71c88cd1",
+      "exact_body_unchanged": true
+    },
+    "campaign-eval-learn-experiment": {
+      "new": "fc873e17b46724ada51835ba933a9ccc2636fb8705a673ec36bbc11aaee899eb",
+      "old": "fc873e17b46724ada51835ba933a9ccc2636fb8705a673ec36bbc11aaee899eb",
+      "exact_body_unchanged": true
+    },
+    "campaign-eval-learn-measurement": {
+      "new": "11992f4a01bed486961922bd97673823b787e44c854cd3fe6fb8adc211ac4245",
+      "old": "11992f4a01bed486961922bd97673823b787e44c854cd3fe6fb8adc211ac4245",
+      "exact_body_unchanged": true
+    },
+    "campaign-eval-research-memory": {
+      "new": "53cd3ddd568569c7bb8a5cc4ea09f7e8e7c0455d023e299d4ef89c8aadcf509a",
+      "old": "53cd3ddd568569c7bb8a5cc4ea09f7e8e7c0455d023e299d4ef89c8aadcf509a",
+      "exact_body_unchanged": true
+    },
+    "campaign-eval-research-retrieval": {
+      "new": "50ade362b5acd1b7bfaf65738298ef1371cf998108bbb62c5678b7251f7bc475",
+      "old": "50ade362b5acd1b7bfaf65738298ef1371cf998108bbb62c5678b7251f7bc475",
+      "exact_body_unchanged": true
+    },
+    "campaign-eval-research-verification": {
+      "new": "b2e9986cbb88a7eaba47b3170882988e5734edf3c1d77ccfa577ac733c1dc678",
+      "old": "b2e9986cbb88a7eaba47b3170882988e5734edf3c1d77ccfa577ac733c1dc678",
+      "exact_body_unchanged": true
+    },
+    "campaign-eval-research-insufficient": {
+      "new": "3aa27f7abab74d2c28586946908881a518b2fa1ce0fa089bdadf3df2dd6d3e7e",
+      "old": "3aa27f7abab74d2c28586946908881a518b2fa1ce0fa089bdadf3df2dd6d3e7e",
+      "exact_body_unchanged": true
+    }
+  },
+  "probe_requests_unchanged": true,
+  "references_not_in_workflow_payload": true,
+  "dynamic_checker_change": "Canonical entire response digest and section reference layout now bind check/recheck; actual bodies are constructed from preceding responses and measured freshly. No future body or measurement is invented.",
+  "measurement_reuse": [],
+  "every_messages_requires_new_exact_paired_count": true,
+  "changed_code": [
+    "src/workspace/d5_freeze.py",
+    "src/workspace/d5_campaign_packet.py",
+    "src/workspace/d5_campaign_report.py",
+    "src/workspace/d5_report_binding.py",
+    "src/workspace/d5_answerability.py",
+    "planning/15-evaluation-audit-and-recovery/reference/answerability-v1.json"
+  ],
+  "human_review": null,
+  "authority_activated": false
+}

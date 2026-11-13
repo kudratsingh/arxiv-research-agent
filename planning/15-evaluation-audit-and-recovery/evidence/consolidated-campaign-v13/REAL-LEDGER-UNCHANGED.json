@@ -1,0 +1,19 @@
+{
+  "verified_at": "2026-11-13T06:57:00.670418+00:00",
+  "programme": "research-evaluation-20261105-v1",
+  "before_digest": "28c045e30d5cc318fb552c36d5755c025291bc29d0e236e36d6e9dbddd55225c",
+  "after_digest": "28c045e30d5cc318fb552c36d5755c025291bc29d0e236e36d6e9dbddd55225c",
+  "unchanged": true,
+  "programme_jobs": 33,
+  "messages": 65,
+  "counts": 90,
+  "known_estimated_usd": "1.853811",
+  "pending_usd": "0.425066",
+  "unknown_usd": "0.425066",
+  "pending_unknown_overlap": true,
+  "new_live_campaign_extensions": 0,
+  "new_real_provider_contacts": 0,
+  "new_real_count_contacts": 0,
+  "new_real_financial_mutations": 0,
+  "historical_results_preserved": true
+}

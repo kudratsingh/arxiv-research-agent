@@ -74,7 +74,7 @@ New report derivatives carry an analysis receipt binding packet, raw-result dige
 scorer code, policy and locked matrix. They never overwrite raw responses or prior
 reports. Current owner/human usefulness and qualification remain unmeasured.
 
-## W3 — verification in progress
+## W3 — local gates complete; publication outcome recorded separately
 
 Focused unit checks:63 passed. Protected coverage-only repair → uncertain recheck
 regression:1 passed, using production admission/adapter/report in disposable
@@ -88,8 +88,13 @@ The local locked runtime is Python3.13.7; CI uses Python3.14. Runtime receipts r
 executable, import path and dependency versions. Runtime parity is **not** claimed.
 
 Baseline CI43370477206 completed9/9success on1259ddb3. That verifies the baseline,
-not this patch. Final full coverage gate, complete14-job protected mock replay,
-source freeze and exact-head CI are pending. Source changes invalidate the old
+not this patch. Final full coverage gate passed7206/54skipped/53separateE2Edeselected in1865.71s;
+project94.4127%,patch10586/10977lines,all package floors. SeparateE2E53pass,
+simulation20/20USD0,registry260/0. Both the complete14/44/44mock gate and exact
+sealed real-snapshot replay passed; all current workflow checks bound and duplicate
+dispatch0. Final sourcea3cf3d7c is frozen in v13packet97d24567bc98753122315f135a621eb886cebb2b81c32eb5762572589f037e08.
+The exact published-head CI conclusion is recorded separately in permanent
+publication receipts and the completion handoff. Source changes invalidate the old
 v12 proposal; do not activate or approve it for this implementation.
 
 ## Authority and accounting
@@ -111,3 +116,9 @@ Original LangGraph metric/source-ID/completion/truncation repairs remain a
 separate track. No original-agent result is qualified by this workspace patch.
 
 All rights reserved. No license or reuse permission is granted.
+
+The reviewed execution proposal and runnable commands are in [RUNBOOK](RUNBOOK.md)
+and [one approval request](evidence/consolidated-campaign-v13/APPROVAL-REQUEST.md).
+[Verification](evidence/consolidated-campaign-v13/VERIFICATION.md) distinguishes
+application/source, package publication, local gates and exact-head CI. The final
+read-only ledger census remains identical by canonical snapshot digest; no live extension exists.
