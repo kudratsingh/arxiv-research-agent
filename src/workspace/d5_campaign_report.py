@@ -51,13 +51,13 @@ def score_workflow(
     from src.workspace.assistance import checks_model
     from src.workspace.assistance_contract import resolve_draft
     from src.workspace.assistance_policy import render_task_output
+    from src.workspace.d5_report_binding import ReportBindingError, current_check
     from src.workspace.grounding import (
         EvidenceRef,
         SupportCheck,
         claim_input_digest,
         validate_claims,
     )
-    from src.workspace.provider_adapter import response_output
 
     result: dict[str, Any] = {
         "id": case["id"],
@@ -71,7 +71,10 @@ def score_workflow(
         "machine_coverage": None,
         "claim_quality": None,
         "prose_review": None,
+        "prose_findings": None,
+        "assessment_binding": {"status": "unavailable", "reason": "no_current_completed_check"},
         "abstention": None,
+        "response_disposition": None,
         "mechanical_provenance": None,
         "whole_claim_support": None,
         "human_review": None,
@@ -98,6 +101,7 @@ def score_workflow(
     )
     drafts = [s for s in snapshot.get("steps", []) if s["stage"] in {"draft", "repair"}]
     if not drafts:
+        result["completion"] = False
         return result
     sealed = case["sealed"]
     output = {k: v for k, v in drafts[-1]["output"].items() if k != "grounding"}
@@ -115,6 +119,7 @@ def score_workflow(
         )
         result["declared_coverage"] = rendered.get("request_coverage")
         result["abstention"] = rendered.get("abstention")
+        result["response_disposition"] = rendered.get("response_disposition")
         provenance = validate_claims(claims, materials)
         result["mechanical_provenance"] = (
             all(a.identity_resolved and a.scope_compatible for a in provenance.assessments)
@@ -125,27 +130,13 @@ def score_workflow(
             {**asdict(c), "input_digest": claim_input_digest(c, materials), "human_support": None}
             for c in claims
         ]
-        checks = [
-            c
-            for c in snapshot.get("contacts", [])
-            if c["stage"] == "check" and c.get("state") == "completed" and c.get("response")
-        ]
-        if checks:
-            contact = checks[-1]
-            from src.workspace.d5_operations import verdict_text
-
+        try:
+            bound = current_check(sealed, snapshot, materials)
+            contact, context, raw = bound["contact"], bound["context"], bound["raw_verdict"]
             body = contact["body"]
-            raw = response_output(
-                {
-                    **contact["response"],
-                    "content": [{"type": "text", "text": verdict_text(contact["response"])}],
-                },
-                body["model"],
-            )
             parsed = checks_model(sealed["schema_revision"]).model_validate(raw)
             from src.workspace.assistance_coverage import validate_review
 
-            context = json.loads(body["messages"][0]["content"])
             validate_review(parsed, context)
             parsed.validate_locations(context.get("unscored_prose", {}))
             expected = {c.claim_id: claim_input_digest(c, materials) for c in claims}
@@ -165,13 +156,25 @@ def score_workflow(
                 )
                 grounding = validate_claims(claims, materials, reviews)
                 result.update(
+                    assessment_binding=bound["binding"],
                     whole_claim_support=asdict(grounding),
                     machine_coverage=raw.get("coverage_checks"),
                     claim_quality=raw.get("claim_quality"),
                     prose_review=raw.get("prose_review"),
                     prose_findings=raw.get("prose_findings"),
                 )
+            else:
+                raise ReportBindingError("checker_claim_binding_mismatch")
+        except (ValueError, KeyError, TypeError, IndexError) as exc:
+            result["completion"] = False
+            result["assessment_binding"] = {
+                "status": "unavailable",
+                "reason": str(exc)
+                if isinstance(exc, ReportBindingError)
+                else "invalid_or_unbound_checker",
+            }
     except (ValueError, KeyError, TypeError):
+        result["completion"] = False
         result["mechanical_provenance"] = False
         result["scoring_error"] = "invalid_or_unbound_output; no quality pass"
     return result
@@ -232,7 +235,10 @@ def results(
             if step["stage"] == "check":
                 verdicts.update({v["claim_id"]: v["decision"] for v in step["output"]["checks"]})
     probes = score_probes(packet["probe_references"], verdicts)
+    from src.workspace.d5_answerability import score_parts
+
     evaluation = [c for c in cases if c["cohort"] != "development"]
+    part_scores = [r for c in evaluation for r in score_parts(c, packet["answerability"])]
     facts = [c for case in evaluation for c in case["claims"]]
     supported = sum((c.get("whole_claim_support") or {}).get("supported", 0) for c in evaluation)
     checked = sum((c.get("whole_claim_support") or {}).get("checked", 0) for c in evaluation)
@@ -288,6 +294,7 @@ def results(
         not simulated
         and quality != "FAIL"
         and not missing_primary
+        and all(r["request_fulfillment"] == "met" for r in part_scores)
         and complete == 8
         and len(facts) >= 20
         and checked == supported == len(facts)
@@ -297,7 +304,7 @@ def results(
         )
     ):
         quality = "PASS_MACHINE_ONLY"
-    return {
+    report = {
         "packet_digest": packet["packet_digest"],
         "application_commit": packet["application_commit"],
         "basis": "SIMULATED SOFTWARE EVIDENCE ONLY"
@@ -321,6 +328,24 @@ def results(
         },
         "machine_quality": quality,
         "request_coverage": coverage,
+        "answerability": {
+            "matrix_digest": packet["answerability"]["matrix_digest"],
+            "scoring_policy": packet["scoring"]["revision"],
+            "parts": part_scores,
+            "denominator": 24,
+            "counts": {
+                status: sum(r["request_fulfillment"] == status for r in part_scores)
+                for status in (
+                    "met",
+                    "partial",
+                    "unmet",
+                    "omitted_answer",
+                    "unsupported_answer",
+                    "UNSCORED",
+                )
+            },
+            "human_review": None,
+        },
         "claim_quality_counts": {
             "bundled": bundled,
             "lost_qualifications": lost,
@@ -352,6 +377,27 @@ def results(
         "limitations": "Frozen public snapshot, known extraction limits, exposed sources, proposed machine references and correlated claims. Human usefulness/qualification and literature recall remain unmeasured.",
     }
 
+    return {
+        **report,
+        "analysis_receipt": {
+            "revision": "workspace-campaign-analysis-v1",
+            "original_packet_digest": packet["packet_digest"],
+            "raw_results_digest": _digest(snapshots),
+            "report_digest_excluding_receipt": _digest(report),
+            "scoring_policy": packet["scoring"]["revision"],
+            "answerability_matrix_digest": packet["answerability"]["matrix_digest"],
+            "scorer_code": {
+                name: value
+                for name, value in packet["code"].items()
+                if name.endswith(
+                    ("d5_campaign_report.py", "d5_report_binding.py", "d5_answerability.py")
+                )
+            },
+            "human_review_digest": None,
+            "historical_records_modified": False,
+        },
+    }
+
 
 def markdown(report: dict[str, Any]) -> str:
     rows = [
@@ -376,7 +422,11 @@ def markdown(report: dict[str, Any]) -> str:
         "",
         "```json",
         json.dumps(
-            {k: report[k] for k in ("denominators", "probe_scores", "accounting", "stop")}, indent=2
+            {
+                k: report[k]
+                for k in ("denominators", "answerability", "probe_scores", "accounting", "stop")
+            },
+            indent=2,
         ),
         "```",
         "",

@@ -15,6 +15,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import asdict
 from datetime import UTC, datetime
 from decimal import Decimal
+from time import monotonic
 from typing import Any, Literal
 
 import httpx
@@ -292,6 +293,10 @@ class QualificationAdapter:
 
     def _complete_http_body(self, job_id: str, ordinal: int, status: int, body: bytes) -> None:
         """Optional receipt for a complete body before envelope decoding."""
+
+    def _contact_timing(self, job_id: str, ordinal: int, event: str, elapsed: float) -> None:
+        """Versioned D5 adapters can retain actual timing; legacy receipts stay unchanged."""
+
 
     def _response_output(self, response: dict[str, Any], body: dict[str, Any]) -> dict[str, Any]:
         return response_output(response, body["model"])
@@ -584,7 +589,8 @@ class QualificationAdapter:
                     prior.get("state") != "completed"
                     or prior.get("endpoint") != "messages/count_tokens"
                     or prior.get("generation_request_digest") != _digest(body)
-                    or prior.get("body") != {k: v for k, v in body.items() if k not in {"max_tokens", "temperature"}}
+                    or prior.get("body")
+                    != {k: v for k, v in body.items() if k not in {"max_tokens", "temperature"}}
                     or prior.get("request_digest") != _digest(prior.get("body"))
                     or type(estimate) is not int
                     or estimate < 0
@@ -598,24 +604,46 @@ class QualificationAdapter:
             conn.execute(
                 "UPDATE workspace_generation_jobs SET data=%s WHERE id=%s", (Jsonb(data), job_id)
             )
-        async with asyncio.timeout(timeout_seconds):
-            async with httpx.AsyncClient(
-                transport=self.transport,
-                trust_env=False,
-                follow_redirects=False,
-                timeout=timeout_seconds,
-                headers={"x-api-key": self.api_key, "anthropic-version": "2023-06-01"},
-            ) as client:
-                async with client.stream(
-                    "POST", "https://api.anthropic.com/v1/" + path, json=body
-                ) as response:
-                    chunks = bytearray()
-                    async for chunk in response.aiter_bytes():
-                        chunks.extend(chunk)
-                        if len(chunks) > int(self.inputs.settings["response_bytes"]):
-                            raise AdmissionError("response_size_exceeded")
-                    self._complete_http_body(job_id, ordinal, response.status_code, bytes(chunks))
-                    response.raise_for_status()
+        started = monotonic()
+        self._contact_timing(job_id, ordinal, "dispatch", 0.0)
+        try:
+            async with asyncio.timeout(timeout_seconds):
+                async with httpx.AsyncClient(
+                    transport=self.transport,
+                    trust_env=False,
+                    follow_redirects=False,
+                    timeout=timeout_seconds,
+                    headers={"x-api-key": self.api_key, "anthropic-version": "2023-06-01"},
+                ) as client:
+                    async with client.stream(
+                        "POST", "https://api.anthropic.com/v1/" + path, json=body
+                    ) as response:
+                        chunks = bytearray()
+                        first = True
+                        async for chunk in response.aiter_bytes():
+                            if chunk and first:
+                                self._contact_timing(
+                                    job_id, ordinal, "first_body_byte", monotonic() - started
+                                )
+                                first = False
+                            chunks.extend(chunk)
+                            if len(chunks) > int(self.inputs.settings["response_bytes"]):
+                                raise AdmissionError("response_size_exceeded")
+                        self._contact_timing(job_id, ordinal, "full_body", monotonic() - started)
+                        self._complete_http_body(
+                            job_id, ordinal, response.status_code, bytes(chunks)
+                        )
+                        response.raise_for_status()
+        except BaseException as exc:
+            event = (
+                "cancelled"
+                if isinstance(exc, asyncio.CancelledError)
+                else "timeout"
+                if isinstance(exc, (TimeoutError, httpx.TimeoutException))
+                else "error"
+            )
+            self._contact_timing(job_id, ordinal, event, monotonic() - started)
+            raise
         value = json.loads(chunks)
         if not isinstance(value, dict):
             raise AdmissionError("invalid_provider_response")

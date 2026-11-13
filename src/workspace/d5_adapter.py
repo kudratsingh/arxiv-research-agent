@@ -94,6 +94,8 @@ def qualification_producer() -> dict[str, Any]:
         "workspace/d5_campaign_operator.py",
         "workspace/d5_campaign.py",
         "workspace/d5_campaign_report.py",
+        "workspace/d5_report_binding.py",
+        "workspace/d5_answerability.py",
         "workspace/d5_coverage_replay.py",
         "workspace/assistance_policy.py",
         "workspace/assistance_coverage.py",
@@ -280,6 +282,108 @@ def prepare_input(
             settings["output_tokens"] = selected["output_tokens"]
             settings["price_estimate_usd_per_million"] = selected["prices"]
     return GenerationInput("deep_dive", model, ADAPTER_REVISION, sources, settings)
+
+
+def initial_context(sealed: dict[str, Any]) -> dict[str, Any]:
+    """Canonical public request context, shared by dispatch and report binding."""
+    compact = {
+        k: sealed[k]
+        for k in (
+            "schema_revision",
+            "kind",
+            "assistance",
+            "project_context",
+            "units",
+            "settings",
+            "private_context",
+        )
+    }
+    compact["assistance"] = {
+        k: sealed["assistance"][k]
+        for k in ("mode", "depth", "background", "direction", "follow_up")
+    }
+    if sealed["schema_revision"] in {TASK_REVISION, *COVERAGE_REVISIONS}:
+        compact["task_policy"] = sealed["task_policy"]
+    return {
+        "phase": "draft",
+        "role": "workflow",
+        "sealed_request": compact,
+        "output_schema": schemas(
+            list(sealed["units"]),
+            purpose=response_purpose(sealed["assistance"]["mode"], sealed["units"]),
+            revision=sealed["schema_revision"],
+            task_policy=sealed.get("task_policy"),
+        )["wire"],
+    }
+
+
+def checker_context(
+    sealed: dict[str, Any], workflow: dict[str, Any], materials: Any
+) -> dict[str, Any]:
+    """The exact context the production checker receives for one response."""
+    value = initial_context(sealed)
+    value["phase"] = "check"
+    draft, claims = resolve_draft(
+        workflow,
+        {k: EvidenceRef(**v) for k, v in sealed["units"].items()},
+        materials,
+        purpose=response_purpose(sealed["assistance"]["mode"], sealed["units"]),
+        revision=sealed["schema_revision"],
+        task_policy=sealed.get("task_policy"),
+    )
+    workflow_view = (
+        render_task_output(
+            workflow,
+            list(sealed["units"]),
+            sealed["response_purpose"],
+            sealed["task_policy"],
+        )
+        if sealed["schema_revision"] in {TASK_REVISION, *COVERAGE_REVISIONS}
+        else workflow
+    )
+    # The existing canonical digest binds all generated fields, including
+    # section references that do not change factual claim digests.
+    current = {k: v for k, v in workflow.items() if k != "grounding"}
+    value["checked_response_digest"] = _digest(current)
+    value["response_layout"] = {
+        k: v
+        for k, v in current.get("response", current).items()
+        if k not in {"claims", "coverage", "gaps", "questions", "proposal", "abstention"}
+    }
+    value["role"] = "checker"
+    value["sealed_request"].pop("units")
+    value["output_schema"] = transform_schema(checks_model(sealed["schema_revision"]))
+    value["draft"] = {"claims": [asdict(c) for c in claims]}
+    value["claim_inputs"] = [
+        {"claim_id": c.claim_id, "input_digest": claim_input_digest(c, materials)} for c in claims
+    ]
+    value["unscored_prose"] = {
+        k: workflow_view[k]
+        for k in (
+            "background",
+            "comparison",
+            "comparison_basis",
+            "assumptions",
+            "gaps",
+            "questions",
+            "proposal",
+            "abstention",
+        )
+        if k in workflow_view
+    }
+    if sealed["schema_revision"] not in {TASK_REVISION, *COVERAGE_REVISIONS}:
+        value["unscored_prose"].update(render_procedures(workflow))
+    if sealed["schema_revision"] in COVERAGE_REVISIONS:
+        value.update(
+            review_context(
+                sealed["task_policy"],
+                workflow_view,
+                value["claim_inputs"],
+                sealed["units"],
+            )
+        )
+        value["review_evidence"] = sealed["units"]
+    return value
 
 
 class D5Adapter(QualificationAdapter):
@@ -522,37 +626,30 @@ class D5Adapter(QualificationAdapter):
             raise AdmissionError("d5_source_or_task_binding_drift")
         return sealed["sources"], materials
 
-    def _initial(self) -> dict[str, Any]:
-        sealed = self.inputs.settings["d5_request"]
-        compact = {
-            k: sealed[k]
-            for k in (
-                "schema_revision",
-                "kind",
-                "assistance",
-                "project_context",
-                "units",
-                "settings",
-                "private_context",
+    def _contact_timing(self, job_id: str, ordinal: int, event: str, elapsed: float) -> None:
+        # Observed local transport timing only. No events are invented for old
+        # contacts, and a timeout/cancellation event does not settle liability.
+        with self.store.pool.connection() as conn:
+            self.control._lock(conn, self.owner)
+            _, _, data = self.control._job(conn, self.owner, job_id)
+            contact = data["adapter"]["contacts"][ordinal]
+            timing = contact.setdefault(
+                "timing",
+                {
+                    "revision": "transport-timing-v1",
+                    "first_byte_basis": "first nonempty response body chunk",
+                    "events": [],
+                },
             )
-        }
-        compact["assistance"] = {
-            k: sealed["assistance"][k]
-            for k in ("mode", "depth", "background", "direction", "follow_up")
-        }
-        if sealed["schema_revision"] in {TASK_REVISION, *COVERAGE_REVISIONS}:
-            compact["task_policy"] = sealed["task_policy"]
-        return {
-            "phase": "draft",
-            "role": "workflow",
-            "sealed_request": compact,
-            "output_schema": schemas(
-                list(sealed["units"]),
-                purpose=response_purpose(sealed["assistance"]["mode"], sealed["units"]),
-                revision=sealed["schema_revision"],
-                task_policy=sealed.get("task_policy"),
-            )["wire"],
-        }
+            timing["events"].append(
+                {"event": event, "utc": datetime.now(UTC).isoformat(), "elapsed_seconds": elapsed}
+            )
+            conn.execute(
+                "UPDATE workspace_generation_jobs SET data=%s WHERE id=%s", (Jsonb(data), job_id)
+            )
+
+    def _initial(self) -> dict[str, Any]:
+        return initial_context(self.inputs.settings["d5_request"])
 
     def request(self, job_id: str | None = None) -> dict[str, Any]:
         _, materials = self._context()
@@ -610,8 +707,10 @@ class D5Adapter(QualificationAdapter):
             raise AdmissionError("d5_four_stage_limit")
         value = self._initial()
         value["phase"] = phase
-        if phase in {"check", "repair"}:
-            workflow = steps[-1]["output"] if phase == "check" else steps[0]["output"]
+        if phase == "check":
+            value = checker_context(sealed, steps[-1]["output"], materials)
+        elif phase == "repair":
+            workflow = steps[0]["output"]
             draft, claims = resolve_draft(
                 workflow,
                 {k: EvidenceRef(**v) for k, v in sealed["units"].items()},
@@ -630,75 +729,37 @@ class D5Adapter(QualificationAdapter):
                 if sealed["schema_revision"] in {TASK_REVISION, *COVERAGE_REVISIONS}
                 else workflow
             )
-            if phase == "check":
-                value["role"] = "checker"
-                value["sealed_request"].pop("units")
-                value["output_schema"] = transform_schema(checks_model(sealed["schema_revision"]))
-                value["draft"] = {"claims": [asdict(c) for c in claims]}
-                value["claim_inputs"] = [
-                    {"claim_id": c.claim_id, "input_digest": claim_input_digest(c, materials)}
-                    for c in claims
-                ]
-                value["unscored_prose"] = {
-                    k: workflow_view[k]
-                    for k in (
-                        "background",
-                        "comparison",
-                        "comparison_basis",
-                        "assumptions",
-                        "gaps",
-                        "questions",
-                        "proposal",
-                        "abstention",
-                    )
-                    if k in workflow_view
-                }
-                if sealed["schema_revision"] not in {TASK_REVISION, *COVERAGE_REVISIONS}:
-                    value["unscored_prose"].update(render_procedures(workflow))
-                if sealed["schema_revision"] in COVERAGE_REVISIONS:
-                    value.update(
-                        review_context(
-                            sealed["task_policy"],
-                            workflow_view,
-                            value["claim_inputs"],
-                            sealed["units"],
-                        )
-                    )
-                    value["review_evidence"] = sealed["units"]
-            else:
-                checked = self._checks(
-                    {k: steps[-1]["output"][k] for k in steps[-1]["output"] if k != "grounding"}
-                )
-                # Digest/provenance checks happen before this repair is counted.
-                from src.workspace.grounding import SupportCheck
+            checked = self._checks(
+                {k: steps[-1]["output"][k] for k in steps[-1]["output"] if k != "grounding"}
+            )
+            # Digest/provenance checks happen before this repair is counted.
+            from src.workspace.grounding import SupportCheck
 
-                report = validate_claims(
-                    claims,
-                    materials,
-                    tuple(
-                        SupportCheck(
-                            c.claim_id,
-                            c.input_digest,
-                            c.decision,
-                            steps[-1]["model_id"],
-                            self.revision + ":check",
-                            c.reason,
-                        )
-                        for c in checked.checks
-                    ),
-                )
-                value["draft"] = {
-                    "claims": [
-                        {"claim_id": c.claim_id, "text": c.text, "kind": c.kind} for c in claims
-                    ]
-                }
-                value["previous_grounding"] = asdict(report)
-                value["previous_prose_review"] = checked.model_dump(mode="json")
-                if sealed["schema_revision"] in COVERAGE_REVISIONS:
-                    value["previous_declared_coverage"] = workflow_view["request_coverage"]
-                value["procedural_draft"] = {
-                    k: workflow_view[k] for k in ("gaps", "questions", "proposal", "abstention")
-                }
+            report = validate_claims(
+                claims,
+                materials,
+                tuple(
+                    SupportCheck(
+                        c.claim_id,
+                        c.input_digest,
+                        c.decision,
+                        steps[-1]["model_id"],
+                        self.revision + ":check",
+                        c.reason,
+                    )
+                    for c in checked.checks
+                ),
+            )
+            value["draft"] = {
+                "claims": [{"claim_id": c.claim_id, "text": c.text, "kind": c.kind} for c in claims]
+            }
+            value["previous_grounding"] = asdict(report)
+            value["previous_prose_review"] = checked.model_dump(mode="json")
+            if sealed["schema_revision"] in COVERAGE_REVISIONS:
+                value["previous_declared_coverage"] = workflow_view["request_coverage"]
+            value["procedural_draft"] = {
+                k: workflow_view[k] for k in ("gaps", "questions", "proposal", "abstention")
+            }
         body = self._wire(value)
         if phase == "draft" and _digest(body) != sealed["candidate_initial_wire_digest"]:
             raise AdmissionError("d5_initial_wire_drift")

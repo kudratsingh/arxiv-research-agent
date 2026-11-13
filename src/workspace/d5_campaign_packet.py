@@ -18,7 +18,7 @@ from src.workspace.d5_campaign_policy import LIMITS, PROFILE
 from src.workspace.d5_deadlines import POLICY as DEADLINES
 from src.workspace.d5_operations import ROUTES
 
-REVISION = "d5-complete-machine-campaign-v12"
+REVISION = "d5-complete-machine-campaign-v13"
 BASE = "1429b39296792b8bc3d5530d28bcc56600048b149310fc10df30c2ee6048a7a7"
 ROOT = Path(__file__).resolve().parents[2]
 BUILD_OWNER = "d5-campaign-public-build"
@@ -229,6 +229,7 @@ def plan_digest(packet: dict[str, Any]) -> str:
                 "operation_deadlines",
                 "limits",
                 "scoring",
+                "answerability",
                 "code",
                 "adapter",
                 "source_bindings",
@@ -419,6 +420,7 @@ def make_probes(
 def freeze(store: Any, snapshot: dict[str, Any]) -> dict[str, Any]:
     from src.workspace.assistance import CoverageChecks
     from src.workspace.d5_adapter import qualification_producer
+    from src.workspace.d5_answerability import POLICY, matrix
     from src.workspace.d5_campaign_extension import proposal
     from src.workspace.d5_freeze import code_bindings, verify_discovery
     from src.workspace.executor import FakeExecutor
@@ -513,7 +515,9 @@ def freeze(store: Any, snapshot: dict[str, Any]) -> dict[str, Any]:
             "local": CoverageChecks.model_json_schema(),
             "wire": transform_schema(CoverageChecks),
         },
+        "answerability": matrix(cases),
         "scoring": {
+            "revision": POLICY,
             "evaluation_denominator": 8,
             "generated_claims_min": 20,
             "probe_records_min": 20,
@@ -580,6 +584,10 @@ def verify_packet(p: dict[str, Any]) -> None:
             task_policy=sealed["task_policy"],
         ):
             raise AdmissionError("campaign_exact_response_schema_drift")
+    from src.workspace.d5_answerability import POLICY, matrix
+
+    if p.get("answerability") != matrix(p["cases"]) or p["scoring"].get("revision") != POLICY:
+        raise AdmissionError("campaign_locked_answerability_or_policy_drift")
     refs = p["probe_references"]
     identifiers = [
         c["claim_id"]

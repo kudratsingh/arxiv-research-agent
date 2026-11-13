@@ -1,0 +1,335 @@
+{
+  "revision": "workspace-answerability-reference-v1",
+  "author": "Codex",
+  "provenance": "machine_reference",
+  "method": "Offline reading of the exact frozen selected abstract units and application task policy; authored before the successor campaign. Not human gold, provider results or fresh held-out evidence.",
+  "reviewed_at": "2026-11-13T06:10:47Z",
+  "human_review": null,
+  "cases": [
+    {
+      "case_id": "campaign-eval-learn-mechanism",
+      "parts": [
+        {
+          "part_id": "p1",
+          "answerability": "partially_answerable",
+          "expected_behavior": "bounded_partial_answer",
+          "retained_support": "The AWM abstract describes hypothetical action, read-only environment queries, evidence-based reasoning and executable observation construction without changing the real environment.",
+          "missing_information": "No full implementation, query protocol or prerequisite specification is retained.",
+          "limitation_origins": [
+            "available_text",
+            "extraction"
+          ]
+        },
+        {
+          "part_id": "p2",
+          "answerability": "partially_answerable",
+          "expected_behavior": "bounded_partial_answer",
+          "retained_support": "The AWM abstract describes hypothetical action, read-only environment queries, evidence-based reasoning and executable observation construction without changing the real environment.",
+          "missing_information": "No full implementation, query protocol or prerequisite specification is retained.",
+          "limitation_origins": [
+            "available_text",
+            "extraction"
+          ]
+        },
+        {
+          "part_id": "p3",
+          "answerability": "answerable",
+          "expected_behavior": "answer",
+          "retained_support": "The retained scope and absent details above permit identifying bounded evidence gaps, without supplying missing findings.",
+          "missing_information": "No full implementation, query protocol or prerequisite specification is retained.",
+          "limitation_origins": [
+            "available_text",
+            "extraction"
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "campaign-eval-learn-conditions",
+      "parts": [
+        {
+          "part_id": "p1",
+          "answerability": "insufficient",
+          "expected_behavior": "bounded_partial_answer",
+          "retained_support": "The TensorSSM abstract describes tensor tokenisation, cross-mode dependencies and state updates.",
+          "missing_information": "No reported numerical result, population, task dataset, comparator, metric definition or evaluated condition is present. Do not fabricate result conditions.",
+          "limitation_origins": [
+            "available_text"
+          ]
+        },
+        {
+          "part_id": "p2",
+          "answerability": "partially_answerable",
+          "expected_behavior": "bounded_partial_answer",
+          "retained_support": "The TensorSSM abstract describes tensor tokenisation, cross-mode dependencies and state updates.",
+          "missing_information": "No reported numerical result, population, task dataset, comparator, metric definition or evaluated condition is present. Do not fabricate result conditions.",
+          "limitation_origins": [
+            "available_text"
+          ]
+        },
+        {
+          "part_id": "p3",
+          "answerability": "answerable",
+          "expected_behavior": "answer",
+          "retained_support": "The retained scope and absent details above permit identifying bounded evidence gaps, without supplying missing findings.",
+          "missing_information": "No reported numerical result, population, task dataset, comparator, metric definition or evaluated condition is present. Do not fabricate result conditions.",
+          "limitation_origins": [
+            "available_text"
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "campaign-eval-learn-experiment",
+      "parts": [
+        {
+          "part_id": "p1",
+          "answerability": "partially_answerable",
+          "expected_behavior": "bounded_partial_answer",
+          "retained_support": "The personalization abstract supplies 250 personas, five languages, 25K turns and a separation of strategy selection from execution. It supports a high-level outline.",
+          "missing_information": "Model identities, exact prompts, splits, annotation and training recipes, metric definitions and reproducible implementation are absent.",
+          "limitation_origins": [
+            "available_text",
+            "extraction"
+          ]
+        },
+        {
+          "part_id": "p2",
+          "answerability": "partially_answerable",
+          "expected_behavior": "bounded_partial_answer",
+          "retained_support": "The personalization abstract supplies 250 personas, five languages, 25K turns and a separation of strategy selection from execution. It supports a high-level outline.",
+          "missing_information": "Model identities, exact prompts, splits, annotation and training recipes, metric definitions and reproducible implementation are absent.",
+          "limitation_origins": [
+            "available_text",
+            "extraction"
+          ]
+        },
+        {
+          "part_id": "p3",
+          "answerability": "answerable",
+          "expected_behavior": "answer",
+          "retained_support": "The retained scope and absent details above permit identifying bounded evidence gaps, without supplying missing findings.",
+          "missing_information": "Model identities, exact prompts, splits, annotation and training recipes, metric definitions and reproducible implementation are absent.",
+          "limitation_origins": [
+            "available_text",
+            "extraction"
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "campaign-eval-learn-measurement",
+      "parts": [
+        {
+          "part_id": "p1",
+          "answerability": "partially_answerable",
+          "expected_behavior": "bounded_partial_answer",
+          "retained_support": "EDB-Bio reports 96K episodes across three biological domains and a reported 2.5x experiment-selection efficiency advantage for Ibis0 against the best frontier models. Applications remain proposals.",
+          "missing_information": "The operational efficiency denominator, exact comparator identities, uncertainty and detailed evaluation conditions are not retained. No clinical efficacy or safety finding is established.",
+          "limitation_origins": [
+            "available_text",
+            "extraction"
+          ]
+        },
+        {
+          "part_id": "p2",
+          "answerability": "partially_answerable",
+          "expected_behavior": "bounded_partial_answer",
+          "retained_support": "EDB-Bio reports 96K episodes across three biological domains and a reported 2.5x experiment-selection efficiency advantage for Ibis0 against the best frontier models. Applications remain proposals.",
+          "missing_information": "The operational efficiency denominator, exact comparator identities, uncertainty and detailed evaluation conditions are not retained. No clinical efficacy or safety finding is established.",
+          "limitation_origins": [
+            "available_text",
+            "extraction"
+          ]
+        },
+        {
+          "part_id": "p3",
+          "answerability": "answerable",
+          "expected_behavior": "answer",
+          "retained_support": "The retained scope and absent details above permit identifying bounded evidence gaps, without supplying missing findings.",
+          "missing_information": "The operational efficiency denominator, exact comparator identities, uncertainty and detailed evaluation conditions are not retained. No clinical efficacy or safety finding is established.",
+          "limitation_origins": [
+            "available_text",
+            "extraction"
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "campaign-eval-research-memory",
+      "parts": [
+        {
+          "part_id": "p1",
+          "answerability": "partially_answerable",
+          "expected_behavior": "bounded_partial_answer",
+          "retained_support": "KEEPER separates memory auxiliary objectives and reports an incorrect claim persisting despite correction in one baseline trajectory. The harness source concerns portable versioned orchestration, not a second memory-error experiment.",
+          "missing_information": "Exact update algorithm, error prevalence, replication and longitudinal calibration are unavailable. Do not generalise a single trajectory or treat harness scores as memory measurements.",
+          "limitation_origins": [
+            "corpus",
+            "selection",
+            "available_text"
+          ]
+        },
+        {
+          "part_id": "p2",
+          "answerability": "partially_answerable",
+          "expected_behavior": "bounded_partial_answer",
+          "retained_support": "KEEPER separates memory auxiliary objectives and reports an incorrect claim persisting despite correction in one baseline trajectory. The harness source concerns portable versioned orchestration, not a second memory-error experiment.",
+          "missing_information": "Exact update algorithm, error prevalence, replication and longitudinal calibration are unavailable. Do not generalise a single trajectory or treat harness scores as memory measurements.",
+          "limitation_origins": [
+            "corpus",
+            "selection",
+            "available_text"
+          ]
+        },
+        {
+          "part_id": "p3",
+          "answerability": "answerable",
+          "expected_behavior": "answer",
+          "retained_support": "The retained scope and absent details above permit identifying bounded evidence gaps, without supplying missing findings.",
+          "missing_information": "Exact update algorithm, error prevalence, replication and longitudinal calibration are unavailable. Do not generalise a single trajectory or treat harness scores as memory measurements.",
+          "limitation_origins": [
+            "corpus",
+            "selection",
+            "available_text"
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "campaign-eval-research-retrieval",
+      "parts": [
+        {
+          "part_id": "p1",
+          "answerability": "insufficient",
+          "expected_behavior": "comparison_only_abstention",
+          "retained_support": "The MTRAG/RETECO and SciFact-poisoning abstracts separately describe retrieval sufficiency and one-model evidence-majority sensitivity.",
+          "missing_information": "No shared task, model, metric, baseline or relevance judgments permit a comparative performance conclusion. Keep source notes independent and the requested comparison unanswered.",
+          "limitation_origins": [
+            "corpus",
+            "ranking",
+            "selection",
+            "available_text"
+          ]
+        },
+        {
+          "part_id": "p2",
+          "answerability": "partially_answerable",
+          "expected_behavior": "bounded_partial_answer",
+          "retained_support": "The MTRAG/RETECO and SciFact-poisoning abstracts separately describe retrieval sufficiency and one-model evidence-majority sensitivity.",
+          "missing_information": "No shared task, model, metric, baseline or relevance judgments permit a comparative performance conclusion. Keep source notes independent and the requested comparison unanswered.",
+          "limitation_origins": [
+            "corpus",
+            "ranking",
+            "selection",
+            "available_text"
+          ]
+        },
+        {
+          "part_id": "p3",
+          "answerability": "answerable",
+          "expected_behavior": "answer",
+          "retained_support": "The retained scope and absent details above permit identifying bounded evidence gaps, without supplying missing findings.",
+          "missing_information": "No shared task, model, metric, baseline or relevance judgments permit a comparative performance conclusion. Keep source notes independent and the requested comparison unanswered.",
+          "limitation_origins": [
+            "corpus",
+            "ranking",
+            "selection",
+            "available_text"
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "campaign-eval-research-verification",
+      "parts": [
+        {
+          "part_id": "p1",
+          "answerability": "partially_answerable",
+          "expected_behavior": "bounded_partial_answer",
+          "retained_support": "The personalization and SciFact abstracts describe bounded calibration or failure risks. SciFact uses 200 questions, Gemma3-12B and unequal clean/poisoned evidence; the other measures personalization strategies.",
+          "missing_information": "Neither establishes a trustworthy general factual checker, calibrated abstention, or verifier precision/recall. Strategy calibration is not factual-verification accuracy.",
+          "limitation_origins": [
+            "corpus",
+            "ranking",
+            "selection",
+            "available_text"
+          ]
+        },
+        {
+          "part_id": "p2",
+          "answerability": "partially_answerable",
+          "expected_behavior": "bounded_partial_answer",
+          "retained_support": "The personalization and SciFact abstracts describe bounded calibration or failure risks. SciFact uses 200 questions, Gemma3-12B and unequal clean/poisoned evidence; the other measures personalization strategies.",
+          "missing_information": "Neither establishes a trustworthy general factual checker, calibrated abstention, or verifier precision/recall. Strategy calibration is not factual-verification accuracy.",
+          "limitation_origins": [
+            "corpus",
+            "ranking",
+            "selection",
+            "available_text"
+          ]
+        },
+        {
+          "part_id": "p3",
+          "answerability": "answerable",
+          "expected_behavior": "answer",
+          "retained_support": "The retained scope and absent details above permit identifying bounded evidence gaps, without supplying missing findings.",
+          "missing_information": "Neither establishes a trustworthy general factual checker, calibrated abstention, or verifier precision/recall. Strategy calibration is not factual-verification accuracy.",
+          "limitation_origins": [
+            "corpus",
+            "ranking",
+            "selection",
+            "available_text"
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "campaign-eval-research-insufficient",
+      "parts": [
+        {
+          "part_id": "p1",
+          "answerability": "insufficient",
+          "expected_behavior": "full_application_abstention",
+          "retained_support": "Neither web-agent safety predictions nor a fairness protocol supplies evidence for the unspecified physical vehicle.",
+          "missing_information": "Vehicle/configuration, operating envelope, safety objectives and validation evidence are missing. All parts require full application abstention with no claims or source-note sections.",
+          "limitation_origins": [
+            "application_context",
+            "corpus",
+            "ranking",
+            "selection",
+            "available_text"
+          ]
+        },
+        {
+          "part_id": "p2",
+          "answerability": "insufficient",
+          "expected_behavior": "full_application_abstention",
+          "retained_support": "Neither web-agent safety predictions nor a fairness protocol supplies evidence for the unspecified physical vehicle.",
+          "missing_information": "Vehicle/configuration, operating envelope, safety objectives and validation evidence are missing. All parts require full application abstention with no claims or source-note sections.",
+          "limitation_origins": [
+            "application_context",
+            "corpus",
+            "ranking",
+            "selection",
+            "available_text"
+          ]
+        },
+        {
+          "part_id": "p3",
+          "answerability": "insufficient",
+          "expected_behavior": "full_application_abstention",
+          "retained_support": "Ask for the explicitly missing application context; no factual source notes.",
+          "missing_information": "Vehicle/configuration, operating envelope, safety objectives and validation evidence are missing. All parts require full application abstention with no claims or source-note sections.",
+          "limitation_origins": [
+            "application_context",
+            "corpus",
+            "ranking",
+            "selection",
+            "available_text"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -188,6 +188,8 @@ def code_bindings() -> dict[str, str]:
         "d5_campaign_operator.py",
         "d5_campaign.py",
         "d5_campaign_report.py",
+        "d5_report_binding.py",
+        "d5_answerability.py",
         "migrations/018_d5_campaign_extension.sql",
         "d5_coverage_replay.py",
         "d5_operations.py",
@@ -225,6 +227,7 @@ def code_bindings() -> dict[str, str]:
     ]
     paths = [root / "src/workspace" / name for name in names]
     paths += [
+        root / "planning/15-evaluation-audit-and-recovery/reference/answerability-v1.json",
         root / "web/components/workspace/QualificationResult.tsx",
         root / "web/components/workspace/ScoredSections.tsx",
         root / "web/components/workspace/AssistancePanel.tsx",

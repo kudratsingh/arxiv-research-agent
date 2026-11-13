@@ -85,20 +85,29 @@ def runtime(store, monkeypatch, clock, transport, *, sealed=True):
     original = d.prepare_input
     with monkeypatch.context() as setup_patch:
         if sealed:
-            setup_patch.setattr(d, "prepare_input", lambda *a, **kw: original(*a, **kw, operation_deadlines=deadlines.POLICY))
+            setup_patch.setattr(
+                d,
+                "prepare_input",
+                lambda *a, **kw: original(*a, **kw, operation_deadlines=deadlines.POLICY),
+            )
         adapter, inputs = support.runtime(store, NORMAL, transport)
     job = adapter.start(inputs.settings["d5_request_id"])
     transport.adapter, transport.job = adapter, job["id"]
     with store.pool.connection() as conn:
-        data = conn.execute("SELECT data FROM workspace_generation_jobs WHERE id=%s", (job["id"],)).fetchone()[0]
+        data = conn.execute(
+            "SELECT data FROM workspace_generation_jobs WHERE id=%s", (job["id"],)
+        ).fetchone()[0]
     clock.base = datetime.fromisoformat(data["created_at"])
     monkeypatch.setattr(deadlines, "now", clock.now)
     monkeypatch.setattr(provider.asyncio, "timeout", clock.timeout)
+    monkeypatch.setattr(provider, "monotonic", lambda: clock.seconds)
     return adapter, inputs, job["id"]
 
 
 @pytest.mark.parametrize("sealed", [False, True])
-async def test_valid_checker_after31_virtual_seconds_legacy_refuses_new_completes(store, monkeypatch, sealed):
+async def test_valid_checker_after31_virtual_seconds_legacy_refuses_new_completes(
+    store, monkeypatch, sealed
+):
     clock = Clock()
     transport = Delayed(clock)
     adapter, _, job = runtime(store, monkeypatch, clock, transport, sealed=sealed)
@@ -109,6 +118,10 @@ async def test_valid_checker_after31_virtual_seconds_legacy_refuses_new_complete
         assert transport.timeouts == [30, 30, 30, 120]
         assert len(result["contacts"]) == 4
         assert result["contacts"][-1]["timeout_seconds"] == 120
+        timings = result["contacts"][-1]["timing"]["events"]
+        assert [e["event"] for e in timings] == ["dispatch", "first_body_byte", "full_body"]
+        assert [e["elapsed_seconds"] for e in timings] == [0, 31, 31]
+        assert all(datetime.fromisoformat(e["utc"]).tzinfo for e in timings)
         assert adapter.start(adapter.inputs.settings["d5_request_id"])["state"] == "ready"
         assert len(transport.attempts) == 4
     else:
@@ -118,7 +131,9 @@ async def test_valid_checker_after31_virtual_seconds_legacy_refuses_new_complete
         assert transport.timeouts == [30, 30, 30, 30]
 
 
-async def test_new_timeout_after121_virtual_seconds_retains_uncertainty_and_no_replay(store, monkeypatch):
+async def test_new_timeout_after121_virtual_seconds_retains_uncertainty_and_no_replay(
+    store, monkeypatch
+):
     clock = Clock()
     transport = Delayed(clock, delay=121)
     adapter, inputs, job = runtime(store, monkeypatch, clock, transport)
@@ -127,10 +142,18 @@ async def test_new_timeout_after121_virtual_seconds_retains_uncertainty_and_no_r
         await adapter.advance(job)
     result = adapter.snapshot(job)
     assert result["state"] == "uncertain" and result["result"] is None
-    assert result["contacts"][-1]["state"] == "dispatching" and "response" not in result["contacts"][-1]
+    assert (
+        result["contacts"][-1]["state"] == "dispatching"
+        and "response" not in result["contacts"][-1]
+    )
     assert len(transport.attempts) == 4
+    timings = result["contacts"][-1]["timing"]["events"]
+    assert [e["event"] for e in timings] == ["dispatch", "timeout"]
+    assert timings[-1]["elapsed_seconds"] == 121
     with store.pool.connection() as conn:
-        held = conn.execute("SELECT unknown FROM workspace_spend_reservations WHERE job_id=%s", (job,)).fetchone()[0]
+        held = conn.execute(
+            "SELECT unknown FROM workspace_spend_reservations WHERE job_id=%s", (job,)
+        ).fetchone()[0]
     assert held == Decimal("0.45")
     restarted = d.D5Adapter(store, "d5-run", inputs, transport=httpx.MockTransport(transport))
     with pytest.raises(AdmissionError):
@@ -141,7 +164,12 @@ async def test_new_timeout_after121_virtual_seconds_retains_uncertainty_and_no_r
         restarted.start("alternate-id")
     assert len(transport.attempts) == 4
     with store.pool.connection() as conn:
-        assert conn.execute("SELECT unknown FROM workspace_spend_reservations WHERE job_id=%s", (job,)).fetchone()[0] == held
+        assert (
+            conn.execute(
+                "SELECT unknown FROM workspace_spend_reservations WHERE job_id=%s", (job,)
+            ).fetchone()[0]
+            == held
+        )
 
 
 @pytest.mark.parametrize("fault", ["cancel", "restart", "expiry"])
