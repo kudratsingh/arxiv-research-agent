@@ -219,7 +219,15 @@ jobs:
     # safety/simulation could report. Keep every selection, coverage input,
     # floor, install bound and 60-second per-test timeout. Five additional
     # aggregate minutes let the remaining tiers finish with bounded margin.
-    timeout-minutes: 35
+    # Run 43382685582 reached 99% of 7,260 selected cases with no logged
+    # test failure, then the 35-minute job bound cancelled coverage at
+    # 07:36:17Z (unit/integration began 07:02:47Z). The new production
+    # report-binding regression itself passed. The downstream E2E, complete
+    # 14-job mock campaign, safety and simulation steps still need to run.
+    # Give the full sequential gate ten bounded aggregate minutes of margin;
+    # preserve every selection, coverage input/floor, per-step network bound
+    # and 60-second per-test ceiling. No provider/workflow deadline changes.
+    timeout-minutes: 45
     env:
       # Never a real key, in a job that now runs the e2e tier and the
       # adversarial safety suite as well as the unit and integration

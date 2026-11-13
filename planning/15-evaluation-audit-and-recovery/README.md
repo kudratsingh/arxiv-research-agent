@@ -12,7 +12,9 @@ The investigation found real correctness defects, including a stale-check report
 4. [Coding agent starting message](04-coding-agent-start.md) is the copyable instruction for the next offline implementation batch.
 
 Implementation progress and prospective successor: [STATUS](STATUS.md). The
-original audit snapshot below remains historical.
+original audit snapshot below remains historical. Read the
+[independent review and wording clarifications](INDEPENDENT-REVIEW.md) alongside
+the frozen verification record.
 
 ## Current decision
 

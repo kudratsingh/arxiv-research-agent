@@ -122,3 +122,21 @@ and [one approval request](evidence/consolidated-campaign-v13/APPROVAL-REQUEST.m
 [Verification](evidence/consolidated-campaign-v13/VERIFICATION.md) distinguishes
 application/source, package publication, local gates and exact-head CI. The final
 read-only ledger census remains identical by canonical snapshot digest; no live extension exists.
+
+## CI recovery after first publication
+
+Publication6ffd54e8 received8/9success; Python was cancelled at its35-minute
+aggregate bound while still passing through99%. It is not green.
+[Measured correction](CI-RECOVERY.md) raises only that aggregate bound to45;
+all tests, inputs, floors and step/provider bounds remain unchanged. The same
+packet/source bindings remain valid. A fresh full pre-push coverage run and
+exact-head CI are required for the follow-up publication; outcomes are retained
+separately from the cancelled run.
+
+Independent Terra High [reading addendum](INDEPENDENT-REVIEW.md): all21 listed
+package hashes and24 request/evidence bindings matched, approval flags false,
+links resolved, no concrete packet/scoring defect demonstrated. Read its wording
+clarifications before approval: origin tags are proposed categories, not proven
+extraction failures; preservation verified zero NEW copies, not zero existing
+duplicates; cancelled coverage reached99%, never completed. Frozen files remain
+unchanged, with the addendum kept separately.
