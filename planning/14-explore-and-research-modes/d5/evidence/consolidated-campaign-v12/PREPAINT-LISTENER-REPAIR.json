@@ -1,0 +1,43 @@
+{
+  "qualification_application": "587492d55105914f69524aa32979988508e83c3b",
+  "packet_digest": "fe3d1d63f0886f1d7d3b48153f2fb696fbd3938b34c0328050ad31d407572afa",
+  "code_bindings_match": true,
+  "adapter_bindings_match": true,
+  "code_binding_digest": "7a5f1f1fc8c7dd0f7911c86522982235e2a67be30d8257e81ae969e009377dd5",
+  "adapter_binding_digest": "5bb9532bdb96ce6672f285db0ff9ff8728f73f23acd2d681d01625bb9931ce69",
+  "repair_files": {
+    "web/lib/tokens.ts": "fe4a0d53f0e0c62042cb5841f4a1319447bf737b4ceb1612ea5fed5a7c3a45b7",
+    "web/e2e/theme.spec.ts": "3b22225e4169886964ce28d27addf15956109056a916dc5465b641e39ef28b7f",
+    "web/tests/shell/themeToggle.test.tsx": "2bd8c3ed104456395ccc0427b7687c8a5e7f8496d9ef4cd39b9b242eecc293e9"
+  },
+  "scope": "Pre-paint OS listener now respects a later explicit preference; no model/schema/evidence/request/scorer change.",
+  "before": "One failed and19passed outof20 theme tests; actual shipped script reproduced overwrite.",
+  "after_frontend": {
+    "files_passed": 221,
+    "tests_passed": 4291,
+    "tests_skipped": 0,
+    "seconds": 121.56,
+    "coverage": {
+      "statements": 98.18,
+      "branches": 94.01,
+      "functions": 94.14,
+      "lines": 99.5
+    }
+  },
+  "build_conditional_tests": "Nine tests previously skipped without built artifacts now run after production build.",
+  "production_theme_browser": {
+    "passed": 14,
+    "seconds": 9.7,
+    "viewports": [
+      "1440x1000",
+      "390x844"
+    ],
+    "event_synchronized_os_changes": true
+  },
+  "lint": "pass",
+  "typecheck": "pass",
+  "production_build": "pass",
+  "unchanged_budgets": "pass",
+  "new_provider_contacts": 0,
+  "new_authority": false
+}

@@ -179,6 +179,32 @@ test.describe("WO-01 deferred proof — no theme flash before first paint", () =
     },
   );
 
+  test(
+    "an explicit choice survives subsequent OS changes after a system start",
+    { tag: "@theme" },
+    async ({ page }) => {
+      await page.emulateMedia({ colorScheme: "light" });
+      await seedPreference(page, "system");
+      await page.goto("/", { waitUntil: "domcontentloaded" });
+      await page.locator("[data-theme-toggle]").getByText("Dark", { exact: true }).click();
+      await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+
+      // Observe actual media-change dispatch, after the pre-paint listener,
+      // rather than passing before a queued OS event overwrites the choice.
+      await page.evaluate(() => {
+        window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", event => {
+          document.documentElement.setAttribute("data-test-os-theme-event", event.matches ? "dark" : "light");
+        });
+      });
+      await page.emulateMedia({ colorScheme: "dark" });
+      await expect(page.locator("html")).toHaveAttribute("data-test-os-theme-event", "dark");
+      await page.emulateMedia({ colorScheme: "light" });
+      await expect(page.locator("html")).toHaveAttribute("data-test-os-theme-event", "light");
+      await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+      await expect(page.locator("html")).toHaveAttribute("data-theme-preference", "dark");
+    },
+  );
+
   /**
    * KNOWN GAP §16, made deterministic.
    *

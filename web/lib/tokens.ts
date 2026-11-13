@@ -262,7 +262,7 @@ export const themeInitScript =
   'var p=v.indexOf(s)<0?"system":s;' +
   'var m=window.matchMedia("(prefers-color-scheme: dark)");' +
   "var d=document.documentElement;" +
-  'var a=function(){d.setAttribute(t,p==="system"?(m.matches?"dark":"light"):p);};' +
-  "a();d.setAttribute(q,p);" +
+  'var a=function(){if(d.getAttribute(q)!==p)return;d.setAttribute(t,p==="system"?(m.matches?"dark":"light"):p);};' +
+  "d.setAttribute(q,p);a();" +
   'if(p==="system"&&m.addEventListener){m.addEventListener("change",a);}' +
   "}catch(e){}})();";

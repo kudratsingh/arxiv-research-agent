@@ -13,6 +13,7 @@
 
 import { readFileSync } from "node:fs";
 import path from "node:path";
+import { runInNewContext } from "node:vm";
 import { render as testingLibraryRender } from "@testing-library/react";
 import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -154,6 +155,20 @@ describe("criterion 8 — persistence, in the form the pre-paint script reads", 
     });
     expect(document.documentElement.getAttribute(THEME_ATTRIBUTE)).toBe("dark");
     expect(readThemePreference()).toBe("dark");
+  });
+
+  it("the pre-paint OS listener also preserves an explicit choice", async () => {
+    window.localStorage.setItem(THEME_STORAGE_KEY, "system");
+    runInNewContext(themeInitScript, { window, document });
+    testingLibraryRender(<ThemeToggle />);
+    await user().click(screen.getByRole("radio", { name: THEME_CONTROL.dark }));
+
+    await act(async () => {
+      setPrefersDark(true);
+      setPrefersDark(false);
+    });
+    expect(readThemePreference()).toBe("dark");
+    expect(document.documentElement.getAttribute(THEME_ATTRIBUTE)).toBe("dark");
   });
 
   it("still applies the theme when storage throws", async () => {
