@@ -2,32 +2,65 @@
 
 ## Consolidated campaign offline preparation
 
-Branch `codex/workspace-d5-campaign-complete`, from publishedcaef4d2b. The
-[single campaign runbook](d5/CONSOLIDATED-CAMPAIGN.md) replaces the proposed
-individual A/B handoffs for this prospective sequence only. Fixed new scope:
-2 development+8 exposed-corpus evaluation workflows+4 balanced checker batches,
-14jobs/44Messages/44exact paired counts/$5.10. One proposed append-only receipt
-binds47/109/134 capacity, the exact historical uncertainty exception, and the
-whole ordered campaign. Nothing is activated by preparation.
+Application **`587492d55105914f69524aa32979988508e83c3b`**, branch
+`codex/workspace-d5-campaign-complete`, from publishedcaef4d2b. The
+[single campaign runbook](d5/CONSOLIDATED-CAMPAIGN.md),
+[exact packet/evidence](d5/evidence/consolidated-campaign-v12/VERIFICATION.md) and
+[one unexecuted approval request](d5/evidence/consolidated-campaign-v12/APPROVAL-REQUEST.md)
+replace individual future A/B handoffs for this prospective sequence only.
+Packet **`fe3d1d63f0886f1d7d3b48153f2fb696fbd3938b34c0328050ad31d407572afa`**. Fixed new scope: 2 development + 8
+exposed-corpus evaluation workflows + 4 balanced checker batches, at most
+14 jobs / 44 Messages / 44 exact paired counts / $5.10. One proposed external
+receipt binds 47/109/134 capacity, the exact historical uncertainty exception
+and the whole ordered campaign. Nothing is activated by preparation.
 
-The full production-adapter offline software gate completed14 jobs and the
-maximum44/44 repair/recheck envelope in disposable Postgres. Repeated invocation
-dispatched zero contacts. Synthetic checks/counts/usage are not provider fit or
-quality evidence; the simulated report remains HOLD and human fields stay null.
-Safety regressions, full coverage, final seal and exact-head CI are in progress;
-final results will be recorded in the new verification index before handoff.
+The full final-packet production-adapter replay completed 14 jobs and the maximum
+44/44 repair/recheck envelope in disposable Postgres over copied actual public/
+financial history. A separate control preserved failed Learn → ready comparison
+→ ready evaluation. Completed-identity replay dispatches nothing. Synthetic
+checks/counts/usage establish software behavior only: the mock report remains
+HOLD (10 generated facts against minimum20,7 unanswered primary requests),
+with all human fields null. Twenty locked probes have 10 supported and10
+unsupported machine references,10 matched pairs and6 shared passages; neither
+human qualification nor independent statistical samples are claimed.
 
-Read-only real baseline33/65/90/$1.853811 known+$0.425066 retained hold remains
-the authority. Pending/unknown overlap. Full planned exposure plus$1 buffer is
-$8.378877, so no dollar increase is needed now and no evaluation is shrunk.
-Programme expiry2026-11-14T07:24:01Z remains. Any future dollar adjustment is one
-consolidated owner decision with results and remaining batch, never implicit.
-V10 stays uncertain/stopped; v7r2's3/8 and all original results/receipts/scorers
-are preserved. No real provider/count contacts, live grant/amendment, accounting
-change or spend. Owner3137/review3178 unchanged; no PR/merge/deployment;
-everyday generation, recurrence and notifications disabled.
+Final local `make test-cov-diff`: **7148 passed, 54 skipped, 53 deselected in 1508.48s (0:25:08)**,
+**94.39% project / 96% patch**; all four package floors pass
+(api88≥86,agents96≥92,security100≥97,eval95≥91). Ruff and mypy213 pass;
+workflow E2E53 pass, research simulation20/20 at$0, registry260/0,
+documentation95 pass. CI-tracer critical commands pass4 tests, maximum call
+33.06s under the unchanged60s limit. The prior full run's rounding-boundary and
+old-schema fixture failures were reproduced and fixed without weakening any
+assertion intent, floor or tier. Exact final-head CI is a separate publication
+gate, recorded in the final handoff, Actions and local publication receipt;
+local success alone is not a remote CI claim. No frontend source was changed.
 
-## Current offline operation-deadline repair
+Read-only real baseline remains **33 programme jobs / 65 Messages / 90 counts /
+$1.853811 known estimated + one $0.425066 retained hold**. Pending/unknown overlap;
+all287 original files and the original full public/financial/scopes/grants
+snapshot match their before hashes. Full planned exposure plus the existing$1
+buffer is$8.378877, so no dollar increase or evaluation reduction is proposed.
+The complete next-batch reservation is enforced; if it approaches$10, request
+one consolidated owner decision with results and remaining maximum work/cost.
+Programme expiry2026-11-14T07:24:01Z is unchanged.
+
+Owner retention correction: the active checkout is permanently located at
+`~/Machine-Learning-Projects/arxiv-workspaces/workspace-d5-campaign-complete`.
+The private canonical rulebook now forbids evidence deletion and public root
+AGENTS/CLAUDE/README link to it.287 referenced files and28,222 broader evidence
+files have hash-verified permanent copies outside temporary storage; the ledger
+has a read-only backup. No originals deleted. Runtime hashes and the exact packet
+are unchanged after relocation. The reported284-file deletion queue itself is
+unverified pending its source/list. [Retention receipt](d5/evidence/consolidated-campaign-v12/PERMANENT-RETENTION.json).
+
+V10 remains uncertain/stopped, its result unavailable and full hold retained.
+V7r2's3/8 and all original results/receipts/scorers remain separate. No real
+provider/count contacts, live grants/amendments, hold/accounting changes or new
+spend. Owner3137/review3178 unchanged; no PR,merge or deployment; everyday
+generation,recurrence and notifications disabled. Human qualification remains
+out of scope. The final package asks for one bounded campaign approval only.
+
+## Historical offline operation-deadline repair
 
 Application **`92c5a9eafa81bbaa279a5b44312f1519a1bd522c`**, isolated branch
 `codex/workspace-d5-operation-deadlines`, from publicatione046fba8.
@@ -69,7 +102,7 @@ prior-head CI is not evidence for this revision. Owner3137/review3178 unchanged,
 human qualification out of scope, everyday generation/recurrence/notifications
 disabled. No PR, merge or deployment.
 
-## Current coverage-authority v10 offline successor
+## Historical coverage-authority v10 offline successor
 
 Application **`3c94e566228e6dc536518887e93c41d8832f8478`**, isolated branch
 `codex/workspace-d5-coverage-authority`. [Contract and exact commands](d5/COVERAGE-AUTHORITY.md),

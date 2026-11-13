@@ -1,6 +1,23 @@
 # Explore & Learn and Research
 
-Current offline revision: [sealed operation deadlines](d5/OPERATION-DEADLINES.md),
+Current offline revision: [one consolidated machine-only campaign](d5/CONSOLIDATED-CAMPAIGN.md),
+[sealed packet and verification](d5/evidence/consolidated-campaign-v12/VERIFICATION.md),
+[single unexecuted approval request](d5/evidence/consolidated-campaign-v12/APPROVAL-REQUEST.md).
+Application `587492d55105914f69524aa32979988508e83c3b`; packet
+`fe3d1d63f0886f1d7d3b48153f2fb696fbd3938b34c0328050ad31d407572afa`.
+The proposed fixed sequence is 2 development workflows, 8 exposed-corpus
+evaluation workflows and 4 balanced checker batches: at most 14 new jobs,
+44 Messages, 44 automatic exact paired counts and $5.10. One proposed external
+receipt binds capacity 47/109/134, the unchanged $10 ceiling and a narrow
+historical-uncertainty admission exception that preserves the full hold.
+No live activation or provider/count contact. The real ledger remains
+33 programme jobs / 65 Messages / 90 counts / $1.853811 known estimated plus
+one overlapping $0.425066 pending/unknown hold. Everyday generation, recurrence,
+notifications and human qualification remain disabled/out of scope. The complete
+batch plus the existing $1 buffer fits within $10; no dollar increase or scope
+reduction is proposed. Exact-head CI is separate from local verification.
+
+Historical offline revision: [sealed operation deadlines](d5/OPERATION-DEADLINES.md),
 [uncertainty-resolution plan](d5/UNCERTAINTY-RESOLUTION.md), and
 [blocked one-case proposal](d5/OPERATION-DEADLINES-PROPOSAL.md).
 Application`92c5a9eafa81bbaa279a5b44312f1519a1bd522c`; proposed Opus checks/rechecks120s,

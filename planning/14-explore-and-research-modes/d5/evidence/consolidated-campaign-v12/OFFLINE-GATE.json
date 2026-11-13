@@ -1,0 +1,20 @@
+{
+  "application_commit": "587492d55105914f69524aa32979988508e83c3b",
+  "review_packet_digest": "fe3d1d63f0886f1d7d3b48153f2fb696fbd3938b34c0328050ad31d407572afa",
+  "basis": "Separate synthetic-ledger software gate with the same code/public inputs; not provider or quality evidence",
+  "gate": {
+    "passed": true,
+    "maximal_repair_envelope": true,
+    "jobs": 14,
+    "messages": 44,
+    "paired_counts": 44,
+    "cumulative_jobs": 47,
+    "cumulative_messages": 109,
+    "cumulative_counts": 134,
+    "historical_hold_retained": "0.425066",
+    "repeat_dispatches": 0,
+    "real_provider_contacts": 0,
+    "human_qualification": false,
+    "elapsed_seconds": 86.11135441705119
+  }
+}

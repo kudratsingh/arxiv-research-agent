@@ -1,0 +1,407 @@
+{
+  "basis": "Codex-authored proposed machine references, not human gold",
+  "locked_digest": "42b27808a65e473452782f7aafce53dbf9bf0730f6dcfe67ea50d06b90015820",
+  "references": {
+    "p67993bf7fbbb3c13e3": {
+      "reference": "supported",
+      "basis": "Machine-authored frozen reference; not human gold",
+      "matched_pair": "pair-1",
+      "claim_digest": "235074d4eb21e0b8bcf33ff8b1870c955cb35ae82d8cd5dfd582cf7897de736f",
+      "evidence": {
+        "material_id": "mat-54f2f6e0645f499458d5030d06e35a59",
+        "span_id": "span-3fd278aadaa92873179ed21c075ab368",
+        "work_id": "arxiv:2610.41482",
+        "version_id": "arxiv:2610.41482:v1:metadata-e5c832a06d88973f",
+        "source_hash": "sha256:2b307ec864315d90d5e828786c2505fff1feda8837559b7e8601961ea9717759",
+        "scope": "abstract",
+        "parser_revision": "workspace-plain-text-v1",
+        "page": null,
+        "start": 0,
+        "end": 875,
+        "quote": "Recursive textual memory can carry earlier errors into later updates, yet task performance alone does not establish memory reliability. We define self-consistency bias as the persistence of incorrect claims already present in the incoming memory. We present KEEPER, a comparative analysis of four auxiliary objectives along information-content and update-sensitivity axes within a shared recursive interface, examining how supervision targets relate to agent performance. Among evaluated conditions, reward-related prediction achieve the highest task performance before and after offline reinforcement learning, outperforming joint supervision. A claim-level analysis of one baseline trajectory documents error persistence despite corrective observations. Together, these analyses motivate evaluating error persistence and valid-information retention alongside task outcomes."
+      },
+      "text": "In the KEEPER abstract, self-consistency bias is defined as persistence of incorrect claims already present in incoming memory."
+    },
+    "pffecbcf8bfbdc5dfcd": {
+      "reference": "unsupported",
+      "basis": "Machine-authored frozen reference; not human gold",
+      "matched_pair": "pair-1",
+      "claim_digest": "cf05147183cc25aaf7d3081369f7fb605ab8b9121940dab64582f2422a15ff06",
+      "evidence": {
+        "material_id": "mat-54f2f6e0645f499458d5030d06e35a59",
+        "span_id": "span-3fd278aadaa92873179ed21c075ab368",
+        "work_id": "arxiv:2610.41482",
+        "version_id": "arxiv:2610.41482:v1:metadata-e5c832a06d88973f",
+        "source_hash": "sha256:2b307ec864315d90d5e828786c2505fff1feda8837559b7e8601961ea9717759",
+        "scope": "abstract",
+        "parser_revision": "workspace-plain-text-v1",
+        "page": null,
+        "start": 0,
+        "end": 875,
+        "quote": "Recursive textual memory can carry earlier errors into later updates, yet task performance alone does not establish memory reliability. We define self-consistency bias as the persistence of incorrect claims already present in the incoming memory. We present KEEPER, a comparative analysis of four auxiliary objectives along information-content and update-sensitivity axes within a shared recursive interface, examining how supervision targets relate to agent performance. Among evaluated conditions, reward-related prediction achieve the highest task performance before and after offline reinforcement learning, outperforming joint supervision. A claim-level analysis of one baseline trajectory documents error persistence despite corrective observations. Together, these analyses motivate evaluating error persistence and valid-information retention alongside task outcomes."
+      },
+      "text": "The KEEPER abstract defines self-consistency bias as retention of correct claims newly introduced by corrective observations."
+    },
+    "p397af6519ccb7d0544": {
+      "reference": "supported",
+      "basis": "Machine-authored frozen reference; not human gold",
+      "matched_pair": "pair-2",
+      "claim_digest": "8aae0586a2827540d361ed7840620bfecaaf9ed45e284028b8f35548fb1a0371",
+      "evidence": {
+        "material_id": "mat-c35118081c1369f460cb4c41adbc185a",
+        "span_id": "span-163cc35fb95515cc133e7405c86ba94a",
+        "work_id": "arxiv:2610.40893",
+        "version_id": "arxiv:2610.40893:v1:metadata-018e69b4ec3841a0",
+        "source_hash": "sha256:1122e718e19513fe95c3c094c5f12f18ff207bac442405d2fcc7098cfe8b54e2",
+        "scope": "abstract",
+        "parser_revision": "workspace-plain-text-v1",
+        "page": null,
+        "start": 1404,
+        "end": 1910,
+        "quote": "The defect patterns it exposed (evaluation criteria leaking into prompts, token-level swaps that break Arabic agreement, epistemically unbalanced pairs, single-theme refusal probes, unwritten dialect twins counted as coverage) are, we argue, general hazards of counterfactual fairness benchmarks. This is a protocol paper, not a results paper: no model has been evaluated, and the accompanying pre-registration commits the hypotheses, metrics, exclusion rules, and analysis plan that the pilot will follow."
+      },
+      "text": "The selected fairness-benchmark abstract describes a protocol paper in which no model has yet been evaluated."
+    },
+    "pec3f5d4a92bbb1dd1d": {
+      "reference": "unsupported",
+      "basis": "Machine-authored frozen reference; not human gold",
+      "matched_pair": "pair-2",
+      "claim_digest": "ab3423486c16d7ada9ef7ba2bf9d4cc5e7acbfd6e8d175fd1ccffdfd87f54fd2",
+      "evidence": {
+        "material_id": "mat-c35118081c1369f460cb4c41adbc185a",
+        "span_id": "span-163cc35fb95515cc133e7405c86ba94a",
+        "work_id": "arxiv:2610.40893",
+        "version_id": "arxiv:2610.40893:v1:metadata-018e69b4ec3841a0",
+        "source_hash": "sha256:1122e718e19513fe95c3c094c5f12f18ff207bac442405d2fcc7098cfe8b54e2",
+        "scope": "abstract",
+        "parser_revision": "workspace-plain-text-v1",
+        "page": null,
+        "start": 1404,
+        "end": 1910,
+        "quote": "The defect patterns it exposed (evaluation criteria leaking into prompts, token-level swaps that break Arabic agreement, epistemically unbalanced pairs, single-theme refusal probes, unwritten dialect twins counted as coverage) are, we argue, general hazards of counterfactual fairness benchmarks. This is a protocol paper, not a results paper: no model has been evaluated, and the accompanying pre-registration commits the hypotheses, metrics, exclusion rules, and analysis plan that the pilot will follow."
+      },
+      "text": "The selected fairness-benchmark abstract reports completed model evaluations and measured fairness results."
+    },
+    "p6e4ca96cbd61328d32": {
+      "reference": "supported",
+      "basis": "Machine-authored frozen reference; not human gold",
+      "matched_pair": "pair-3",
+      "claim_digest": "a17b898d95e40d47f2e6a7901f20817441ba95962e714d21442d001b818934a7",
+      "evidence": {
+        "material_id": "mat-f21ad4e80c44211991e82a95f45998cd",
+        "span_id": "span-1942c09355c6070032a062a1b97f487f",
+        "work_id": "arxiv:2610.41025",
+        "version_id": "arxiv:2610.41025:v1:metadata-1aa9801b0aa16243",
+        "source_hash": "sha256:eac921aee1ab954efb0214424bb246ecbd9672cc5e59b0fb138db644a1cf3de3",
+        "scope": "abstract",
+        "parser_revision": "workspace-plain-text-v1",
+        "page": null,
+        "start": 1462,
+        "end": 1906,
+        "quote": "On 87 runs, the two best live supervisors are statistically tied and one of them is a small open-weight model (DeepSeek V4.1 Flash); the supervisor that is among the best post-hoc diagnosers (GPT-6.1 Sol) is the weakest live one (-14.5 points on the same runs, p = 0.002), so post-hoc diagnostic performance can be a poor proxy for live oversight. The environment and the evaluation code are released at https://github.com/jeremy1392/RCAreplay."
+      },
+      "text": "On the 87 runs reported in the selected oversight abstract, the two best live supervisors are statistically tied."
+    },
+    "p47e152c37928b63194": {
+      "reference": "unsupported",
+      "basis": "Machine-authored frozen reference; not human gold",
+      "matched_pair": "pair-3",
+      "claim_digest": "40b75d503c47b59df18718ff7d97b11bb9f214191e267e9301f7a1b833cf9cbb",
+      "evidence": {
+        "material_id": "mat-f21ad4e80c44211991e82a95f45998cd",
+        "span_id": "span-1942c09355c6070032a062a1b97f487f",
+        "work_id": "arxiv:2610.41025",
+        "version_id": "arxiv:2610.41025:v1:metadata-1aa9801b0aa16243",
+        "source_hash": "sha256:eac921aee1ab954efb0214424bb246ecbd9672cc5e59b0fb138db644a1cf3de3",
+        "scope": "abstract",
+        "parser_revision": "workspace-plain-text-v1",
+        "page": null,
+        "start": 1462,
+        "end": 1906,
+        "quote": "On 87 runs, the two best live supervisors are statistically tied and one of them is a small open-weight model (DeepSeek V4.1 Flash); the supervisor that is among the best post-hoc diagnosers (GPT-6.1 Sol) is the weakest live one (-14.5 points on the same runs, p = 0.002), so post-hoc diagnostic performance can be a poor proxy for live oversight. The environment and the evaluation code are released at https://github.com/jeremy1392/RCAreplay."
+      },
+      "text": "On the 87 reported runs, the selected oversight abstract establishes a statistically significant unique winner among the two best live supervisors."
+    },
+    "pa52f0600f0944ce3d6": {
+      "reference": "supported",
+      "basis": "Machine-authored frozen reference; not human gold",
+      "matched_pair": "pair-4",
+      "claim_digest": "4c1e64c086e51db47da303423fb20f1bba0f3e0845d9a633aefdc4366d774d35",
+      "evidence": {
+        "material_id": "mat-f215cad7235629deacb40965a6cc68c5",
+        "span_id": "span-3796f5b460ad2a613da39b1c12a2630d",
+        "work_id": "arxiv:2610.40758",
+        "version_id": "arxiv:2610.40758:v1:metadata-96148d2d4e4a4093",
+        "source_hash": "sha256:cd9e14f99e31776e9ccf7e02900f0e8ef3f79b98abff32889ab815dc1254c5d8",
+        "scope": "abstract",
+        "parser_revision": "workspace-plain-text-v1",
+        "page": null,
+        "start": 1544,
+        "end": 1863,
+        "quote": "With the stronger GPT-6-Sol, ACE and Dynamic Cheatsheet learn from feedback alone. They reach 78% accuracy and solve 59-60% of the single cells, against 53% and 8% with the certifying model, and they surpass the raw history. CLR-Bench therefore measures how well an agent learns, and this ability differs across models."
+      },
+      "text": "In the selected CLR-Bench excerpt, ACE and Dynamic Cheatsheet learn from feedback alone with the stronger GPT-6-Sol model."
+    },
+    "p978f07cd3f82b2a790": {
+      "reference": "unsupported",
+      "basis": "Machine-authored frozen reference; not human gold",
+      "matched_pair": "pair-4",
+      "claim_digest": "8288fde629824d6eaa413cb77da6643694d60ff9d51a419b05fcfecb3d73a59b",
+      "evidence": {
+        "material_id": "mat-f215cad7235629deacb40965a6cc68c5",
+        "span_id": "span-3796f5b460ad2a613da39b1c12a2630d",
+        "work_id": "arxiv:2610.40758",
+        "version_id": "arxiv:2610.40758:v1:metadata-96148d2d4e4a4093",
+        "source_hash": "sha256:cd9e14f99e31776e9ccf7e02900f0e8ef3f79b98abff32889ab815dc1254c5d8",
+        "scope": "abstract",
+        "parser_revision": "workspace-plain-text-v1",
+        "page": null,
+        "start": 1544,
+        "end": 1863,
+        "quote": "With the stronger GPT-6-Sol, ACE and Dynamic Cheatsheet learn from feedback alone. They reach 78% accuracy and solve 59-60% of the single cells, against 53% and 8% with the certifying model, and they surpass the raw history. CLR-Bench therefore measures how well an agent learns, and this ability differs across models."
+      },
+      "text": "In the selected CLR-Bench excerpt, ACE and Dynamic Cheatsheet cannot learn from feedback alone with the stronger GPT-6-Sol model."
+    },
+    "p516e97b12aba141558": {
+      "reference": "supported",
+      "basis": "Machine-authored frozen reference; not human gold",
+      "matched_pair": "pair-5",
+      "claim_digest": "4f4f413cab9719ba4bb1b4b5cfd61f6f0962c52c1dda58a739d8d4daec99227e",
+      "evidence": {
+        "material_id": "mat-7c5d45b31f4da5928986ff0ad3193693",
+        "span_id": "span-26b832a8767bae8d976ae5f81f0789a6",
+        "work_id": "arxiv:2610.40959",
+        "version_id": "arxiv:2610.40959:v1:metadata-a78f18ab927d7ec9",
+        "source_hash": "sha256:b513e6d6bbd259d5abd3a746d635ae6fc9bea669b45b8c639f7dd222918183c5",
+        "scope": "abstract",
+        "parser_revision": "workspace-plain-text-v1",
+        "page": null,
+        "start": 1373,
+        "end": 1861,
+        "quote": "Cost-effective state-of-the-art (SOTA) LLMs relevant to personal agents achieve below 60% accuracy on temporal tracking, higher-level pattern inference, and constraint-aware action-boundary decisions, with fewer than 10% of test cases answered correctly across all three repeated runs. Even a high-performing SOTA model remains inconsistent on these capabilities. P-ContextBench provides measurable targets for improving the accuracy, reliability, and safety of LLM-based personal agents."
+      },
+      "text": "For the cost-effective SOTA LLMs evaluated in the selected P-ContextBench abstract, temporal-tracking accuracy is below 60%."
+    },
+    "pd6224074e8d3c1ec9c": {
+      "reference": "unsupported",
+      "basis": "Machine-authored frozen reference; not human gold",
+      "matched_pair": "pair-5",
+      "claim_digest": "9537a9888857adc46a2ba90a811b58fe30d9dd5472c19e5ffd9f23cae216e288",
+      "evidence": {
+        "material_id": "mat-7c5d45b31f4da5928986ff0ad3193693",
+        "span_id": "span-26b832a8767bae8d976ae5f81f0789a6",
+        "work_id": "arxiv:2610.40959",
+        "version_id": "arxiv:2610.40959:v1:metadata-a78f18ab927d7ec9",
+        "source_hash": "sha256:b513e6d6bbd259d5abd3a746d635ae6fc9bea669b45b8c639f7dd222918183c5",
+        "scope": "abstract",
+        "parser_revision": "workspace-plain-text-v1",
+        "page": null,
+        "start": 1373,
+        "end": 1861,
+        "quote": "Cost-effective state-of-the-art (SOTA) LLMs relevant to personal agents achieve below 60% accuracy on temporal tracking, higher-level pattern inference, and constraint-aware action-boundary decisions, with fewer than 10% of test cases answered correctly across all three repeated runs. Even a high-performing SOTA model remains inconsistent on these capabilities. P-ContextBench provides measurable targets for improving the accuracy, reliability, and safety of LLM-based personal agents."
+      },
+      "text": "For the cost-effective SOTA LLMs evaluated in the selected P-ContextBench abstract, temporal-tracking accuracy is at least 90%."
+    },
+    "p12127e8edb5ce9c445": {
+      "reference": "supported",
+      "basis": "Machine-authored frozen reference; not human gold",
+      "matched_pair": "pair-6",
+      "claim_digest": "223516272b6b5d90fded42d0c3af2b37bb19303c2eec6800bf526f88f7f6aeaa",
+      "evidence": {
+        "material_id": "mat-48780ffb91b68f22cf607c5650336baf",
+        "span_id": "span-19ad83096299f09c1ada7a49ddd9bce9",
+        "work_id": "arxiv:2610.40871",
+        "version_id": "arxiv:2610.40871:v1:metadata-0be4ee69b6741057",
+        "source_hash": "sha256:0a0d6c2b721f9e82465d91ea96cec77e8245c6cccbe44e194b19a14db5f36be0",
+        "scope": "abstract",
+        "parser_revision": "workspace-plain-text-v1",
+        "page": null,
+        "start": 1429,
+        "end": 1866,
+        "quote": "This design effectively integrates spatial information into the state space and the tensor core, substantially advancing the state adaptability and enhancing the expressiveness of the data compression. Extensive experiments demonstrate that TensorSSM achieves significantly high reconstruction accuracy and storage efficiency, exhibiting robust expressiveness across diverse tensor datasets without relying on strict spatial assumptions."
+      },
+      "text": "The selected TensorSSM abstract reports experiments across diverse tensor datasets without relying on strict spatial assumptions."
+    },
+    "p535b831e7b236ed6c4": {
+      "reference": "unsupported",
+      "basis": "Machine-authored frozen reference; not human gold",
+      "matched_pair": "pair-6",
+      "claim_digest": "7352cb755313519d45352e906b61edafcd5152026c24c25310a0baada455649e",
+      "evidence": {
+        "material_id": "mat-48780ffb91b68f22cf607c5650336baf",
+        "span_id": "span-19ad83096299f09c1ada7a49ddd9bce9",
+        "work_id": "arxiv:2610.40871",
+        "version_id": "arxiv:2610.40871:v1:metadata-0be4ee69b6741057",
+        "source_hash": "sha256:0a0d6c2b721f9e82465d91ea96cec77e8245c6cccbe44e194b19a14db5f36be0",
+        "scope": "abstract",
+        "parser_revision": "workspace-plain-text-v1",
+        "page": null,
+        "start": 1429,
+        "end": 1866,
+        "quote": "This design effectively integrates spatial information into the state space and the tensor core, substantially advancing the state adaptability and enhancing the expressiveness of the data compression. Extensive experiments demonstrate that TensorSSM achieves significantly high reconstruction accuracy and storage efficiency, exhibiting robust expressiveness across diverse tensor datasets without relying on strict spatial assumptions."
+      },
+      "text": "The selected TensorSSM abstract says its experiments require strict spatial assumptions."
+    },
+    "p28fbef6c0cb3a0894c": {
+      "reference": "supported",
+      "basis": "Machine-authored frozen reference; not human gold",
+      "matched_pair": "pair-7",
+      "claim_digest": "8644815f1eb93eb4044ec320f97b55970b1a4ddeb7382d645297be0131f82c49",
+      "evidence": {
+        "material_id": "mat-54f2f6e0645f499458d5030d06e35a59",
+        "span_id": "span-3fd278aadaa92873179ed21c075ab368",
+        "work_id": "arxiv:2610.41482",
+        "version_id": "arxiv:2610.41482:v1:metadata-e5c832a06d88973f",
+        "source_hash": "sha256:2b307ec864315d90d5e828786c2505fff1feda8837559b7e8601961ea9717759",
+        "scope": "abstract",
+        "parser_revision": "workspace-plain-text-v1",
+        "page": null,
+        "start": 0,
+        "end": 875,
+        "quote": "Recursive textual memory can carry earlier errors into later updates, yet task performance alone does not establish memory reliability. We define self-consistency bias as the persistence of incorrect claims already present in the incoming memory. We present KEEPER, a comparative analysis of four auxiliary objectives along information-content and update-sensitivity axes within a shared recursive interface, examining how supervision targets relate to agent performance. Among evaluated conditions, reward-related prediction achieve the highest task performance before and after offline reinforcement learning, outperforming joint supervision. A claim-level analysis of one baseline trajectory documents error persistence despite corrective observations. Together, these analyses motivate evaluating error persistence and valid-information retention alongside task outcomes."
+      },
+      "text": "Among the conditions evaluated in the KEEPER abstract, reward-related prediction has the highest task performance before and after offline reinforcement learning, outperforming joint supervision."
+    },
+    "pb21e6b9c746b3e9887": {
+      "reference": "unsupported",
+      "basis": "Machine-authored frozen reference; not human gold",
+      "matched_pair": "pair-7",
+      "claim_digest": "ace37199c1eb0735b19eec5c208d4902472fcd29bc2ba7070db876b3fd0b1101",
+      "evidence": {
+        "material_id": "mat-54f2f6e0645f499458d5030d06e35a59",
+        "span_id": "span-3fd278aadaa92873179ed21c075ab368",
+        "work_id": "arxiv:2610.41482",
+        "version_id": "arxiv:2610.41482:v1:metadata-e5c832a06d88973f",
+        "source_hash": "sha256:2b307ec864315d90d5e828786c2505fff1feda8837559b7e8601961ea9717759",
+        "scope": "abstract",
+        "parser_revision": "workspace-plain-text-v1",
+        "page": null,
+        "start": 0,
+        "end": 875,
+        "quote": "Recursive textual memory can carry earlier errors into later updates, yet task performance alone does not establish memory reliability. We define self-consistency bias as the persistence of incorrect claims already present in the incoming memory. We present KEEPER, a comparative analysis of four auxiliary objectives along information-content and update-sensitivity axes within a shared recursive interface, examining how supervision targets relate to agent performance. Among evaluated conditions, reward-related prediction achieve the highest task performance before and after offline reinforcement learning, outperforming joint supervision. A claim-level analysis of one baseline trajectory documents error persistence despite corrective observations. Together, these analyses motivate evaluating error persistence and valid-information retention alongside task outcomes."
+      },
+      "text": "Among the conditions evaluated in the KEEPER abstract, joint supervision outperforms reward-related prediction both before and after offline reinforcement learning."
+    },
+    "pcb0546905ad1274ae4": {
+      "reference": "supported",
+      "basis": "Machine-authored frozen reference; not human gold",
+      "matched_pair": "pair-8",
+      "claim_digest": "6e6f0b994b3e5cacfb6106f8e36b9b5d09f74092d41b7fc97fe2a3f4c21d785d",
+      "evidence": {
+        "material_id": "mat-c35118081c1369f460cb4c41adbc185a",
+        "span_id": "span-163cc35fb95515cc133e7405c86ba94a",
+        "work_id": "arxiv:2610.40893",
+        "version_id": "arxiv:2610.40893:v1:metadata-018e69b4ec3841a0",
+        "source_hash": "sha256:1122e718e19513fe95c3c094c5f12f18ff207bac442405d2fcc7098cfe8b54e2",
+        "scope": "abstract",
+        "parser_revision": "workspace-plain-text-v1",
+        "page": null,
+        "start": 1404,
+        "end": 1910,
+        "quote": "The defect patterns it exposed (evaluation criteria leaking into prompts, token-level swaps that break Arabic agreement, epistemically unbalanced pairs, single-theme refusal probes, unwritten dialect twins counted as coverage) are, we argue, general hazards of counterfactual fairness benchmarks. This is a protocol paper, not a results paper: no model has been evaluated, and the accompanying pre-registration commits the hypotheses, metrics, exclusion rules, and analysis plan that the pilot will follow."
+      },
+      "text": "The selected fairness protocol abstract says its pre-registration commits the hypotheses, metrics, exclusion rules and analysis plan for a subsequent pilot."
+    },
+    "p5a100f7fbbbf527764": {
+      "reference": "unsupported",
+      "basis": "Machine-authored frozen reference; not human gold",
+      "matched_pair": "pair-8",
+      "claim_digest": "768238b034489fe0f5474d91fd138c6dbfc33915f8573994660a39e2f7cda23d",
+      "evidence": {
+        "material_id": "mat-c35118081c1369f460cb4c41adbc185a",
+        "span_id": "span-163cc35fb95515cc133e7405c86ba94a",
+        "work_id": "arxiv:2610.40893",
+        "version_id": "arxiv:2610.40893:v1:metadata-018e69b4ec3841a0",
+        "source_hash": "sha256:1122e718e19513fe95c3c094c5f12f18ff207bac442405d2fcc7098cfe8b54e2",
+        "scope": "abstract",
+        "parser_revision": "workspace-plain-text-v1",
+        "page": null,
+        "start": 1404,
+        "end": 1910,
+        "quote": "The defect patterns it exposed (evaluation criteria leaking into prompts, token-level swaps that break Arabic agreement, epistemically unbalanced pairs, single-theme refusal probes, unwritten dialect twins counted as coverage) are, we argue, general hazards of counterfactual fairness benchmarks. This is a protocol paper, not a results paper: no model has been evaluated, and the accompanying pre-registration commits the hypotheses, metrics, exclusion rules, and analysis plan that the pilot will follow."
+      },
+      "text": "The selected fairness protocol abstract says the pilot was completed before its hypotheses and exclusion rules were specified."
+    },
+    "p65d23a5830d380eed8": {
+      "reference": "supported",
+      "basis": "Machine-authored frozen reference; not human gold",
+      "matched_pair": "pair-9",
+      "claim_digest": "6790272caf1eec71b099d53072e09f1d4d76453ca3796acd69df74e18bf3bf65",
+      "evidence": {
+        "material_id": "mat-f21ad4e80c44211991e82a95f45998cd",
+        "span_id": "span-1942c09355c6070032a062a1b97f487f",
+        "work_id": "arxiv:2610.41025",
+        "version_id": "arxiv:2610.41025:v1:metadata-1aa9801b0aa16243",
+        "source_hash": "sha256:eac921aee1ab954efb0214424bb246ecbd9672cc5e59b0fb138db644a1cf3de3",
+        "scope": "abstract",
+        "parser_revision": "workspace-plain-text-v1",
+        "page": null,
+        "start": 1462,
+        "end": 1906,
+        "quote": "On 87 runs, the two best live supervisors are statistically tied and one of them is a small open-weight model (DeepSeek V4.1 Flash); the supervisor that is among the best post-hoc diagnosers (GPT-6.1 Sol) is the weakest live one (-14.5 points on the same runs, p = 0.002), so post-hoc diagnostic performance can be a poor proxy for live oversight. The environment and the evaluation code are released at https://github.com/jeremy1392/RCAreplay."
+      },
+      "text": "Based on its reported contrast on the same 87 runs, the selected oversight abstract cautions that post-hoc diagnostic performance can be a poor proxy for live oversight."
+    },
+    "pc26e83b76325eb1e65": {
+      "reference": "unsupported",
+      "basis": "Machine-authored frozen reference; not human gold",
+      "matched_pair": "pair-9",
+      "claim_digest": "e9a2b99a3a5ef3cccb691ca370271e251f9ff7836345c75141509027b9135ba0",
+      "evidence": {
+        "material_id": "mat-f21ad4e80c44211991e82a95f45998cd",
+        "span_id": "span-1942c09355c6070032a062a1b97f487f",
+        "work_id": "arxiv:2610.41025",
+        "version_id": "arxiv:2610.41025:v1:metadata-1aa9801b0aa16243",
+        "source_hash": "sha256:eac921aee1ab954efb0214424bb246ecbd9672cc5e59b0fb138db644a1cf3de3",
+        "scope": "abstract",
+        "parser_revision": "workspace-plain-text-v1",
+        "page": null,
+        "start": 1462,
+        "end": 1906,
+        "quote": "On 87 runs, the two best live supervisors are statistically tied and one of them is a small open-weight model (DeepSeek V4.1 Flash); the supervisor that is among the best post-hoc diagnosers (GPT-6.1 Sol) is the weakest live one (-14.5 points on the same runs, p = 0.002), so post-hoc diagnostic performance can be a poor proxy for live oversight. The environment and the evaluation code are released at https://github.com/jeremy1392/RCAreplay."
+      },
+      "text": "The selected oversight abstract concludes that the strongest post-hoc diagnostician is guaranteed to be the strongest live supervisor on those runs."
+    },
+    "p19c8d9837e04382c22": {
+      "reference": "supported",
+      "basis": "Machine-authored frozen reference; not human gold",
+      "matched_pair": "pair-10",
+      "claim_digest": "6f9e9d94da547b35342a9616279a010c0ed83b05dd11f6aaa71b3cf84b05eafe",
+      "evidence": {
+        "material_id": "mat-f215cad7235629deacb40965a6cc68c5",
+        "span_id": "span-3796f5b460ad2a613da39b1c12a2630d",
+        "work_id": "arxiv:2610.40758",
+        "version_id": "arxiv:2610.40758:v1:metadata-96148d2d4e4a4093",
+        "source_hash": "sha256:cd9e14f99e31776e9ccf7e02900f0e8ef3f79b98abff32889ab815dc1254c5d8",
+        "scope": "abstract",
+        "parser_revision": "workspace-plain-text-v1",
+        "page": null,
+        "start": 1544,
+        "end": 1863,
+        "quote": "With the stronger GPT-6-Sol, ACE and Dynamic Cheatsheet learn from feedback alone. They reach 78% accuracy and solve 59-60% of the single cells, against 53% and 8% with the certifying model, and they surpass the raw history. CLR-Bench therefore measures how well an agent learns, and this ability differs across models."
+      },
+      "text": "For the stronger GPT-6-Sol comparison, the selected CLR-Bench excerpt reports 78% accuracy against 53% with the certifying model."
+    },
+    "p6abefc7e97d62b7bb2": {
+      "reference": "unsupported",
+      "basis": "Machine-authored frozen reference; not human gold",
+      "matched_pair": "pair-10",
+      "claim_digest": "ed09680480159358684b349b67d8785b1611500d13a8fb899111d62a3c6ec051",
+      "evidence": {
+        "material_id": "mat-f215cad7235629deacb40965a6cc68c5",
+        "span_id": "span-3796f5b460ad2a613da39b1c12a2630d",
+        "work_id": "arxiv:2610.40758",
+        "version_id": "arxiv:2610.40758:v1:metadata-96148d2d4e4a4093",
+        "source_hash": "sha256:cd9e14f99e31776e9ccf7e02900f0e8ef3f79b98abff32889ab815dc1254c5d8",
+        "scope": "abstract",
+        "parser_revision": "workspace-plain-text-v1",
+        "page": null,
+        "start": 1544,
+        "end": 1863,
+        "quote": "With the stronger GPT-6-Sol, ACE and Dynamic Cheatsheet learn from feedback alone. They reach 78% accuracy and solve 59-60% of the single cells, against 53% and 8% with the certifying model, and they surpass the raw history. CLR-Bench therefore measures how well an agent learns, and this ability differs across models."
+      },
+      "text": "For the stronger GPT-6-Sol comparison, the selected CLR-Bench excerpt reports 53% accuracy against 78% with the certifying model."
+    }
+  },
+  "human_labels": null
+}

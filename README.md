@@ -6,6 +6,10 @@ A research workbench for ML/AI papers and a controlled testbed for agent policie
 
 ![Evidence Workbench with a completed research thread and its cited briefing.](docs/images/workbench-briefing.png)
 
+## Agent instructions
+
+Project agents must read the [private owner rulebook](https://github.com/kudratsingh/arxiv-private-notes/blob/master/claude.md) (authorized access required). [AGENTS.md](AGENTS.md) and [CLAUDE.md](CLAUDE.md) point to that canonical repository; private notes are not copied here.
+
 ## What it does
 
 - **Plan and steer research:** approve, revise or cancel the plan before search and reading proceed. Planning itself can use the model and incur cost.

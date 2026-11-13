@@ -1,0 +1,39 @@
+{
+  "application_commit": "587492d55105914f69524aa32979988508e83c3b",
+  "command": "make test-cov-diff VENV_PYTHON=/Users/kudratsingh/Machine-Learning-Projects/arxiv-venv-lock/bin/python",
+  "summary_verbatim": "7148 passed, 54 skipped, 53 deselected in 1508.48s (0:25:08)",
+  "passed": 7148,
+  "skipped": 54,
+  "separate_e2e_deselected": 53,
+  "seconds": 1508.48,
+  "project_percent": 94.39,
+  "patch_percent": 96.3892517260683,
+  "patch_display_percent": 96,
+  "patch_floor": 90,
+  "patch_total_lines": 10718,
+  "patch_missing_lines": 387,
+  "package_floors": {
+    "api": {
+      "minimum": 86,
+      "actual_display_percent": 88,
+      "passed": true
+    },
+    "agents": {
+      "minimum": 92,
+      "actual_display_percent": 96,
+      "passed": true
+    },
+    "security": {
+      "minimum": 97,
+      "actual_display_percent": 100,
+      "passed": true
+    },
+    "eval": {
+      "minimum": 91,
+      "actual_display_percent": 95,
+      "passed": true
+    }
+  },
+  "coverage_xml_sha256": "691f3e8c108cd33fd83a2598222bb0786975c632f32ba97a9cac617fae8fa105",
+  "prior_failed_diagnostic": "2 failed/7144 passed; exact rounding and schema-fixture fixes, no floor or tier change"
+}

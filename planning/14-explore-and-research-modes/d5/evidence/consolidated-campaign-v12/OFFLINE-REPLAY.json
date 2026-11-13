@@ -1,0 +1,21 @@
+{
+  "packet_digest": "fe3d1d63f0886f1d7d3b48153f2fb696fbd3938b34c0328050ad31d407572afa",
+  "application_commit": "587492d55105914f69524aa32979988508e83c3b",
+  "result_digest": "3f9207fc620f5a9ec36443c3af17d5359caa02ad72638f7facfb9f2ae02adaee",
+  "real_provider_contacts": 0,
+  "new_spend_usd": "0",
+  "simulated_contacts": {
+    "jobs": 14,
+    "messages": 44,
+    "counts": 44
+  },
+  "copied_cumulative": {
+    "funded_programme_jobs": 47,
+    "messages": 109,
+    "counts": 134
+  },
+  "historical_hold": "0.425066",
+  "machine_quality": "HOLD",
+  "human_labels": null,
+  "limitations": "Synthetic usage and verdicts;10 generated mock claims versus minimum20;7 unanswered primary requests. Software proof, not provider/quality acceptance."
+}

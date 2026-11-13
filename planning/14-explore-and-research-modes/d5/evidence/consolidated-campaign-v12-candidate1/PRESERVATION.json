@@ -1,0 +1,20 @@
+{
+  "all_original_files_identical": true,
+  "files_checked": 287,
+  "manifest_digest": "b445a831d582f5023c99016064da9f00b2bfc0b13728ee4ba095909525f3b64c",
+  "snapshot_before_digest": "28c045e30d5cc318fb552c36d5755c025291bc29d0e236e36d6e9dbddd55225c",
+  "snapshot_after_digest": "28c045e30d5cc318fb552c36d5755c025291bc29d0e236e36d6e9dbddd55225c",
+  "all_public_financial_scopes_grants_identical": true,
+  "funded_programme_jobs": 33,
+  "messages": 65,
+  "counts": 90,
+  "known_estimated_usd": "1.853811",
+  "pending_usd": "0.425066",
+  "unknown_usd": "0.425066",
+  "pending_unknown_overlap": true,
+  "new_provider_contacts": 0,
+  "new_spend_usd": "0",
+  "live_grants_recorded": 0,
+  "live_amendments_recorded": 0,
+  "live_holds_changed": 0
+}

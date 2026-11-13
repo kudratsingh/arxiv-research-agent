@@ -1,0 +1,33 @@
+{
+  "application_commit": "587492d55105914f69524aa32979988508e83c3b",
+  "ruff": "All checks passed!",
+  "mypy": "Success: no issues found in 213 source files",
+  "workflow_e2e": {
+    "passed": 53,
+    "seconds": 15.12,
+    "real_provider_contacts": 0
+  },
+  "research_simulation": {
+    "succeeded": 20,
+    "failed": 0,
+    "usd": "0.0000"
+  },
+  "registry": {
+    "objects": 260,
+    "mismatches": 0
+  },
+  "documentation": {
+    "passed": 95,
+    "seconds": 20.79
+  },
+  "ci_coverage_tracer_critical": {
+    "passed": 4,
+    "seconds": 132.48,
+    "longest_call_seconds": 33.06,
+    "test_timeout_seconds": 60
+  },
+  "frontend_local_checks": "No frontend source changed; final-head remote web/browser/build/budget results are a separate CI publication gate",
+  "provider_calls": 0,
+  "token_count_contacts": 0,
+  "new_spend_usd": "0"
+}

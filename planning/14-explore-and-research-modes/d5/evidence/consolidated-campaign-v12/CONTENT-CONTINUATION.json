@@ -1,0 +1,14 @@
+{
+  "application_commit": "587492d55105914f69524aa32979988508e83c3b",
+  "synthetic_software_control": true,
+  "states_in_order": [
+    "failed",
+    "ready",
+    "ready"
+  ],
+  "new_messages": 8,
+  "new_paired_counts": 8,
+  "old_hold_retained": "0.425066",
+  "real_provider_contacts": 0,
+  "stop": null
+}

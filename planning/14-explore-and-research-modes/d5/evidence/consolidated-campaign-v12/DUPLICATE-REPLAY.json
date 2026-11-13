@@ -1,0 +1,11 @@
+{
+  "packet_digest": "fe3d1d63f0886f1d7d3b48153f2fb696fbd3938b34c0328050ad31d407572afa",
+  "application_commit": "587492d55105914f69524aa32979988508e83c3b",
+  "completed_identities": 14,
+  "new_transports_constructed": 0,
+  "new_mock_contacts": 0,
+  "new_real_provider_contacts": 0,
+  "ledger_identical": true,
+  "historical_hold_retained": "0.425066",
+  "synthetic_software_evidence_only": true
+}

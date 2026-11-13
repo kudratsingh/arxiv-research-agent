@@ -1,6 +1,20 @@
 # D5 qualification and offline development
 
-Current offline revision: [operation deadlines](OPERATION-DEADLINES.md),
+Current offline revision: [consolidated campaign](CONSOLIDATED-CAMPAIGN.md),
+[exact packet and verification](evidence/consolidated-campaign-v12/VERIFICATION.md),
+[one unexecuted approval request](evidence/consolidated-campaign-v12/APPROVAL-REQUEST.md).
+Application `587492d55105914f69524aa32979988508e83c3b`; packet
+`fe3d1d63f0886f1d7d3b48153f2fb696fbd3938b34c0328050ad31d407572afa`.
+The new 14-job/44-Message/44-count/$5.10 sequence has automatic paired counts
+and one external scope, plus an explicit append-only capacity and exact
+historical-uncertainty exception proposal. Nothing is activated. Original
+uncertainty, the full $0.425066 hold, all failed results and old scopes remain
+unchanged. Human qualification is out of scope and provider dispatch remains
+stopped. The full packet replay uses copied actual public/financial history,
+disposable Postgres and mocked transport; software success is not factual
+qualification. Exact final-head CI is reported separately from local results.
+
+Historical offline revision: [operation deadlines](OPERATION-DEADLINES.md),
 [preserved uncertain contact and resolution options](UNCERTAINTY-RESOLUTION.md),
 [blocked one-case proposal](OPERATION-DEADLINES-PROPOSAL.md),
 [verification](evidence/operation-deadlines-v11/VERIFICATION.md).

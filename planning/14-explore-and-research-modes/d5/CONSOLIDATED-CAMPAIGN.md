@@ -89,6 +89,9 @@ current allocated operation stops admission. Other scopes cannot borrow the
 exception. There is no provider usage lookup or uncertain-contact replay in
 this campaign. Later authoritative reconciliation requires its own audited
 evidence; this approval would not establish completion or billing.
+Concurrency one governs new dispatches. Because historical upstream completion
+remains unknown, this is not a claim that the old remote operation was cancelled
+or that its physical overlap has been disproved.
 
 ## Automatic progression and stops
 
@@ -166,9 +169,12 @@ preparation. `BASELINE.json.gz` contains the public/financial snapshot without
 owner notes/history/drafts or credentials and is retained locally, not committed.
 
 ```sh
+cd /Users/kudratsingh/Machine-Learning-Projects/arxiv-workspaces/workspace-d5-campaign-complete
 export VENV_PYTHON=/Users/kudratsingh/Machine-Learning-Projects/arxiv-venv-lock/bin/python
+export PYTHONPATH="$PWD:/Users/kudratsingh/Machine-Learning-Projects/arxiv-tooling/d5-test-deps"
 export ANTHROPIC_API_KEY=local-preview-disabled
 export WORKSPACE_D5_OFFLINE=1
+export WORKSPACE_TEST_POSTGRES_URL='postgresql://workspace:workspace-local-only@127.0.0.1:15488/workspace_d5_tests'
 "$VENV_PYTHON" -m tests.d5_campaign_gate --out outputs/d5/campaign-software-gate
 ```
 
@@ -177,6 +183,9 @@ explicit `workspace_d5_tests` loopback database). It exercises14 jobs,44 mock
 Messages/44 mock exact counts, all ten repair/recheck paths, four probes,
 historical-hold preservation and repeat invocation with zero duplicate dispatch.
 Transport/usage/authorization are synthetic, not provider quality/token evidence.
+The local command uses the existing isolated test-dependency overlay for
+`jsonschema`; the shared locked venv is not modified. CI installs its declared
+test dependencies in its own runner. The worktree remains first on `PYTHONPATH`.
 
 For a repeat of the full sealed public/financial snapshot, use a new empty
 disposable database and the final packet path from the verification index:
@@ -184,7 +193,7 @@ disposable database and the final packet path from the verification index:
 ```sh
 export D5_POSTGRES_URL='postgresql://workspace:workspace-local-only@127.0.0.1:15488/workspace_d5_campaign_offline_NEW'
 "$VENV_PYTHON" -m src.workspace.d5_campaign offline \
-  --snapshot outputs/d5/consolidated-campaign-v12/BASELINE.json.gz \
+  --snapshot /Users/kudratsingh/Machine-Learning-Projects/arxiv-evidence/d5-campaign-20261112/active-checkpoint/outputs/d5/consolidated-campaign-v12/BASELINE.json.gz \
   --packet planning/14-explore-and-research-modes/d5/evidence/consolidated-campaign-v12/packet.json.gz \
   --fixture-repair-all --out outputs/d5/campaign-offline_NEW
 ```
@@ -194,9 +203,15 @@ template. The operator records the actual owner message, timestamp, attribution,
 both explicit flags and expiry. Do not copy synthetic authorization.
 
 ```sh
+export PACKET="$PWD/planning/14-explore-and-research-modes/d5/evidence/consolidated-campaign-v12/packet.json.gz"
+export OWNER_AUTHORIZATION="/Users/kudratsingh/Machine-Learning-Projects/arxiv-evidence/research-evaluation-20261105-v1/consolidated-campaign-v12-live/OWNER.json"
+export ACTIVATION_RECEIPT="/Users/kudratsingh/Machine-Learning-Projects/arxiv-evidence/research-evaluation-20261105-v1/consolidated-campaign-v12-live/ACTIVATION.json"
+export RESULT_DIRECTORY="/Users/kudratsingh/Machine-Learning-Projects/arxiv-evidence/research-evaluation-20261105-v1/consolidated-campaign-v12-live/results"
+export REPORT_DIRECTORY="/Users/kudratsingh/Machine-Learning-Projects/arxiv-evidence/research-evaluation-20261105-v1/consolidated-campaign-v12-live/report"
 "$VENV_PYTHON" -m src.workspace.d5_campaign_operator template \
   --packet "$PACKET" --authorization "$OWNER_AUTHORIZATION"
 # After the single explicit approval, in the existing qualification DB only:
+export D5_POSTGRES_URL='postgresql://workspace:workspace-local-only@127.0.0.1:15488/workspace_d5_prose_v6_validation'
 "$VENV_PYTHON" -m src.workspace.d5_campaign_operator record \
   --packet "$PACKET" --authorization "$OWNER_AUTHORIZATION" --receipt "$ACTIVATION_RECEIPT"
 # Dedicated provider process; do not source a key into the everyday workspace.
@@ -210,3 +225,9 @@ envelope is approximately90–100 minutes (ten480s workflow bounds plus four
 count/check bounds and reporting). This is an upper planning envelope, not a
 measured remote latency promise. Progress checkpoints report outcomes without
 requiring another decision unless an approved hard stop occurs.
+
+## Permanent retention and repository instructions
+
+The owner rulebook is [private and canonical](https://github.com/kudratsingh/arxiv-private-notes/blob/master/claude.md). Public `AGENTS.md`, `CLAUDE.md` and README link there. Evidence is permanent, not a cache: never delete, expire, overwrite or prune it. The working checkout and tooling are now outside temporary storage; all new live receipts/results use `arxiv-evidence/`.
+
+[Relocation/preservation receipt](evidence/consolidated-campaign-v12/PERMANENT-RETENTION.json) records the verified287-file recovery and the broader28,222-file archive. All five recorded links have retained targets. The original ledger has a read-only pg_dump backup; its actual Docker volume is already persistent. The exact284-item midnight queue has not been identified, so no claim is made that the queue was cancelled. No matching user cron/LaunchAgent was found; the owner was asked for the notice/list. Nothing was deleted.

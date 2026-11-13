@@ -1,0 +1,11 @@
+{
+  "original_sha256": "138ba87cbc5ab7badaa494c65202fadfe68668d1a4a574d1b4b42f63d4f9f690",
+  "raw_original_gzip": "OFFLINE-REPORT-original.md.gz",
+  "relocated_original": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-evidence/d5-campaign-20261112/rendered-originals/consolidated-campaign-v12-candidate1/OFFLINE-REPORT-original.md",
+  "verified_copy": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-evidence/d5-campaign-20261112/rendered-originals/consolidated-campaign-v12-candidate1/OFFLINE-REPORT-verified-copy.md",
+  "display_file": "OFFLINE-REPORT-display.md",
+  "display_sha256": "f4df8816da91056640c057a0c488c134fc6b7fcc94b113df17b69250ec2e526e",
+  "transformation": "Trailing whitespace removed in a separately labelled display derivative only. Original bytes retained verbatim.",
+  "source_json_modified": false,
+  "original_evidence_destroyed": false
+}

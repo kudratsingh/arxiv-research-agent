@@ -1,0 +1,33 @@
+{
+  "application_commit": "51073b1fb1353073e71b69709985b1ae133de946",
+  "packet_digest": "b5e2a815c3d639ebfc38d538c0d2481a040e38e2828475e6ba13445fb741e655",
+  "proposal_digest": "1b37b48c6259203107ee15d8a8399f90bd832d8e620d6ea09b5eaa795ddb7f0f",
+  "scope_id": "d5-b5e2a815c3d639ebfc38d538",
+  "plan_digest": "4854c305fe36fe2c3acd0c6677bbd2d1f3a8f1ed7edfccfa94df3638e784e16f",
+  "code_binding_digest": "5b36f320cd6fd159a8431fd33ae648fbd01dbf359ba1b25abbbdf4936846c1c0",
+  "adapter_binding_digest": "581a62712d67712fba34b7dcd712513bfd9b3cc31dccf597984b4b27225fec6e",
+  "reference_digest": "42b27808a65e473452782f7aafce53dbf9bf0730f6dcfe67ea50d06b90015820",
+  "limits": {
+    "jobs": 14,
+    "messages": 44,
+    "counts": 44,
+    "usd": "10",
+    "concurrency": 1,
+    "workflow_usd": "0.45",
+    "probe_usd": "0.15",
+    "headroom_usd": "1.00",
+    "new_usd": "5.10"
+  },
+  "programme_limits_proposed": {
+    "new_jobs": 47,
+    "messages": 109,
+    "counts": 134,
+    "usd": "10",
+    "concurrency": 1
+  },
+  "programme_expiry": "2026-11-14T07:24:01+00:00",
+  "approved": false,
+  "real_provider_contacts": 0,
+  "new_spend_usd": "0",
+  "historical_hold_usd": "0.425066"
+}
