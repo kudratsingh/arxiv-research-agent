@@ -1,0 +1,18 @@
+{
+  "provenance": "Synthetic reproduction of the exact generated full-gate failure; not a provider or human result",
+  "original_test_commit": "728dcc04",
+  "original_test_file_sha256": "20c07e7665a991af81f5bebe7ecf20a5ecbfd7f738536faccb8371b3a38cecb3",
+  "input": "postgresql://a:postgres@aaa:1/db",
+  "password": "postgres",
+  "redact_text_output": " postgresql://***@aaa:1/db ",
+  "redact_url_output": "postgresql://***@aaa:1/db",
+  "old_global_substring_assertion_passed": false,
+  "exact_full_userinfo_masking_passed": true,
+  "production_redaction_changed": false,
+  "generated_collision_controls": [
+    "password contained in public scheme",
+    "password identical to public host"
+  ],
+  "mutation_requirement": "Removing url_userinfo must preserve the entire unredacted credential-bearing URL, not merely a matching substring in its public scheme.",
+  "new_provider_contacts": 0
+}

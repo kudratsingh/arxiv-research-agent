@@ -202,10 +202,16 @@ def connection_url_credential(draw: st.DrawFn) -> Credential:
     password = draw(st.text(alphabet=_ALNUM + ".", min_size=8, max_size=24))
     host = draw(st.text(alphabet=string.ascii_lowercase, min_size=3, max_size=14))
     port = draw(st.integers(min_value=1, max_value=65535))
-    # The assertion is that the password is gone from the output, so
-    # nothing else in the URL may spell it back.
-    assume(password not in host and password not in user)
+    # Userinfo is checked structurally: the password may also spell a public
+    # scheme, username or host. Those diagnostic parts must survive.
     return Credential(f"{scheme}://{user}:{password}@{host}:{port}/db", password)
+
+
+def connection_without_userinfo(credential: Credential) -> str:
+    """Expected full masking, independent of either production implementation."""
+    scheme, authority = credential.emitted.split("://", 1)
+    _, host_port_path = authority.split("@", 1)
+    return f"{scheme}://***@{host_port_path}"
 
 
 @st.composite
@@ -407,9 +413,11 @@ def test_every_rule_destroys_its_secret(
     # to do with redaction.
     assume(credential.secret not in before and credential.secret not in after)
 
-    assert credential.secret not in redact_text(
-        surround(credential.emitted, before, after)
-    )
+    redacted = redact_text(surround(credential.emitted, before, after))
+    if rule_name == "url_userinfo":
+        assert redacted == surround(connection_without_userinfo(credential), before, after)
+    else:
+        assert credential.secret not in redacted
 
 
 @pytest.mark.parametrize("rule_name", RULE_NAMES)
@@ -429,7 +437,11 @@ def test_every_rule_is_load_bearing(
     line = surround(credential.emitted, before, after)
 
     with rules_without(rule_name):
-        assert credential.secret in redact_text(line)
+        unredacted = redact_text(line)
+        if rule_name == "url_userinfo":
+            assert credential.emitted in unredacted
+        else:
+            assert credential.secret in unredacted
 
 
 @pytest.mark.parametrize("rule_name", PREFIX_PRESERVING_RULES)
@@ -478,6 +490,14 @@ def test_an_email_address_keeps_its_domain(
 
 
 @given(credential=connection_url_credential(), before=_CONTEXT, after=_CONTEXT)
+@example(
+    credential=Credential("postgresql" + "://a:" + "postgres" + "@aaa:1/db", "postgres"),
+    before="", after="",
+)
+@example(
+    credential=Credential("redis" + "://user:" + "aaaaaaaa" + "@aaaaaaaa:1/db", "aaaaaaaa"),
+    before="", after="",
+)
 def test_a_connection_password_dies_in_both_implementations(
     credential: Credential, before: str, after: str
 ) -> None:
@@ -488,14 +508,14 @@ def test_a_connection_password_dies_in_both_implementations(
     rule is a regex over prose, and ADR 0042's leak arrived through
     the second one — inside a connection error's message.
     """
-    assume(credential.secret not in before and credential.secret not in after)
-    host = credential.emitted.partition("@")[2].partition(":")[0]
-
-    assert credential.secret not in redact_text(
-        surround(credential.emitted, before, after)
+    # A valid password such as "postgres" can also occur in "postgresql".
+    # Require exact removal of all userinfo and preservation of every other
+    # component, rather than mistaking the surviving public scheme for a leak.
+    expected = connection_without_userinfo(credential)
+    assert redact_text(surround(credential.emitted, before, after)) == surround(
+        expected, before, after
     )
-    assert credential.secret not in redact_url(credential.emitted)
-    assert host in redact_url(credential.emitted)
+    assert redact_url(credential.emitted) == expected
 
 
 # ---------------------------------------------------------------------------
