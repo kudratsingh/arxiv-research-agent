@@ -38,7 +38,20 @@ the existing theme hydration overwrite. A frontend-only guard now preserves the
 live explicit preference; deterministic before/after tests,4281frontend tests,
 8reading-loop browser checks and12production theme browser checks pass. The
 sealed qualification producer and packet are unchanged; [CI repair evidence](d5/evidence/consolidated-campaign-v12/CI-THEME-REPAIR.md)
-records failures as well as successes. Final exact-head CI remains separate.
+records failures as well as successes. A later full gate found a redaction
+property false positive (password postgres colliding with the public scheme).
+Exact independent userinfo-masking assertions, whole-URL mutation checks and
+explicit collision controls fix the oracle;97focused tests pass. Production
+redaction and all sealed bindings are unchanged. [Evidence](d5/evidence/consolidated-campaign-v12/REDACTION-ORACLE-REPAIR.md).
+The related pre-paint listener is fixed in7fa3de0c and has a deterministic
+shipped-script regression. Final frontend4291pass/no skips,14production theme
+browser checks,lint,typecheck,build and unchanged budgets pass; [receipt](d5/evidence/consolidated-campaign-v12/PREPAINT-LISTENER-REPAIR.json).
+Final local rerun:7148pass/54skip/53separateE2Edeselected in1713.22s,
+94.3895%project/96.3893%patch; same-data package floors pass. Documentation95pass.
+[Final local receipt](d5/evidence/consolidated-campaign-v12/FINAL-LOCAL-VERIFICATION.json).
+Initial remote5ca260e9 run passed8/9 checks including7201Python tests and the
+complete14/44/44 mock campaign, but failed the reproduced theme race. The new
+exact-published-head CI remains a separate required gate.
 
 Read-only real baseline remains **33 programme jobs / 65 Messages / 90 counts /
 $1.853811 known estimated + one $0.425066 retained hold**. Pending/unknown overlap;
@@ -55,8 +68,8 @@ The private canonical rulebook now forbids evidence deletion and public root
 AGENTS/CLAUDE/README link to it.287 referenced files and28,222 broader evidence
 files have hash-verified permanent copies outside temporary storage; the ledger
 has a read-only backup. No originals deleted. Runtime hashes and the exact packet
-are unchanged after relocation. The reported284-file deletion queue itself is
-unverified pending its source/list. [Retention receipt](d5/evidence/consolidated-campaign-v12/PERMANENT-RETENTION.json).
+are unchanged after relocation. The owner identified the284-file notice as coming from a separate audit. Its
+actual list remains unverified and is tracked independently of this campaign. [Retention receipt](d5/evidence/consolidated-campaign-v12/PERMANENT-RETENTION.json).
 
 V10 remains uncertain/stopped, its result unavailable and full hold retained.
 V7r2's3/8 and all original results/receipts/scorers remain separate. No real

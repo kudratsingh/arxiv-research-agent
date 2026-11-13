@@ -3,6 +3,8 @@
 Preparation is offline only. All flags in the operator template remain false.
 This request replaces preliminary count-only and individual-case handoffs for
 this fixed prospective sequence; it does not renew any stopped scope.
+The [case and selected-passage index](CAMPAIGN-SCOPE.md) exposes the complete
+sequence for review without changing its sealed inputs.
 
 ```text
 I approve only the consolidated D5 machine-only campaign.

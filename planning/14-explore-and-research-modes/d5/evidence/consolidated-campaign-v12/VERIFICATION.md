@@ -122,6 +122,33 @@ single-test bound; it became its own bounded integration command rather than
 raising the timeout or dropping any case. Real source data and original failed
 provider outputs were not corrected or reclassified.
 
+## Subsequent publication-gate findings
+
+[Theme repair](CI-THEME-REPAIR.md) reproduces and fixes the hydration race that
+failed the initial remote browser job. [Redaction oracle repair](REDACTION-ORACLE-REPAIR.md)
+reproduces the subsequent local property failure without changing production
+redaction. Both preserve the sealed qualification code, requests and evidence.
+[The renewed read-only audit](PRESERVATION-AFTER-THEME-REPAIR.json) confirms the
+live ledger and all287 permanent original copies remain unchanged. The readable
+[case and selected-passage index](CAMPAIGN-SCOPE.md) exposes the complete
+unexecuted scope. Final publication checks are recorded against their exact head.
+
+## Final publication rerun
+
+[Final local receipt](FINAL-LOCAL-VERIFICATION.json): compatibility application
+7fa3de0c; sealed qualification application587492d5 and packet unchanged.
+`make test-cov-diff` passes7148/54skip/53separateE2Edeselected in1713.22s
+(28:33),94.3895%project/96.3893%patch. All four package floors pass on the same
+permanently retained data. Documentation checks95pass. Frontend4291pass/no skips,
+14production theme browser checks and8fixture reading-loop checks pass, with
+lint/typecheck/build/budgets unchanged. Earlier failed runs remain evidence.
+
+Initial publication5ca260e9 remote CI finished8/9successful: Python7201pass/1skip,
+94.76%project/96%patch, all package floors, workflow E2E and the full14-job/44/44
+mock campaign pass. Only the reproduced theme race failed. This is historical
+signal, not the required new final-head green result; that result is recorded
+by Actions and the publication receipt after the repaired branch is pushed.
+
 ## Publication and remaining limits
 
 The application commit above contains runtime code, tests and the bounded CI

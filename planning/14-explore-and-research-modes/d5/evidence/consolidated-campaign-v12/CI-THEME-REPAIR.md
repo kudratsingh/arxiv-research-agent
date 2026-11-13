@@ -39,3 +39,19 @@ published as a separate compatibility commit: every sealed producer hash,
 model/schema/source/settings binding and packet byte remains identical. See
 [the fresh binding proof](SEALED-PRODUCER-AFTER-THEME-REPAIR.json). No new packet
 or historical rebind is needed; no owner approval has been recorded.
+
+## Pre-paint listener follow-up
+
+Compatibility commit7fa3de0c also fixes the independent pre-paint OS listener.
+Running the shipped script with a system start, a manual dark choice and an OS
+change reproduced another overwrite (19pass/1fail). The listener now writes the
+initial preference before resolving it, and future OS events check the live
+preference. [Binding and verification receipt](PREPAINT-LISTENER-REPAIR.json).
+
+Final frontend coverage run:221files,4291pass/no skips in121.56s;
+98.18%statements,94.01%branches,94.14%functions,99.50%lines. Nine existing
+build-dependent checks now execute because production assets are available.
+The event-synchronized production browser suite passes14/14 desktop/mobile in
+9.7s. Lint, typecheck, production build and unchanged route budgets pass.
+Original failure logs and previous successful evidence remain retained.
+The qualification application and packet are unchanged.

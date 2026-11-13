@@ -1,0 +1,78 @@
+{
+  "qualification_application": "587492d55105914f69524aa32979988508e83c3b",
+  "compatibility_application": "7fa3de0cc05efaa54209be07f4e6bb86480c9775",
+  "provider_packet_unchanged": true,
+  "python_full_gate": {
+    "command": "make test-cov-diff VENV_PYTHON=/Users/kudratsingh/Machine-Learning-Projects/arxiv-venv-lock/bin/python",
+    "passed": 7148,
+    "skipped": 54,
+    "separate_e2e_deselected": 53,
+    "seconds": 1713.22,
+    "project_coverage": 94.38945935914883,
+    "patch_lines": 10718,
+    "patch_missing_lines": 387,
+    "patch_percent": 96.3892517260683,
+    "patch_floor": 90,
+    "package_floors": {
+      "api": {
+        "actual": 88,
+        "floor": 86
+      },
+      "agents": {
+        "actual": 96,
+        "floor": 92
+      },
+      "security": {
+        "actual": 100,
+        "floor": 97
+      },
+      "eval": {
+        "actual": 95,
+        "floor": 91
+      }
+    },
+    "log_sha256": "8a6ddb3fbef7b29dcc5f99aacf3adc4773bc491e50cf2953adc0c7f679afdfc3",
+    "coverage_xml_sha256": "083e5b8f80e84997a1bbe342c9a1a3ac9002b096f8988bd242195afa4deadc4c"
+  },
+  "frontend": {
+    "passed": 4291,
+    "skipped": 0,
+    "files": 221,
+    "seconds": 121.56,
+    "coverage": {
+      "statements": 98.18,
+      "branches": 94.01,
+      "functions": 94.14,
+      "lines": 99.5
+    },
+    "theme_unit": 20,
+    "theme_production_browser": 14,
+    "reading_loop_fixture_browser": 8,
+    "lint": "pass",
+    "typecheck": "pass",
+    "production_build": "pass",
+    "unchanged_budgets": "pass"
+  },
+  "documentation": {
+    "passed": 95,
+    "seconds": 24.61
+  },
+  "initial_remote_ci": {
+    "head": "5ca260e946c9cc14a177d0bc302505d0ff19aa72",
+    "run_id": 43361922306,
+    "passed_checks": 8,
+    "failed_checks": 1,
+    "failure": "Theme hydration overwrite; reproduced and repaired. New exact-head run required.",
+    "python_passed": 7201,
+    "python_skipped": 1,
+    "python_seconds": 1439.85,
+    "python_project_coverage": 94.76,
+    "complete_campaign_gate": "14 jobs/44 Messages/44 paired counts; cumulative47/109/134; old hold retained; duplicate dispatch0; mock transport only"
+  },
+  "new_provider_contacts": 0,
+  "new_authorizations": 0,
+  "new_spend_usd": "0",
+  "historical_known_estimated_usd": "1.853811",
+  "historical_hold_usd": "0.425066",
+  "final_exact_head_ci": "Separate final publication receipt and Actions; local results are not remote green."
+}

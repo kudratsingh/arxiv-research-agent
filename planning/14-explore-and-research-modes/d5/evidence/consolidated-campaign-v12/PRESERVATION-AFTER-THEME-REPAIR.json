@@ -1,0 +1,16 @@
+{
+  "original_snapshot_digest": "28c045e30d5cc318fb552c36d5755c025291bc29d0e236e36d6e9dbddd55225c",
+  "current_snapshot_digest": "28c045e30d5cc318fb552c36d5755c025291bc29d0e236e36d6e9dbddd55225c",
+  "all_public_financial_scopes_and_grants_unchanged": true,
+  "retained_original_files_verified": 287,
+  "verified_storage": "arxiv-evidence canonical copies, independent of temporary original survival",
+  "funded_programme_jobs": 33,
+  "messages": 65,
+  "counts": 90,
+  "known_estimated_usd": "1.853811",
+  "pending_usd": "0.425066",
+  "unknown_usd": "0.425066",
+  "pending_unknown_overlap": true,
+  "new_provider_contacts": 0,
+  "new_live_authorizations_or_accounting_changes": false
+}
