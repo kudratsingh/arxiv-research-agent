@@ -17,7 +17,7 @@ import { render as testingLibraryRender } from "@testing-library/react";
 import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { ThemeToggle, readThemePreference } from "@/components/patterns/ThemeToggle";
+import { ThemeToggle, readThemePreference, setThemePreference } from "@/components/patterns/ThemeToggle";
 import { THEME_CONTROL } from "@/lib/copy/shell";
 import {
   THEME_ATTRIBUTE,
@@ -134,6 +134,28 @@ describe("criterion 8 — persistence, in the form the pre-paint script reads", 
     expect(document.documentElement.getAttribute(THEME_ATTRIBUTE)).toBe("light");
   });
 
+  it("ignores an already queued OS callback after an explicit choice", () => {
+    const matchMedia = window.matchMedia;
+    let queued: (() => void) | undefined;
+    vi.spyOn(window, "matchMedia").mockImplementation((query) => {
+      const list = matchMedia(query);
+      vi.spyOn(list, "addEventListener").mockImplementation((_type, listener) => {
+        queued = listener as () => void;
+      });
+      return list;
+    });
+    render(<ThemeToggle />, { theme: "light", themePreference: "system" });
+    expect(queued).toBeDefined();
+
+    // A queued event can run before React cleans up the old system effect.
+    act(() => {
+      setThemePreference("dark");
+      queued!();
+    });
+    expect(document.documentElement.getAttribute(THEME_ATTRIBUTE)).toBe("dark");
+    expect(readThemePreference()).toBe("dark");
+  });
+
   it("still applies the theme when storage throws", async () => {
     const setItem = vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
       throw new Error("storage is partitioned");
@@ -220,6 +242,7 @@ describe("known gap §16 — a choice made before hydration", () => {
     hydrateOver(() => {});
 
     expect(window.localStorage.length).toBe(0);
+    expect(document.documentElement.getAttribute(THEME_ATTRIBUTE)).toBe("dark");
     expect(document.documentElement.getAttribute(THEME_PREFERENCE_ATTRIBUTE)).toBe(
       "dark",
     );

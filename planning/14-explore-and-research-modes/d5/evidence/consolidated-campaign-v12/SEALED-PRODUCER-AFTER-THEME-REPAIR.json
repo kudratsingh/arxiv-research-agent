@@ -1,0 +1,18 @@
+{
+  "packet_digest": "fe3d1d63f0886f1d7d3b48153f2fb696fbd3938b34c0328050ad31d407572afa",
+  "sealed_qualification_application": "587492d55105914f69524aa32979988508e83c3b",
+  "code_bindings_match": true,
+  "adapter_bindings_match": true,
+  "code_binding_digest": "7a5f1f1fc8c7dd0f7911c86522982235e2a67be30d8257e81ae969e009377dd5",
+  "adapter_binding_digest": "5bb9532bdb96ce6672f285db0ff9ff8728f73f23acd2d681d01625bb9931ce69",
+  "unchanged_packet_file_sha256": "5f31fc937b150fad4e5bfb698d8bb0d3f6cbb9dd428dd757de0cc151e1447a15",
+  "frontend_ci_repair_files": {
+    "web/components/patterns/ThemeToggle.tsx": "476b982d8fcd5339fde9f894353624ac67c3d992c93bc06ae1504655f8121f36",
+    "web/e2e/theme.spec.ts": "7a6fa1b72d1f69858c382f54ca3b7fdf2fd0f10a1fb9e2222b6ace6e6cd12ce6",
+    "web/tests/shell/themeToggle.test.tsx": "3bf1a08919c4e8d2d601f031bf8279e5e921fa63c50ef1a4999dd2607881c3c8"
+  },
+  "request_model_schema_source_and_scoring_bindings_changed": false,
+  "new_provider_contacts": 0,
+  "new_authority_created": false,
+  "note": "Theme-only compatibility repair. Existing prospective packet retained verbatim because every sealed producer/schema/evidence/settings byte matches; this does not rebind historical results or grant execution."
+}

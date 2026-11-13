@@ -33,7 +33,12 @@ documentation95 pass. CI-tracer critical commands pass4 tests, maximum call
 old-schema fixture failures were reproduced and fixed without weakening any
 assertion intent, floor or tier. Exact final-head CI is a separate publication
 gate, recorded in the final handoff, Actions and local publication receipt;
-local success alone is not a remote CI claim. No frontend source was changed.
+local success alone is not a remote CI claim. The first remote publication exposed
+the existing theme hydration overwrite. A frontend-only guard now preserves the
+live explicit preference; deterministic before/after tests,4281frontend tests,
+8reading-loop browser checks and12production theme browser checks pass. The
+sealed qualification producer and packet are unchanged; [CI repair evidence](d5/evidence/consolidated-campaign-v12/CI-THEME-REPAIR.md)
+records failures as well as successes. Final exact-head CI remains separate.
 
 Read-only real baseline remains **33 programme jobs / 65 Messages / 90 counts /
 $1.853811 known estimated + one $0.425066 retained hold**. Pending/unknown overlap;

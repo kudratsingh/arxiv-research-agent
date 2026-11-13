@@ -161,6 +161,9 @@ export function ThemeToggle({ className }: ThemeToggleProps): React.ReactElement
     if (typeof window === "undefined" || !window.matchMedia) return;
     const query = window.matchMedia(DARK_QUERY);
     const apply = (): void => {
+      // Hydration starts with the server snapshot; an OS event can also be
+      // queued before effect cleanup. The live preference wins in both cases.
+      if (readThemePreference() !== "system") return;
       document.documentElement.setAttribute(THEME_ATTRIBUTE, resolve("system"));
     };
     apply();
@@ -191,12 +194,8 @@ export function ThemeToggle({ className }: ThemeToggleProps): React.ReactElement
   // `useSyncExternalStore` re-render lands relative to this effect, which
   // is deliberately not an ordering this component gets to depend on.
   //
-  // WHY IT IS DECLARED AFTER THE `system` EFFECT AND NOT BEFORE IT. Both run
-  // in declaration order on the mount commit, and that one writes
-  // `data-theme` on the hydration pass because `preference` is still the
-  // server snapshot there — the defect `e2e/theme.spec.ts` declares with
-  // `test.fail`, which is not this change's to fix. Declared first, the
-  // adopted choice would be applied and then immediately overwritten.
+  // The system effect also checks the live preference before writing, so a
+  // stored or just-adopted choice cannot be overwritten by its server snapshot.
   //
   // THE ONE CASE IT CANNOT SEE, recorded rather than left to be discovered:
   // a pre-hydration click on the option the server already rendered as

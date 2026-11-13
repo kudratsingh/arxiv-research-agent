@@ -125,7 +125,7 @@ provider outputs were not corrected or reclassified.
 ## Publication and remaining limits
 
 The application commit above contains runtime code, tests and the bounded CI
-gate. The later publication adds documentation/evidence only, including public agent entrypoints. Runtime code is unchanged. Final exact-head CI is
+gate. Publication5ca260e9 added documentation/evidence and public agent entrypoints. A later frontend-only compatibility fix repairs a reproduced theme hydration race; [its results](CI-THEME-REPAIR.md) and [fresh sealed-code proof](SEALED-PRODUCER-AFTER-THEME-REPAIR.json) distinguish that change from the unchanged qualification application. Final exact-head CI is
 recorded by the owner handoff and local `outputs/d5/consolidated-campaign-v12/PUBLICATION.json`;
 [branch Actions](https://github.com/kudratsingh/arxiv-research-agent/actions/workflows/ci.yml?query=branch%3Acodex%2Fworkspace-d5-campaign-complete)
 is authoritative. No PR, merge or deployment.

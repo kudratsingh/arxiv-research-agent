@@ -85,51 +85,16 @@ test.describe("WO-01 deferred proof — no theme flash before first paint", () =
   );
 
   /**
-   * 🔴 A DEFECT THIS WORK ORDER FOUND, PINNED SO IT CANNOT BE FORGOTTEN.
-   *
-   * `test.fail()` — this assertion is **expected to fail on this commit**, so
-   * the suite is green while the bug exists and goes RED the moment somebody
-   * fixes it. Whoever fixes it deletes the `test.fail()` line and the test
-   * becomes an ordinary guard. That is deliberate: a bug found by the browser
-   * tier and then quietly not asserted is a bug the browser tier did not find.
-   *
-   * WHAT HAPPENS. With `arxiv-agent.theme` stored as `"dark"`, `<html>` is
-   * correctly `data-theme="dark"` before first paint (asserted above) and
-   * then flips to `light` a few hundred milliseconds later, while
-   * `data-theme-preference` stays `"dark"`. The user picked dark, sees dark,
-   * and then watches the page turn light. Measured on the seeded stack:
-   *
-   *     stored=dark  early={theme:dark, preference:dark}
-   *                  late ={theme:light, preference:dark, stored:dark}
-   *
-   * WHY. `ThemeToggle.tsx:135` reads the preference through
-   * `useSyncExternalStore(subscribe, readThemePreference,
-   * serverThemePreference)`, and `serverThemePreference()` returns `"system"`
-   * (`:99`) — correctly, because a server render cannot know the choice. React
-   * uses that server snapshot for the HYDRATION render, so the effect at
-   * `:143-158` runs once with `preference === "system"`, passes its
-   * `if (preference !== "system") return` guard, and calls
-   * `apply()` → `setAttribute("data-theme", resolve("system"))` → `light`.
-   * When the client snapshot (`"dark"`) then arrives, the effect re-runs,
-   * returns early at the same guard — and never restores what the first pass
-   * overwrote.
-   *
-   * The pre-paint script is not at fault and neither is the storage key. The
-   * fix belongs with the control: the effect must not write `data-theme` on
-   * the hydration pass, or must re-resolve from the *current* preference
-   * rather than only bailing out. WO-01 owns the theme foundation and WO-08
-   * owns `ThemeToggle`; this work order deliberately does not edit either.
+   * Regression: the hydration render starts with the server's system snapshot.
+   * Its effect must read the live preference before resolving an OS theme,
+   * otherwise stored dark becomes light while the preference still says dark.
+   * The unit hydration test covers that ordering deterministically; this test
+   * verifies the painted browser state survives client attachment.
    */
   test(
     "a stored dark preference survives hydration",
     { tag: "@theme" },
     async ({ page }) => {
-      test.fail(
-        true,
-        "Known defect: ThemeToggle's hydration-pass effect overwrites " +
-          "data-theme with the OS resolution. See the comment above this test.",
-      );
-
       await seedPreference(page, "dark");
       await page.goto("/", { waitUntil: "domcontentloaded" });
 
