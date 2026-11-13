@@ -96,6 +96,7 @@ from src.campaign.planner import (
     resume_campaign,
     write_campaign,
 )
+from src.campaign.report import CampaignReport
 from src.config import Settings
 from src.config import settings as shipped_settings
 from src.contracts.benchmark_adapters import suite_ref
@@ -1914,6 +1915,26 @@ class TestTheRunVerb:
 # ---------------------------------------------------------------------------
 
 
+@pytest.fixture(scope="module")
+def full_matrix_report(full_matrix: MatrixRun) -> CampaignReport:
+    """Analyze the same immutable matrix once; assertions share its report.
+
+    The CI cancellation on run 41468750549 exposed repeated analysis here:
+    seven assertions rebuilt an unchanged 300-episode report, including
+    every seeded 10,000-resample interval. Share the real result just as
+    the earlier assertions share the real matrix. The no-write, malformed
+    input and CLI cases still build fresh reports at their own seams.
+    No records, resamples, assertions or coverage selection are reduced.
+    """
+    from src.campaign.report import build_report
+
+    return build_report(
+        full_matrix.directory.parent,
+        full_matrix.plan.campaign_id,
+        generated_at="2026-09-17T00:00:00Z",
+    )
+
+
 class TestTheCampaignReport:
     """`report` over the same two passes the groups above measured.
 
@@ -1927,15 +1948,11 @@ class TestTheCampaignReport:
 
     @pytest.mark.timeout(300)
     def test_the_report_says_three_hundred_episodes_ran_at_zero_cost(
-        self, full_matrix: MatrixRun
+        self, full_matrix: MatrixRun, full_matrix_report: CampaignReport
     ) -> None:
-        from src.campaign.report import build_report, render_report
+        from src.campaign.report import render_report
 
-        report = build_report(
-            full_matrix.directory.parent,
-            full_matrix.plan.campaign_id,
-            generated_at="2026-09-17T00:00:00Z",
-        )
+        report = full_matrix_report
 
         assert report.records_read == PLANNED_EPISODES
         assert report.trajectories_read == PLANNED_EPISODES
@@ -1962,14 +1979,12 @@ class TestTheCampaignReport:
         )
 
     def test_the_free_scorers_three_skipped_rubrics_are_named_not_scored(
-        self, full_matrix: MatrixRun
+        self, full_matrix_report: CampaignReport
     ) -> None:
         """A rubric that did not run must never print as a number."""
-        from src.campaign.report import JUDGE_METRICS, METRIC_IDS, build_report
+        from src.campaign.report import JUDGE_METRICS, METRIC_IDS
 
-        report = build_report(
-            full_matrix.directory.parent, full_matrix.plan.campaign_id
-        )
+        report = full_matrix_report
 
         assert [arm.arm_id for arm in report.quality] == list(ARM_IDS)
         for arm in report.quality:
@@ -2019,16 +2034,12 @@ class TestTheCampaignReport:
                 assert row.interval_low is not None and row.interval_high is not None
 
     def test_every_cost_and_latency_figure_is_the_arms_own_records(
-        self, full_matrix: MatrixRun
+        self, full_matrix: MatrixRun, full_matrix_report: CampaignReport
     ) -> None:
         """Recomputed from the records rather than trusted from the report."""
         from decimal import Decimal
 
-        from src.campaign.report import build_report
-
-        report = build_report(
-            full_matrix.directory.parent, full_matrix.plan.campaign_id
-        )
+        report = full_matrix_report
         records = load_episode_records(full_matrix.directory, full_matrix.plan)
 
         for cost in report.cost:
@@ -2046,14 +2057,12 @@ class TestTheCampaignReport:
             assert cost.latency_p95_seconds <= cost.latency_max_seconds + 5e-4
 
     def test_a_class_the_records_cannot_see_is_not_reported_as_zero(
-        self, full_matrix: MatrixRun
+        self, full_matrix_report: CampaignReport
     ) -> None:
         """The distinction 15 §7.1 asks for, enforced on the rendered table."""
-        from src.campaign.report import TAXONOMY, build_report, render_report
+        from src.campaign.report import TAXONOMY, render_report
 
-        report = build_report(
-            full_matrix.directory.parent, full_matrix.plan.campaign_id
-        )
+        report = full_matrix_report
         rows = {row.class_id: row for row in report.taxonomy}
 
         assert len(report.taxonomy) == len(TAXONOMY) == 13
@@ -2087,14 +2096,11 @@ class TestTheCampaignReport:
         assert "| task understanding | not detected from records | — | — | — |" in rendered
 
     def test_the_lineage_digests_the_sealed_arm_and_reads_a_sealed_graph(
-        self, full_matrix: MatrixRun
+        self, full_matrix: MatrixRun, full_matrix_report: CampaignReport
     ) -> None:
-        from src.campaign.report import build_report
         from src.contracts.run_manifest import ManifestFileStore
 
-        report = build_report(
-            full_matrix.directory.parent, full_matrix.plan.campaign_id
-        )
+        report = full_matrix_report
         paths = {
             episode.run_id: episode.output_path
             for episode in full_matrix.plan.runnable
@@ -2121,13 +2127,11 @@ class TestTheCampaignReport:
         assert len({by_arm["C"], by_arm["D"], by_arm["E"], by_arm["A"]}) == 4
 
     def test_the_appendix_names_every_episode_exactly_once(
-        self, full_matrix: MatrixRun
+        self, full_matrix: MatrixRun, full_matrix_report: CampaignReport
     ) -> None:
-        from src.campaign.report import build_report, render_report
+        from src.campaign.report import render_report
 
-        report = build_report(
-            full_matrix.directory.parent, full_matrix.plan.campaign_id
-        )
+        report = full_matrix_report
 
         assert len(report.episodes) == PLANNED_EPISODES
         assert len({episode.run_id for episode in report.episodes}) == PLANNED_EPISODES
@@ -2187,11 +2191,11 @@ class TestTheCampaignReport:
             build_report(tmp_path, "camp_" + "0" * 32)
 
     def test_the_run_book_section_describes_the_verb_that_exists(
-        self, full_matrix: MatrixRun
+        self, full_matrix_report: CampaignReport
     ) -> None:
         """15 §12.6 is the run-book; its command has to be a real one."""
         from src.campaign.cli import _parser
-        from src.campaign.report import TAXONOMY, build_report, render_report
+        from src.campaign.report import TAXONOMY, render_report
 
         doc = (
             REPO_ROOT
@@ -2200,9 +2204,7 @@ class TestTheCampaignReport:
             / "15-stage0-qualification-report.md"
         ).read_text(encoding="utf-8")
         parsed = _parser().parse_args(["report", "--campaign-id", "camp_x"])
-        report = build_report(
-            full_matrix.directory.parent, full_matrix.plan.campaign_id
-        )
+        report = full_matrix_report
 
         assert parsed.command == "report"
         assert "python -m src.campaign report \\" in doc

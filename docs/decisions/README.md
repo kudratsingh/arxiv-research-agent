@@ -876,3 +876,5 @@ never renumbered.
 
 If you're not sure whether a decision warrants an ADR, err toward
 writing one. They're cheap to write and priceless six months later.
+
+Unallocated proposal: [Personal daily research workspace](proposals/personal-daily-research-workspace.md). ADR 0103 remains reserved for LE-E; this proposal requires allocation before merge.

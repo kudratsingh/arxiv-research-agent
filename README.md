@@ -50,6 +50,10 @@ The research application, Evidence Workbench and policy-campaign infrastructure 
 <details>
 <summary><strong>Technical reference: architecture, screenshots, flags, setup, tests and evaluation</strong></summary>
 
+## Current product direction — November 2026
+
+The next release is a personal daily research workspace: **discover → understand → connect → experiment → retain**. Daily briefings and guided deep dives lead, using the existing stack. Operation is local first; paid services require separate approval. The [direction kit](planning/11-daily-research-workspace/README.md), [implementation status](planning/11-daily-research-workspace/STATUS.md) and [workspace ADR proposal](docs/decisions/proposals/personal-daily-research-workspace.md) govern this work. The historical implementation and evidence below remain available; course publication and educational pilots no longer precede the personal radar.
+
 ## Architecture
 
 ### The workflow — four shapes, two of them drawn here

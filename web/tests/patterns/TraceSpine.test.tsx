@@ -486,13 +486,13 @@ describe("criterion 6 — an <ol> of four in a labelled region, with a nested <o
     }
   });
 
-  it("is the ONLY role=status in the component tree, product-wide", () => {
-    // 03 §7.3 allows exactly one. WO-12's StatusBanner documents that it
-    // has no branch producing one; this is the mechanical half.
+  it("keeps live announcements in the two shell-specific owners", () => {
+    // Each rendered shell has one announcer. ADR 0103 adds a separate
+    // daily shell that never mounts TraceSpine.
     const files = listFiles("components").filter((file) => file.endsWith(".tsx"));
     expect(files.length).toBeGreaterThan(10);
     const owners = files.filter((file) => /role=\{?["']status["']\}?/.test(code(file)));
-    expect(owners).toEqual(["components/patterns/TraceSpine.tsx"]);
+    expect(owners.sort()).toEqual(["components/daily/Announcement.tsx", "components/patterns/TraceSpine.tsx"]);
   });
 
   it("announces material transitions and never an individual checkpoint", () => {

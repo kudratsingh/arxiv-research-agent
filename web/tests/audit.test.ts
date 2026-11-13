@@ -307,42 +307,10 @@ describe("the dev half of the gate", () => {
 describe("web/audit-exceptions.json as checked in", () => {
   const exceptions = loadExceptions(WEB_ROOT);
 
-  it("covers the @lhci/cli chain and nothing else", () => {
-    // Seven entries on ONE chain, five upstream GHSAs. If this list grows, the
-    // growth is a review conversation — which is the point of it being a file,
-    // and which is why this assertion is an exact list rather than a
-    // `toContain`. WO-29 added this chain: `@lhci/cli` is the nightly
-    // Lighthouse gate's runner, and npm attributes its transitive `tmp`,
-    // `uuid` and `extract-zip` advisories to every package on the path down to
-    // them. It is dev-only; the production audit is still gated at zero and
-    // consults nothing in this file.
-    //
-    // The Storybook image-size chain used to be here too and is GONE, which is
-    // the good direction for this list to move: the 2026-09 refresh took
-    // non-breaking bumps that pulled a fixed image-size (2.0.2 to 2.0.4) and a
-    // fixed js-yaml under @redocly/openapi-core, so three entries became stale
-    // and were deleted rather than re-signed. The gate fails on a stale entry
-    // precisely so that deletion cannot be skipped.
-    expect(exceptions.map((entry) => entry.package).sort()).toEqual([
-      "@lhci/cli",
-      "@lhci/utils",
-      "@puppeteer/browsers",
-      "extract-zip",
-      "lighthouse",
-      "puppeteer-core",
-      "tmp",
-    ]);
-    const byPackage = new Map(exceptions.map((entry) => [entry.package, entry.advisories]));
-    // The @lhci/cli chain: BOTH `extract-zip` advisories on the four packages
-    // that only carry it — 1193685 was published in 2026-09 beside the
-    // original 1139346, and describes the same unfixed symlink path — both
-    // `tmp` advisories on `tmp`, and all five on the direct dependency at the
-    // head, which npm attributes everything to.
-    for (const name of ["@lhci/utils", "@puppeteer/browsers", "extract-zip", "lighthouse", "puppeteer-core"]) {
-      expect(byPackage.get(name), name).toEqual([1139346, 1193685]);
-    }
-    expect(byPackage.get("tmp")).toEqual([1109537, 1120654]);
-    expect(byPackage.get("@lhci/cli")).toEqual([1109537, 1119441, 1120654, 1139346, 1193685]);
+  it("has no retained exceptions after the W0 toolchain security update", () => {
+    // The report-reader tests above still exercise all refusal/exception branches.
+    // The real tree no longer needs any; stale exemptions must be removed.
+    expect(exceptions).toEqual([]);
   });
 
   it("gives every entry a real justification and an owner", () => {

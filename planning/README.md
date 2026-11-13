@@ -30,6 +30,11 @@ Living log of enterprise-readiness plans, feature ideas, and roadmap for the arx
     long-horizon agents, together with the four P0 contract RFCs. It is a
     planning package plus the contracts that have landed against it; it does
     not authorize implementation, and nothing in it authorizes spend.
+11. [Daily Research Workspace](11-daily-research-workspace/README.md) — the
+    2026-11-02 direction kit: daily personalized briefings and guided deep dives
+    for the owner's research, local first with paid services separately approved.
+    Product research, source/topic seeds, experience design, architecture,
+    work orders, quality gates and a copyable implementation-agent handoff.
 
 ## How to use this folder
 
