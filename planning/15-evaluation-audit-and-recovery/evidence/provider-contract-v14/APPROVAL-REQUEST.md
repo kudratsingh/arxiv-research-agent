@@ -1,0 +1,26 @@
+# Single prospective owner approval — NOT GRANTED
+
+I approve the consolidated D5 machine-only v14 campaign, bound to:
+
+- Final packet digest: `2ad47ade2db7f96d97ff11303b56cdd222b2980fadca37824ba2866f113accf4`
+- Application identity: `8497f320fb376124cc9987b1739e986555011ec7`
+- Publication: the exact published-head CI receipt in the final handoff must verify these unchanged producer bindings. Documentation-only publication does not grant authority.
+- Capacity and quarantine proposal digest: `f9842ca2cfcdc55818274d1a8c147cf75e65207087d7bfe513664ec5d6338eb7`
+
+Approve only the exact scope, identities, frozen references, schemas, settings, pricing, stop rules and scoring policy in that packet and proposal. Before activation, verify all bindings and code gates, and capture the live ledger: 35 funded programme jobs / 68 Messages / 93 counts / $1.986755 known estimated cost plus $0.875066 overlapping pending/unknown holds. Stop on mismatch. The pending and unknown amounts describe the same holds and are counted once. Preserve every predecessor receipt and the stopped v13 scope; this approval does not resume or alter it.
+
+I authorize an append-only capacity amendment to 49 funded programme jobs / 112 Messages / 137 counts, a $12 programme cumulative ceiling, $12 daily and monthly qualification-policy ceilings, and concurrency one. The maximum new scope is 14 jobs / 44 Messages / 44 automatic exact paired counts / $7.50. Each actual Messages request requires its own provider token-count estimate paired to the exact bound request and input fit at or below 16,000 tokens before dispatch. These counts are included in the 44; there is no separate Stage A or individual routine count approval. A 20,000-input-token reservation assumption is a conservative budget bound, not measured token usage or permission to exceed the 16,000-token fit requirement.
+
+Run the 14 newly sealed identities in order: two development workflows, eight evaluation workflows and four checker probe batches containing 20 balanced machine-reference probes. Maximum $0.65 per workflow and $0.25 per probe batch. Use the sealed Sonnet 5.5 route with 4,000 output tokens for drafts and repairs, and Opus 5.5 adaptive High with 8,000 output tokens for checks, rechecks and probes. Every workflow requires a check; allow at most one repair followed by a mandatory recheck. Use the preserved time limits of 30 seconds for each count, draft and repair, 120 seconds for each check and recheck, and 480 seconds per workflow. No automatic retries.
+
+Both development workflows must have their remote schemas accepted and produce complete, input-bound final checker responses after their latest draft or repair before proceeding to the evaluation workflows or probes. A valid negative quality verdict is a failed quality outcome, not a broken contract, and may progress once both development contracts are complete. A broken development contract stops the campaign. A fully metered evaluation content failure may be recorded as failed and the campaign may continue where the sealed stop policy permits. Do not promote incomplete output or missing evidence to a pass.
+
+I expressly authorize a prospective quarantine exception for the original unknown upstream contact, job `gen-ba942321c16d5ed10cc41cff7f6c1ac9f5a98877`, retaining its $0.425066 hold and original uncertain record. Separately, I expressly authorize a prospective quarantine exception for the complete HTTP 400 with unvalidated usage in v13 packet `97d24567bc98753122315f135a621eb886cebb2b81c32eb5762572589f037e08`, case `campaign-dev-compare`, job `gen-a6e23d9f41c98fbf0327d33f1658a207a7f7d860`, retaining its distinct $0.45 hold and original uncertain record. Verify the exact evidence and journal bindings for each against the sealed proposal before activation. Preserve both holds and predecessor records unchanged. Neither exception establishes zero billing, settles either liability, establishes completion of the old upstream contact, or authorizes replay of either old job. These exceptions do not waive the stop for any new uncertainty.
+
+Retain all existing hard stops, including binding drift, accounting corruption, exhausted limits, expiry or revocation, cancellation, provider error and new uncertainty. Stop on a broken development contract. A received HTTP response does not by itself validate usage. Keep known usage, reservations and unresolved liability distinct; do not assume billing from an estimate.
+
+This approval expires at the earlier of 24 hours after approval and 2026-11-14T07:24:01Z. Check expiry before activation and each dispatch. If that deadline has passed, or cannot accommodate the gated work, a separate explicit owner decision specifying a new deadline and scope is required; this draft does not automatically extend it.
+
+Return the complete case census, unrun and failed outcomes, exact passages, machine-only quality results and accounting without routine individual count approvals. Human qualification remains out of scope. Preserve owner services and ports; everyday generation, recurrence and notifications remain disabled. No merge or deployment is authorized.
+
+All rights reserved. No license or reuse permission is granted.

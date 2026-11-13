@@ -1,0 +1,12 @@
+{
+  "packet_digest": "2ad47ade2db7f96d97ff11303b56cdd222b2980fadca37824ba2866f113accf4",
+  "application_commit": "8497f320fb376124cc9987b1739e986555011ec7",
+  "proposal_digest": "f9842ca2cfcdc55818274d1a8c147cf75e65207087d7bfe513664ec5d6338eb7",
+  "snapshot_digest": "4bd567c5c03d661d8608cc13cac4b176c844490fa318e45b7097bee7808b7dd1",
+  "predecessor_packet": "97d24567bc98753122315f135a621eb886cebb2b81c32eb5762572589f037e08",
+  "programme_expiry": "2026-11-14T07:24:01+00:00",
+  "scope_id": "d5-2ad47ade2db7f96d97ff1130",
+  "approved": false,
+  "provider_contacts": 0,
+  "count_contacts": 0
+}

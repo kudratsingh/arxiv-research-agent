@@ -1,0 +1,94 @@
+{
+  "created_at": "2026-11-13T23:07:47.588276+00:00",
+  "kind": "unapproved-prospective-v14-package",
+  "application_commit": "8497f320fb376124cc9987b1739e986555011ec7",
+  "packet_digest": "2ad47ade2db7f96d97ff11303b56cdd222b2980fadca37824ba2866f113accf4",
+  "proposal_digest": "f9842ca2cfcdc55818274d1a8c147cf75e65207087d7bfe513664ec5d6338eb7",
+  "approved": false,
+  "files": [
+    {
+      "path": "ANSWERABILITY.json",
+      "bytes": 68895,
+      "sha256": "792edd85b81d26de96b9aa1e87f275772d10211f38e4fb1c09fd4d036d8ee8a7"
+    },
+    {
+      "path": "APPROVAL-REQUEST.md",
+      "bytes": 5213,
+      "sha256": "2a1e93d95aea483a35160cddc030cf8cad0ed6f4d932b410cf83ce1dc33c9e6d"
+    },
+    {
+      "path": "AUTHORIZATION-TEMPLATE.json",
+      "bytes": 42534,
+      "sha256": "857bfbe5e614dc085830d7471242d6cd54f2fbb914f02914d3c034c381d79f40"
+    },
+    {
+      "path": "CHECKER-SCHEMAS.json",
+      "bytes": 14924,
+      "sha256": "dd908b47adbc25a5a3b6ab839579c13aa8be5486789aebbd23a10a1db675d61c"
+    },
+    {
+      "path": "IDENTITY.json",
+      "bytes": 594,
+      "sha256": "28519b94de352d31211de735890bb1b2c02f8c669abf88dc8c164e51482ba69c"
+    },
+    {
+      "path": "LOCAL-GATE-RECEIPT.json",
+      "bytes": 1021,
+      "sha256": "b0fe9501dcc949b1ff6b011094a5e4a1b9c163c6e91e56d7007785d8c84efca3"
+    },
+    {
+      "path": "OFFLINE-REPLAY-RECEIPT.json",
+      "bytes": 925,
+      "sha256": "3c7e8c016cff0bb6d6aae86fe84985aaeaccd46e8eaa205e2709421c4d64c8d8"
+    },
+    {
+      "path": "PROPOSAL.json",
+      "bytes": 18696,
+      "sha256": "46af16a01583cfffcafbbcf896946dfeca4ef382c82de31b76e9cce28091a895"
+    },
+    {
+      "path": "README.md",
+      "bytes": 5049,
+      "sha256": "ab3e9b403971d8669495d8121d44a6d3917362a3a0de6d8955f8d30273c0d6d7"
+    },
+    {
+      "path": "REQUEST-INDEX.json.gz",
+      "bytes": 14559,
+      "sha256": "855b9ed2b9dab38dca212d93453519129986b80d710e4fa1de8d93bbd2f58d14"
+    },
+    {
+      "path": "ROUTES-AND-LIMITS.json",
+      "bytes": 2464,
+      "sha256": "73bcee6b4dbda6a8a328c91fe068befd97cec358e8b8aa17deea49c5f5df4cea"
+    },
+    {
+      "path": "RUNBOOK.md",
+      "bytes": 6397,
+      "sha256": "c7f8d151247a6c2661850fc00ae6284488f389cada7e562fa7ca20c0892d94a0"
+    },
+    {
+      "path": "SCHEMA-METRICS.json",
+      "bytes": 3336,
+      "sha256": "684e5f917ef9e16c8933584e592afc70d9005c522418c4383155b2d9a5e9d9e3"
+    },
+    {
+      "path": "VERIFICATION.md",
+      "bytes": 6210,
+      "sha256": "25b6781e812927601da50188bc2f65d16ef88a1c63283118b948a4f5885637e7"
+    },
+    {
+      "path": "compiled-inputs.json.gz",
+      "bytes": 34669,
+      "sha256": "796b2fb0d70089aca0e4dd91174cfec9b9ad52d7b89d73235f0d7bdad3e8266e"
+    },
+    {
+      "path": "packet.json.gz",
+      "bytes": 423808,
+      "sha256": "00af11e7f3b71a6b2e817b4111bc8242337a6a4f7dd6d404d0bbe971dbc8b980"
+    }
+  ],
+  "new_provider_contacts": 0,
+  "new_count_contacts": 0,
+  "live_mutations": 0,
+  "ci_result": "separate exact-head publication receipt"
+}

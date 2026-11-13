@@ -1,0 +1,80 @@
+{
+  "operation_routes": {
+    "revision": "d5-sonnet-opus-high-complete-verdict-v2",
+    "draft_repair": {
+      "model": "claude-sonnet-5-5",
+      "thinking": {
+        "type": "between_tools"
+      },
+      "effort": "medium",
+      "input_tokens": 20000,
+      "output_tokens": 4000,
+      "prices": {
+        "input": "2",
+        "output": "10",
+        "verified_at": "2026-11-13"
+      }
+    },
+    "check_recheck_probe": {
+      "model": "claude-opus-5-5",
+      "thinking": {
+        "type": "adaptive"
+      },
+      "effort": "high",
+      "input_tokens": 20000,
+      "output_tokens": 8000,
+      "prices": {
+        "input": "4",
+        "output": "20",
+        "verified_at": "2026-11-13"
+      }
+    }
+  },
+  "operation_deadlines": {
+    "revision": "d5-operation-deadlines-v1",
+    "count_seconds": 30,
+    "draft_seconds": 30,
+    "repair_seconds": 30,
+    "check_seconds": 120,
+    "recheck_seconds": 120,
+    "workflow_seconds": 480,
+    "origin": "durable_reservation_created_at"
+  },
+  "campaign_limits": {
+    "jobs": 14,
+    "messages": 44,
+    "counts": 44,
+    "usd": "12",
+    "concurrency": 1,
+    "workflow_usd": "0.65",
+    "probe_usd": "0.25",
+    "headroom_usd": "1.00",
+    "new_usd": "7.50"
+  },
+  "programme_limits": {
+    "new_jobs": 49,
+    "messages": 112,
+    "counts": 137,
+    "usd": "12",
+    "concurrency": 1
+  },
+  "progression": {
+    "revision": "development-bound-complete-checks-v1",
+    "development_jobs": 2,
+    "before_evaluation": "Both development identities must have complete, input-bound final checker responses after their current draft/repair. A valid negative quality verdict is not a broken contract and does not become accepted content.",
+    "broken_development_contract": "STOP; no evaluation or probe dispatch",
+    "negative_development_quality": "Preserve failure, allow the next sealed identity when its complete response contract is proven",
+    "evaluation_content_rejection": "Preserve fully metered failures and continue unrelated sealed cases",
+    "provider_error_or_new_uncertainty": "STOP; no retry or replacement identity"
+  },
+  "workflow_unrounded_reservation_usd": "0.64",
+  "probe_unrounded_reservation_usd": "0.24",
+  "raw_total_usd": "7.36",
+  "rounded_new_total_usd": "7.50",
+  "historical_known_usd": "1.986755",
+  "historical_liabilities_overlap_usd": "0.875066",
+  "headroom_usd": "1",
+  "planning_total_usd": "11.361821",
+  "proposed_ceiling_usd": "12",
+  "approved": false
+}

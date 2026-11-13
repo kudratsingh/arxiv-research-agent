@@ -1,0 +1,563 @@
+{
+  "local": {
+    "$defs": {
+      "CompactChecksRevision": {
+        "enum": [
+          "workspace-assistance-compact-checks-v14"
+        ],
+        "title": "CompactChecksRevision",
+        "type": "string"
+      },
+      "CompactClaimReview": {
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "description": "Concise material evidence or unresolved issue across the row judgments; <=120 JSON-encoded UTF-8 bytes locally.",
+            "maxLength": 96,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          },
+          "claim_id": {
+            "enum": [
+              "c1",
+              "c2",
+              "c3",
+              "c4",
+              "c5",
+              "c6"
+            ],
+            "title": "Claim Id",
+            "type": "string"
+          },
+          "input_digest": {
+            "pattern": "^sha256:[a-f0-9]{64}$",
+            "title": "Input Digest",
+            "type": "string"
+          },
+          "decision": {
+            "$ref": "#/$defs/SupportDecision"
+          },
+          "atomicity": {
+            "enum": [
+              "atomic",
+              "bundled",
+              "uncertain"
+            ],
+            "title": "Atomicity",
+            "type": "string"
+          },
+          "qualifications": {
+            "$ref": "#/$defs/Retention"
+          }
+        },
+        "required": [
+          "reason",
+          "claim_id",
+          "input_digest",
+          "decision",
+          "atomicity",
+          "qualifications"
+        ],
+        "title": "CompactClaimReview",
+        "type": "object"
+      },
+      "CompactPartReview": {
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "description": "Concise material evidence or unresolved issue across the row judgments; <=120 JSON-encoded UTF-8 bytes locally.",
+            "maxLength": 96,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          },
+          "part_id": {
+            "enum": [
+              "p1",
+              "p2",
+              "p3",
+              "p4",
+              "p5",
+              "p6",
+              "p7",
+              "p8"
+            ],
+            "title": "Part Id",
+            "type": "string"
+          },
+          "input_digest": {
+            "pattern": "^sha256:[a-f0-9]{64}$",
+            "title": "Input Digest",
+            "type": "string"
+          },
+          "decision": {
+            "enum": [
+              "answered",
+              "lacks_evidence",
+              "omitted",
+              "uncertain"
+            ],
+            "title": "Decision",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason",
+          "part_id",
+          "input_digest",
+          "decision"
+        ],
+        "title": "CompactPartReview",
+        "type": "object"
+      },
+      "CompactProseFinding": {
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "description": "Concise material evidence or unresolved issue across the row judgments; <=120 JSON-encoded UTF-8 bytes locally.",
+            "maxLength": 96,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          },
+          "field": {
+            "enum": [
+              "background",
+              "assumptions",
+              "comparison",
+              "gaps",
+              "questions",
+              "proposal",
+              "abstention"
+            ],
+            "title": "Field",
+            "type": "string"
+          },
+          "index": {
+            "anyOf": [
+              {
+                "maximum": 2,
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Index"
+          }
+        },
+        "required": [
+          "reason",
+          "field",
+          "index"
+        ],
+        "title": "CompactProseFinding",
+        "type": "object"
+      },
+      "Retention": {
+        "additionalProperties": false,
+        "properties": {
+          "study_scope": {
+            "enum": [
+              "retained",
+              "lost",
+              "not_reported",
+              "not_applicable",
+              "uncertain"
+            ],
+            "title": "Study Scope",
+            "type": "string"
+          },
+          "comparator": {
+            "enum": [
+              "retained",
+              "lost",
+              "not_reported",
+              "not_applicable",
+              "uncertain"
+            ],
+            "title": "Comparator",
+            "type": "string"
+          },
+          "metric_definition": {
+            "enum": [
+              "retained",
+              "lost",
+              "not_reported",
+              "not_applicable",
+              "uncertain"
+            ],
+            "title": "Metric Definition",
+            "type": "string"
+          },
+          "conditions": {
+            "enum": [
+              "retained",
+              "lost",
+              "not_reported",
+              "not_applicable",
+              "uncertain"
+            ],
+            "title": "Conditions",
+            "type": "string"
+          }
+        },
+        "required": [
+          "study_scope",
+          "comparator",
+          "metric_definition",
+          "conditions"
+        ],
+        "title": "Retention",
+        "type": "object"
+      },
+      "SupportDecision": {
+        "enum": [
+          "supported",
+          "unsupported",
+          "abstain"
+        ],
+        "title": "SupportDecision",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "description": "All judgments remain mandatory; a shared reason covers claim judgments.\n\nReasons concisely identify the material evidence or unresolved issue; their\nomission never defaults any support, atomicity or qualification judgment.\nUTF-8 byte bounds and semantic/binding checks are local validation duties,\nincluding where the SDK's transformed schema removes unsupported constraints.",
+    "properties": {
+      "revision": {
+        "$ref": "#/$defs/CompactChecksRevision"
+      },
+      "claim_reviews": {
+        "items": {
+          "$ref": "#/$defs/CompactClaimReview"
+        },
+        "maxItems": 6,
+        "title": "Claim Reviews",
+        "type": "array"
+      },
+      "coverage_checks": {
+        "items": {
+          "$ref": "#/$defs/CompactPartReview"
+        },
+        "maxItems": 8,
+        "title": "Coverage Checks",
+        "type": "array"
+      },
+      "prose_review": {
+        "enum": [
+          "procedural_only",
+          "unscored_factual_content",
+          "abstain"
+        ],
+        "title": "Prose Review",
+        "type": "string"
+      },
+      "prose_findings": {
+        "items": {
+          "$ref": "#/$defs/CompactProseFinding"
+        },
+        "maxItems": 10,
+        "title": "Prose Findings",
+        "type": "array"
+      },
+      "priority_review": {
+        "enum": [
+          "respected",
+          "violated",
+          "uncertain"
+        ],
+        "title": "Priority Review",
+        "type": "string"
+      }
+    },
+    "required": [
+      "revision",
+      "claim_reviews",
+      "coverage_checks",
+      "prose_review",
+      "prose_findings",
+      "priority_review"
+    ],
+    "title": "CompactChecks",
+    "type": "object"
+  },
+  "wire": {
+    "$defs": {
+      "CompactChecksRevision": {
+        "type": "string",
+        "enum": [
+          "workspace-assistance-compact-checks-v14"
+        ],
+        "title": "CompactChecksRevision"
+      },
+      "CompactClaimReview": {
+        "type": "object",
+        "title": "CompactClaimReview",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "description": "Concise material evidence or unresolved issue across the row judgments; <=120 JSON-encoded UTF-8 bytes locally.\n\n{maxLength: 96, minLength: 1}",
+            "title": "Reason"
+          },
+          "claim_id": {
+            "type": "string",
+            "enum": [
+              "c1",
+              "c2",
+              "c3",
+              "c4",
+              "c5",
+              "c6"
+            ],
+            "title": "Claim Id"
+          },
+          "input_digest": {
+            "type": "string",
+            "title": "Input Digest",
+            "description": "{pattern: ^sha256:[a-f0-9]{64}$}"
+          },
+          "decision": {
+            "$ref": "#/$defs/SupportDecision"
+          },
+          "atomicity": {
+            "type": "string",
+            "enum": [
+              "atomic",
+              "bundled",
+              "uncertain"
+            ],
+            "title": "Atomicity"
+          },
+          "qualifications": {
+            "$ref": "#/$defs/Retention"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "reason",
+          "claim_id",
+          "input_digest",
+          "decision",
+          "atomicity",
+          "qualifications"
+        ]
+      },
+      "CompactPartReview": {
+        "type": "object",
+        "title": "CompactPartReview",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "description": "Concise material evidence or unresolved issue across the row judgments; <=120 JSON-encoded UTF-8 bytes locally.\n\n{maxLength: 96, minLength: 1}",
+            "title": "Reason"
+          },
+          "part_id": {
+            "type": "string",
+            "enum": [
+              "p1",
+              "p2",
+              "p3",
+              "p4",
+              "p5",
+              "p6",
+              "p7",
+              "p8"
+            ],
+            "title": "Part Id"
+          },
+          "input_digest": {
+            "type": "string",
+            "title": "Input Digest",
+            "description": "{pattern: ^sha256:[a-f0-9]{64}$}"
+          },
+          "decision": {
+            "type": "string",
+            "enum": [
+              "answered",
+              "lacks_evidence",
+              "omitted",
+              "uncertain"
+            ],
+            "title": "Decision"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "reason",
+          "part_id",
+          "input_digest",
+          "decision"
+        ]
+      },
+      "CompactProseFinding": {
+        "type": "object",
+        "title": "CompactProseFinding",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "description": "Concise material evidence or unresolved issue across the row judgments; <=120 JSON-encoded UTF-8 bytes locally.\n\n{maxLength: 96, minLength: 1}",
+            "title": "Reason"
+          },
+          "field": {
+            "type": "string",
+            "enum": [
+              "background",
+              "assumptions",
+              "comparison",
+              "gaps",
+              "questions",
+              "proposal",
+              "abstention"
+            ],
+            "title": "Field"
+          },
+          "index": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "description": "{maximum: 2, minimum: 0}"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Index"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "reason",
+          "field",
+          "index"
+        ]
+      },
+      "Retention": {
+        "type": "object",
+        "title": "Retention",
+        "properties": {
+          "study_scope": {
+            "type": "string",
+            "enum": [
+              "retained",
+              "lost",
+              "not_reported",
+              "not_applicable",
+              "uncertain"
+            ],
+            "title": "Study Scope"
+          },
+          "comparator": {
+            "type": "string",
+            "enum": [
+              "retained",
+              "lost",
+              "not_reported",
+              "not_applicable",
+              "uncertain"
+            ],
+            "title": "Comparator"
+          },
+          "metric_definition": {
+            "type": "string",
+            "enum": [
+              "retained",
+              "lost",
+              "not_reported",
+              "not_applicable",
+              "uncertain"
+            ],
+            "title": "Metric Definition"
+          },
+          "conditions": {
+            "type": "string",
+            "enum": [
+              "retained",
+              "lost",
+              "not_reported",
+              "not_applicable",
+              "uncertain"
+            ],
+            "title": "Conditions"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "study_scope",
+          "comparator",
+          "metric_definition",
+          "conditions"
+        ]
+      },
+      "SupportDecision": {
+        "type": "string",
+        "enum": [
+          "supported",
+          "unsupported",
+          "abstain"
+        ],
+        "title": "SupportDecision"
+      }
+    },
+    "type": "object",
+    "description": "All judgments remain mandatory; a shared reason covers claim judgments.\n\nReasons concisely identify the material evidence or unresolved issue; their\nomission never defaults any support, atomicity or qualification judgment.\nUTF-8 byte bounds and semantic/binding checks are local validation duties,\nincluding where the SDK's transformed schema removes unsupported constraints.",
+    "title": "CompactChecks",
+    "properties": {
+      "revision": {
+        "$ref": "#/$defs/CompactChecksRevision"
+      },
+      "claim_reviews": {
+        "type": "array",
+        "title": "Claim Reviews",
+        "items": {
+          "$ref": "#/$defs/CompactClaimReview"
+        },
+        "description": "{maxItems: 6}"
+      },
+      "coverage_checks": {
+        "type": "array",
+        "title": "Coverage Checks",
+        "items": {
+          "$ref": "#/$defs/CompactPartReview"
+        },
+        "description": "{maxItems: 8}"
+      },
+      "prose_review": {
+        "type": "string",
+        "enum": [
+          "procedural_only",
+          "unscored_factual_content",
+          "abstain"
+        ],
+        "title": "Prose Review"
+      },
+      "prose_findings": {
+        "type": "array",
+        "title": "Prose Findings",
+        "items": {
+          "$ref": "#/$defs/CompactProseFinding"
+        },
+        "description": "{maxItems: 10}"
+      },
+      "priority_review": {
+        "type": "string",
+        "enum": [
+          "respected",
+          "violated",
+          "uncertain"
+        ],
+        "title": "Priority Review"
+      }
+    },
+    "additionalProperties": false,
+    "required": [
+      "revision",
+      "claim_reviews",
+      "coverage_checks",
+      "prose_review",
+      "prose_findings",
+      "priority_review"
+    ]
+  }
+}

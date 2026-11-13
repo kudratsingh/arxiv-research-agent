@@ -1,3 +1,9 @@
+# Historical v13 runbook — stopped
+
+Do not activate or resume this stopped scope. Its frozen packet and run evidence remain retained. Use the separate [prospective v14 package and runbook](evidence/provider-contract-v14/RUNBOOK.md) for the unapproved repair; the historical instructions below are preserved as history.
+
+---
+
 # Audit recovery and consolidated campaign runbook
 
 This revision prepares one unexecuted approval. No command below authorizes itself.

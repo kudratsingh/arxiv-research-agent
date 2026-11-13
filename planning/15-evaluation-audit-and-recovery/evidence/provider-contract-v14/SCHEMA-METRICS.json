@@ -1,0 +1,102 @@
+[
+  {
+    "case_id": "campaign-dev-learn",
+    "purpose": "single_paper",
+    "wire_schema_digest": "f955e024d29c0e7cdea7f5e96c30fbb05cbab82e9a323881a2a701374d923561",
+    "compact_utf8_bytes": 7465,
+    "schema_nodes": 322,
+    "anyOf_sites": 1,
+    "anyOf_alternatives": 2,
+    "provider_acceptance": "UNMEASURED"
+  },
+  {
+    "case_id": "campaign-dev-compare",
+    "purpose": "research_comparison",
+    "wire_schema_digest": "4184ba81c41b4115dd04497d2adf61e7389a5e57e848a7ba4c49a025e126d4d0",
+    "compact_utf8_bytes": 7921,
+    "schema_nodes": 338,
+    "anyOf_sites": 1,
+    "anyOf_alternatives": 2,
+    "provider_acceptance": "UNMEASURED"
+  },
+  {
+    "case_id": "campaign-eval-learn-mechanism",
+    "purpose": "single_paper",
+    "wire_schema_digest": "57b2373a835ca52c36038533b0fd438441a523e723b2580375560f66113f12d4",
+    "compact_utf8_bytes": 7465,
+    "schema_nodes": 322,
+    "anyOf_sites": 1,
+    "anyOf_alternatives": 2,
+    "provider_acceptance": "UNMEASURED"
+  },
+  {
+    "case_id": "campaign-eval-learn-conditions",
+    "purpose": "single_paper",
+    "wire_schema_digest": "32ea99243aae60adca575bf0b4728420597121956cd6fa84a71be5188749f134",
+    "compact_utf8_bytes": 7465,
+    "schema_nodes": 322,
+    "anyOf_sites": 1,
+    "anyOf_alternatives": 2,
+    "provider_acceptance": "UNMEASURED"
+  },
+  {
+    "case_id": "campaign-eval-learn-experiment",
+    "purpose": "single_paper",
+    "wire_schema_digest": "ae7c35963b7e85e24ed942c1af3a3e6baa7d1bdbb114e4648292d0b4b4a1b7b8",
+    "compact_utf8_bytes": 7465,
+    "schema_nodes": 322,
+    "anyOf_sites": 1,
+    "anyOf_alternatives": 2,
+    "provider_acceptance": "UNMEASURED"
+  },
+  {
+    "case_id": "campaign-eval-learn-measurement",
+    "purpose": "single_paper",
+    "wire_schema_digest": "8a455befff6aced6294fbb26da49da6b0da1729e30f4cb043ce0b6321a656c5e",
+    "compact_utf8_bytes": 7465,
+    "schema_nodes": 322,
+    "anyOf_sites": 1,
+    "anyOf_alternatives": 2,
+    "provider_acceptance": "UNMEASURED"
+  },
+  {
+    "case_id": "campaign-eval-research-memory",
+    "purpose": "research_comparison",
+    "wire_schema_digest": "49dd21a47dd97e47b7e000bffbc2782dbadef825f2d5a99dde3d3a8a3cc1b8d6",
+    "compact_utf8_bytes": 7897,
+    "schema_nodes": 337,
+    "anyOf_sites": 1,
+    "anyOf_alternatives": 2,
+    "provider_acceptance": "UNMEASURED"
+  },
+  {
+    "case_id": "campaign-eval-research-retrieval",
+    "purpose": "research_comparison",
+    "wire_schema_digest": "65ff436705d2821385ef9223cd9adce6bac1f862a2386a367884577c32c52ebc",
+    "compact_utf8_bytes": 7921,
+    "schema_nodes": 338,
+    "anyOf_sites": 1,
+    "anyOf_alternatives": 2,
+    "provider_acceptance": "UNMEASURED"
+  },
+  {
+    "case_id": "campaign-eval-research-verification",
+    "purpose": "research_comparison",
+    "wire_schema_digest": "f421bc0c852805b062ba23607918bea734d4f39b026b84dacf593613e535b877",
+    "compact_utf8_bytes": 7897,
+    "schema_nodes": 337,
+    "anyOf_sites": 1,
+    "anyOf_alternatives": 2,
+    "provider_acceptance": "UNMEASURED"
+  },
+  {
+    "case_id": "campaign-eval-research-insufficient",
+    "purpose": "research_comparison",
+    "wire_schema_digest": "247b1b1c4f1bd9015cd6531b1eb79aec9025851782a660401ade2a5f3b45153d",
+    "compact_utf8_bytes": 1728,
+    "schema_nodes": 90,
+    "anyOf_sites": 0,
+    "anyOf_alternatives": 0,
+    "provider_acceptance": "UNMEASURED"
+  }
+]

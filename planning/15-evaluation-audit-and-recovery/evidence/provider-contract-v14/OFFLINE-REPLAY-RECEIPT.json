@@ -1,0 +1,26 @@
+{
+  "packet_digest": "2ad47ade2db7f96d97ff11303b56cdd222b2980fadca37824ba2866f113accf4",
+  "application": "8497f320fb376124cc9987b1739e986555011ec7",
+  "synthetic_jobs": 14,
+  "synthetic_messages": 44,
+  "synthetic_paired_counts": 44,
+  "all_current_workflow_checks_bound": true,
+  "answerability_rows": 24,
+  "repeat_dispatches": 0,
+  "retained_hold_usd": "0.875066",
+  "older_unknown_completion_hold_usd": "0.425066",
+  "received_http400_usage_unvalidated_hold_usd": "0.45",
+  "raw_historical_snapshot_digest": "4bd567c5c03d661d8608cc13cac4b176c844490fa318e45b7097bee7808b7dd1",
+  "new_programme_capacity": {
+    "new_jobs": 49,
+    "messages": 112,
+    "counts": 137,
+    "usd": "12",
+    "concurrency": 1
+  },
+  "real_provider_contacts": 0,
+  "real_count_contacts": 0,
+  "real_ledger_mutated": false,
+  "report_digest": "3edf04b92b3769461c16c44e533379409e01b3390e16ceecce25b29654be0903",
+  "human_qualification": false
+}

@@ -1,3 +1,9 @@
+# Latest prospective repair
+
+V13 executed and stopped; its results/accounting remain immutable. The [v14 provider-contract repair](evidence/provider-contract-v14/README.md) is a separate inactive proposal. Its$12 ceiling, capacities and two liability exceptions require one explicit owner approval. The audit snapshot below remains historical.
+
+---
+
 # Evaluation audit and recovery plan
 
 Updated November 12, 2026. The immediate objective is to finish a useful evaluation of the daily research workspace while correcting misleading measurements and preserving the evidence already paid for.

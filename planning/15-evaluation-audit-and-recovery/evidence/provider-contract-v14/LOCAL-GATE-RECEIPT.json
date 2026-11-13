@@ -1,0 +1,39 @@
+{
+  "application_commit": "8497f320fb376124cc9987b1739e986555011ec7",
+  "tested_head": "38a7864fa3a566e5b339f208f86eac3a8bd3cd56",
+  "passed": 7544,
+  "skipped": 54,
+  "separate_e2e_deselected": 53,
+  "elapsed_seconds": "2201.14",
+  "project_percent": "94.48",
+  "project_floor": 89,
+  "patch_printed_percent": 96,
+  "patch_derived_percent": 96.58361161058309,
+  "patch_total_lines": 11679,
+  "patch_missing_lines": 399,
+  "patch_floor": 90,
+  "package_floors": {
+    "api": {
+      "floor": 86,
+      "actual": "88"
+    },
+    "agents": {
+      "floor": 92,
+      "actual": "96"
+    },
+    "security": {
+      "floor": 97,
+      "actual": "100"
+    },
+    "eval": {
+      "floor": 91,
+      "actual": "95"
+    }
+  },
+  "log_sha256": "1bfb43af9207256c8ce90d74da2d2d00f694fe843f35966e77b11339af386b05",
+  "coverage_xml_sha256": "821ff71d405b13ac739fe21f0d8a1717cf6f160f553e3891f10dffdd53dad8b9",
+  "real_provider_contacts": 0,
+  "real_token_count_contacts": 0,
+  "first_failed_gate_preserved": true,
+  "ci_claim": false
+}

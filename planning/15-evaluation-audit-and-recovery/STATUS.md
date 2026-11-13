@@ -1,3 +1,9 @@
+# Current prospective repair — v14
+
+The sections below retain the W0–W3 historical checkpoint. V13 subsequently ran and stopped after the truncated Learn checker and received Compare grammar HTTP400. Current offline repair: application `8497f320`, [sealed prospective package](evidence/provider-contract-v14/README.md). The live baseline is35 jobs/68 Messages/93 counts/$1.986755 known plus$0.875066 overlapping retained holds. No new provider/count contacts, grants, settlement or expiry change. Proposed capacities49/112/137 and$12 are inactive. Local full gates and exact publication evidence are recorded in the package verification and permanent receipts.
+
+---
+
 # Offline recovery implementation
 
 Scope: W0–W3 only. Starting source and published head:
@@ -5,6 +11,18 @@ Scope: W0–W3 only. Starting source and published head:
 `arxiv-workspaces/workspace-d5-audit-recovery`, branch
 `codex/workspace-d5-audit-recovery`. The original kit and all predecessor worktrees,
 packets, raw responses, reports and financial records remain retained.
+
+## V14 local verification complete; execution awaits one approval
+
+Application`8497f320`; packet`2ad47ade2db7f96d97ff11303b56cdd222b2980fadca37824ba2866f113accf4`.
+The first full run exposed an outdated migration fixture. Test-only commit
+`38a7864f` removes019 children before rebuilding pre-017 storage and strengthens
+no-activation assertions. Production bindings remain unchanged. The complete
+rerun passed7544/54skipped/53separateE2Edeselected,94.48%project,96%printedpatch;
+all package floors passed. SeparateE2E53,simulation20/20USD0,registry260/0,
+full14/44/44mock replay and current-response bindings passed. Exact published-head
+CI is a separate remote result in the completion receipt; it is never inferred
+from these local checks. Owner3137/review3178 remain untouched.
 
 ## W0 — verified, no relocation
 
