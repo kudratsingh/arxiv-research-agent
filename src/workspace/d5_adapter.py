@@ -96,6 +96,12 @@ def qualification_producer() -> dict[str, Any]:
         "workspace/d5_campaign_report.py",
         "workspace/d5_report_binding.py",
         "workspace/d5_answerability.py",
+        "workspace/assistance_compact_draft.py",
+        "workspace/assistance_compact_checks.py",
+        "workspace/d5_campaign_v14_policy.py",
+        "workspace/d5_campaign_v14_extension.py",
+        "workspace/d5_campaign_v14_packet.py",
+        "workspace/migrations/019_d5_campaign_successor.sql",
         "workspace/d5_coverage_replay.py",
         "workspace/assistance_policy.py",
         "workspace/assistance_coverage.py",
@@ -266,7 +272,9 @@ def prepare_input(
         from src.workspace.d5_campaign_policy import PROFILE as CAMPAIGN_PROFILE
         from src.workspace.d5_coverage_policy import PROFILES
 
-        if scope_profile != CAMPAIGN_PROFILE and (scope_profile not in PROFILES or programme_binding is None or operation == "probe"):
+        if scope_profile != CAMPAIGN_PROFILE and (
+            scope_profile not in PROFILES or programme_binding is None or operation == "probe"
+        ):
             raise AdmissionError("d5_coverage_profile_binding_required")
         settings["d5_scope_profile"] = scope_profile
         settings["d5_programme_binding"] = programme_binding
@@ -353,6 +361,16 @@ def checker_context(
     value["role"] = "checker"
     value["sealed_request"].pop("units")
     value["output_schema"] = transform_schema(checks_model(sealed["schema_revision"]))
+    if sealed["schema_revision"] == "workspace-assistance-compact-coverage-v14":
+        from src.workspace.assistance_compact_checks import (
+            COMPACT_NORMALIZATION_REVISION,
+        )
+        from src.workspace.assistance_compact_checks import (
+            schemas as compact_schemas,
+        )
+
+        value["output_schema"] = compact_schemas()["wire"]
+        value["checker_normalization_revision"] = COMPACT_NORMALIZATION_REVISION
     value["draft"] = {"claims": [asdict(c) for c in claims]}
     value["claim_inputs"] = [
         {"claim_id": c.claim_id, "input_digest": claim_input_digest(c, materials)} for c in claims
@@ -396,7 +414,15 @@ class D5Adapter(QualificationAdapter):
     ) -> dict[str, Any]:
         if self.inputs.settings["d5_operation"] != "workflow":
             raise AdmissionError("d5_workflow_operation_required")
-        amount = amount_usd or ("0.45" if self.inputs.settings.get("operation_routes") else "0.40")
+        from src.workspace.d5_campaign_v14_policy import enabled as v14
+
+        amount = amount_usd or (
+            "0.65"
+            if v14(self.inputs.settings)
+            else "0.45"
+            if self.inputs.settings.get("operation_routes")
+            else "0.40"
+        )
         return super().start(request_id, amount, now=now)
 
     def _complete_http_body(self, job_id: str, ordinal: int, status: int, body: bytes) -> None:
@@ -415,7 +441,9 @@ class D5Adapter(QualificationAdapter):
             },
         )
 
-    def _quarantine_failure(self, job_id: str, reason: str, *, error: BaseException | None = None) -> None:
+    def _quarantine_failure(
+        self, job_id: str, reason: str, *, error: BaseException | None = None
+    ) -> None:
         snapshot = self.snapshot(job_id)
         contacts = snapshot.get("contacts", [])
         # No Messages dispatch and all count replies are known: do not invent a
@@ -784,9 +812,18 @@ class D5Adapter(QualificationAdapter):
 
             text = verdict_text(response)
             # Keep the original strict model/stop/all-or-nothing object parser.
-            return response_output(
+            parsed = response_output(
                 {**response, "content": [{"type": "text", "text": text}]}, body["model"]
             )
+            if (
+                self.inputs.settings["d5_request"]["schema_revision"]
+                == "workspace-assistance-compact-coverage-v14"
+                and self.inputs.settings["d5_operation"] != "probe"
+            ):
+                from src.workspace.assistance_compact_checks import normalize as normalize_checks
+
+                return normalize_checks(parsed)
+            return parsed
         return super()._response_output(response, body)
 
     def _billing_input(self, wire: dict[str, Any]) -> dict[str, Any]:
@@ -870,6 +907,20 @@ class D5Adapter(QualificationAdapter):
     def _checks(self, output: dict[str, Any]) -> Any:
         return checks_model(self.inputs.settings["d5_request"]["schema_revision"]).model_validate(
             output
+        )
+
+    def _persist_quality_rejection(self, error: AdmissionError) -> bool:
+        from src.workspace.d5_campaign_v14_policy import enabled
+
+        return (
+            enabled(self.inputs.settings)
+            and self.inputs.settings.get("d5_operation") == "workflow"
+            and str(error)
+            in {
+                "d5_request_or_claim_quality_unresolved",
+                "d5_whole_claim_support_unresolved",
+                "d5_unscored_factual_prose",
+            }
         )
 
     def _review_complete(self, grounding: Any, snapshot: dict[str, Any], checks: Any) -> bool:
@@ -971,6 +1022,16 @@ class D5Adapter(QualificationAdapter):
                 parsed = json.loads(text, object_pairs_hook=unique, parse_constant=invalid)
                 if last["stage"] == "check":
                     context = json.loads(last["body"]["messages"][0]["content"])
+                    if (
+                        self.inputs.settings["d5_request"]["schema_revision"]
+                        == "workspace-assistance-compact-coverage-v14"
+                        and self.inputs.settings["d5_operation"] != "probe"
+                    ):
+                        from src.workspace.assistance_compact_checks import (
+                            normalize as normalize_checks,
+                        )
+
+                        parsed = normalize_checks(parsed)
                     checks = self._checks(parsed)
                     if self.inputs.settings["d5_request"]["schema_revision"] in COVERAGE_REVISIONS:
                         validate_review(checks, context)
@@ -1036,7 +1097,15 @@ class D5ProbeAdapter(D5Adapter):
     def start(
         self, request_id: str, amount_usd: str | None = None, *, now: datetime | None = None
     ) -> dict[str, Any]:
-        required = "0.15" if self.inputs.settings.get("operation_routes") else "0.08"
+        from src.workspace.d5_campaign_v14_policy import enabled as v14
+
+        required = (
+            "0.25"
+            if v14(self.inputs.settings)
+            else "0.15"
+            if self.inputs.settings.get("operation_routes")
+            else "0.08"
+        )
         amount_usd = amount_usd or required
         if self.inputs.settings["d5_operation"] != "probe" or Decimal(amount_usd) != Decimal(
             required

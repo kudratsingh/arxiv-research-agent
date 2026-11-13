@@ -274,6 +274,10 @@ class QualificationAdapter:
         """Versioned adapters may require a repair for a located prose finding."""
         return self._check_complete(grounding, snapshot)
 
+    def _persist_quality_rejection(self, error: AdmissionError) -> bool:
+        """Versioned adapters may journal a complete negative check before failing."""
+        return False
+
     def _response_authorization(self, job_id: str) -> None:
         """Optional post-response fence; accounting must precede this check."""
 
@@ -767,6 +771,7 @@ class QualificationAdapter:
             self._response_authorization(job_id)
             output = self._response_output(response, wire["body"])
             final = False
+            quality_rejection: AdmissionError | None = None
             if wire["stage"] == "check":
                 checks = self._checks(output)
                 sources, materials = self._context()
@@ -790,7 +795,12 @@ class QualificationAdapter:
                         for c in checks.checks
                     ),
                 )
-                final = self._review_complete(grounding, snapshot, checks)
+                try:
+                    final = self._review_complete(grounding, snapshot, checks)
+                except AdmissionError as exc:
+                    if not self._persist_quality_rejection(exc):
+                        raise
+                    quality_rejection = exc
                 output = {**checks.model_dump(mode="json"), "grounding": asdict(grounding)}
             else:
                 draft = self._draft(output)
@@ -820,6 +830,10 @@ class QualificationAdapter:
                     "UPDATE workspace_generation_jobs SET data=%s WHERE id=%s",
                     (Jsonb(data), job_id),
                 )
+            if quality_rejection is not None:
+                # The response passed schema, identity and exact evidence gates.
+                # Persist its complete negative verdict, never an accepted result.
+                raise quality_rejection
             if final:
                 self.control.reconcile(
                     self.owner,

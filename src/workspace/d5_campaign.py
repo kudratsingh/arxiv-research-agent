@@ -45,6 +45,11 @@ class CampaignTransport:
             )
         result = LocalAssistanceTransport.fixture(request).json()
         payload = json.loads(result["content"][0]["text"])
+        compact_checker = "claim_reviews" in payload
+        if compact_checker:
+            from src.workspace.assistance_compact_checks import normalize
+
+            payload = normalize(payload)
         if context["phase"] == "check":
             self.checks += 1
             if "coverage_checks" in payload:
@@ -83,6 +88,17 @@ class CampaignTransport:
             result.update(
                 stop_reason="max_tokens", content=[{"type": "text", "text": '{"response":'}]
             )
+        if compact_checker:
+            from src.workspace.assistance_compact_checks import compact_fixture
+
+            for row in (
+                *payload["checks"],
+                *payload["claim_quality"],
+                *payload["coverage_checks"],
+                *payload["prose_findings"],
+            ):
+                row["reason"] = "Synthetic software control; no independent semantic qualification."
+            result["content"][0]["text"] = json.dumps(compact_fixture(payload))
         return httpx.Response(200, json=result)
 
 
@@ -200,6 +216,14 @@ async def run(
             advanced += 1
             if progress is not None:
                 progress(terminal)
+            if (
+                packet.get("revision") == "d5-complete-machine-campaign-v14"
+                and entry["stage"] == "B"
+            ):
+                from src.workspace.d5_campaign_v14_policy import development_contract
+
+                with store.pool.connection() as conn:
+                    development_contract(conn, scope, key)
             if checkpoint_after is not None and advanced >= checkpoint_after:
                 break  # Durable progress under the same approval; no new scope.
         except (Exception, asyncio.CancelledError) as exc:
@@ -227,7 +251,9 @@ def main() -> None:
     from src.workspace.store import WorkspaceStore
 
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("verb", choices=["freeze", "verify", "offline", "run", "report"])
+    parser.add_argument(
+        "verb", choices=["freeze", "freeze-v14", "verify", "offline", "run", "report"]
+    )
     parser.add_argument("--packet", type=Path, required=True)
     parser.add_argument("--snapshot", type=Path)
     parser.add_argument("--out", type=Path)
@@ -243,7 +269,7 @@ def main() -> None:
         return
     with database(os.environ["D5_POSTGRES_URL"]) as pool:
         store = WorkspaceStore(pool)
-        if args.verb == "freeze":
+        if args.verb in {"freeze", "freeze-v14"}:
             if (
                 args.snapshot is None
                 or os.environ.get("ANTHROPIC_API_KEY") != "local-preview-disabled"
@@ -252,7 +278,12 @@ def main() -> None:
                 raise AdmissionError("campaign_freeze_offline_snapshot_required")
             captured = read(args.snapshot)
             install(store, captured, fixture=True)
-            write(args.packet, freeze(store, captured))
+            if args.verb == "freeze-v14":
+                from src.workspace.d5_campaign_v14_packet import freeze as freeze_successor
+
+                write(args.packet, freeze_successor(store, captured))
+            else:
+                write(args.packet, freeze(store, captured))
             return
         packet = read(args.packet)
         # Reports may be recomputed after expiry, but never from mutated inputs

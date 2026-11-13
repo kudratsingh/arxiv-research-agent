@@ -298,6 +298,11 @@ def _validate(conn: Any, record: dict[str, Any], program_id: str) -> dict[str, A
 def active(
     conn: Any, program_id: str, required: str | None = None
 ) -> tuple[dict[str, Any], dict[str, Any]] | None:
+    from src.workspace.d5_campaign_v14_extension import active as successor_active
+
+    successor = successor_active(conn, program_id, required)
+    if successor is not None:
+        return successor
     if not conn.execute("SELECT to_regclass('workspace_d5_campaign_extensions')").fetchone()[0]:
         return None
     row = conn.execute(
@@ -343,6 +348,11 @@ def effective(
 
 
 def record_external(store: Any, receipt: dict[str, Any]) -> dict[str, Any]:
+    from src.workspace.d5_campaign_v14_extension import REVISION as SUCCESSOR_REVISION
+    from src.workspace.d5_campaign_v14_extension import record_external as record_successor
+
+    if receipt.get("campaign_extension", {}).get("core", {}).get("revision") == SUCCESSOR_REVISION:
+        return record_successor(store, receipt)
     if receipt.get("approved") is not True or not receipt.get("approved_by"):
         raise AdmissionError("campaign_external_owner_authorization_required")
     core = receipt.get("campaign_extension", {}).get("core", {})
@@ -403,6 +413,11 @@ def guard_exception(
     if not found:
         raise AdmissionError("program_external_completion_uncertain")
     receipt, core = found
+    from src.workspace.d5_campaign_v14_extension import REVISION as SUCCESSOR_REVISION
+    from src.workspace.d5_campaign_v14_extension import guard_exception as successor_guard
+
+    if core["revision"] == SUCCESSOR_REVISION:
+        return successor_guard(conn, policy, found, current_job)
     if policy.get("d5_scope_id") != receipt["scope_id"] or policy.get(
         "d5_authorization_digest"
     ) != _digest(receipt):

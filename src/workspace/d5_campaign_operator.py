@@ -22,7 +22,7 @@ def template(packet: dict[str, Any]) -> dict[str, Any]:
 
     verify(packet)
     compiled = compile_inputs(packet)
-    return deepcopy(
+    value = deepcopy(
         {
             "approved": False,
             "approved_by": None,
@@ -46,6 +46,9 @@ def template(packet: dict[str, Any]) -> dict[str, Any]:
             "historical_uncertainty_exception_approved": False,
         }
     )
+    if packet.get("revision") == "d5-complete-machine-campaign-v14":
+        value["budget_adjustment_approved"] = False
+    return value
 
 
 def record(store: Any, packet: dict[str, Any], receipt: dict[str, Any]) -> dict[str, Any]:
@@ -67,6 +70,8 @@ def record(store: Any, packet: dict[str, Any], receipt: dict[str, Any]) -> dict[
         "capacity_amendment_approved",
         "historical_uncertainty_exception_approved",
     }
+    if "budget_adjustment_approved" in expected:
+        mutable.add("budget_adjustment_approved")
     if set(receipt) != set(expected) or any(
         receipt[k] != expected[k] for k in expected if k not in mutable
     ):
@@ -77,6 +82,8 @@ def record(store: Any, packet: dict[str, Any], receipt: dict[str, Any]) -> dict[
         or not receipt.get("approval_source")
         or receipt.get("capacity_amendment_approved") is not True
         or receipt.get("historical_uncertainty_exception_approved") is not True
+        or "budget_adjustment_approved" in expected
+        and receipt.get("budget_adjustment_approved") is not True
     ):
         raise AdmissionError("campaign_explicit_consolidated_owner_approval_required")
     check_storage(store, packet)
@@ -126,7 +133,45 @@ def authorize_fixture(store: Any, packet: dict[str, Any]) -> dict[str, Any]:
         capacity_amendment_approved=True,
         historical_uncertainty_exception_approved=True,
     )
+    if "budget_adjustment_approved" in value:
+        value["budget_adjustment_approved"] = True
     return record(store, packet, value)
+
+
+def revoke(store: Any, packet: dict[str, Any], authorization: dict[str, Any]) -> dict[str, Any]:
+    """Explicit operator revocation follows the selected append-only revision."""
+    from psycopg.types.json import Jsonb
+
+    if authorization.get("packet_digest") != packet["packet_digest"] or not authorization.get(
+        "approved_by"
+    ):
+        raise AdmissionError("campaign_revocation_attribution_required")
+    prospective = packet.get("revision") == "d5-complete-machine-campaign-v14"
+    if prospective and authorization.get("scope_id") != "d5-" + packet["packet_digest"][:24]:
+        raise AdmissionError("campaign_revocation_scope_binding_required")
+    statement = (
+        "INSERT INTO workspace_d5_campaign_successor_revocations VALUES(%s,%s,clock_timestamp()) ON CONFLICT DO NOTHING"
+        if prospective
+        else "INSERT INTO workspace_d5_campaign_revocations VALUES(%s,%s,clock_timestamp()) ON CONFLICT DO NOTHING"
+    )
+    with store.pool.connection() as conn:
+        conn.execute(
+            "SELECT pg_advisory_xact_lock(hashtextextended(%s,0))",
+            ("evaluation:" + packet["program_id"],),
+        )
+        conn.execute(
+            statement,
+            (
+                packet["campaign_extension"]["core"]["extension_id"],
+                Jsonb(
+                    {
+                        "revoked_by": authorization["approved_by"],
+                        "at": datetime.now(UTC).isoformat(),
+                    }
+                ),
+            ),
+        )
+    return {"revoked": True, "provider_contacts": 0}
 
 
 def main() -> None:
@@ -150,31 +195,8 @@ def main() -> None:
         if args.verb == "record":
             write(args.receipt, record(store, packet, read(args.authorization)))
         else:
-            from psycopg.types.json import Jsonb
-
             authorization = read(args.authorization)
-            if authorization.get("packet_digest") != packet[
-                "packet_digest"
-            ] or not authorization.get("approved_by"):
-                raise AdmissionError("campaign_revocation_attribution_required")
-            with pool.connection() as conn:
-                conn.execute(
-                    "SELECT pg_advisory_xact_lock(hashtextextended(%s,0))",
-                    ("evaluation:" + packet["program_id"],),
-                )
-                conn.execute(
-                    "INSERT INTO workspace_d5_campaign_revocations VALUES(%s,%s,clock_timestamp()) ON CONFLICT DO NOTHING",
-                    (
-                        packet["campaign_extension"]["core"]["extension_id"],
-                        Jsonb(
-                            {
-                                "revoked_by": authorization["approved_by"],
-                                "at": datetime.now(UTC).isoformat(),
-                            }
-                        ),
-                    ),
-                )
-            write(args.receipt, {"revoked": True, "provider_contacts": 0})
+            write(args.receipt, revoke(store, packet, authorization))
 
 
 if __name__ == "__main__":

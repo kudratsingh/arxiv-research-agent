@@ -40,11 +40,15 @@ def message_output(contact: dict[str, Any]) -> dict[str, Any]:
     parsed = response_output(response, body["model"])
     if json_object(response["content"][0]["text"]) != parsed:
         raise ReportBindingError("response_parse_mismatch")
+    from src.workspace.assistance_compact_checks import normalize, schemas
+
+    if body.get("output_config", {}).get("format", {}).get("schema") == schemas()["wire"]:
+        return normalize(parsed)
     return parsed
 
 
 def current_check(
-    sealed: dict[str, Any], snapshot: dict[str, Any], materials: Any
+    sealed: dict[str, Any], snapshot: dict[str, Any], materials: Any, *, routes: Any = None
 ) -> dict[str, Any]:
     """Bind one completed check after the latest validated workflow response.
 
@@ -117,7 +121,9 @@ def current_check(
     contact = messages[selected + 1]
     if contact["stage"] != "check" or contact["ordinal"] <= producer["ordinal"]:
         raise ReportBindingError("checker_does_not_follow_current_response")
-    expected_wire = wire(checker_context(sealed, parsed_outputs[selected], materials), ROUTES)
+    expected_wire = wire(
+        checker_context(sealed, parsed_outputs[selected], materials), routes or ROUTES
+    )
     expected = json_object(expected_wire["messages"][0]["content"])
     if (
         contact["body"] != expected_wire
@@ -136,5 +142,14 @@ def current_check(
             "checker_request_digest": contact["request_digest"],
             "checked_context_digest": _digest(expected),
             "completed_checker_after_current_response": True,
+            **(
+                {
+                    "checker_normalization_revision": expected["checker_normalization_revision"],
+                    "raw_checker_response_digest": _digest(contact["response"]),
+                    "normalized_verdict_digest": _digest(parsed_outputs[selected + 1]),
+                }
+                if "checker_normalization_revision" in expected
+                else {}
+            ),
         },
     }

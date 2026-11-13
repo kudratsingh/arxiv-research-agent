@@ -234,7 +234,7 @@ def plan_digest(packet: dict[str, Any]) -> str:
                 "adapter",
                 "source_bindings",
             )
-        }
+        } | ({"progression": packet["progression"], "checker_normalization_revision": packet["checker_normalization_revision"]} if packet.get("revision") == "d5-complete-machine-campaign-v14" else {})
     )
 
 
@@ -537,6 +537,11 @@ def freeze(store: Any, snapshot: dict[str, Any]) -> dict[str, Any]:
 
 
 def verify_packet(p: dict[str, Any]) -> None:
+    if p.get("revision") == "d5-complete-machine-campaign-v14":
+        from src.workspace.d5_campaign_v14_packet import verify_packet as verify_successor
+
+        verify_successor(p)
+        return
     from src.workspace.assistance_contract import schemas
     from src.workspace.d5_campaign_policy import PROGRAM_LIMITS
 
@@ -645,7 +650,7 @@ def compile_campaign(p: dict[str, Any]) -> dict[str, Any]:
                 operation="probe" if probe else "workflow",
                 probe_wire=case["wire"] if probe else None,
                 programme_amendment_digest=p["campaign_extension"]["proposal_digest"],
-                operation_routes=ROUTES,
+                operation_routes=p.get("operation_routes", ROUTES),
                 scope_profile=PROFILE,
                 operation_deadlines=DEADLINES,
                 repair_located_prose=True,

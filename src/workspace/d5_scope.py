@@ -28,11 +28,11 @@ LIMITS: dict[str, Any] = {
 
 
 def limits_for(settings: dict[str, Any]) -> dict[str, Any]:
-    from src.workspace.d5_campaign_policy import LIMITS as CAMPAIGN_LIMITS
     from src.workspace.d5_campaign_policy import enabled
+    from src.workspace.d5_campaign_policy import limits_for as campaign_limits
 
     if enabled(settings):
-        return CAMPAIGN_LIMITS
+        return campaign_limits(settings)
     if settings.get("d5_scope_profile"):
         from src.workspace.d5_coverage_policy import profile_limits
 
@@ -47,10 +47,11 @@ def limits_for(settings: dict[str, Any]) -> dict[str, Any]:
 
 def valid_limits(value: Any) -> bool:
     from src.workspace.d5_campaign_policy import LIMITS as CAMPAIGN_LIMITS
+    from src.workspace.d5_campaign_v14_policy import LIMITS as V14_LIMITS
     from src.workspace.d5_coverage_policy import PROFILES
     from src.workspace.d5_operations import OPUS_LIMITS
 
-    return value in (LIMITS, OPUS_LIMITS, CAMPAIGN_LIMITS, *PROFILES.values())
+    return value in (LIMITS, OPUS_LIMITS, CAMPAIGN_LIMITS, V14_LIMITS, *PROFILES.values())
 
 
 def stage_authorizations(

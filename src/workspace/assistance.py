@@ -256,6 +256,13 @@ def build_wire(request: dict[str, Any]) -> dict[str, Any]:
             **request,
             "coverage_wire_rule": "Coverage is the ONLY claim-to-request mapping. Do not emit claims.part_ids; it is forbidden. Every part names its existing answer_claim_ids and context_claim_ids, with no duplicates or overlap within a part. Every emitted claim must occur in coverage. answered requires nonempty answer_claim_ids and gap=none; lacks_evidence and omitted forbid answer_claim_ids and use their own gap reasons. Full abstention forbids claims and all claim references. Context is not an answer, including when only a comparison is unavailable. Claim associations do not establish relevance or support: all claims still require whole-claim, atomicity, qualification, coverage and prose checking. Prioritize sealed parts within six atomic claims/8000 UTF-8 bytes; preserve study scope, comparator, metric definition and conditions. Questions/actions use neutral bounded intents.",
         }
+    if request.get("sealed_request", {}).get("schema_revision") == "workspace-assistance-compact-coverage-v14":
+        request = {
+            **request,
+            "coverage_wire_rule": "Coverage is the sole authoritative mapping, grouped into answered, lacks_evidence and omitted arrays. Each sealed part_id appears exactly once across groups. Answered rows require existing answer_claim_ids; gap groups forbid that field and have their own reasons. Context never answers a comparison. All claims must be referenced, with no duplicate or overlapping roles. Full abstention omits claims and ALL claim references. Do not emit claims.part_ids or an abstention string; disposition and normalized labels are derived by the application. Six atomic claims and 8000 UTF-8 draft bytes maximum; all factual prose must be cited claims. Preserve every qualification and exact selected evidence.",
+        }
+        if phase == "check":
+            request["checker_wire_rule"] = "Return the compact verdict revision exactly: each claim_reviews row contains support, atomicity, four qualification judgments and one concise reason; coverage_checks, priority_review, prose_review and located prose_findings are mandatory. Shared reasons are limited to 96 characters and 120 JSON-encoded UTF-8 bytes; whole compact AND normalized verdict must fit 8000 bytes. Do not omit negative or uncertain findings to fit. Every supplied claim and requested part requires its exact digest. Identity/quote validity alone is not whole-claim support."
     wire = _build_request_kwargs(
         profile=RequestProfile(CANDIDATE_MODEL, None, False, "medium", True),
         prompt=_json({key: value for key, value in request.items() if key != "output_schema"}),
@@ -702,7 +709,22 @@ class LocalAssistanceTransport(FakeProvider):
             else:
                 from src.workspace.assistance_coverage import decorate_fixture
 
-                payload = decorate_fixture(payload, original["task_policy"])
+                if original["schema_revision"] == "workspace-assistance-compact-coverage-v14":
+                    from src.workspace.assistance_compact_draft import (
+                        fixture_payload,
+                        legacy_policy,
+                    )
+
+                    payload = decorate_fixture(payload, legacy_policy(original["task_policy"]))
+                    payload = fixture_payload(payload, response_purpose(original["assistance"]["mode"], original["units"]), original["task_policy"])
+                else:
+                    payload = decorate_fixture(payload, original["task_policy"])
+        if context["phase"] == "check" and original.get("schema_revision") == "workspace-assistance-compact-coverage-v14":
+            from src.workspace.assistance_compact_checks import compact_fixture
+
+            for row in (*payload["checks"], *payload["claim_quality"], *payload["coverage_checks"], *payload["prose_findings"]):
+                row["reason"] = "Synthetic software control; no independent semantic qualification."
+            payload = compact_fixture(payload)
         return httpx.Response(
             200,
             json={
@@ -839,9 +861,12 @@ class LocalAssistanceTransport(FakeProvider):
 
     def check(self, request: dict[str, Any], *, cancelled: Callable[[], bool]) -> dict[str, Any]:
         try:
-            value = checks_model(request["sealed_request"]["schema_revision"]).model_validate(
-                self._call(request, cancelled)
-            )
+            raw = self._call(request, cancelled)
+            if request["sealed_request"]["schema_revision"] == "workspace-assistance-compact-coverage-v14":
+                from src.workspace.assistance_compact_checks import normalize as normalize_checks
+
+                raw = normalize_checks(raw)
+            value = checks_model(request["sealed_request"]["schema_revision"]).model_validate(raw)
             if isinstance(value, CoverageChecks):
                 validate_review(value, request)
                 if review_failed(value, {"request_coverage": request["declared_coverage"]}):

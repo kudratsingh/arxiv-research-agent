@@ -203,8 +203,8 @@ def record_external(
                 "model_ids": sorted({e["input"]["model_id"] for e in compiled.values()}),
                 "source_scopes": ["abstract", "excerpt"],
                 "per_job_usd": limits["workflow_usd"],
-                "day_usd": "10",
-                "month_usd": "10",
+                "day_usd": limits["usd"],
+                "month_usd": limits["usd"],
                 "valid_from": approved_at.isoformat(),
                 "expires_at": expires.isoformat(),
                 "approval_record": {

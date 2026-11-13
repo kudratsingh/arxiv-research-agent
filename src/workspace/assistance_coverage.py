@@ -15,8 +15,9 @@ from pydantic import BaseModel, ConfigDict, Field, create_model, model_validator
 COVERAGE_REVISION = "workspace-assistance-request-coverage-v8"
 SHAPED_COVERAGE_REVISION = "workspace-assistance-coverage-shapes-v9"
 AUTHORITATIVE_COVERAGE_REVISION = "workspace-assistance-coverage-authority-v10"
+COMPACT_COVERAGE_REVISION = "workspace-assistance-compact-coverage-v14"
 SHAPED_REVISIONS = frozenset({SHAPED_COVERAGE_REVISION, AUTHORITATIVE_COVERAGE_REVISION})
-COVERAGE_REVISIONS = frozenset({COVERAGE_REVISION, *SHAPED_REVISIONS})
+COVERAGE_REVISIONS = frozenset({COVERAGE_REVISION, *SHAPED_REVISIONS, COMPACT_COVERAGE_REVISION})
 PartId = Literal["p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8"]
 ClaimId = Literal["c1", "c2", "c3", "c4", "c5", "c6"]
 Status = Literal["answered", "lacks_evidence", "omitted"]
@@ -153,6 +154,10 @@ class NoReferenceCoverage(BaseModel):
 
 
 def response_model(handles: list[str], purpose: str, policy: dict[str, Any]) -> type[BaseModel]:
+    if policy["revision"] == COMPACT_COVERAGE_REVISION:
+        from src.workspace.assistance_compact_draft import response_model as compact_model
+
+        return compact_model(handles, purpose, policy)
     from src.workspace.assistance_contract import digest
     from src.workspace.assistance_policy import task_response_model
 
@@ -240,6 +245,10 @@ def response_model(handles: list[str], purpose: str, policy: dict[str, Any]) -> 
 def normalize(
     payload: dict[str, Any], handles: list[str], purpose: str, policy: dict[str, Any]
 ) -> tuple[dict[str, Any], dict[str, Any]]:
+    if policy["revision"] == COMPACT_COVERAGE_REVISION:
+        from src.workspace.assistance_compact_draft import normalize as compact_normalize
+
+        return compact_normalize(payload, handles, purpose, policy)
     if len(json.dumps(payload, ensure_ascii=False).encode()) > 8000:
         raise ValueError("assistance_response_too_large")
     value = (
@@ -314,7 +323,7 @@ def render(
         "request_coverage": rows,
         "coverage_complete": all(r["status"] == "answered" for r in rows),
         "coverage_basis": "Declared coverage; machine checks are unqualified and human review is unmeasured",
-        **({"claim_request_index": reverse_index(coverage)} if policy["revision"] == AUTHORITATIVE_COVERAGE_REVISION else {}),
+        **({"claim_request_index": reverse_index(coverage)} if policy["revision"] in {AUTHORITATIVE_COVERAGE_REVISION, COMPACT_COVERAGE_REVISION} else {}),
     }
 
 
@@ -379,7 +388,7 @@ def review_context(
         "request_parts": policy["requested_parts"],
         "coverage_inputs": parts,
         "declared_coverage": rendered["request_coverage"],
-        **({"claim_request_index": rendered["claim_request_index"]} if policy["revision"] == AUTHORITATIVE_COVERAGE_REVISION else {}),
+        **({"claim_request_index": rendered["claim_request_index"]} if policy["revision"] in {AUTHORITATIVE_COVERAGE_REVISION, COMPACT_COVERAGE_REVISION} else {}),
         "quality_rubric": {
             "atomicity": "one independently testable finding per claim, not separate outcomes joined together",
             "qualifications": list(QUALIFICATIONS),

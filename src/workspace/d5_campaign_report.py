@@ -46,7 +46,7 @@ def score_probes(references: dict[str, Any], verdicts: dict[str, Any]) -> dict[s
 
 
 def score_workflow(
-    case: dict[str, Any], snapshot: dict[str, Any] | None, materials: Any
+    case: dict[str, Any], snapshot: dict[str, Any] | None, materials: Any, *, routes: Any = None
 ) -> dict[str, Any]:
     from src.workspace.assistance import checks_model
     from src.workspace.assistance_contract import resolve_draft
@@ -131,7 +131,7 @@ def score_workflow(
             for c in claims
         ]
         try:
-            bound = current_check(sealed, snapshot, materials)
+            bound = current_check(sealed, snapshot, materials, routes=routes)
             contact, context, raw = bound["contact"], bound["context"], bound["raw_verdict"]
             body = contact["body"]
             parsed = checks_model(sealed["schema_revision"]).model_validate(raw)
@@ -227,7 +227,7 @@ def results(
             )[0]
             for m in packet["materials"]
         )
-    cases = [score_workflow(c, snapshots.get(c["id"]), materials) for c in packet["cases"]]
+    cases = [score_workflow(c, snapshots.get(c["id"]), materials, routes=packet.get("operation_routes")) for c in packet["cases"]]
     verdicts = {}
     for probe in packet["probes"]:
         observed = snapshots.get(probe["id"], {})

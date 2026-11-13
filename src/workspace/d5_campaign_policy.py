@@ -70,6 +70,13 @@ def enabled(settings: dict[str, Any]) -> bool:
     return settings.get("d5_scope_profile") == PROFILE
 
 
+def limits_for(settings: dict[str, Any]) -> dict[str, Any]:
+    from src.workspace.d5_campaign_v14_policy import LIMITS as V14_LIMITS
+    from src.workspace.d5_campaign_v14_policy import enabled as v14
+
+    return V14_LIMITS if v14(settings) else LIMITS
+
+
 def job_binding(conn: Any, job_id: str) -> tuple[str, dict[str, Any], str]:
     row = conn.execute(
         "SELECT j.state,j.data,r.amount::text,r.workflow::text,r.judge::text,r.unknown::text "
@@ -100,17 +107,27 @@ def guard_order(conn: Any, bound: dict[str, Any], case_id: str) -> None:
     done = audit_outcomes(conn, bound["id"])
     if case_id not in order or any(k not in done for k in order[: order.index(case_id)]):
         raise AdmissionError("campaign_previous_case_not_terminal")
+    from src.workspace.d5_campaign_v14_policy import LIMITS as V14_LIMITS
+    from src.workspace.d5_campaign_v14_policy import require_development_contracts
+
+    if bound["limits"] == V14_LIMITS and bound["cases"][case_id]["stage"] != "B":
+        require_development_contracts(conn, bound)
 
 
 def registration(
     conn: Any, program_id: str, compiled: dict[str, Any], receipt: dict[str, Any]
 ) -> None:
     from src.workspace.d5_campaign_extension import validate_scope
+    from src.workspace.d5_campaign_v14_policy import LIMITS as V14_LIMITS
+    from src.workspace.d5_campaign_v14_policy import ROUTES as V14_ROUTES
     from src.workspace.d5_deadlines import POLICY
     from src.workspace.d5_operations import ROUTES
 
+    prospective = receipt["limits"] == V14_LIMITS
+    expected_limits = V14_LIMITS if prospective else LIMITS
+    expected_routes = V14_ROUTES if prospective else ROUTES
     if (
-        receipt["limits"] != LIMITS
+        receipt["limits"] != expected_limits
         or receipt["stages"] != ["B", "C", "D"]
         or len(compiled) != 14
         or [sum(e["stage"] == s for e in compiled.values()) for s in ("B", "C", "D")] != [2, 8, 4]
@@ -118,7 +135,7 @@ def registration(
         or any(
             not enabled(e["input"]["settings"])
             or e["input"]["settings"].get("operation_deadlines") != POLICY
-            or e["input"]["settings"].get("operation_routes") != ROUTES
+            or e["input"]["settings"].get("operation_routes") != expected_routes
             for e in compiled.values()
         )
     ):
@@ -137,13 +154,14 @@ def guard(
 ) -> None:
     from src.workspace.qualification_budget import census
 
-    if bound["limits"] != LIMITS or bound["stages"] != ["B", "C", "D"]:
+    limits = limits_for(settings)
+    if bound["limits"] != limits or bound["stages"] != ["B", "C", "D"]:
         raise AdmissionError("campaign_scope_binding_drift")
     guard_order(conn, {**bound, "id": settings["d5_scope_id"]}, settings["d5_case_id"])
     history = census(conn, owner, members=bound["members"])
     # Pending already includes unknown; do not add it a second time.
     if Decimal(history["known_usd"]) + Decimal(history["pending_usd"]) + (amount or 0) > Decimal(
-        LIMITS["new_usd"]
+        limits["new_usd"]
     ):
         raise AdmissionError("campaign_new_spend_cap_exceeded")
     if amount is not None:
@@ -151,7 +169,7 @@ def guard(
         remaining = sum(
             (
                 Decimal(
-                    LIMITS["probe_usd"] if e["operation"] == "probe" else LIMITS["workflow_usd"]
+                    limits["probe_usd"] if e["operation"] == "probe" else limits["workflow_usd"]
                 )
                 for k, e in bound["cases"].items()
                 if k not in done
@@ -168,7 +186,7 @@ def guard(
         programme = census(conn, owner, members=members)
         if Decimal(programme["known_usd"]) + Decimal(
             programme["pending_usd"]
-        ) + remaining + Decimal(LIMITS["headroom_usd"]) > Decimal(LIMITS["usd"]):
+        ) + remaining + Decimal(limits["headroom_usd"]) > Decimal(limits["usd"]):
             raise AdmissionError("campaign_remaining_batch_requires_consolidated_budget_adjustment")
 
 
