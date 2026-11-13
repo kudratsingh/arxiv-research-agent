@@ -105,7 +105,12 @@ def record_external(
         if program is None:
             raise AdmissionError("d5_preserved_program_required")
         if any(e["input"]["settings"].get("d5_scope_profile") for e in compiled.values()):
-            from src.workspace.d5_coverage_policy import registration
+            from src.workspace.d5_campaign_policy import enabled
+
+            if all(enabled(e["input"]["settings"]) for e in compiled.values()):
+                from src.workspace.d5_campaign_policy import registration
+            else:
+                from src.workspace.d5_coverage_policy import registration
 
             registration(conn, program_id, compiled, receipt)
         prior = conn.execute(
@@ -137,7 +142,11 @@ def record_external(
             )
         ):
             raise AdmissionError("d5_historical_ledger_drift")
-        if (
+        from src.workspace.d5_campaign_policy import PROFILE as CAMPAIGN_PROFILE
+        from src.workspace.d5_campaign_policy import enabled
+
+        campaign = all(enabled(e["input"]["settings"]) for e in compiled.values())
+        if not campaign and (
             history["uncertain_contacts"]
             or history["active_jobs"]
             or history["unknown_usd"] != "0"
@@ -211,6 +220,8 @@ def record_external(
                 "d5_scope_id": scope_id,
                 "d5_authorization_digest": auth_digest,
             }
+            if campaign:
+                policy["d5_campaign_profile"] = CAMPAIGN_PROFILE
             conn.execute(
                 "INSERT INTO workspace_budget_policies VALUES(%s,%s,%s)",
                 (member, policy["approval_record"]["approval_id"], Jsonb(policy)),

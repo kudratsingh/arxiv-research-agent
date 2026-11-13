@@ -277,10 +277,14 @@ class QualificationAdapter:
         """Optional post-response fence; accounting must precede this check."""
 
     def _contact_scope(self, conn: Any, job_id: str, endpoint: str) -> None:
-        """Stricter versioned limits, inside the existing journal transaction."""
+        """One fresh cumulative audit per locked operation; D5 adds its scope."""
+        _, policy = self.control._policy(conn, self.owner, self.inputs.snapshot(), datetime.now(UTC))
+        guard_trial(conn, self.owner, policy, current_job=job_id, next_endpoint=endpoint)
 
     def _dispatch_scope(self, conn: Any, job_id: str) -> None:
-        """Recheck external scope at the point of dispatch."""
+        """Recheck cumulative permission at dispatch; D5 adds its stricter guard."""
+        _, policy = self.control._policy(conn, self.owner, self.inputs.snapshot(), datetime.now(UTC))
+        guard_trial(conn, self.owner, policy, current_job=job_id)
 
     def _timeout_seconds(self, path: str, contact: dict[str, Any], data: dict[str, Any]) -> float:
         """Historical wire adapters retain their original scalar timeout."""
@@ -560,7 +564,6 @@ class QualificationAdapter:
             self.control._sources(conn, self.owner, self.inputs.snapshot())
             adapter = data.get("adapter", {})
             contacts = adapter.get("contacts", [])
-            guard_trial(conn, self.owner, policy, current_job=job_id)
             self._dispatch_scope(conn, job_id)
             if (
                 state != "running"
@@ -631,7 +634,6 @@ class QualificationAdapter:
             self.control._sources(conn, self.owner, self.inputs.snapshot())
             adapter = data.get("adapter", {})
             contacts = adapter.get("contacts", [])
-            guard_trial(conn, self.owner, policy, current_job=job_id, next_endpoint=endpoint)
             self._contact_scope(conn, job_id, endpoint)
             if (
                 state != "running"

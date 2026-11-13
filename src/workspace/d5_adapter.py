@@ -88,6 +88,12 @@ def qualification_producer() -> dict[str, Any]:
         "workspace/d5_coverage_authority_packet.py",
         "workspace/d5_deadlines.py",
         "workspace/d5_timeout_packet.py",
+        "workspace/d5_campaign_policy.py",
+        "workspace/d5_campaign_extension.py",
+        "workspace/d5_campaign_packet.py",
+        "workspace/d5_campaign_operator.py",
+        "workspace/d5_campaign.py",
+        "workspace/d5_campaign_report.py",
         "workspace/d5_coverage_replay.py",
         "workspace/assistance_policy.py",
         "workspace/assistance_coverage.py",
@@ -255,9 +261,10 @@ def prepare_input(
     if repair_located_prose or sealed["schema_revision"] == PROCEDURAL_REVISION:
         settings["located_prose_repair"] = "first-check-only-v1"
     if scope_profile is not None:
+        from src.workspace.d5_campaign_policy import PROFILE as CAMPAIGN_PROFILE
         from src.workspace.d5_coverage_policy import PROFILES
 
-        if scope_profile not in PROFILES or programme_binding is None or operation == "probe":
+        if scope_profile != CAMPAIGN_PROFILE and (scope_profile not in PROFILES or programme_binding is None or operation == "probe"):
             raise AdmissionError("d5_coverage_profile_binding_required")
         settings["d5_scope_profile"] = scope_profile
         settings["d5_programme_binding"] = programme_binding
@@ -304,7 +311,7 @@ class D5Adapter(QualificationAdapter):
             },
         )
 
-    def _quarantine_failure(self, job_id: str, reason: str) -> None:
+    def _quarantine_failure(self, job_id: str, reason: str, *, error: BaseException | None = None) -> None:
         snapshot = self.snapshot(job_id)
         contacts = snapshot.get("contacts", [])
         # No Messages dispatch and all count replies are known: do not invent a
@@ -347,6 +354,10 @@ class D5Adapter(QualificationAdapter):
                 )
             except (AdmissionError, KeyError, TypeError, ValueError):
                 self.control.recover(self.owner, job_id)
+        from src.workspace.d5_campaign_policy import preserve_content_rejection
+
+        if preserve_content_rejection(self.store, self.owner, self.inputs, job_id, error):
+            return
         with self.store.pool.connection() as conn:
             conn.execute(
                 "UPDATE workspace_d5_scopes SET state='stopped',data=jsonb_set(data,'{stop_reason}',%s)WHERE scope_id=%s AND state='active'",
@@ -364,7 +375,7 @@ class D5Adapter(QualificationAdapter):
                     return await QualificationAdapter.advance(self, job_id, cancelled=cancelled)
             return await QualificationAdapter.advance(self, job_id, cancelled=cancelled)
         except BaseException as exc:
-            self._quarantine_failure(job_id, type(exc).__name__)
+            self._quarantine_failure(job_id, type(exc).__name__, error=exc)
             raise
 
     def _context(self) -> tuple[list[dict[str, Any]], Any]:

@@ -224,11 +224,21 @@ def guard_program(
             "SELECT owner FROM workspace_evaluation_members WHERE program_id=%s", (program,)
         ).fetchall()
     ]
+    from src.workspace.d5_campaign_policy import PROFILE as CAMPAIGN_PROFILE
     from src.workspace.programme_amendments import effective_limits
 
-    limits = effective_limits(
-        conn, program, required_proposal_digest=policy.get("program_amendment_proposal_digest")
-    )
+    campaign = None
+    if policy.get("d5_campaign_profile") == CAMPAIGN_PROFILE:
+        from src.workspace.d5_campaign_extension import active
+
+        campaign = active(conn, program, policy.get("program_amendment_proposal_digest"))
+        if campaign is None:
+            raise AdmissionError("campaign_matching_activation_required")
+        limits = campaign[1]["limits"]
+    else:
+        limits = effective_limits(
+            conn, program, required_proposal_digest=policy.get("program_amendment_proposal_digest")
+        )
     _, baseline, _ = row
     report = census(conn, owner, members=members)
     for job_id, checkpoint in baseline["contact_checkpoints"].items():
@@ -255,13 +265,17 @@ def guard_program(
         raise AdmissionError("evaluation_history_missing")
     if any(j != current_job for j in report["active_jobs"]):
         raise AdmissionError("program_one_job_at_a_time")
+    if campaign is not None:
+        from src.workspace.d5_campaign_extension import guard_exception
+
+        guard_exception(conn, policy, verified=campaign, current_job=current_job)
     if (
         report["messages"] + (next_endpoint == "messages") > limits["messages"]
         or report["counts"] + (next_endpoint == "messages/count_tokens") > limits["counts"]
     ):
         raise AdmissionError("program_contact_cap_exceeded")
     if reserve_usd is not None:
-        if report["uncertain_contacts"] or Decimal(report["unknown_usd"]):
+        if campaign is None and (report["uncertain_contacts"] or Decimal(report["unknown_usd"])):
             raise AdmissionError("program_external_completion_uncertain")
         if reserve_usd > 0 and report["new_jobs"] >= limits["new_jobs"]:
             raise AdmissionError("program_job_cap_exceeded")

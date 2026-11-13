@@ -158,7 +158,12 @@ def reading_minutes(key: str, mode: str, index: int) -> int:
 
 def execution_owners(packet: dict[str, Any]) -> tuple[str, str]:
     """A new prospective cohort cannot reuse stopped financial identities."""
+    from src.workspace.d5_campaign_packet import REVISION as CAMPAIGN_REVISION
+    from src.workspace.d5_campaign_packet import owners as campaign_owners
     from src.workspace.d5_coverage_packet import is_packet, owners
+
+    if packet.get("revision") == CAMPAIGN_REVISION:
+        return campaign_owners(packet)
 
     if is_packet(packet):
         return owners(packet)
@@ -177,6 +182,13 @@ def code_bindings() -> dict[str, str]:
         "d5_coverage_authority_packet.py",
         "d5_deadlines.py",
         "d5_timeout_packet.py",
+        "d5_campaign_policy.py",
+        "d5_campaign_extension.py",
+        "d5_campaign_packet.py",
+        "d5_campaign_operator.py",
+        "d5_campaign.py",
+        "d5_campaign_report.py",
+        "migrations/018_d5_campaign_extension.sql",
         "d5_coverage_replay.py",
         "d5_operations.py",
         "programme_amendments.py",
@@ -251,6 +263,12 @@ def verify(packet: dict[str, Any]) -> None:
             case["sealed"]["candidate_initial_wire"]
         ):
             raise AdmissionError("d5_wire_digest_changed")
+    from src.workspace.d5_campaign_packet import REVISION as CAMPAIGN_REVISION
+    from src.workspace.d5_campaign_packet import verify_packet
+
+    if packet.get("revision") == CAMPAIGN_REVISION:
+        verify_packet(packet)
+        return
     from src.workspace.d5_coverage_packet import is_packet, verify_controls
 
     if is_packet(packet):
@@ -354,6 +372,11 @@ def verify_discovery(packet: dict[str, Any]) -> None:
 
 def compile_inputs(packet: dict[str, Any]) -> dict[str, dict[str, Any]]:
     verify(packet)
+    from src.workspace.d5_campaign_packet import REVISION as CAMPAIGN_REVISION
+    from src.workspace.d5_campaign_packet import compile_campaign
+
+    if packet.get("revision") == CAMPAIGN_REVISION:
+        return compile_campaign(packet)
     from src.workspace.d5_coverage_packet import compile_controls, is_packet
 
     if is_packet(packet):

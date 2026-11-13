@@ -1,5 +1,32 @@
 # Two-mode implementation status
 
+## Consolidated campaign offline preparation
+
+Branch `codex/workspace-d5-campaign-complete`, from publishedcaef4d2b. The
+[single campaign runbook](d5/CONSOLIDATED-CAMPAIGN.md) replaces the proposed
+individual A/B handoffs for this prospective sequence only. Fixed new scope:
+2 development+8 exposed-corpus evaluation workflows+4 balanced checker batches,
+14jobs/44Messages/44exact paired counts/$5.10. One proposed append-only receipt
+binds47/109/134 capacity, the exact historical uncertainty exception, and the
+whole ordered campaign. Nothing is activated by preparation.
+
+The full production-adapter offline software gate completed14 jobs and the
+maximum44/44 repair/recheck envelope in disposable Postgres. Repeated invocation
+dispatched zero contacts. Synthetic checks/counts/usage are not provider fit or
+quality evidence; the simulated report remains HOLD and human fields stay null.
+Safety regressions, full coverage, final seal and exact-head CI are in progress;
+final results will be recorded in the new verification index before handoff.
+
+Read-only real baseline33/65/90/$1.853811 known+$0.425066 retained hold remains
+the authority. Pending/unknown overlap. Full planned exposure plus$1 buffer is
+$8.378877, so no dollar increase is needed now and no evaluation is shrunk.
+Programme expiry2026-11-14T07:24:01Z remains. Any future dollar adjustment is one
+consolidated owner decision with results and remaining batch, never implicit.
+V10 stays uncertain/stopped; v7r2's3/8 and all original results/receipts/scorers
+are preserved. No real provider/count contacts, live grant/amendment, accounting
+change or spend. Owner3137/review3178 unchanged; no PR/merge/deployment;
+everyday generation, recurrence and notifications disabled.
+
 ## Current offline operation-deadline repair
 
 Application **`92c5a9eafa81bbaa279a5b44312f1519a1bd522c`**, isolated branch

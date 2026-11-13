@@ -28,6 +28,11 @@ LIMITS: dict[str, Any] = {
 
 
 def limits_for(settings: dict[str, Any]) -> dict[str, Any]:
+    from src.workspace.d5_campaign_policy import LIMITS as CAMPAIGN_LIMITS
+    from src.workspace.d5_campaign_policy import enabled
+
+    if enabled(settings):
+        return CAMPAIGN_LIMITS
     if settings.get("d5_scope_profile"):
         from src.workspace.d5_coverage_policy import profile_limits
 
@@ -41,10 +46,11 @@ def limits_for(settings: dict[str, Any]) -> dict[str, Any]:
 
 
 def valid_limits(value: Any) -> bool:
+    from src.workspace.d5_campaign_policy import LIMITS as CAMPAIGN_LIMITS
     from src.workspace.d5_coverage_policy import PROFILES
     from src.workspace.d5_operations import OPUS_LIMITS
 
-    return value in (LIMITS, OPUS_LIMITS, *PROFILES.values())
+    return value in (LIMITS, OPUS_LIMITS, CAMPAIGN_LIMITS, *PROFILES.values())
 
 
 def stage_authorizations(
@@ -182,7 +188,9 @@ def scope(
         raise AdmissionError("d5_case_not_externally_authorized")
     if case.get("stage") not in allowed:
         raise AdmissionError("d5_stage_not_authorized")
-    if case.get("stage") == "C":
+    from src.workspace.d5_campaign_policy import enabled
+
+    if case.get("stage") == "C" and not enabled(settings):
         require_development(conn, scope_id, cases)
     return {
         **data,
@@ -215,9 +223,16 @@ def guard_scope(
         reserve_operation=inputs["settings"]["d5_operation"],
     )
     if inputs["settings"].get("d5_scope_profile"):
-        from src.workspace.d5_coverage_policy import guard as coverage_guard
+        from src.workspace.d5_campaign_policy import enabled
 
-        coverage_guard(conn, bound, owner, inputs["settings"], amount=amount, endpoint=endpoint)
+        if enabled(inputs["settings"]):
+            from src.workspace.d5_campaign_policy import guard as campaign_guard
+
+            campaign_guard(conn, bound, owner, inputs["settings"], amount=amount, endpoint=endpoint)
+        else:
+            from src.workspace.d5_coverage_policy import guard as coverage_guard
+
+            coverage_guard(conn, bound, owner, inputs["settings"], amount=amount, endpoint=endpoint)
     history = census(conn, owner, members=bound["members"])
     baseline = bound["baseline"]
     limits = bound["limits"]
@@ -268,6 +283,7 @@ def guard_scope(
             raise AdmissionError("d5_uncertain_completion_requires_reconciliation")
         if (
             Decimal(baseline["known_usd"])
+            + Decimal(baseline["pending_usd"])
             + Decimal(history["known_usd"])
             + Decimal(history["pending_usd"])
             + amount

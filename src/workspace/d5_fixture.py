@@ -273,7 +273,7 @@ def prepare_projects(store: WorkspaceStore, packet: dict[str, Any]) -> None:
     from src.workspace.context_store import WorkspaceContext
 
     context = WorkspaceContext(store)
-    owners = execution_owners(packet)
+    owners = tuple(dict.fromkeys(execution_owners(packet)))
     if packet.get("cohort_revision") == "procedural-v8":
         with store.pool.connection() as conn:
             for owner in owners:
@@ -288,7 +288,7 @@ def prepare_projects(store: WorkspaceStore, packet: dict[str, Any]) -> None:
                         "INSERT INTO workspace_profiles VALUES(%s,1,%s)",
                         (owner, Jsonb(packet["profile"])),
                     )
-    for case in packet["cases"]:
+    for case in (*packet["cases"], *packet.get("probes", [])):
         project = (case.get("sealed") or {}).get("project_context")
         if not project:
             continue

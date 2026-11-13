@@ -399,6 +399,25 @@ jobs:
         # a reader can check without opening a conftest.
         run: make test-e2e VENV_PYTHON=python
 
+      - name: Complete D5 campaign (14 jobs, mock transport, disposable Postgres)
+        # A sequential campaign is a bounded integration command, not one
+        # 60-second unit test. All existing test tiers/floors remain intact.
+        # Provision only an owned temporary PG cluster/schema; no owner DB/key.
+        timeout-minutes: 5
+        env:
+          ANTHROPIC_API_KEY: local-preview-disabled
+          WORKSPACE_D5_OFFLINE: '1'
+        run: python -m tests.d5_campaign_gate --out build/d5-campaign-offline
+
+      - name: Upload D5 mock campaign evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: d5-campaign-offline
+          path: build/d5-campaign-offline
+          if-no-files-found: warn
+          retention-days: 30
+
       # The adversarial safety suite (ADR 0072): the authored 42-case
       # corpus run against this checkout's own defences, deterministically
       # and with zero model calls. Two invocations because the CLI either

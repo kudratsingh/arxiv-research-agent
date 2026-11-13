@@ -13,6 +13,7 @@ import re
 from collections.abc import Callable, Sequence
 from dataclasses import asdict
 from enum import StrEnum
+from functools import lru_cache
 from types import GenericAlias
 from typing import Any, Literal, cast
 
@@ -521,6 +522,28 @@ def response_model(
     *,
     purpose: ResponsePurpose = "research_comparison",
     revision: str | None = None,
+    task_policy: dict[str, Any] | None = None,
+) -> type[BaseModel]:
+    """Cache pure type compilation, never outputs, evidence or permission checks.
+
+    The full version/handle/policy key prevents cross-request scope reuse. Policy
+    is decoded into owned data; caller mutation cannot change a cached model.
+    Schema dictionaries are still freshly exported by schemas().
+    """
+    try:
+        key = json.dumps(task_policy, ensure_ascii=False, sort_keys=True)
+    except (TypeError, ValueError):
+        return _response_model(handles, purpose=purpose, revision=revision, task_policy=task_policy)
+    return _compiled_model(tuple(handles), purpose, revision, key)
+
+
+@lru_cache(maxsize=64)
+def _compiled_model(handles: tuple[str, ...], purpose: ResponsePurpose, revision: str | None, policy_json: str) -> type[BaseModel]:
+    return _response_model(handles, purpose=purpose, revision=revision, task_policy=json.loads(policy_json))
+
+
+def _response_model(
+    handles: Sequence[str], *, purpose: ResponsePurpose = "research_comparison", revision: str | None = None,
     task_policy: dict[str, Any] | None = None,
 ) -> type[BaseModel]:
     from src.workspace.assistance_coverage import COVERAGE_REVISIONS

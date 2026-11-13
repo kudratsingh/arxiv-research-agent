@@ -213,8 +213,6 @@ def effective(
     if (
         _digest(receipt) != auth
         or digest != receipt["proposal_digest"]
-        or required
-        and required != digest
         or expiry != datetime.fromisoformat(receipt["expires_at"])
         or conn.execute(
             "SELECT 1 FROM workspace_programme_capacity_revocations WHERE amendment_id=%s",
@@ -232,7 +230,9 @@ def effective(
         != core["basis"]
     ):
         raise AdmissionError("capacity_historical_receipts_changed")
-    return dict(core["amended_limits"])
+    from src.workspace.d5_campaign_extension import effective as campaign_effective
+
+    return campaign_effective(conn, program_id, dict(core["amended_limits"]), digest, required)
 
 
 def revoke(store: WorkspaceStore, amendment_id: str, *, actor: str) -> None:
