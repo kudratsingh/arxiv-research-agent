@@ -20,6 +20,8 @@ def build_wire(request: dict[str, Any]) -> dict[str, Any]:
     value = deepcopy(request)
     mode = value.get("sealed_request", {}).get("assistance", {}).get("mode", "research")
     value["capacity_policy"] = deepcopy(POLICY)
+    if value.get("sealed_request", {}).get("schema_revision") == "workspace-assistance-keyed-v16":
+        value["identity_contract"] = "Required named coverage entries exactly match sealed requested parts. Use gap_reasons within one part for all missing details. Claims use named slots c1..mode cap; c1 is required, null means an unused remaining slot. Never emit claim_id/part_id or a reverse mapping inside values. Checker named identities/digests are derived server-side from the exact current sealed context; provide every verdict, never repeat IDs."
     value["request_quality_rule"] = (
         f"At most {CLAIMS_BY_MODE[mode]} atomic claims in {mode} mode; "
         "about 500 characters per claim and 240 per explanation are SOFT targets only. "

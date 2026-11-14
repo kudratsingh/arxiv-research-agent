@@ -40,6 +40,10 @@ def message_output(contact: dict[str, Any]) -> dict[str, Any]:
     parsed = response_output(response, body["model"])
     if json_object(response["content"][0]["text"]) != parsed:
         raise ReportBindingError("response_parse_mismatch")
+    context = json.loads(body["messages"][0]["content"])
+    if context.get("sealed_request", {}).get("schema_revision") == "workspace-assistance-keyed-v16" and contact.get("stage") == "check":
+        from src.workspace.assistance_keyed_checks import normalize as keyed_normalize
+        return keyed_normalize(parsed, context, probe=context.get("operation") == "probe")
     from src.workspace.assistance_capacity_contract import check_schemas, normalize_checks
     if body.get("output_config", {}).get("format", {}).get("schema") == check_schemas()["wire"]:
         return normalize_checks(parsed)

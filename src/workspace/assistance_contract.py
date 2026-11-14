@@ -554,6 +554,11 @@ def _response_model(
     from src.workspace.assistance_coverage import response_model as coverage_model
     from src.workspace.assistance_policy import TASK_REVISION, task_response_model
 
+    if revision == "workspace-assistance-keyed-v16":
+        from src.workspace import assistance_keyed_contract as keyed
+        if task_policy is None:
+            raise ValueError("sealed_task_policy_required")
+        return keyed.response_model(handles, purpose, task_policy)
     if revision == "workspace-assistance-capacity-v15":
         from src.workspace.assistance_capacity_contract import response_model as capacity_model
         if task_policy is None:
@@ -659,6 +664,11 @@ def resolve_draft(
     )
     from src.workspace.assistance_policy import TASK_REVISION, normalize_task_output
 
+    if revision == "workspace-assistance-keyed-v16":
+        from src.workspace.assistance_keyed_contract import resolve_draft as keyed_resolve
+        if task_policy is None:
+            raise ValueError("sealed_task_policy_required")
+        return keyed_resolve(payload, catalog, materials, purpose=purpose, policy=task_policy)
     if revision == "workspace-assistance-capacity-v15":
         from src.workspace.assistance_capacity_contract import resolve_draft as capacity_resolve
         if task_policy is None:

@@ -106,6 +106,11 @@ def qualification_producer() -> dict[str, Any]:
     root = Path(__file__).resolve().parents[1]
     files = (
         "workspace/d5_adapter.py",
+        "workspace/assistance_keyed_contract.py",
+        "workspace/assistance_keyed_checks.py",
+        "workspace/d5_campaign_v16_policy.py",
+        "workspace/d5_campaign_v16_extension.py",
+        "workspace/d5_campaign_v16_packet.py",
         'workspace/d5_capacity_selection.py',
         'workspace/d5_capacity_policy.py',
         'workspace/d5_capacity_wire.py',
@@ -254,7 +259,7 @@ def prepare_input(
     operation_deadlines: dict[str, Any] | None = None,
     capacity_policy: dict[str, Any] | None = None,
 ) -> GenerationInput:
-    prospective = sealed.get("schema_revision") == CAPACITY_REVISION
+    prospective = sealed.get("schema_revision") in {CAPACITY_REVISION, "workspace-assistance-keyed-v16"}
     if prospective:
         if capacity_policy != CAPACITY_POLICY or operation_deadlines != CAPACITY_DEADLINES or operation_routes != CAPACITY_ROUTES:
             raise AdmissionError("d5_capacity_sealed_policy_binding_required")
@@ -448,7 +453,7 @@ def checker_context(
 
         value["output_schema"] = compact_schemas()["wire"]
         value["checker_normalization_revision"] = COMPACT_NORMALIZATION_REVISION
-    if sealed["schema_revision"] == CAPACITY_REVISION:
+    if sealed["schema_revision"] in {CAPACITY_REVISION, "workspace-assistance-keyed-v16"}:
         from src.workspace.assistance_capacity_contract import check_schemas
         from src.workspace.d5_capacity_policy import NORMALIZATION_REVISION
         value["output_schema"] = check_schemas()["wire"]
@@ -483,7 +488,7 @@ def checker_context(
             )
         )
         value["review_evidence"] = sealed["units"]
-    if sealed["schema_revision"] == CAPACITY_REVISION:
+    if sealed["schema_revision"] in {CAPACITY_REVISION, "workspace-assistance-keyed-v16"}:
         # Keep each exact passage once. Claims carry separate sealed handles;
         # claim_input_digest still binds the complete resolved evidence identity.
         value["draft"] = {"claims": [
@@ -493,6 +498,11 @@ def checker_context(
             for claim in claims
         ]}
         value["evidence_encoding"] = "Separate selected handles resolve only through review_evidence; no joined quotation or source expansion."
+    if sealed["schema_revision"] == "workspace-assistance-keyed-v16":
+        from src.workspace.assistance_keyed_checks import NORMALIZATION_REVISION
+        from src.workspace.assistance_keyed_checks import schemas as keyed_schemas
+        value["output_schema"] = keyed_schemas(value)["wire"]
+        value["checker_normalization_revision"] = NORMALIZATION_REVISION
     return value
 
 
@@ -651,9 +661,9 @@ class D5Adapter(QualificationAdapter):
         operation = settings.get("d5_operation")
         routes = settings.get("operation_routes")
         prospective = capacity_enabled(dict(settings))
-        if prospective and (sealed.get("schema_revision") != CAPACITY_REVISION or settings.get("operation_deadlines") != CAPACITY_DEADLINES or routes != CAPACITY_ROUTES):
+        if prospective and (sealed.get("schema_revision") not in {CAPACITY_REVISION, "workspace-assistance-keyed-v16"} or settings.get("operation_deadlines") != CAPACITY_DEADLINES or routes != CAPACITY_ROUTES):
             raise AdmissionError("d5_capacity_sealed_policy_binding_required")
-        if not prospective and sealed.get("schema_revision") == CAPACITY_REVISION:
+        if not prospective and sealed.get("schema_revision") in {CAPACITY_REVISION, "workspace-assistance-keyed-v16"}:
             raise AdmissionError("d5_capacity_policy_required")
         if "operation_deadlines" in settings:
             from src.workspace.d5_deadlines import validate as validate_deadlines
@@ -924,8 +934,13 @@ class D5Adapter(QualificationAdapter):
             value["previous_grounding"] = asdict(report)
             value["previous_prose_review"] = checked.model_dump(mode="json")
             if capacity_enabled(dict(self.inputs.settings)):
-                from src.workspace.assistance_capacity_contract import compact_checks
-                value["previous_prose_review"] = compact_checks(checked.model_dump(mode="json"))
+                if sealed["schema_revision"] == "workspace-assistance-keyed-v16":
+                    from src.workspace.assistance_keyed_checks import compact
+                    prior_context = checker_context(sealed, workflow["output"], materials)
+                    value["previous_prose_review"] = compact(checked.model_dump(mode="json"), prior_context)
+                else:
+                    from src.workspace.assistance_capacity_contract import compact_checks
+                    value["previous_prose_review"] = compact_checks(checked.model_dump(mode="json"))
                 value["previous_grounding"]["assessments"] = [
                     {key: item for key, item in assessment.items() if key != "reason"}
                     for assessment in value["previous_grounding"]["assessments"]
@@ -971,6 +986,11 @@ class D5Adapter(QualificationAdapter):
                 from src.workspace.assistance_compact_checks import normalize as normalize_checks
 
                 return normalize_checks(parsed)
+            if self.inputs.settings["d5_request"]["schema_revision"] == "workspace-assistance-keyed-v16":
+                from src.workspace.assistance_keyed_checks import normalize as keyed_normalize
+                context = json.loads(body["messages"][0]["content"])
+                from src.workspace.d5_report_binding import json_object
+                return keyed_normalize(json_object(text), context, probe=self.inputs.settings["d5_operation"] == "probe")
             if capacity_enabled(dict(self.inputs.settings)) and self.inputs.settings["d5_operation"] != "probe":
                 from src.workspace.assistance_capacity_contract import normalize_checks
                 return normalize_checks(parsed)
@@ -996,6 +1016,9 @@ class D5Adapter(QualificationAdapter):
         }
 
     def _probe_schema(self) -> dict[str, Any]:
+        if self.inputs.settings["d5_request"]["schema_revision"] == "workspace-assistance-keyed-v16":
+            from src.workspace.assistance_keyed_checks import schemas as keyed_schemas
+            return dict(keyed_schemas(self.inputs.settings["probe_context"], probe=True)["wire"])
         if capacity_enabled(dict(self.inputs.settings)):
             from src.workspace.assistance_capacity_contract import probe_checks_model
             return dict(transform_schema(probe_checks_model([c["claim_id"] for c in self.inputs.settings["probe_context"]["claims"]])))
@@ -1046,7 +1069,7 @@ class D5Adapter(QualificationAdapter):
         report = validate_claims(claims, materials)
         if any(not item.scope_compatible for item in report.assessments):
             raise AdmissionError("d5_draft_scope_incompatible")
-        model = D5CapacityStudyDraft if sealed["schema_revision"] == CAPACITY_REVISION else D5StudyDraft
+        model = D5CapacityStudyDraft if sealed["schema_revision"] in {CAPACITY_REVISION, "workspace-assistance-keyed-v16"} else D5StudyDraft
         return model.model_validate(
             {
                 "kind": "deep_dive",
@@ -1063,6 +1086,9 @@ class D5Adapter(QualificationAdapter):
         )
 
     def _checks(self, output: dict[str, Any]) -> Any:
+        if self.inputs.settings["d5_request"]["schema_revision"] == "workspace-assistance-keyed-v16" and self.inputs.settings["d5_operation"] == "probe":
+            from src.workspace.assistance_keyed_checks import probe_checks_model as keyed_probe
+            return keyed_probe().model_validate(output)
         if capacity_enabled(dict(self.inputs.settings)) and self.inputs.settings["d5_operation"] == "probe":
             from src.workspace.assistance_capacity_contract import probe_checks_model
             return probe_checks_model([c["claim_id"] for c in self.inputs.settings["probe_context"]["claims"]]).model_validate(output)
@@ -1193,7 +1219,12 @@ class D5Adapter(QualificationAdapter):
                         )
 
                         parsed = normalize_checks(parsed)
-                    if capacity_enabled(dict(self.inputs.settings)) and self.inputs.settings["d5_operation"] != "probe":
+                    if self.inputs.settings["d5_request"]["schema_revision"] == "workspace-assistance-keyed-v16":
+                        from src.workspace.assistance_keyed_checks import (
+                            normalize as keyed_normalize,
+                        )
+                        parsed = keyed_normalize(parsed, context, probe=self.inputs.settings["d5_operation"] == "probe")
+                    elif capacity_enabled(dict(self.inputs.settings)) and self.inputs.settings["d5_operation"] != "probe":
                         from src.workspace.assistance_capacity_contract import (
                             normalize_checks as normalize_capacity_checks,
                         )
