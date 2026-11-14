@@ -42,11 +42,15 @@ function fullNote(job: QualificationJob, output: AssistanceOutput): string {
 
 function referenceNote(job: QualificationJob, ref: EvidenceReference): string {
   const stored = job.request.assistance;
-  const url = new URL(readerHref({ work_id: ref.work_id }, ref.version_id, passageAnchor(ref)), "https://workspace.invalid");
-  url.searchParams.set("qualification", job.id);
-  url.searchParams.set("mode", stored.mode);
-  if (stored.project_id) url.searchParams.set("project", stored.project_id);
-  return `Reference to complete retained experimental qualification result (human review pending).\n\n${url.pathname}${url.search}${url.hash}\n\nQualification record: ${job.id}`;
+  const href = readerHref({ work_id: ref.work_id }, ref.version_id, passageAnchor(ref));
+  const [pathAndQuery, fragment] = href.split("#", 2);
+  const [path, query] = pathAndQuery!.split("?", 2);
+  const params = new URLSearchParams(query);
+  params.set("qualification", job.id);
+  params.set("mode", stored.mode);
+  if (stored.project_id) params.set("project", stored.project_id);
+  const target = `${path}?${params}${fragment === undefined ? "" : `#${fragment}`}`;
+  return `Reference to complete retained experimental qualification result (human review pending).\n\n${target}\n\nQualification record: ${job.id}`;
 }
 
 /** Read-only, quarantined production-pipeline results. No dispatch API exists. */
