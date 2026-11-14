@@ -75,8 +75,9 @@ def limits_for(settings: dict[str, Any]) -> dict[str, Any]:
     from src.workspace.d5_campaign_v14_policy import enabled as v14
     from src.workspace.d5_campaign_v15_policy import LIMITS as V15_LIMITS
     from src.workspace.d5_campaign_v15_policy import enabled as v15
-
-    return V15_LIMITS if v15(settings) else V14_LIMITS if v14(settings) else LIMITS
+    from src.workspace.d5_campaign_v16_policy import LIMITS as V16_LIMITS
+    from src.workspace.d5_campaign_v16_policy import enabled as v16
+    return V16_LIMITS if v16(settings) else V15_LIMITS if v15(settings) else V14_LIMITS if v14(settings) else LIMITS
 
 
 def job_binding(conn: Any, job_id: str) -> tuple[str, dict[str, Any], str]:
@@ -117,7 +118,13 @@ def guard_order(conn: Any, bound: dict[str, Any], case_id: str) -> None:
     )
 
     if bound["limits"] == V15_LIMITS and bound["cases"][case_id]["stage"] != "B":
-        require_capacity_contracts(conn, bound)
+        if bound["authorization_record"]["campaign_extension"]["core"]["revision"] == "programme-keyed-contract-successor-v16":
+            from src.workspace.d5_campaign_v16_policy import (
+                require_development_contracts as require_keyed_contracts,
+            )
+            require_keyed_contracts(conn, bound)
+        else:
+            require_capacity_contracts(conn, bound)
     if bound["limits"] == V14_LIMITS and bound["cases"][case_id]["stage"] != "B":
         require_development_contracts(conn, bound)
 

@@ -51,6 +51,9 @@ def template(packet: dict[str, Any]) -> dict[str, Any]:
     if packet.get("revision") == "d5-comprehensive-machine-campaign-v15":
         value.update(budget_adjustment_approved=False, expiry_adjustment_approved=False,
                      programme_expires_at=None, expires_at=None)
+    if packet.get("revision") == "d5-keyed-machine-campaign-v16":
+        value.pop("capacity_amendment_approved")
+        value.update(programme_expires_at=packet["programme"]["programme_expires_at"], expires_at=None)
     return value
 
 
@@ -85,7 +88,7 @@ def record(store: Any, packet: dict[str, Any], receipt: dict[str, Any]) -> dict[
         receipt.get("approved") is not True
         or not receipt.get("approved_by")
         or not receipt.get("approval_source")
-        or receipt.get("capacity_amendment_approved") is not True
+        or "capacity_amendment_approved" in expected and receipt.get("capacity_amendment_approved") is not True
         or receipt.get("historical_uncertainty_exception_approved") is not True
         or "budget_adjustment_approved" in expected
         and receipt.get("budget_adjustment_approved") is not True
@@ -142,6 +145,9 @@ def authorize_fixture(store: Any, packet: dict[str, Any]) -> dict[str, Any]:
         value["budget_adjustment_approved"] = True
     if packet.get("revision") == "d5-comprehensive-machine-campaign-v15":
         value.update(expiry_adjustment_approved=True, programme_expires_at=(now + timedelta(days=7)).isoformat(), expires_at=(now + timedelta(hours=23)).isoformat())
+    if packet.get("revision") == "d5-keyed-machine-campaign-v16":
+        value.pop("capacity_amendment_approved", None)
+        value["expires_at"] = min(now + timedelta(hours=23), datetime.fromisoformat(packet["programme"]["programme_expires_at"])).isoformat()
     return record(store, packet, value)
 
 
@@ -156,7 +162,7 @@ def revoke(store: Any, packet: dict[str, Any], authorization: dict[str, Any]) ->
     prospective = packet.get("revision") == "d5-complete-machine-campaign-v14"
     if prospective and authorization.get("scope_id") != "d5-" + packet["packet_digest"][:24]:
         raise AdmissionError("campaign_revocation_scope_binding_required")
-    capacity = packet.get("revision") == "d5-comprehensive-machine-campaign-v15"
+    capacity = packet.get("revision") in {"d5-comprehensive-machine-campaign-v15", "d5-keyed-machine-campaign-v16"}
     if capacity and authorization.get("scope_id") != "d5-" + packet["packet_digest"][:24]:
         raise AdmissionError("campaign_revocation_scope_binding_required")
     statement = (

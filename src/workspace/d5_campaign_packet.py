@@ -234,7 +234,7 @@ def plan_digest(packet: dict[str, Any]) -> str:
                 "adapter",
                 "source_bindings",
             )
-        } | ({"progression": packet["progression"], "checker_normalization_revision": packet["checker_normalization_revision"]} if packet.get("revision") in {"d5-complete-machine-campaign-v14", "d5-comprehensive-machine-campaign-v15"} else {}) | ({"capacity_policy": packet["capacity_policy"], "expiry_policy": packet["expiry_policy"]} if packet.get("revision") == "d5-comprehensive-machine-campaign-v15" else {})
+        } | ({"progression": packet["progression"], "checker_normalization_revision": packet["checker_normalization_revision"]} if packet.get("revision") in {"d5-complete-machine-campaign-v14", "d5-comprehensive-machine-campaign-v15", "d5-keyed-machine-campaign-v16"} else {}) | ({"capacity_policy": packet["capacity_policy"], "expiry_policy": packet["expiry_policy"]} if packet.get("revision") in {"d5-comprehensive-machine-campaign-v15", "d5-keyed-machine-campaign-v16"} else {}) | ({"checker_schema_template_revision": packet["checker_schema_template_revision"]} if packet.get("revision") == "d5-keyed-machine-campaign-v16" else {})
     )
 
 
@@ -537,6 +537,10 @@ def freeze(store: Any, snapshot: dict[str, Any]) -> dict[str, Any]:
 
 
 def verify_packet(p: dict[str, Any]) -> None:
+    if p.get("revision") == "d5-keyed-machine-campaign-v16":
+        from src.workspace.d5_campaign_v16_packet import verify_packet as verify_keyed
+        verify_keyed(p)
+        return
     if p.get("revision") == "d5-comprehensive-machine-campaign-v15":
         from src.workspace.d5_campaign_v15_packet import verify_packet as verify_capacity
         verify_capacity(p)
