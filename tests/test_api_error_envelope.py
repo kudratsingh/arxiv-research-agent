@@ -116,8 +116,11 @@ class TestTheUnhandledPath:
         """
         app = _app_with_a_raising_route()
         async with LifespanManager(app), _client(app) as client:
-                resp = await client.get("/_test_boom")
+                # Random UUIDs can coincidentally contain the DSN port5432.
+                # Keep correlation deterministic; retain every raw-byte leak check.
+                resp = await client.get("/_test_boom", headers={"X-Request-Id": "redaction-envelope-correlation"})
 
+        assert resp.headers["x-request-id"] == "redaction-envelope-correlation"
         visible = resp.text + repr(dict(resp.headers))
         for fragment in (
             "db.internal.example",

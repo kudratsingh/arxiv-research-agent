@@ -4,6 +4,8 @@ import pytest
 
 from src.workspace.d5_capacity_outcomes import classify_outcome
 
+pytestmark = pytest.mark.unit
+
 
 def reject(code, error_class="AdmissionError"):
     return {"state": "failed", "content_rejection": {"error": code, "error_class": error_class, "accepted": False}}

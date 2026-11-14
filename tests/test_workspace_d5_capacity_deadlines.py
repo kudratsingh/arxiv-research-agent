@@ -10,6 +10,8 @@ from src.workspace.admission import AdmissionError
 from src.workspace.d5_capacity_policy import DEADLINES
 from src.workspace.d5_capacity_policy import POLICY as CAPACITY_POLICY
 
+pytestmark = pytest.mark.unit
+
 
 def reservation(*, capacity=True, seconds=0, steps=0):
     settings = {"operation_deadlines": deepcopy(DEADLINES if capacity else deadlines.POLICY)}
