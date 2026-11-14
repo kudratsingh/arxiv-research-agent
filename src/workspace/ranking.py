@@ -144,9 +144,14 @@ def _tokens(value: str) -> set[str]:
 def _contains(text: str, term: str) -> bool:
     # Word boundaries avoid `rag` matching `fragment`, but permit agent/agents
     # only where the authored vocabulary explicitly includes the singular.
+    needle = term.lower()
+    # The escaped regex requires this exact literal before its optional plural.
+    # Skip a boundary search only when the literal is absent; present literals
+    # still receive the original Unicode word-boundary and plural validation.
     return (
         bool(term.strip())
-        and re.search(r"(?<!\w)" + re.escape(term.lower()) + r"s?(?!\w)", text) is not None
+        and needle in text
+        and re.search(r"(?<!\w)" + re.escape(needle) + r"s?(?!\w)", text) is not None
     )
 
 
