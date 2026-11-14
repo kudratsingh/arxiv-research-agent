@@ -58,7 +58,7 @@ def capture(store: Any, program_id: str) -> dict[str, Any]:
         if any(r["visibility_owner"] is not None for r in tables["workspace_works"]):
             raise AdmissionError("campaign_v16_public_context_only")
         tables.update({name: financial_rows(conn, name) for name in FINANCIAL_TABLES})
-        extras = {}
+        extras: dict[str, Any] = {}
         for table, key in (
             ("workspace_programme_amendments", "recorded_amendments"),
             ("workspace_programme_successor_amendments", "recorded_successor_amendments"),
