@@ -99,3 +99,15 @@ most14 identities under its distinct principal. The runner's full census does no
 use that UI list. Complete selected-job data and reasons remain inspectable; this
 batch's Reader tests establish local rendering and exact saved links, while remote
 browser acceptance remains separately identified in CI.
+
+## Profile-backed runtime correction and successor binding
+
+Candidate243 and its cancelled CI43556087526 remain retained. The successor
+applicationa0ad5c2c changes onlyranking.py among78producer files: a missing required
+literal skips an impossible regex match, while every possible positive still uses
+the unchanged Unicode boundary/plural regex.34controls preserve frozen-corpus
+rankings and filters. The same profiled checkpoint call38.65→12.24s, regexsearches
+1492597→66645;50affected CI-shaped coverage controls pass,max11.48s. No timeout,
+selection, coverage input/floor, schema, evidence, threshold or model changes.
+Packet25eec8f541dbe7f70bf2fadee59f51c0d8b456980856cd4f38fce20b139e8bde is separately
+frozen and unapproved; old candidate243 never grants its authority.

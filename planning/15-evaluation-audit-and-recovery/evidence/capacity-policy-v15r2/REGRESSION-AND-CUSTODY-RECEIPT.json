@@ -1,0 +1,30 @@
+{
+  "application_commit": "a0ad5c2ceb5ba1d69753f1bd398876e054e90792",
+  "original_checker_sha256": "ee180d7dc090e76a35793aeab46cae15855994e312e3066b1e1044deffd39119",
+  "original_draft_sha256": "752e712eb9dfda70a72ac418da2b6cf7b22d890c3c05f0cde3a59c54176d63e7",
+  "successor_derivative_changes": [
+    "/revision only"
+  ],
+  "original_reason_characters": [
+    104,
+    110,
+    82,
+    87,
+    92
+  ],
+  "all_reasons_preserved": true,
+  "result": "Completed first check reached semantic review; p1 uncertain still requires repair. No repair dispatched in this regression.",
+  "historical_v14_result": "UNCHANGED FAILED",
+  "historical_files_verified": {
+    "v13": 27,
+    "v14": 48
+  },
+  "copied_missing_files": 0,
+  "predecessors_overwritten": 0,
+  "all_current_response_assessments_still_bound": true,
+  "new_real_provider_contacts": 0,
+  "human_quality_evidence": false,
+  "private_proof_receipt_sha256": "4a8da08a4a8415b3b5cb85f40f5f8800a2a59bcb3b838017e0cbb882ca35e5e9",
+  "new_source_replay": "original-response-controls/run-20261114T053638Z-8da38b15",
+  "source_change_since_previous_proof": "Only semantics-preserving ranking literal prefilter; contract and historical verdict unchanged"
+}

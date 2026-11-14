@@ -1,0 +1,123 @@
+{
+  "basis": "Unapproved prospective successor package; full historical ledger and original raw evidence remain in permanent archives",
+  "application_commit": "a0ad5c2ceb5ba1d69753f1bd398876e054e90792",
+  "packet_digest": "25eec8f541dbe7f70bf2fadee59f51c0d8b456980856cd4f38fce20b139e8bde",
+  "proposal_digest": "a3687d29e52dd2f3a8066cb813d506f8fbf494a0e29b9bdb5f1c9e63f8e7edd4",
+  "files": [
+    {
+      "path": "ANSWERABILITY.json",
+      "bytes": 68895,
+      "sha256": "69b3fd74e6a4bab188491a025b4da4d58ad1401bb84c095231b0a2e4b17eea6f"
+    },
+    {
+      "path": "APPROVAL-REQUEST.md",
+      "bytes": 4854,
+      "sha256": "1372d2efea0e28c1d49bcc2250c72590563e6270373e84719f7ecf59e2b1ac4f"
+    },
+    {
+      "path": "AUTHORIZATION-TEMPLATE.json",
+      "bytes": 45404,
+      "sha256": "d16f7b6f04395c5604cc050dcb81b415a744fd0c45a2cf7f80e5ecb03ed867a1"
+    },
+    {
+      "path": "BUDGET.json",
+      "bytes": 754,
+      "sha256": "eab6a80c7469f94b8b3f52c6a416b3b6b623b138928e88c6874fb7ae6f1bccdf"
+    },
+    {
+      "path": "CHECKER-SCHEMAS.json",
+      "bytes": 14118,
+      "sha256": "3151879c33020d8956649457bb50684e9b11af3bfbcb4ef514335bbe6bd79174"
+    },
+    {
+      "path": "IDENTITY.json",
+      "bytes": 603,
+      "sha256": "ebb9e793aa951e8cbc0bfc72e7b981e7de903b1bdf6e257a41c1be546702f478"
+    },
+    {
+      "path": "INDEPENDENT-REVIEW.md",
+      "bytes": 3354,
+      "sha256": "8fa185d1514038a66349a58e8ae69c6708b3875532626be1f0df477efa938d62"
+    },
+    {
+      "path": "LOCAL-GATE-RECEIPT.json",
+      "bytes": 4027,
+      "sha256": "04132d650e4fc9eda341d3d2e0224a81285f2b3aa301d3e885a0afbc469db15d"
+    },
+    {
+      "path": "OFFLINE-REPLAY-RECEIPT.json",
+      "bytes": 1077,
+      "sha256": "f3164476214c9fc9833bfdf3c35a385731fcb274200880830da743079f0225f3"
+    },
+    {
+      "path": "PERFORMANCE-REPAIR.json",
+      "bytes": 1559,
+      "sha256": "e81f43a1664ad5b17b7503afb58dfc48d7e53adcf1307917bdaf674a75ed4c99"
+    },
+    {
+      "path": "PREPARATION-RECEIPT.json",
+      "bytes": 524,
+      "sha256": "cd18c25615742f47d130f860ada115ae5567cef384e7a5fc43c075567dcb7eef"
+    },
+    {
+      "path": "PROPOSAL.json",
+      "bytes": 19293,
+      "sha256": "26dddd1506673f542e0094939b56ae0e3ccf74e976fa178f399d7d25a2327dbb"
+    },
+    {
+      "path": "README.md",
+      "bytes": 2107,
+      "sha256": "7497261a561fb01d40d1d02582e56cca085265e3a114c1fa268bccd50314e79f"
+    },
+    {
+      "path": "READONLY-CENSUS-RECEIPT.json",
+      "bytes": 670,
+      "sha256": "0c767bd554f53d9a7cc5a4cb1ca2927878261cd1db8cfdbffb18b716df01469a"
+    },
+    {
+      "path": "REGRESSION-AND-CUSTODY-RECEIPT.json",
+      "bytes": 1202,
+      "sha256": "b5a5fff6f5ecb35f29341b0d24e5a998d249b447e96ecae811b0eec7fd616e6b"
+    },
+    {
+      "path": "REQUEST-INDEX.json.gz",
+      "bytes": 69518,
+      "sha256": "654d3958a8d2518cd43d08627c071db3c231c39edfb90826c6cf9327db26fb60"
+    },
+    {
+      "path": "ROUTES-AND-LIMITS.json",
+      "bytes": 4480,
+      "sha256": "933f8772def0f472bb4d558c044e21248af5ae6a463ba3cc6496865d9edf19ca"
+    },
+    {
+      "path": "RUNBOOK.md",
+      "bytes": 7391,
+      "sha256": "53eac02408483fee8162eecd41930c0eaa2b037d1cffbf71c243b846897e394d"
+    },
+    {
+      "path": "SCHEMA-METRICS.json",
+      "bytes": 4122,
+      "sha256": "682ba2ef6dcc39db9f1eb0e001ba00627bd4eb6c619f9a5c83f050cca92d0b74"
+    },
+    {
+      "path": "SIZE-OBSERVATIONS.json",
+      "bytes": 534,
+      "sha256": "f4b70fc914c349c5365776823942359bc8ab7bdb7ba932852b62668509a52514"
+    },
+    {
+      "path": "VERIFICATION.md",
+      "bytes": 6747,
+      "sha256": "b4d7aecca19bb9e488296fea7b470180349e97260b0991ddc03101dc031b2edc"
+    },
+    {
+      "path": "compiled-inputs.json.gz",
+      "bytes": 56226,
+      "sha256": "05ac7448c3c1a8fc7ab2df99fac9b4ce560905051431128f9970d4df134a8815"
+    },
+    {
+      "path": "packet.json.gz",
+      "bytes": 435816,
+      "sha256": "92b63a757557a7cd983c63be10d805651b6ca1787eb3f2365a48a15a58d0325b"
+    }
+  ]
+}

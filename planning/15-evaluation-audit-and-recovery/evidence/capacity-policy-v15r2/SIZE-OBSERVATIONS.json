@@ -1,0 +1,13 @@
+{
+  "basis": "Exact offline UTF-8 JSON byte observations; synthetic usage/counts, not provider token fit",
+  "application": "a0ad5c2ceb5ba1d69753f1bd398876e054e90792",
+  "packet_digest": "25eec8f541dbe7f70bf2fadee59f51c0d8b456980856cd4f38fce20b139e8bde",
+  "max_request_utf8_bytes": 72027,
+  "max_raw_output_utf8_bytes": 27201,
+  "max_normalized_output_utf8_bytes": 50132,
+  "complete_http_receipts_verified": 88,
+  "message_receipts_verified": 44,
+  "count_receipts_verified": 44,
+  "real_contacts": 0,
+  "machine_quality": "HOLD"
+}

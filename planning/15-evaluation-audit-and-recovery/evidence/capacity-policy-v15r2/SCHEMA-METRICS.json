@@ -1,0 +1,128 @@
+[
+  {
+    "case_id": "campaign-dev-learn",
+    "wire_schema_digest": "68ffc868491d3e63f9d339ec3daa38ed3fc699536a1f079d8eb07c379bb0b9c1",
+    "compact_utf8_bytes": 7531,
+    "schema_nodes": 85,
+    "anyOf_sites": 1,
+    "anyOf_alternatives": 2,
+    "provider_acceptance": "UNMEASURED"
+  },
+  {
+    "case_id": "campaign-dev-compare",
+    "wire_schema_digest": "f9f71c5bb0306845f854f35e42faeca8597949175a22866919e746a0d0df09f5",
+    "compact_utf8_bytes": 7910,
+    "schema_nodes": 89,
+    "anyOf_sites": 1,
+    "anyOf_alternatives": 2,
+    "provider_acceptance": "UNMEASURED"
+  },
+  {
+    "case_id": "campaign-eval-learn-mechanism",
+    "wire_schema_digest": "2ee14a8fca5569a53287a7d34a7810561e03906673f4e77b9da6e41fa2426760",
+    "compact_utf8_bytes": 7531,
+    "schema_nodes": 85,
+    "anyOf_sites": 1,
+    "anyOf_alternatives": 2,
+    "provider_acceptance": "UNMEASURED"
+  },
+  {
+    "case_id": "campaign-eval-learn-conditions",
+    "wire_schema_digest": "4c42c382e88144e06906a664e62766ead27bde0b7b778a96f57f8e40e27f291b",
+    "compact_utf8_bytes": 7531,
+    "schema_nodes": 85,
+    "anyOf_sites": 1,
+    "anyOf_alternatives": 2,
+    "provider_acceptance": "UNMEASURED"
+  },
+  {
+    "case_id": "campaign-eval-learn-experiment",
+    "wire_schema_digest": "18b4493aa2ec54ccb9a00365b4387b378322c947217c36fd77ef3daa748fd90b",
+    "compact_utf8_bytes": 7531,
+    "schema_nodes": 85,
+    "anyOf_sites": 1,
+    "anyOf_alternatives": 2,
+    "provider_acceptance": "UNMEASURED"
+  },
+  {
+    "case_id": "campaign-eval-learn-measurement",
+    "wire_schema_digest": "3554303c441c93df1b7546af1488c94bf94af12cf1f571928d3e23893d9146e5",
+    "compact_utf8_bytes": 7531,
+    "schema_nodes": 85,
+    "anyOf_sites": 1,
+    "anyOf_alternatives": 2,
+    "provider_acceptance": "UNMEASURED"
+  },
+  {
+    "case_id": "campaign-eval-research-memory",
+    "wire_schema_digest": "077f290f1cf337bdd3ccc7610aaf9117c16c1e139bccc9185ee4903f40e7a9ad",
+    "compact_utf8_bytes": 7886,
+    "schema_nodes": 89,
+    "anyOf_sites": 1,
+    "anyOf_alternatives": 2,
+    "provider_acceptance": "UNMEASURED"
+  },
+  {
+    "case_id": "campaign-eval-research-retrieval",
+    "wire_schema_digest": "9eb6445b173a43867780b00195a47a70bcfc27f2092ec977c0c5cff3b0b60d12",
+    "compact_utf8_bytes": 7910,
+    "schema_nodes": 89,
+    "anyOf_sites": 1,
+    "anyOf_alternatives": 2,
+    "provider_acceptance": "UNMEASURED"
+  },
+  {
+    "case_id": "campaign-eval-research-verification",
+    "wire_schema_digest": "cde494192403c27e5e9d4c6e539a549b85e93a4f54598c9a5f54c411bf8872cd",
+    "compact_utf8_bytes": 7886,
+    "schema_nodes": 89,
+    "anyOf_sites": 1,
+    "anyOf_alternatives": 2,
+    "provider_acceptance": "UNMEASURED"
+  },
+  {
+    "case_id": "campaign-eval-research-insufficient",
+    "wire_schema_digest": "a35422de35d8eea9d249861bc69f412b355c5ddaa2be89a3f7ba5d112c886e32",
+    "compact_utf8_bytes": 2136,
+    "schema_nodes": 26,
+    "anyOf_sites": 0,
+    "anyOf_alternatives": 0,
+    "provider_acceptance": "UNMEASURED"
+  },
+  {
+    "case_id": "campaign-probe-1",
+    "wire_schema_digest": "ce29c4778f5fc109aea910b5865447632e58d2e7d3d186476f852460836297df",
+    "compact_utf8_bytes": 2044,
+    "schema_nodes": 23,
+    "anyOf_sites": 1,
+    "anyOf_alternatives": 2,
+    "provider_acceptance": "UNMEASURED"
+  },
+  {
+    "case_id": "campaign-probe-2",
+    "wire_schema_digest": "8236c23cd16a069905a25b2758fab18bda7555be8c5b0d50c9922cf996f4768c",
+    "compact_utf8_bytes": 2044,
+    "schema_nodes": 23,
+    "anyOf_sites": 1,
+    "anyOf_alternatives": 2,
+    "provider_acceptance": "UNMEASURED"
+  },
+  {
+    "case_id": "campaign-probe-3",
+    "wire_schema_digest": "46a858a4cea15ecbbe7efa714b9eb270a053975dcb3eb855c2161c363849518d",
+    "compact_utf8_bytes": 2044,
+    "schema_nodes": 23,
+    "anyOf_sites": 1,
+    "anyOf_alternatives": 2,
+    "provider_acceptance": "UNMEASURED"
+  },
+  {
+    "case_id": "campaign-probe-4",
+    "wire_schema_digest": "f69db33b9e3aa4b87fd99f3086df0c3cbb7a87d5b35907764ad262ef31c883dc",
+    "compact_utf8_bytes": 2044,
+    "schema_nodes": 23,
+    "anyOf_sites": 1,
+    "anyOf_alternatives": 2,
+    "provider_acceptance": "UNMEASURED"
+  }
+]

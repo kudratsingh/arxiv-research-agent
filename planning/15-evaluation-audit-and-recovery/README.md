@@ -1,4 +1,13 @@
-# Current prospective capacity repair — v15
+# Current offline campaign package
+
+The current unapproved successor is [capacity-policy-v15r2](evidence/capacity-policy-v15r2/README.md),
+bound to applicationa0ad5c2c. It preserves all v15 scope/quality guards and fixes
+the measured ranking bottleneck without extending test deadlines. Earlier
+candidate243 and cancelled CI43556087526 remain intact. Final local gates pass; hosted exact-head CI remains pending.
+
+---
+
+# Superseded unapproved v15 candidate — retained checkpoint
 
 V14 executed and stopped at its Learn contract failure. Its original response,
 scores, receipts and both holds remain immutable. The [comprehensive v15 repair](CAPACITY-REPAIR-v15.md)

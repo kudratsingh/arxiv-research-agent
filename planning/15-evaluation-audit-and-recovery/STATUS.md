@@ -1,4 +1,20 @@
-# Comprehensive prospective capacity repair — v15
+# Current prospective successor — v15r2
+
+Application `a0ad5c2ceb5ba1d69753f1bd398876e054e90792`; packet
+`25eec8f541dbe7f70bf2fadee59f51c0d8b456980856cd4f38fce20b139e8bde`.
+[Current single, inactive owner decision](evidence/capacity-policy-v15r2/APPROVAL-REQUEST.md).
+The earlier candidate 243 and exact-head run 43556087526 are preserved: eight jobs passed,
+Python was cancelled at 60 minutes with seven earlier test timeouts. No hosted full gate.
+A profile-backed exact-literal prefilter reduces ranking work without changing
+matches, formulas, corpus, evidence or schemas.34equivalence tests pass;50affected
+campaign/ranking controls pass under CI-shaped coverage in148.36s, max11.48s.
+The default 60-second test and 60-minute job bounds stay unchanged. Final local gates:
+7,764 passed / 62 skipped, 94.38% project coverage and 96% printed patch coverage;
+successor exact-head CI remains pending; no authority/contact/financial mutation.
+
+---
+
+# Superseded unapproved v15 checkpoint
 
 Application: `c5b859cc22abe7b66fec562881ba274d4eef9afc`.
 Branch: `codex/workspace-d5-capacity-policy`; permanent checkout:

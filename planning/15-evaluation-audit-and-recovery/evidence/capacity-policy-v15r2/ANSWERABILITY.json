@@ -1,0 +1,1232 @@
+{
+  "revision": "workspace-answerability-reference-v1",
+  "scoring_policy": "workspace-campaign-scoring-v13",
+  "reference_file_digest": "5f3e59984191133fa2a450a79a74e37150d53eb478cf91c963a068a09ae20723",
+  "rows": [
+    {
+      "part_id": "p1",
+      "answerability": "partially_answerable",
+      "expected_behavior": "bounded_partial_answer",
+      "retained_support": "The AWM abstract describes hypothetical action, read-only environment queries, evidence-based reasoning and executable observation construction without changing the real environment.",
+      "missing_information": "No full implementation, query protocol or prerequisite specification is retained.",
+      "limitation_origins": [
+        "available_text",
+        "extraction"
+      ],
+      "case_id": "campaign-eval-learn-mechanism",
+      "request": "What sequence of operations does the selected source describe? Separate established steps from prerequisites unavailable in the retained text.",
+      "requested_part": {
+        "id": "p1",
+        "request": "What sequence of operations does the selected source describe? Separate established steps from prerequisites unavailable in the retained text.",
+        "kind": "answer"
+      },
+      "request_digest": "7929bbeaae689c50a00aadfcf1eabf671137dfe0d8e7cf977c3f9c2abce2f5d4",
+      "task_policy_digest": "e66a44525613bec8de31623de8aff133fb88ff22bbe08271a0a0818559f4dc1c",
+      "selected_evidence": [
+        {
+          "handle": "u0309644ac6e9b03471f1",
+          "work_id": "arxiv:2610.40927",
+          "version_id": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+          "material_id": "mat-e4adcf0135fbaa3982584da87b0040b2",
+          "source_hash": "sha256:6fdc056b308bdc6e3849f19ff0e173a15b4898ca6f86670bc02403c17bf5fbf0",
+          "parser_revision": "workspace-plain-text-v1",
+          "scope": "abstract",
+          "span_id": "span-07767192aeb610b6e7b7d2275d6363ae",
+          "start": 0,
+          "end": 1532,
+          "quote_digest": "7e819173b096a1caebb3340631b08700d0b8065222bba222a7b064da96dc5f0d",
+          "reference_digest": "0309644ac6e9b03471f1dd399c92fab27eda0b3e6db4cca267fc1ed3bb8b1bdb"
+        }
+      ],
+      "selection_digest": "6ff8b75d02849bc5a4a3c68df6c4ed4a4892ac00dd55c4e34417158212cd9742",
+      "ranking_digest": "366fb7a5eb0c6bdf80525f942a6508fde039e94ee1e362d3170f9bb099a3a899",
+      "author": "Codex",
+      "provenance": "machine_reference",
+      "method": "Offline reading of the exact frozen selected abstract units and application task policy; authored before the successor campaign. Not human gold, provider results or fresh held-out evidence.",
+      "reviewed_at": "2026-11-13T06:10:47Z",
+      "human_review": null
+    },
+    {
+      "part_id": "p2",
+      "answerability": "partially_answerable",
+      "expected_behavior": "bounded_partial_answer",
+      "retained_support": "The AWM abstract describes hypothetical action, read-only environment queries, evidence-based reasoning and executable observation construction without changing the real environment.",
+      "missing_information": "No full implementation, query protocol or prerequisite specification is retained.",
+      "limitation_origins": [
+        "available_text",
+        "extraction"
+      ],
+      "case_id": "campaign-eval-learn-mechanism",
+      "request": "State separately cited source facts and retain study scope, comparator, metric definition and conditions.",
+      "requested_part": {
+        "id": "p2",
+        "request": "State separately cited source facts and retain study scope, comparator, metric definition and conditions.",
+        "kind": "source_note"
+      },
+      "request_digest": "ab7c39efda627b17141b9e4a18c1b83e2eb7724852bb3d0fd102fd99f84a9b4f",
+      "task_policy_digest": "e66a44525613bec8de31623de8aff133fb88ff22bbe08271a0a0818559f4dc1c",
+      "selected_evidence": [
+        {
+          "handle": "u0309644ac6e9b03471f1",
+          "work_id": "arxiv:2610.40927",
+          "version_id": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+          "material_id": "mat-e4adcf0135fbaa3982584da87b0040b2",
+          "source_hash": "sha256:6fdc056b308bdc6e3849f19ff0e173a15b4898ca6f86670bc02403c17bf5fbf0",
+          "parser_revision": "workspace-plain-text-v1",
+          "scope": "abstract",
+          "span_id": "span-07767192aeb610b6e7b7d2275d6363ae",
+          "start": 0,
+          "end": 1532,
+          "quote_digest": "7e819173b096a1caebb3340631b08700d0b8065222bba222a7b064da96dc5f0d",
+          "reference_digest": "0309644ac6e9b03471f1dd399c92fab27eda0b3e6db4cca267fc1ed3bb8b1bdb"
+        }
+      ],
+      "selection_digest": "6ff8b75d02849bc5a4a3c68df6c4ed4a4892ac00dd55c4e34417158212cd9742",
+      "ranking_digest": "366fb7a5eb0c6bdf80525f942a6508fde039e94ee1e362d3170f9bb099a3a899",
+      "author": "Codex",
+      "provenance": "machine_reference",
+      "method": "Offline reading of the exact frozen selected abstract units and application task policy; authored before the successor campaign. Not human gold, provider results or fresh held-out evidence.",
+      "reviewed_at": "2026-11-13T06:10:47Z",
+      "human_review": null
+    },
+    {
+      "part_id": "p3",
+      "answerability": "answerable",
+      "expected_behavior": "answer",
+      "retained_support": "The retained scope and absent details above permit identifying bounded evidence gaps, without supplying missing findings.",
+      "missing_information": "No full implementation, query protocol or prerequisite specification is retained.",
+      "limitation_origins": [
+        "available_text",
+        "extraction"
+      ],
+      "case_id": "campaign-eval-learn-mechanism",
+      "request": "Identify missing evidence or required details without inventing findings.",
+      "requested_part": {
+        "id": "p3",
+        "request": "Identify missing evidence or required details without inventing findings.",
+        "kind": "answer"
+      },
+      "request_digest": "ea255c55dea6c9b082e2aced48f3e40e399040bcdaa83ed5e3a83b64dd667041",
+      "task_policy_digest": "e66a44525613bec8de31623de8aff133fb88ff22bbe08271a0a0818559f4dc1c",
+      "selected_evidence": [
+        {
+          "handle": "u0309644ac6e9b03471f1",
+          "work_id": "arxiv:2610.40927",
+          "version_id": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+          "material_id": "mat-e4adcf0135fbaa3982584da87b0040b2",
+          "source_hash": "sha256:6fdc056b308bdc6e3849f19ff0e173a15b4898ca6f86670bc02403c17bf5fbf0",
+          "parser_revision": "workspace-plain-text-v1",
+          "scope": "abstract",
+          "span_id": "span-07767192aeb610b6e7b7d2275d6363ae",
+          "start": 0,
+          "end": 1532,
+          "quote_digest": "7e819173b096a1caebb3340631b08700d0b8065222bba222a7b064da96dc5f0d",
+          "reference_digest": "0309644ac6e9b03471f1dd399c92fab27eda0b3e6db4cca267fc1ed3bb8b1bdb"
+        }
+      ],
+      "selection_digest": "6ff8b75d02849bc5a4a3c68df6c4ed4a4892ac00dd55c4e34417158212cd9742",
+      "ranking_digest": "366fb7a5eb0c6bdf80525f942a6508fde039e94ee1e362d3170f9bb099a3a899",
+      "author": "Codex",
+      "provenance": "machine_reference",
+      "method": "Offline reading of the exact frozen selected abstract units and application task policy; authored before the successor campaign. Not human gold, provider results or fresh held-out evidence.",
+      "reviewed_at": "2026-11-13T06:10:47Z",
+      "human_review": null
+    },
+    {
+      "part_id": "p1",
+      "answerability": "insufficient",
+      "expected_behavior": "bounded_partial_answer",
+      "retained_support": "The TensorSSM abstract describes tensor tokenisation, cross-mode dependencies and state updates.",
+      "missing_information": "No reported numerical result, population, task dataset, comparator, metric definition or evaluated condition is present. Do not fabricate result conditions.",
+      "limitation_origins": [
+        "available_text"
+      ],
+      "case_id": "campaign-eval-learn-conditions",
+      "request": "Which population, task and evaluation conditions limit each reported result in this source? Keep comparator and metric definitions with the claims.",
+      "requested_part": {
+        "id": "p1",
+        "request": "Which population, task and evaluation conditions limit each reported result in this source? Keep comparator and metric definitions with the claims.",
+        "kind": "answer"
+      },
+      "request_digest": "941f636595d973149ad7b48cc4f0f3fb96d4ee57814e963fd3457f4a432fe31f",
+      "task_policy_digest": "1b877649ddcbec93f9c22be4c05593b600e996ef83e85f4ddc78cff8dd617f9b",
+      "selected_evidence": [
+        {
+          "handle": "u6494dfd09e443b85a647",
+          "work_id": "arxiv:2610.40871",
+          "version_id": "arxiv:2610.40871:v1:metadata-0be4ee69b6741057",
+          "material_id": "mat-48780ffb91b68f22cf607c5650336baf",
+          "source_hash": "sha256:0a0d6c2b721f9e82465d91ea96cec77e8245c6cccbe44e194b19a14db5f36be0",
+          "parser_revision": "workspace-plain-text-v1",
+          "scope": "abstract",
+          "span_id": "span-19ad83096299f09c1ada7a49ddd9bce9",
+          "start": 0,
+          "end": 1428,
+          "quote_digest": "f61cf9c0aa7db3a5c648d380225323367d66c95364808a3b53296aff5c2d4bd4",
+          "reference_digest": "6494dfd09e443b85a647411d5ef508331e9e89a1f8a47762bdfe26a8c4843d30"
+        }
+      ],
+      "selection_digest": "e968a03b607e755e1d506cc79ef3f76332cf21d40dbf1514731e9c17c8b42fb6",
+      "ranking_digest": "366fb7a5eb0c6bdf80525f942a6508fde039e94ee1e362d3170f9bb099a3a899",
+      "author": "Codex",
+      "provenance": "machine_reference",
+      "method": "Offline reading of the exact frozen selected abstract units and application task policy; authored before the successor campaign. Not human gold, provider results or fresh held-out evidence.",
+      "reviewed_at": "2026-11-13T06:10:47Z",
+      "human_review": null
+    },
+    {
+      "part_id": "p2",
+      "answerability": "partially_answerable",
+      "expected_behavior": "bounded_partial_answer",
+      "retained_support": "The TensorSSM abstract describes tensor tokenisation, cross-mode dependencies and state updates.",
+      "missing_information": "No reported numerical result, population, task dataset, comparator, metric definition or evaluated condition is present. Do not fabricate result conditions.",
+      "limitation_origins": [
+        "available_text"
+      ],
+      "case_id": "campaign-eval-learn-conditions",
+      "request": "State separately cited source facts and retain study scope, comparator, metric definition and conditions.",
+      "requested_part": {
+        "id": "p2",
+        "request": "State separately cited source facts and retain study scope, comparator, metric definition and conditions.",
+        "kind": "source_note"
+      },
+      "request_digest": "ab7c39efda627b17141b9e4a18c1b83e2eb7724852bb3d0fd102fd99f84a9b4f",
+      "task_policy_digest": "1b877649ddcbec93f9c22be4c05593b600e996ef83e85f4ddc78cff8dd617f9b",
+      "selected_evidence": [
+        {
+          "handle": "u6494dfd09e443b85a647",
+          "work_id": "arxiv:2610.40871",
+          "version_id": "arxiv:2610.40871:v1:metadata-0be4ee69b6741057",
+          "material_id": "mat-48780ffb91b68f22cf607c5650336baf",
+          "source_hash": "sha256:0a0d6c2b721f9e82465d91ea96cec77e8245c6cccbe44e194b19a14db5f36be0",
+          "parser_revision": "workspace-plain-text-v1",
+          "scope": "abstract",
+          "span_id": "span-19ad83096299f09c1ada7a49ddd9bce9",
+          "start": 0,
+          "end": 1428,
+          "quote_digest": "f61cf9c0aa7db3a5c648d380225323367d66c95364808a3b53296aff5c2d4bd4",
+          "reference_digest": "6494dfd09e443b85a647411d5ef508331e9e89a1f8a47762bdfe26a8c4843d30"
+        }
+      ],
+      "selection_digest": "e968a03b607e755e1d506cc79ef3f76332cf21d40dbf1514731e9c17c8b42fb6",
+      "ranking_digest": "366fb7a5eb0c6bdf80525f942a6508fde039e94ee1e362d3170f9bb099a3a899",
+      "author": "Codex",
+      "provenance": "machine_reference",
+      "method": "Offline reading of the exact frozen selected abstract units and application task policy; authored before the successor campaign. Not human gold, provider results or fresh held-out evidence.",
+      "reviewed_at": "2026-11-13T06:10:47Z",
+      "human_review": null
+    },
+    {
+      "part_id": "p3",
+      "answerability": "answerable",
+      "expected_behavior": "answer",
+      "retained_support": "The retained scope and absent details above permit identifying bounded evidence gaps, without supplying missing findings.",
+      "missing_information": "No reported numerical result, population, task dataset, comparator, metric definition or evaluated condition is present. Do not fabricate result conditions.",
+      "limitation_origins": [
+        "available_text"
+      ],
+      "case_id": "campaign-eval-learn-conditions",
+      "request": "Identify missing evidence or required details without inventing findings.",
+      "requested_part": {
+        "id": "p3",
+        "request": "Identify missing evidence or required details without inventing findings.",
+        "kind": "answer"
+      },
+      "request_digest": "ea255c55dea6c9b082e2aced48f3e40e399040bcdaa83ed5e3a83b64dd667041",
+      "task_policy_digest": "1b877649ddcbec93f9c22be4c05593b600e996ef83e85f4ddc78cff8dd617f9b",
+      "selected_evidence": [
+        {
+          "handle": "u6494dfd09e443b85a647",
+          "work_id": "arxiv:2610.40871",
+          "version_id": "arxiv:2610.40871:v1:metadata-0be4ee69b6741057",
+          "material_id": "mat-48780ffb91b68f22cf607c5650336baf",
+          "source_hash": "sha256:0a0d6c2b721f9e82465d91ea96cec77e8245c6cccbe44e194b19a14db5f36be0",
+          "parser_revision": "workspace-plain-text-v1",
+          "scope": "abstract",
+          "span_id": "span-19ad83096299f09c1ada7a49ddd9bce9",
+          "start": 0,
+          "end": 1428,
+          "quote_digest": "f61cf9c0aa7db3a5c648d380225323367d66c95364808a3b53296aff5c2d4bd4",
+          "reference_digest": "6494dfd09e443b85a647411d5ef508331e9e89a1f8a47762bdfe26a8c4843d30"
+        }
+      ],
+      "selection_digest": "e968a03b607e755e1d506cc79ef3f76332cf21d40dbf1514731e9c17c8b42fb6",
+      "ranking_digest": "366fb7a5eb0c6bdf80525f942a6508fde039e94ee1e362d3170f9bb099a3a899",
+      "author": "Codex",
+      "provenance": "machine_reference",
+      "method": "Offline reading of the exact frozen selected abstract units and application task policy; authored before the successor campaign. Not human gold, provider results or fresh held-out evidence.",
+      "reviewed_at": "2026-11-13T06:10:47Z",
+      "human_review": null
+    },
+    {
+      "part_id": "p1",
+      "answerability": "partially_answerable",
+      "expected_behavior": "bounded_partial_answer",
+      "retained_support": "The personalization abstract supplies 250 personas, five languages, 25K turns and a separation of strategy selection from execution. It supports a high-level outline.",
+      "missing_information": "Model identities, exact prompts, splits, annotation and training recipes, metric definitions and reproducible implementation are absent.",
+      "limitation_origins": [
+        "available_text",
+        "extraction"
+      ],
+      "case_id": "campaign-eval-learn-experiment",
+      "request": "What information in this retained source is enough to outline a reproducible experiment, and which implementation or protocol details must be requested?",
+      "requested_part": {
+        "id": "p1",
+        "request": "What information in this retained source is enough to outline a reproducible experiment, and which implementation or protocol details must be requested?",
+        "kind": "answer"
+      },
+      "request_digest": "c9f2e3b95b182f6b8952713ed4dbbc1150cb5de93f39ab932c8967d763180617",
+      "task_policy_digest": "c5e271410deb1ae19f5acd682cb95f712314aa5997457fba8f09e39431ba2618",
+      "selected_evidence": [
+        {
+          "handle": "uaa962b619d4135eadc40",
+          "work_id": "arxiv:2610.40930",
+          "version_id": "arxiv:2610.40930:v1:metadata-b45059ef8928ae02",
+          "material_id": "mat-e0471e7f635e5d75e96b25bdee5fe807",
+          "source_hash": "sha256:97289b875c0005e0a762b90ffc61a53dcdaf28cbeca89decf03bba9c572e1df8",
+          "parser_revision": "workspace-plain-text-v1",
+          "scope": "abstract",
+          "span_id": "span-d9f8a5e2f7e5b553a02e0ed0c0a8f1fb",
+          "start": 0,
+          "end": 1489,
+          "quote_digest": "88319e42205af5b3cfec86df94dd418a32310e6e24051fce06a9f23c6157c44c",
+          "reference_digest": "aa962b619d4135eadc4013cfcdb108a44c5f3b80ad568cd6276e4f44ca14064a"
+        }
+      ],
+      "selection_digest": "c203633f5329e18453657ccf66d40fcd27c35df73abca371d7822c82aeb467da",
+      "ranking_digest": "366fb7a5eb0c6bdf80525f942a6508fde039e94ee1e362d3170f9bb099a3a899",
+      "author": "Codex",
+      "provenance": "machine_reference",
+      "method": "Offline reading of the exact frozen selected abstract units and application task policy; authored before the successor campaign. Not human gold, provider results or fresh held-out evidence.",
+      "reviewed_at": "2026-11-13T06:10:47Z",
+      "human_review": null
+    },
+    {
+      "part_id": "p2",
+      "answerability": "partially_answerable",
+      "expected_behavior": "bounded_partial_answer",
+      "retained_support": "The personalization abstract supplies 250 personas, five languages, 25K turns and a separation of strategy selection from execution. It supports a high-level outline.",
+      "missing_information": "Model identities, exact prompts, splits, annotation and training recipes, metric definitions and reproducible implementation are absent.",
+      "limitation_origins": [
+        "available_text",
+        "extraction"
+      ],
+      "case_id": "campaign-eval-learn-experiment",
+      "request": "State separately cited source facts and retain study scope, comparator, metric definition and conditions.",
+      "requested_part": {
+        "id": "p2",
+        "request": "State separately cited source facts and retain study scope, comparator, metric definition and conditions.",
+        "kind": "source_note"
+      },
+      "request_digest": "ab7c39efda627b17141b9e4a18c1b83e2eb7724852bb3d0fd102fd99f84a9b4f",
+      "task_policy_digest": "c5e271410deb1ae19f5acd682cb95f712314aa5997457fba8f09e39431ba2618",
+      "selected_evidence": [
+        {
+          "handle": "uaa962b619d4135eadc40",
+          "work_id": "arxiv:2610.40930",
+          "version_id": "arxiv:2610.40930:v1:metadata-b45059ef8928ae02",
+          "material_id": "mat-e0471e7f635e5d75e96b25bdee5fe807",
+          "source_hash": "sha256:97289b875c0005e0a762b90ffc61a53dcdaf28cbeca89decf03bba9c572e1df8",
+          "parser_revision": "workspace-plain-text-v1",
+          "scope": "abstract",
+          "span_id": "span-d9f8a5e2f7e5b553a02e0ed0c0a8f1fb",
+          "start": 0,
+          "end": 1489,
+          "quote_digest": "88319e42205af5b3cfec86df94dd418a32310e6e24051fce06a9f23c6157c44c",
+          "reference_digest": "aa962b619d4135eadc4013cfcdb108a44c5f3b80ad568cd6276e4f44ca14064a"
+        }
+      ],
+      "selection_digest": "c203633f5329e18453657ccf66d40fcd27c35df73abca371d7822c82aeb467da",
+      "ranking_digest": "366fb7a5eb0c6bdf80525f942a6508fde039e94ee1e362d3170f9bb099a3a899",
+      "author": "Codex",
+      "provenance": "machine_reference",
+      "method": "Offline reading of the exact frozen selected abstract units and application task policy; authored before the successor campaign. Not human gold, provider results or fresh held-out evidence.",
+      "reviewed_at": "2026-11-13T06:10:47Z",
+      "human_review": null
+    },
+    {
+      "part_id": "p3",
+      "answerability": "answerable",
+      "expected_behavior": "answer",
+      "retained_support": "The retained scope and absent details above permit identifying bounded evidence gaps, without supplying missing findings.",
+      "missing_information": "Model identities, exact prompts, splits, annotation and training recipes, metric definitions and reproducible implementation are absent.",
+      "limitation_origins": [
+        "available_text",
+        "extraction"
+      ],
+      "case_id": "campaign-eval-learn-experiment",
+      "request": "Identify missing evidence or required details without inventing findings.",
+      "requested_part": {
+        "id": "p3",
+        "request": "Identify missing evidence or required details without inventing findings.",
+        "kind": "answer"
+      },
+      "request_digest": "ea255c55dea6c9b082e2aced48f3e40e399040bcdaa83ed5e3a83b64dd667041",
+      "task_policy_digest": "c5e271410deb1ae19f5acd682cb95f712314aa5997457fba8f09e39431ba2618",
+      "selected_evidence": [
+        {
+          "handle": "uaa962b619d4135eadc40",
+          "work_id": "arxiv:2610.40930",
+          "version_id": "arxiv:2610.40930:v1:metadata-b45059ef8928ae02",
+          "material_id": "mat-e0471e7f635e5d75e96b25bdee5fe807",
+          "source_hash": "sha256:97289b875c0005e0a762b90ffc61a53dcdaf28cbeca89decf03bba9c572e1df8",
+          "parser_revision": "workspace-plain-text-v1",
+          "scope": "abstract",
+          "span_id": "span-d9f8a5e2f7e5b553a02e0ed0c0a8f1fb",
+          "start": 0,
+          "end": 1489,
+          "quote_digest": "88319e42205af5b3cfec86df94dd418a32310e6e24051fce06a9f23c6157c44c",
+          "reference_digest": "aa962b619d4135eadc4013cfcdb108a44c5f3b80ad568cd6276e4f44ca14064a"
+        }
+      ],
+      "selection_digest": "c203633f5329e18453657ccf66d40fcd27c35df73abca371d7822c82aeb467da",
+      "ranking_digest": "366fb7a5eb0c6bdf80525f942a6508fde039e94ee1e362d3170f9bb099a3a899",
+      "author": "Codex",
+      "provenance": "machine_reference",
+      "method": "Offline reading of the exact frozen selected abstract units and application task policy; authored before the successor campaign. Not human gold, provider results or fresh held-out evidence.",
+      "reviewed_at": "2026-11-13T06:10:47Z",
+      "human_review": null
+    },
+    {
+      "part_id": "p1",
+      "answerability": "partially_answerable",
+      "expected_behavior": "bounded_partial_answer",
+      "retained_support": "EDB-Bio reports 96K episodes across three biological domains and a reported 2.5x experiment-selection efficiency advantage for Ibis0 against the best frontier models. Applications remain proposals.",
+      "missing_information": "The operational efficiency denominator, exact comparator identities, uncertainty and detailed evaluation conditions are not retained. No clinical efficacy or safety finding is established.",
+      "limitation_origins": [
+        "available_text",
+        "extraction"
+      ],
+      "case_id": "campaign-eval-learn-measurement",
+      "request": "Explain one reported empirical finding with its metric and scope, and distinguish it from hypothesised applications.",
+      "requested_part": {
+        "id": "p1",
+        "request": "Explain one reported empirical finding with its metric and scope, and distinguish it from hypothesised applications.",
+        "kind": "answer"
+      },
+      "request_digest": "e557c166b81bfbf28ebab85ae8205ddf42b890cc0afd0c363a578ac2dffe3636",
+      "task_policy_digest": "9eacfac5ac1cde5235aec943ead14f6250b765b1afc58b55f54da3741e26ee6b",
+      "selected_evidence": [
+        {
+          "handle": "u638d145f43da593f92c7",
+          "work_id": "arxiv:2610.41015",
+          "version_id": "arxiv:2610.41015:v1:metadata-9d3401c4c7c1014c",
+          "material_id": "mat-1c5ecdf06434f317157b2e5fce1b3b0e",
+          "source_hash": "sha256:b490f3ffa20059c827c7a1dde2576cc7857a3b26d3fe14489e47a2fc3f24f710",
+          "parser_revision": "workspace-plain-text-v1",
+          "scope": "abstract",
+          "span_id": "span-9a92d1c10b9b4e9ee5a9185bd6bb4afd",
+          "start": 0,
+          "end": 1516,
+          "quote_digest": "4d60acc72107bef499c6cf1ed0228486e6a7d4bd8e98fda80475da60ce2308ff",
+          "reference_digest": "638d145f43da593f92c7b62642e60007fe2fa26da38836cd876156d5d1c87ded"
+        }
+      ],
+      "selection_digest": "72f9e912bd25c4c36490981c314113b5bb5ea23c8b3c76a4fab27606d83a2a76",
+      "ranking_digest": "366fb7a5eb0c6bdf80525f942a6508fde039e94ee1e362d3170f9bb099a3a899",
+      "author": "Codex",
+      "provenance": "machine_reference",
+      "method": "Offline reading of the exact frozen selected abstract units and application task policy; authored before the successor campaign. Not human gold, provider results or fresh held-out evidence.",
+      "reviewed_at": "2026-11-13T06:10:47Z",
+      "human_review": null
+    },
+    {
+      "part_id": "p2",
+      "answerability": "partially_answerable",
+      "expected_behavior": "bounded_partial_answer",
+      "retained_support": "EDB-Bio reports 96K episodes across three biological domains and a reported 2.5x experiment-selection efficiency advantage for Ibis0 against the best frontier models. Applications remain proposals.",
+      "missing_information": "The operational efficiency denominator, exact comparator identities, uncertainty and detailed evaluation conditions are not retained. No clinical efficacy or safety finding is established.",
+      "limitation_origins": [
+        "available_text",
+        "extraction"
+      ],
+      "case_id": "campaign-eval-learn-measurement",
+      "request": "State separately cited source facts and retain study scope, comparator, metric definition and conditions.",
+      "requested_part": {
+        "id": "p2",
+        "request": "State separately cited source facts and retain study scope, comparator, metric definition and conditions.",
+        "kind": "source_note"
+      },
+      "request_digest": "ab7c39efda627b17141b9e4a18c1b83e2eb7724852bb3d0fd102fd99f84a9b4f",
+      "task_policy_digest": "9eacfac5ac1cde5235aec943ead14f6250b765b1afc58b55f54da3741e26ee6b",
+      "selected_evidence": [
+        {
+          "handle": "u638d145f43da593f92c7",
+          "work_id": "arxiv:2610.41015",
+          "version_id": "arxiv:2610.41015:v1:metadata-9d3401c4c7c1014c",
+          "material_id": "mat-1c5ecdf06434f317157b2e5fce1b3b0e",
+          "source_hash": "sha256:b490f3ffa20059c827c7a1dde2576cc7857a3b26d3fe14489e47a2fc3f24f710",
+          "parser_revision": "workspace-plain-text-v1",
+          "scope": "abstract",
+          "span_id": "span-9a92d1c10b9b4e9ee5a9185bd6bb4afd",
+          "start": 0,
+          "end": 1516,
+          "quote_digest": "4d60acc72107bef499c6cf1ed0228486e6a7d4bd8e98fda80475da60ce2308ff",
+          "reference_digest": "638d145f43da593f92c7b62642e60007fe2fa26da38836cd876156d5d1c87ded"
+        }
+      ],
+      "selection_digest": "72f9e912bd25c4c36490981c314113b5bb5ea23c8b3c76a4fab27606d83a2a76",
+      "ranking_digest": "366fb7a5eb0c6bdf80525f942a6508fde039e94ee1e362d3170f9bb099a3a899",
+      "author": "Codex",
+      "provenance": "machine_reference",
+      "method": "Offline reading of the exact frozen selected abstract units and application task policy; authored before the successor campaign. Not human gold, provider results or fresh held-out evidence.",
+      "reviewed_at": "2026-11-13T06:10:47Z",
+      "human_review": null
+    },
+    {
+      "part_id": "p3",
+      "answerability": "answerable",
+      "expected_behavior": "answer",
+      "retained_support": "The retained scope and absent details above permit identifying bounded evidence gaps, without supplying missing findings.",
+      "missing_information": "The operational efficiency denominator, exact comparator identities, uncertainty and detailed evaluation conditions are not retained. No clinical efficacy or safety finding is established.",
+      "limitation_origins": [
+        "available_text",
+        "extraction"
+      ],
+      "case_id": "campaign-eval-learn-measurement",
+      "request": "Identify missing evidence or required details without inventing findings.",
+      "requested_part": {
+        "id": "p3",
+        "request": "Identify missing evidence or required details without inventing findings.",
+        "kind": "answer"
+      },
+      "request_digest": "ea255c55dea6c9b082e2aced48f3e40e399040bcdaa83ed5e3a83b64dd667041",
+      "task_policy_digest": "9eacfac5ac1cde5235aec943ead14f6250b765b1afc58b55f54da3741e26ee6b",
+      "selected_evidence": [
+        {
+          "handle": "u638d145f43da593f92c7",
+          "work_id": "arxiv:2610.41015",
+          "version_id": "arxiv:2610.41015:v1:metadata-9d3401c4c7c1014c",
+          "material_id": "mat-1c5ecdf06434f317157b2e5fce1b3b0e",
+          "source_hash": "sha256:b490f3ffa20059c827c7a1dde2576cc7857a3b26d3fe14489e47a2fc3f24f710",
+          "parser_revision": "workspace-plain-text-v1",
+          "scope": "abstract",
+          "span_id": "span-9a92d1c10b9b4e9ee5a9185bd6bb4afd",
+          "start": 0,
+          "end": 1516,
+          "quote_digest": "4d60acc72107bef499c6cf1ed0228486e6a7d4bd8e98fda80475da60ce2308ff",
+          "reference_digest": "638d145f43da593f92c7b62642e60007fe2fa26da38836cd876156d5d1c87ded"
+        }
+      ],
+      "selection_digest": "72f9e912bd25c4c36490981c314113b5bb5ea23c8b3c76a4fab27606d83a2a76",
+      "ranking_digest": "366fb7a5eb0c6bdf80525f942a6508fde039e94ee1e362d3170f9bb099a3a899",
+      "author": "Codex",
+      "provenance": "machine_reference",
+      "method": "Offline reading of the exact frozen selected abstract units and application task policy; authored before the successor campaign. Not human gold, provider results or fresh held-out evidence.",
+      "reviewed_at": "2026-11-13T06:10:47Z",
+      "human_review": null
+    },
+    {
+      "part_id": "p1",
+      "answerability": "partially_answerable",
+      "expected_behavior": "bounded_partial_answer",
+      "retained_support": "KEEPER separates memory auxiliary objectives and reports an incorrect claim persisting despite correction in one baseline trajectory. The harness source concerns portable versioned orchestration, not a second memory-error experiment.",
+      "missing_information": "Exact update algorithm, error prevalence, replication and longitudinal calibration are unavailable. Do not generalise a single trajectory or treat harness scores as memory measurements.",
+      "limitation_origins": [
+        "corpus",
+        "selection",
+        "available_text"
+      ],
+      "case_id": "campaign-eval-research-memory",
+      "request": "Which selected evidence explains how agent memory is updated and how incorrect information can persist? Separate mechanisms from measurements.",
+      "requested_part": {
+        "id": "p1",
+        "request": "Which selected evidence explains how agent memory is updated and how incorrect information can persist? Separate mechanisms from measurements.",
+        "kind": "answer"
+      },
+      "request_digest": "4eb3b132283eaa65898b335fafc3bf42c78ced44ceb56d6534e148c9d9f5473b",
+      "task_policy_digest": "c430c9cc816f77b0e593da3e6a0056e08870a3367d0ad95b660790524eec1c65",
+      "selected_evidence": [
+        {
+          "handle": "u0b8e339ef860923aa8e9",
+          "work_id": "arxiv:2610.40917",
+          "version_id": "arxiv:2610.40917:v1:metadata-ed88c851cf4b1810",
+          "material_id": "mat-6fd91ac7a4d590f9500cc5b123d0d91a",
+          "source_hash": "sha256:f44613f0fd3d548ea98353f5dc0bc44f943b80169023a6bdd2fe90aa1d2e65e2",
+          "parser_revision": "workspace-plain-text-v1",
+          "scope": "abstract",
+          "span_id": "span-2db7b5ad8d32797f3b9ce8b2a8d78628",
+          "start": 0,
+          "end": 1216,
+          "quote_digest": "7676c6b2ff5d326656535e63762299acaf4487aa3cb720eefc0694d859b88c3b",
+          "reference_digest": "0b8e339ef860923aa8e9d7967850c7e5cdb4f33a93d04fcee0ab600a96269e9e"
+        },
+        {
+          "handle": "ucbe894d1356a18e9f328",
+          "work_id": "arxiv:2610.41482",
+          "version_id": "arxiv:2610.41482:v1:metadata-e5c832a06d88973f",
+          "material_id": "mat-54f2f6e0645f499458d5030d06e35a59",
+          "source_hash": "sha256:2b307ec864315d90d5e828786c2505fff1feda8837559b7e8601961ea9717759",
+          "parser_revision": "workspace-plain-text-v1",
+          "scope": "abstract",
+          "span_id": "span-3fd278aadaa92873179ed21c075ab368",
+          "start": 0,
+          "end": 875,
+          "quote_digest": "50c3364d710646e50ca1c17e104732dbc4d2868862565e496299fe06b526ac49",
+          "reference_digest": "cbe894d1356a18e9f32851f62fb0797644ca6c68ba7a2abd5cad8e8c32636a93"
+        }
+      ],
+      "selection_digest": "685bfa06bb5c13a4f79c1a344eeb26b0828a912d859c630867cc92e77392be8c",
+      "ranking_digest": "daea027469c8bd367884cac287487208c561e601bfdac9fc31fd2b017b7afc5b",
+      "author": "Codex",
+      "provenance": "machine_reference",
+      "method": "Offline reading of the exact frozen selected abstract units and application task policy; authored before the successor campaign. Not human gold, provider results or fresh held-out evidence.",
+      "reviewed_at": "2026-11-13T06:10:47Z",
+      "human_review": null
+    },
+    {
+      "part_id": "p2",
+      "answerability": "partially_answerable",
+      "expected_behavior": "bounded_partial_answer",
+      "retained_support": "KEEPER separates memory auxiliary objectives and reports an incorrect claim persisting despite correction in one baseline trajectory. The harness source concerns portable versioned orchestration, not a second memory-error experiment.",
+      "missing_information": "Exact update algorithm, error prevalence, replication and longitudinal calibration are unavailable. Do not generalise a single trajectory or treat harness scores as memory measurements.",
+      "limitation_origins": [
+        "corpus",
+        "selection",
+        "available_text"
+      ],
+      "case_id": "campaign-eval-research-memory",
+      "request": "State separately cited source facts and retain study scope, comparator, metric definition and conditions.",
+      "requested_part": {
+        "id": "p2",
+        "request": "State separately cited source facts and retain study scope, comparator, metric definition and conditions.",
+        "kind": "source_note"
+      },
+      "request_digest": "ab7c39efda627b17141b9e4a18c1b83e2eb7724852bb3d0fd102fd99f84a9b4f",
+      "task_policy_digest": "c430c9cc816f77b0e593da3e6a0056e08870a3367d0ad95b660790524eec1c65",
+      "selected_evidence": [
+        {
+          "handle": "u0b8e339ef860923aa8e9",
+          "work_id": "arxiv:2610.40917",
+          "version_id": "arxiv:2610.40917:v1:metadata-ed88c851cf4b1810",
+          "material_id": "mat-6fd91ac7a4d590f9500cc5b123d0d91a",
+          "source_hash": "sha256:f44613f0fd3d548ea98353f5dc0bc44f943b80169023a6bdd2fe90aa1d2e65e2",
+          "parser_revision": "workspace-plain-text-v1",
+          "scope": "abstract",
+          "span_id": "span-2db7b5ad8d32797f3b9ce8b2a8d78628",
+          "start": 0,
+          "end": 1216,
+          "quote_digest": "7676c6b2ff5d326656535e63762299acaf4487aa3cb720eefc0694d859b88c3b",
+          "reference_digest": "0b8e339ef860923aa8e9d7967850c7e5cdb4f33a93d04fcee0ab600a96269e9e"
+        },
+        {
+          "handle": "ucbe894d1356a18e9f328",
+          "work_id": "arxiv:2610.41482",
+          "version_id": "arxiv:2610.41482:v1:metadata-e5c832a06d88973f",
+          "material_id": "mat-54f2f6e0645f499458d5030d06e35a59",
+          "source_hash": "sha256:2b307ec864315d90d5e828786c2505fff1feda8837559b7e8601961ea9717759",
+          "parser_revision": "workspace-plain-text-v1",
+          "scope": "abstract",
+          "span_id": "span-3fd278aadaa92873179ed21c075ab368",
+          "start": 0,
+          "end": 875,
+          "quote_digest": "50c3364d710646e50ca1c17e104732dbc4d2868862565e496299fe06b526ac49",
+          "reference_digest": "cbe894d1356a18e9f32851f62fb0797644ca6c68ba7a2abd5cad8e8c32636a93"
+        }
+      ],
+      "selection_digest": "685bfa06bb5c13a4f79c1a344eeb26b0828a912d859c630867cc92e77392be8c",
+      "ranking_digest": "daea027469c8bd367884cac287487208c561e601bfdac9fc31fd2b017b7afc5b",
+      "author": "Codex",
+      "provenance": "machine_reference",
+      "method": "Offline reading of the exact frozen selected abstract units and application task policy; authored before the successor campaign. Not human gold, provider results or fresh held-out evidence.",
+      "reviewed_at": "2026-11-13T06:10:47Z",
+      "human_review": null
+    },
+    {
+      "part_id": "p3",
+      "answerability": "answerable",
+      "expected_behavior": "answer",
+      "retained_support": "The retained scope and absent details above permit identifying bounded evidence gaps, without supplying missing findings.",
+      "missing_information": "Exact update algorithm, error prevalence, replication and longitudinal calibration are unavailable. Do not generalise a single trajectory or treat harness scores as memory measurements.",
+      "limitation_origins": [
+        "corpus",
+        "selection",
+        "available_text"
+      ],
+      "case_id": "campaign-eval-research-memory",
+      "request": "Identify missing evidence or required details without inventing findings.",
+      "requested_part": {
+        "id": "p3",
+        "request": "Identify missing evidence or required details without inventing findings.",
+        "kind": "answer"
+      },
+      "request_digest": "ea255c55dea6c9b082e2aced48f3e40e399040bcdaa83ed5e3a83b64dd667041",
+      "task_policy_digest": "c430c9cc816f77b0e593da3e6a0056e08870a3367d0ad95b660790524eec1c65",
+      "selected_evidence": [
+        {
+          "handle": "u0b8e339ef860923aa8e9",
+          "work_id": "arxiv:2610.40917",
+          "version_id": "arxiv:2610.40917:v1:metadata-ed88c851cf4b1810",
+          "material_id": "mat-6fd91ac7a4d590f9500cc5b123d0d91a",
+          "source_hash": "sha256:f44613f0fd3d548ea98353f5dc0bc44f943b80169023a6bdd2fe90aa1d2e65e2",
+          "parser_revision": "workspace-plain-text-v1",
+          "scope": "abstract",
+          "span_id": "span-2db7b5ad8d32797f3b9ce8b2a8d78628",
+          "start": 0,
+          "end": 1216,
+          "quote_digest": "7676c6b2ff5d326656535e63762299acaf4487aa3cb720eefc0694d859b88c3b",
+          "reference_digest": "0b8e339ef860923aa8e9d7967850c7e5cdb4f33a93d04fcee0ab600a96269e9e"
+        },
+        {
+          "handle": "ucbe894d1356a18e9f328",
+          "work_id": "arxiv:2610.41482",
+          "version_id": "arxiv:2610.41482:v1:metadata-e5c832a06d88973f",
+          "material_id": "mat-54f2f6e0645f499458d5030d06e35a59",
+          "source_hash": "sha256:2b307ec864315d90d5e828786c2505fff1feda8837559b7e8601961ea9717759",
+          "parser_revision": "workspace-plain-text-v1",
+          "scope": "abstract",
+          "span_id": "span-3fd278aadaa92873179ed21c075ab368",
+          "start": 0,
+          "end": 875,
+          "quote_digest": "50c3364d710646e50ca1c17e104732dbc4d2868862565e496299fe06b526ac49",
+          "reference_digest": "cbe894d1356a18e9f32851f62fb0797644ca6c68ba7a2abd5cad8e8c32636a93"
+        }
+      ],
+      "selection_digest": "685bfa06bb5c13a4f79c1a344eeb26b0828a912d859c630867cc92e77392be8c",
+      "ranking_digest": "daea027469c8bd367884cac287487208c561e601bfdac9fc31fd2b017b7afc5b",
+      "author": "Codex",
+      "provenance": "machine_reference",
+      "method": "Offline reading of the exact frozen selected abstract units and application task policy; authored before the successor campaign. Not human gold, provider results or fresh held-out evidence.",
+      "reviewed_at": "2026-11-13T06:10:47Z",
+      "human_review": null
+    },
+    {
+      "part_id": "p1",
+      "answerability": "insufficient",
+      "expected_behavior": "comparison_only_abstention",
+      "retained_support": "The MTRAG/RETECO and SciFact-poisoning abstracts separately describe retrieval sufficiency and one-model evidence-majority sensitivity.",
+      "missing_information": "No shared task, model, metric, baseline or relevance judgments permit a comparative performance conclusion. Keep source notes independent and the requested comparison unanswered.",
+      "limitation_origins": [
+        "corpus",
+        "ranking",
+        "selection",
+        "available_text"
+      ],
+      "case_id": "campaign-eval-research-retrieval",
+      "request": "Compare selected retrieval and RAG methods only on compatible evaluation evidence. State unavailable common tasks, baselines, relevance judgments and counterevidence.",
+      "requested_part": {
+        "id": "p1",
+        "request": "Compare selected retrieval and RAG methods only on compatible evaluation evidence. State unavailable common tasks, baselines, relevance judgments and counterevidence.",
+        "kind": "comparison"
+      },
+      "request_digest": "a701ee0a73a1fa9d1bef568dd658f9c905c096bffb583431d21896e883689500",
+      "task_policy_digest": "84f523bff3478435884b652ead842cd802459eaadc099e8c99b015d57d4b80c9",
+      "selected_evidence": [
+        {
+          "handle": "u1aab0740f44dab2c5010",
+          "work_id": "arxiv:2610.40966",
+          "version_id": "arxiv:2610.40966:v1:metadata-55c0a56c8750035c",
+          "material_id": "mat-a722330404855072b6b7fb9b13004998",
+          "source_hash": "sha256:001a0cb486d1e1a1081cc92155eb757b894e9d7b1633615d5b311dff7ce64cc3",
+          "parser_revision": "workspace-plain-text-v1",
+          "scope": "abstract",
+          "span_id": "span-6e05d19768ccb5f09cbbbbd979e4bd9e",
+          "start": 0,
+          "end": 1545,
+          "quote_digest": "2d37926b11330fef275a4dbc482b690541a233204fc3347d1d6923cdff8f8ea7",
+          "reference_digest": "1aab0740f44dab2c5010b953cecebd5cf886a87c5fa68516ec086bc4cfacd74d"
+        },
+        {
+          "handle": "u51eb3c267dcf8b28d986",
+          "work_id": "arxiv:2610.41012",
+          "version_id": "arxiv:2610.41012:v1:metadata-f20dbad8ce03c4ef",
+          "material_id": "mat-87a598790424ed922764c982f309a43e",
+          "source_hash": "sha256:76a7c11f2545f3f8f1417e82969b14825103c6058d7d730c1e4dda44ebd82e8e",
+          "parser_revision": "workspace-plain-text-v1",
+          "scope": "abstract",
+          "span_id": "span-a723f9817c67d15fe33feda2cb02ed38",
+          "start": 0,
+          "end": 1118,
+          "quote_digest": "38eb76dfb00f66ce1f1f0229de781c5c4adb9e8546d2cd5f0696f676f2221e65",
+          "reference_digest": "51eb3c267dcf8b28d9869c444a3f11e1ae910eb40481f458c14843ef832329ad"
+        }
+      ],
+      "selection_digest": "4372c108b398b2098b9ef842b3878e049ad9798f0184b24a0fa7781a6aa2faaf",
+      "ranking_digest": "c639244834113285f7264c68364e173c01e1f44c85f5a716c62d903d3f925894",
+      "author": "Codex",
+      "provenance": "machine_reference",
+      "method": "Offline reading of the exact frozen selected abstract units and application task policy; authored before the successor campaign. Not human gold, provider results or fresh held-out evidence.",
+      "reviewed_at": "2026-11-13T06:10:47Z",
+      "human_review": null
+    },
+    {
+      "part_id": "p2",
+      "answerability": "partially_answerable",
+      "expected_behavior": "bounded_partial_answer",
+      "retained_support": "The MTRAG/RETECO and SciFact-poisoning abstracts separately describe retrieval sufficiency and one-model evidence-majority sensitivity.",
+      "missing_information": "No shared task, model, metric, baseline or relevance judgments permit a comparative performance conclusion. Keep source notes independent and the requested comparison unanswered.",
+      "limitation_origins": [
+        "corpus",
+        "ranking",
+        "selection",
+        "available_text"
+      ],
+      "case_id": "campaign-eval-research-retrieval",
+      "request": "State separately cited source facts and retain study scope, comparator, metric definition and conditions.",
+      "requested_part": {
+        "id": "p2",
+        "request": "State separately cited source facts and retain study scope, comparator, metric definition and conditions.",
+        "kind": "source_note"
+      },
+      "request_digest": "ab7c39efda627b17141b9e4a18c1b83e2eb7724852bb3d0fd102fd99f84a9b4f",
+      "task_policy_digest": "84f523bff3478435884b652ead842cd802459eaadc099e8c99b015d57d4b80c9",
+      "selected_evidence": [
+        {
+          "handle": "u1aab0740f44dab2c5010",
+          "work_id": "arxiv:2610.40966",
+          "version_id": "arxiv:2610.40966:v1:metadata-55c0a56c8750035c",
+          "material_id": "mat-a722330404855072b6b7fb9b13004998",
+          "source_hash": "sha256:001a0cb486d1e1a1081cc92155eb757b894e9d7b1633615d5b311dff7ce64cc3",
+          "parser_revision": "workspace-plain-text-v1",
+          "scope": "abstract",
+          "span_id": "span-6e05d19768ccb5f09cbbbbd979e4bd9e",
+          "start": 0,
+          "end": 1545,
+          "quote_digest": "2d37926b11330fef275a4dbc482b690541a233204fc3347d1d6923cdff8f8ea7",
+          "reference_digest": "1aab0740f44dab2c5010b953cecebd5cf886a87c5fa68516ec086bc4cfacd74d"
+        },
+        {
+          "handle": "u51eb3c267dcf8b28d986",
+          "work_id": "arxiv:2610.41012",
+          "version_id": "arxiv:2610.41012:v1:metadata-f20dbad8ce03c4ef",
+          "material_id": "mat-87a598790424ed922764c982f309a43e",
+          "source_hash": "sha256:76a7c11f2545f3f8f1417e82969b14825103c6058d7d730c1e4dda44ebd82e8e",
+          "parser_revision": "workspace-plain-text-v1",
+          "scope": "abstract",
+          "span_id": "span-a723f9817c67d15fe33feda2cb02ed38",
+          "start": 0,
+          "end": 1118,
+          "quote_digest": "38eb76dfb00f66ce1f1f0229de781c5c4adb9e8546d2cd5f0696f676f2221e65",
+          "reference_digest": "51eb3c267dcf8b28d9869c444a3f11e1ae910eb40481f458c14843ef832329ad"
+        }
+      ],
+      "selection_digest": "4372c108b398b2098b9ef842b3878e049ad9798f0184b24a0fa7781a6aa2faaf",
+      "ranking_digest": "c639244834113285f7264c68364e173c01e1f44c85f5a716c62d903d3f925894",
+      "author": "Codex",
+      "provenance": "machine_reference",
+      "method": "Offline reading of the exact frozen selected abstract units and application task policy; authored before the successor campaign. Not human gold, provider results or fresh held-out evidence.",
+      "reviewed_at": "2026-11-13T06:10:47Z",
+      "human_review": null
+    },
+    {
+      "part_id": "p3",
+      "answerability": "answerable",
+      "expected_behavior": "answer",
+      "retained_support": "The retained scope and absent details above permit identifying bounded evidence gaps, without supplying missing findings.",
+      "missing_information": "No shared task, model, metric, baseline or relevance judgments permit a comparative performance conclusion. Keep source notes independent and the requested comparison unanswered.",
+      "limitation_origins": [
+        "corpus",
+        "ranking",
+        "selection",
+        "available_text"
+      ],
+      "case_id": "campaign-eval-research-retrieval",
+      "request": "Identify missing evidence or required details without inventing findings.",
+      "requested_part": {
+        "id": "p3",
+        "request": "Identify missing evidence or required details without inventing findings.",
+        "kind": "answer"
+      },
+      "request_digest": "ea255c55dea6c9b082e2aced48f3e40e399040bcdaa83ed5e3a83b64dd667041",
+      "task_policy_digest": "84f523bff3478435884b652ead842cd802459eaadc099e8c99b015d57d4b80c9",
+      "selected_evidence": [
+        {
+          "handle": "u1aab0740f44dab2c5010",
+          "work_id": "arxiv:2610.40966",
+          "version_id": "arxiv:2610.40966:v1:metadata-55c0a56c8750035c",
+          "material_id": "mat-a722330404855072b6b7fb9b13004998",
+          "source_hash": "sha256:001a0cb486d1e1a1081cc92155eb757b894e9d7b1633615d5b311dff7ce64cc3",
+          "parser_revision": "workspace-plain-text-v1",
+          "scope": "abstract",
+          "span_id": "span-6e05d19768ccb5f09cbbbbd979e4bd9e",
+          "start": 0,
+          "end": 1545,
+          "quote_digest": "2d37926b11330fef275a4dbc482b690541a233204fc3347d1d6923cdff8f8ea7",
+          "reference_digest": "1aab0740f44dab2c5010b953cecebd5cf886a87c5fa68516ec086bc4cfacd74d"
+        },
+        {
+          "handle": "u51eb3c267dcf8b28d986",
+          "work_id": "arxiv:2610.41012",
+          "version_id": "arxiv:2610.41012:v1:metadata-f20dbad8ce03c4ef",
+          "material_id": "mat-87a598790424ed922764c982f309a43e",
+          "source_hash": "sha256:76a7c11f2545f3f8f1417e82969b14825103c6058d7d730c1e4dda44ebd82e8e",
+          "parser_revision": "workspace-plain-text-v1",
+          "scope": "abstract",
+          "span_id": "span-a723f9817c67d15fe33feda2cb02ed38",
+          "start": 0,
+          "end": 1118,
+          "quote_digest": "38eb76dfb00f66ce1f1f0229de781c5c4adb9e8546d2cd5f0696f676f2221e65",
+          "reference_digest": "51eb3c267dcf8b28d9869c444a3f11e1ae910eb40481f458c14843ef832329ad"
+        }
+      ],
+      "selection_digest": "4372c108b398b2098b9ef842b3878e049ad9798f0184b24a0fa7781a6aa2faaf",
+      "ranking_digest": "c639244834113285f7264c68364e173c01e1f44c85f5a716c62d903d3f925894",
+      "author": "Codex",
+      "provenance": "machine_reference",
+      "method": "Offline reading of the exact frozen selected abstract units and application task policy; authored before the successor campaign. Not human gold, provider results or fresh held-out evidence.",
+      "reviewed_at": "2026-11-13T06:10:47Z",
+      "human_review": null
+    },
+    {
+      "part_id": "p1",
+      "answerability": "partially_answerable",
+      "expected_behavior": "bounded_partial_answer",
+      "retained_support": "The personalization and SciFact abstracts describe bounded calibration or failure risks. SciFact uses 200 questions, Gemma3-12B and unequal clean/poisoned evidence; the other measures personalization strategies.",
+      "missing_information": "Neither establishes a trustworthy general factual checker, calibrated abstention, or verifier precision/recall. Strategy calibration is not factual-verification accuracy.",
+      "limitation_origins": [
+        "corpus",
+        "ranking",
+        "selection",
+        "available_text"
+      ],
+      "case_id": "campaign-eval-research-verification",
+      "request": "What measurements in the selected sources support trustworthy claim verification? Preserve uncertainty, abstention and calibration limits.",
+      "requested_part": {
+        "id": "p1",
+        "request": "What measurements in the selected sources support trustworthy claim verification? Preserve uncertainty, abstention and calibration limits.",
+        "kind": "answer"
+      },
+      "request_digest": "7215aa2f27374534af6fe48769a22640282ae180ee421e78e4031c5457593623",
+      "task_policy_digest": "25723b4d5d573419356b1bf8b461a320eca0008ba7f36a620d9a406bdba376c9",
+      "selected_evidence": [
+        {
+          "handle": "u51eb3c267dcf8b28d986",
+          "work_id": "arxiv:2610.41012",
+          "version_id": "arxiv:2610.41012:v1:metadata-f20dbad8ce03c4ef",
+          "material_id": "mat-87a598790424ed922764c982f309a43e",
+          "source_hash": "sha256:76a7c11f2545f3f8f1417e82969b14825103c6058d7d730c1e4dda44ebd82e8e",
+          "parser_revision": "workspace-plain-text-v1",
+          "scope": "abstract",
+          "span_id": "span-a723f9817c67d15fe33feda2cb02ed38",
+          "start": 0,
+          "end": 1118,
+          "quote_digest": "38eb76dfb00f66ce1f1f0229de781c5c4adb9e8546d2cd5f0696f676f2221e65",
+          "reference_digest": "51eb3c267dcf8b28d9869c444a3f11e1ae910eb40481f458c14843ef832329ad"
+        },
+        {
+          "handle": "uaa962b619d4135eadc40",
+          "work_id": "arxiv:2610.40930",
+          "version_id": "arxiv:2610.40930:v1:metadata-b45059ef8928ae02",
+          "material_id": "mat-e0471e7f635e5d75e96b25bdee5fe807",
+          "source_hash": "sha256:97289b875c0005e0a762b90ffc61a53dcdaf28cbeca89decf03bba9c572e1df8",
+          "parser_revision": "workspace-plain-text-v1",
+          "scope": "abstract",
+          "span_id": "span-d9f8a5e2f7e5b553a02e0ed0c0a8f1fb",
+          "start": 0,
+          "end": 1489,
+          "quote_digest": "88319e42205af5b3cfec86df94dd418a32310e6e24051fce06a9f23c6157c44c",
+          "reference_digest": "aa962b619d4135eadc4013cfcdb108a44c5f3b80ad568cd6276e4f44ca14064a"
+        }
+      ],
+      "selection_digest": "253df96212cef0ff0b132832b3c9810e48ce37eee619520499b7da1f287cd043",
+      "ranking_digest": "166abd9f9504f7e3580f1462dcef4d2029084c4d1ddf75181161aab238cd72e2",
+      "author": "Codex",
+      "provenance": "machine_reference",
+      "method": "Offline reading of the exact frozen selected abstract units and application task policy; authored before the successor campaign. Not human gold, provider results or fresh held-out evidence.",
+      "reviewed_at": "2026-11-13T06:10:47Z",
+      "human_review": null
+    },
+    {
+      "part_id": "p2",
+      "answerability": "partially_answerable",
+      "expected_behavior": "bounded_partial_answer",
+      "retained_support": "The personalization and SciFact abstracts describe bounded calibration or failure risks. SciFact uses 200 questions, Gemma3-12B and unequal clean/poisoned evidence; the other measures personalization strategies.",
+      "missing_information": "Neither establishes a trustworthy general factual checker, calibrated abstention, or verifier precision/recall. Strategy calibration is not factual-verification accuracy.",
+      "limitation_origins": [
+        "corpus",
+        "ranking",
+        "selection",
+        "available_text"
+      ],
+      "case_id": "campaign-eval-research-verification",
+      "request": "State separately cited source facts and retain study scope, comparator, metric definition and conditions.",
+      "requested_part": {
+        "id": "p2",
+        "request": "State separately cited source facts and retain study scope, comparator, metric definition and conditions.",
+        "kind": "source_note"
+      },
+      "request_digest": "ab7c39efda627b17141b9e4a18c1b83e2eb7724852bb3d0fd102fd99f84a9b4f",
+      "task_policy_digest": "25723b4d5d573419356b1bf8b461a320eca0008ba7f36a620d9a406bdba376c9",
+      "selected_evidence": [
+        {
+          "handle": "u51eb3c267dcf8b28d986",
+          "work_id": "arxiv:2610.41012",
+          "version_id": "arxiv:2610.41012:v1:metadata-f20dbad8ce03c4ef",
+          "material_id": "mat-87a598790424ed922764c982f309a43e",
+          "source_hash": "sha256:76a7c11f2545f3f8f1417e82969b14825103c6058d7d730c1e4dda44ebd82e8e",
+          "parser_revision": "workspace-plain-text-v1",
+          "scope": "abstract",
+          "span_id": "span-a723f9817c67d15fe33feda2cb02ed38",
+          "start": 0,
+          "end": 1118,
+          "quote_digest": "38eb76dfb00f66ce1f1f0229de781c5c4adb9e8546d2cd5f0696f676f2221e65",
+          "reference_digest": "51eb3c267dcf8b28d9869c444a3f11e1ae910eb40481f458c14843ef832329ad"
+        },
+        {
+          "handle": "uaa962b619d4135eadc40",
+          "work_id": "arxiv:2610.40930",
+          "version_id": "arxiv:2610.40930:v1:metadata-b45059ef8928ae02",
+          "material_id": "mat-e0471e7f635e5d75e96b25bdee5fe807",
+          "source_hash": "sha256:97289b875c0005e0a762b90ffc61a53dcdaf28cbeca89decf03bba9c572e1df8",
+          "parser_revision": "workspace-plain-text-v1",
+          "scope": "abstract",
+          "span_id": "span-d9f8a5e2f7e5b553a02e0ed0c0a8f1fb",
+          "start": 0,
+          "end": 1489,
+          "quote_digest": "88319e42205af5b3cfec86df94dd418a32310e6e24051fce06a9f23c6157c44c",
+          "reference_digest": "aa962b619d4135eadc4013cfcdb108a44c5f3b80ad568cd6276e4f44ca14064a"
+        }
+      ],
+      "selection_digest": "253df96212cef0ff0b132832b3c9810e48ce37eee619520499b7da1f287cd043",
+      "ranking_digest": "166abd9f9504f7e3580f1462dcef4d2029084c4d1ddf75181161aab238cd72e2",
+      "author": "Codex",
+      "provenance": "machine_reference",
+      "method": "Offline reading of the exact frozen selected abstract units and application task policy; authored before the successor campaign. Not human gold, provider results or fresh held-out evidence.",
+      "reviewed_at": "2026-11-13T06:10:47Z",
+      "human_review": null
+    },
+    {
+      "part_id": "p3",
+      "answerability": "answerable",
+      "expected_behavior": "answer",
+      "retained_support": "The retained scope and absent details above permit identifying bounded evidence gaps, without supplying missing findings.",
+      "missing_information": "Neither establishes a trustworthy general factual checker, calibrated abstention, or verifier precision/recall. Strategy calibration is not factual-verification accuracy.",
+      "limitation_origins": [
+        "corpus",
+        "ranking",
+        "selection",
+        "available_text"
+      ],
+      "case_id": "campaign-eval-research-verification",
+      "request": "Identify missing evidence or required details without inventing findings.",
+      "requested_part": {
+        "id": "p3",
+        "request": "Identify missing evidence or required details without inventing findings.",
+        "kind": "answer"
+      },
+      "request_digest": "ea255c55dea6c9b082e2aced48f3e40e399040bcdaa83ed5e3a83b64dd667041",
+      "task_policy_digest": "25723b4d5d573419356b1bf8b461a320eca0008ba7f36a620d9a406bdba376c9",
+      "selected_evidence": [
+        {
+          "handle": "u51eb3c267dcf8b28d986",
+          "work_id": "arxiv:2610.41012",
+          "version_id": "arxiv:2610.41012:v1:metadata-f20dbad8ce03c4ef",
+          "material_id": "mat-87a598790424ed922764c982f309a43e",
+          "source_hash": "sha256:76a7c11f2545f3f8f1417e82969b14825103c6058d7d730c1e4dda44ebd82e8e",
+          "parser_revision": "workspace-plain-text-v1",
+          "scope": "abstract",
+          "span_id": "span-a723f9817c67d15fe33feda2cb02ed38",
+          "start": 0,
+          "end": 1118,
+          "quote_digest": "38eb76dfb00f66ce1f1f0229de781c5c4adb9e8546d2cd5f0696f676f2221e65",
+          "reference_digest": "51eb3c267dcf8b28d9869c444a3f11e1ae910eb40481f458c14843ef832329ad"
+        },
+        {
+          "handle": "uaa962b619d4135eadc40",
+          "work_id": "arxiv:2610.40930",
+          "version_id": "arxiv:2610.40930:v1:metadata-b45059ef8928ae02",
+          "material_id": "mat-e0471e7f635e5d75e96b25bdee5fe807",
+          "source_hash": "sha256:97289b875c0005e0a762b90ffc61a53dcdaf28cbeca89decf03bba9c572e1df8",
+          "parser_revision": "workspace-plain-text-v1",
+          "scope": "abstract",
+          "span_id": "span-d9f8a5e2f7e5b553a02e0ed0c0a8f1fb",
+          "start": 0,
+          "end": 1489,
+          "quote_digest": "88319e42205af5b3cfec86df94dd418a32310e6e24051fce06a9f23c6157c44c",
+          "reference_digest": "aa962b619d4135eadc4013cfcdb108a44c5f3b80ad568cd6276e4f44ca14064a"
+        }
+      ],
+      "selection_digest": "253df96212cef0ff0b132832b3c9810e48ce37eee619520499b7da1f287cd043",
+      "ranking_digest": "166abd9f9504f7e3580f1462dcef4d2029084c4d1ddf75181161aab238cd72e2",
+      "author": "Codex",
+      "provenance": "machine_reference",
+      "method": "Offline reading of the exact frozen selected abstract units and application task policy; authored before the successor campaign. Not human gold, provider results or fresh held-out evidence.",
+      "reviewed_at": "2026-11-13T06:10:47Z",
+      "human_review": null
+    },
+    {
+      "part_id": "p1",
+      "answerability": "insufficient",
+      "expected_behavior": "full_application_abstention",
+      "retained_support": "Neither web-agent safety predictions nor a fairness protocol supplies evidence for the unspecified physical vehicle.",
+      "missing_information": "Vehicle/configuration, operating envelope, safety objectives and validation evidence are missing. All parts require full application abstention with no claims or source-note sections.",
+      "limitation_origins": [
+        "application_context",
+        "corpus",
+        "ranking",
+        "selection",
+        "available_text"
+      ],
+      "case_id": "campaign-eval-research-insufficient",
+      "request": "Can the selected sources justify a learned controller for a vehicle whose configuration, operating conditions, safety criteria and validation data have not been supplied?",
+      "requested_part": {
+        "id": "p1",
+        "request": "Can the selected sources justify a learned controller for a vehicle whose configuration, operating conditions, safety criteria and validation data have not been supplied?",
+        "kind": "answer"
+      },
+      "request_digest": "0092fcc8f543a1962cf0044e2250bf8b0ee0039bbec0dc24a1f60162f34feb49",
+      "task_policy_digest": "a8aa72c739b8c0f87a83544a5a243ae9b6e5ad038be50c98d25ed5eb66228078",
+      "selected_evidence": [
+        {
+          "handle": "u199bc87ac63c4d9e8535",
+          "work_id": "arxiv:2610.40798",
+          "version_id": "arxiv:2610.40798:v1:metadata-c1a34fa53cba3d51",
+          "material_id": "mat-4c16f701f33831a7541e340a65c12a24",
+          "source_hash": "sha256:06a821c06c428faa00a5d8696567d3a955b6bcd5e830130b5f94a10e09d6119e",
+          "parser_revision": "workspace-plain-text-v1",
+          "scope": "abstract",
+          "span_id": "span-19ef61ad682feb5985a67c51ff803347",
+          "start": 0,
+          "end": 1588,
+          "quote_digest": "c33769c59052558bee55078fcc6b6cc17a632eb4806a9819b582ba58892be8d1",
+          "reference_digest": "199bc87ac63c4d9e853545746df99064cdd9347b14f4ba476b331b217c51f912"
+        },
+        {
+          "handle": "ub314a0bb598e7e9dfabe",
+          "work_id": "arxiv:2610.40893",
+          "version_id": "arxiv:2610.40893:v1:metadata-018e69b4ec3841a0",
+          "material_id": "mat-c35118081c1369f460cb4c41adbc185a",
+          "source_hash": "sha256:1122e718e19513fe95c3c094c5f12f18ff207bac442405d2fcc7098cfe8b54e2",
+          "parser_revision": "workspace-plain-text-v1",
+          "scope": "abstract",
+          "span_id": "span-163cc35fb95515cc133e7405c86ba94a",
+          "start": 0,
+          "end": 1403,
+          "quote_digest": "977c1a5c7b74b6399dca7251006c7862e47e90b88b8e19a82a89c0c4b899c851",
+          "reference_digest": "b314a0bb598e7e9dfabe36296a1cee81dae4faa0efa7e1c8dd6ab83974de0471"
+        }
+      ],
+      "selection_digest": "ef3f04a6d2a9b3f18263f969ca5c03a7b8d404ff45e0ed316e3cabb1433dd56d",
+      "ranking_digest": "d16819dbe3bb571b22e0a45889214b94ef77751d61af3e9acb24c25bcced5a17",
+      "author": "Codex",
+      "provenance": "machine_reference",
+      "method": "Offline reading of the exact frozen selected abstract units and application task policy; authored before the successor campaign. Not human gold, provider results or fresh held-out evidence.",
+      "reviewed_at": "2026-11-13T06:10:47Z",
+      "human_review": null
+    },
+    {
+      "part_id": "p2",
+      "answerability": "insufficient",
+      "expected_behavior": "full_application_abstention",
+      "retained_support": "Neither web-agent safety predictions nor a fairness protocol supplies evidence for the unspecified physical vehicle.",
+      "missing_information": "Vehicle/configuration, operating envelope, safety objectives and validation evidence are missing. All parts require full application abstention with no claims or source-note sections.",
+      "limitation_origins": [
+        "application_context",
+        "corpus",
+        "ranking",
+        "selection",
+        "available_text"
+      ],
+      "case_id": "campaign-eval-research-insufficient",
+      "request": "State separately cited source facts and retain study scope, comparator, metric definition and conditions.",
+      "requested_part": {
+        "id": "p2",
+        "request": "State separately cited source facts and retain study scope, comparator, metric definition and conditions.",
+        "kind": "source_note"
+      },
+      "request_digest": "ab7c39efda627b17141b9e4a18c1b83e2eb7724852bb3d0fd102fd99f84a9b4f",
+      "task_policy_digest": "a8aa72c739b8c0f87a83544a5a243ae9b6e5ad038be50c98d25ed5eb66228078",
+      "selected_evidence": [
+        {
+          "handle": "u199bc87ac63c4d9e8535",
+          "work_id": "arxiv:2610.40798",
+          "version_id": "arxiv:2610.40798:v1:metadata-c1a34fa53cba3d51",
+          "material_id": "mat-4c16f701f33831a7541e340a65c12a24",
+          "source_hash": "sha256:06a821c06c428faa00a5d8696567d3a955b6bcd5e830130b5f94a10e09d6119e",
+          "parser_revision": "workspace-plain-text-v1",
+          "scope": "abstract",
+          "span_id": "span-19ef61ad682feb5985a67c51ff803347",
+          "start": 0,
+          "end": 1588,
+          "quote_digest": "c33769c59052558bee55078fcc6b6cc17a632eb4806a9819b582ba58892be8d1",
+          "reference_digest": "199bc87ac63c4d9e853545746df99064cdd9347b14f4ba476b331b217c51f912"
+        },
+        {
+          "handle": "ub314a0bb598e7e9dfabe",
+          "work_id": "arxiv:2610.40893",
+          "version_id": "arxiv:2610.40893:v1:metadata-018e69b4ec3841a0",
+          "material_id": "mat-c35118081c1369f460cb4c41adbc185a",
+          "source_hash": "sha256:1122e718e19513fe95c3c094c5f12f18ff207bac442405d2fcc7098cfe8b54e2",
+          "parser_revision": "workspace-plain-text-v1",
+          "scope": "abstract",
+          "span_id": "span-163cc35fb95515cc133e7405c86ba94a",
+          "start": 0,
+          "end": 1403,
+          "quote_digest": "977c1a5c7b74b6399dca7251006c7862e47e90b88b8e19a82a89c0c4b899c851",
+          "reference_digest": "b314a0bb598e7e9dfabe36296a1cee81dae4faa0efa7e1c8dd6ab83974de0471"
+        }
+      ],
+      "selection_digest": "ef3f04a6d2a9b3f18263f969ca5c03a7b8d404ff45e0ed316e3cabb1433dd56d",
+      "ranking_digest": "d16819dbe3bb571b22e0a45889214b94ef77751d61af3e9acb24c25bcced5a17",
+      "author": "Codex",
+      "provenance": "machine_reference",
+      "method": "Offline reading of the exact frozen selected abstract units and application task policy; authored before the successor campaign. Not human gold, provider results or fresh held-out evidence.",
+      "reviewed_at": "2026-11-13T06:10:47Z",
+      "human_review": null
+    },
+    {
+      "part_id": "p3",
+      "answerability": "insufficient",
+      "expected_behavior": "full_application_abstention",
+      "retained_support": "Ask for the explicitly missing application context; no factual source notes.",
+      "missing_information": "Vehicle/configuration, operating envelope, safety objectives and validation evidence are missing. All parts require full application abstention with no claims or source-note sections.",
+      "limitation_origins": [
+        "application_context",
+        "corpus",
+        "ranking",
+        "selection",
+        "available_text"
+      ],
+      "case_id": "campaign-eval-research-insufficient",
+      "request": "Identify missing evidence or required details without inventing findings.",
+      "requested_part": {
+        "id": "p3",
+        "request": "Identify missing evidence or required details without inventing findings.",
+        "kind": "answer"
+      },
+      "request_digest": "ea255c55dea6c9b082e2aced48f3e40e399040bcdaa83ed5e3a83b64dd667041",
+      "task_policy_digest": "a8aa72c739b8c0f87a83544a5a243ae9b6e5ad038be50c98d25ed5eb66228078",
+      "selected_evidence": [
+        {
+          "handle": "u199bc87ac63c4d9e8535",
+          "work_id": "arxiv:2610.40798",
+          "version_id": "arxiv:2610.40798:v1:metadata-c1a34fa53cba3d51",
+          "material_id": "mat-4c16f701f33831a7541e340a65c12a24",
+          "source_hash": "sha256:06a821c06c428faa00a5d8696567d3a955b6bcd5e830130b5f94a10e09d6119e",
+          "parser_revision": "workspace-plain-text-v1",
+          "scope": "abstract",
+          "span_id": "span-19ef61ad682feb5985a67c51ff803347",
+          "start": 0,
+          "end": 1588,
+          "quote_digest": "c33769c59052558bee55078fcc6b6cc17a632eb4806a9819b582ba58892be8d1",
+          "reference_digest": "199bc87ac63c4d9e853545746df99064cdd9347b14f4ba476b331b217c51f912"
+        },
+        {
+          "handle": "ub314a0bb598e7e9dfabe",
+          "work_id": "arxiv:2610.40893",
+          "version_id": "arxiv:2610.40893:v1:metadata-018e69b4ec3841a0",
+          "material_id": "mat-c35118081c1369f460cb4c41adbc185a",
+          "source_hash": "sha256:1122e718e19513fe95c3c094c5f12f18ff207bac442405d2fcc7098cfe8b54e2",
+          "parser_revision": "workspace-plain-text-v1",
+          "scope": "abstract",
+          "span_id": "span-163cc35fb95515cc133e7405c86ba94a",
+          "start": 0,
+          "end": 1403,
+          "quote_digest": "977c1a5c7b74b6399dca7251006c7862e47e90b88b8e19a82a89c0c4b899c851",
+          "reference_digest": "b314a0bb598e7e9dfabe36296a1cee81dae4faa0efa7e1c8dd6ab83974de0471"
+        }
+      ],
+      "selection_digest": "ef3f04a6d2a9b3f18263f969ca5c03a7b8d404ff45e0ed316e3cabb1433dd56d",
+      "ranking_digest": "d16819dbe3bb571b22e0a45889214b94ef77751d61af3e9acb24c25bcced5a17",
+      "author": "Codex",
+      "provenance": "machine_reference",
+      "method": "Offline reading of the exact frozen selected abstract units and application task policy; authored before the successor campaign. Not human gold, provider results or fresh held-out evidence.",
+      "reviewed_at": "2026-11-13T06:10:47Z",
+      "human_review": null
+    }
+  ],
+  "basis": "Proposed machine references on exposed retained abstracts; not independent human labels or literature recall",
+  "missing": "UNSCORED/HOLD",
+  "human_qualified": false,
+  "matrix_digest": "7a5627307bb0a2eff83b983234c1da57f67178eaeab2572bf6d112a58f7a0e38"
+}

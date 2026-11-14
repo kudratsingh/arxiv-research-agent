@@ -1,0 +1,120 @@
+{
+  "application": "a0ad5c2ceb5ba1d69753f1bd398876e054e90792",
+  "packet_digest": "25eec8f541dbe7f70bf2fadee59f51c0d8b456980856cd4f38fce20b139e8bde",
+  "created_utc": "2026-11-14T06:49:22.234591+00:00",
+  "full_python": {
+    "passed": 7764,
+    "skipped": 62,
+    "deselected_e2e": 53,
+    "pytest_reported_seconds": 1851.88,
+    "project_percent": 94.38,
+    "project_floor": 89,
+    "patch_percent_printed": 96,
+    "patch_floor": 90,
+    "changed_lines": 13014,
+    "missing_lines": 476,
+    "branch_coverage_and_test_contexts": true
+  },
+  "package_floors": {
+    "api": {
+      "printed": 88,
+      "floor": 86
+    },
+    "agents": {
+      "printed": 96,
+      "floor": 92
+    },
+    "security": {
+      "printed": 100,
+      "floor": 97
+    },
+    "eval": {
+      "printed": 95,
+      "floor": 91
+    }
+  },
+  "separate_e2e_passed": 53,
+  "research_simulation": {
+    "success": 20,
+    "error": 0,
+    "usd": "0.0000"
+  },
+  "registry": {
+    "objects": 260,
+    "mismatches": 0
+  },
+  "archive_extension_controls_passed": 42,
+  "focused_coverage_controls_passed": 50,
+  "ranking_equivalence_passed": 34,
+  "mypy_source_files": 230,
+  "ruff": "pass",
+  "web_tree": "e8d54eb62d9102a4fff6e5060a0a1a7a63dc5aa4",
+  "frontend_source_unchanged_from": "c5b859cc22abe7b66fec562881ba274d4eef9afc",
+  "predecessor_same_web_tree_tests": 4294,
+  "all_thresholds_and_watchdogs_unchanged": true,
+  "new_exact_head_ci": "PENDING publication and dispatch; prior run43556087526 CANCELLED",
+  "known_supplemental_invocation_failure": "archive-controls-02:34passed,8setup errors because the census layout was given instead of the original POST-STOP-LEDGER layout; corrected03passes42; no source/assertion changes",
+  "power_interruptions_recorded": "ci-profile-repair/POWER-TRANSITIONS-v1.json; do not infer active runtime from UTC wall duration",
+  "logs": {
+    "make-test-cov-diff-04.log": {
+      "sha256": "020710202e179edbc3bf884770936c1fc5fa7eaeef74a28d6b320a2de0e33958",
+      "bytes": 40478
+    },
+    "coverage-package-api-04.log": {
+      "sha256": "94357f63ecbc9f2a794d70f4d95b4a0db358191b6ae02fe472d240e367467503",
+      "bytes": 3
+    },
+    "coverage-package-agents-04.log": {
+      "sha256": "d93844f8f37e55564be3f194656bf33b5d0fb5e589a0fe17eb7c2d4e8593ec9c",
+      "bytes": 3
+    },
+    "coverage-package-security-04.log": {
+      "sha256": "eea8254c7500ba3de996aa8ad6af399183f04e17d4a8102fde539dbc93a90012",
+      "bytes": 4
+    },
+    "coverage-package-eval-04.log": {
+      "sha256": "d867d3f88fa20d7cb936ecd93651adeedf473a6177218cd0987f462ff5511cb6",
+      "bytes": 3
+    },
+    "make-test-e2e-02.log": {
+      "sha256": "a6916cc9259d04582c8dca6046c6b4c808ef1ff5f89d15cb05cc3d3376765092",
+      "bytes": 8461
+    },
+    "make-simulate-research-02.log": {
+      "sha256": "bdbf8af3936f26bf545e64edef210feab9c1f90ca4a3001d64e636fd7e38514b",
+      "bytes": 66270
+    },
+    "registry-parity-02.log": {
+      "sha256": "ffe3a2763694f735d44ac4b58fee474f7091fa78a56db0f351933f7a88375886",
+      "bytes": 503
+    },
+    "archive-controls-03.log": {
+      "sha256": "608fdb6654e4c9eb1924921dbbcd7cfa07d14415b303042c03cb5add8e5b9731",
+      "bytes": 99
+    },
+    "root-mypy-12.log": {
+      "sha256": "7a9771fa149280a943fe917324b1a67bdcf232e3a259d3350d995e641b7c08ab",
+      "bytes": 45
+    },
+    "root-ruff-12.log": {
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+      "bytes": 19
+    },
+    "ci-profile-repair/affected-under-coverage-v1.log": {
+      "sha256": "298a0e87989ce654b46b92420f6b941b0057a206ffee8d84b700d43fb7e333b4",
+      "bytes": 2546
+    },
+    "docs-gate-04.log": {
+      "sha256": "0a199208d03b21a5d160e7c2ad2ba533a5c50f4e355dcaa9b68dcfbaf2a1cc0c",
+      "bytes": 100
+    },
+    "docs-gate-05.log": {
+      "sha256": "65ecb7cdd2e78fc4db94a938ebd0b2130028354f2987bf5638c35a49fe5da38a",
+      "bytes": 100
+    }
+  },
+  "provider_contacts": 0,
+  "live_financial_or_authority_mutations": 0,
+  "documentation_tests_passed": 66,
+  "final_documentation_tests_passed": 66
+}
