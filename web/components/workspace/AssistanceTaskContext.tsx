@@ -1,4 +1,4 @@
-import type { AssistanceOutput } from "@/lib/workspace/assistanceTypes";
+import type { AssistanceOutput, EvidenceReference } from "@/lib/workspace/assistanceTypes";
 
 export const taskDefaults = { intent: "answer", requested_parts: "", vehicle_configuration: "", operating_envelope: "", safety_objectives: "", validation_evidence: "" };
 const contextLabels = {
@@ -64,4 +64,13 @@ export function coverageNote(output: AssistanceOutput): string[] {
     coverage_basis: output.coverage_basis,
     request_coverage: output.request_coverage,
   })];
+}
+
+/** Export only the retained result and exact source references, not request or wire records. */
+export function downloadAssistanceResult(id: string, simulated: boolean, output: AssistanceOutput, units: Record<string, EvidenceReference>) {
+  const data = { job_id: id, basis: simulated ? "Offline simulation; quality unqualified" : "Quarantined experimental result; human review pending", assistance_output: output, source_references: units };
+  const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
+  const link = document.createElement("a");
+  link.href = url; link.download = `${id}-result.json`; document.body.appendChild(link); link.click(); link.remove();
+  URL.revokeObjectURL(url);
 }

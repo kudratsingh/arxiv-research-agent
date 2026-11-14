@@ -146,3 +146,10 @@ it("saves every declared gap and disposition with its original coverage metadata
  const body=mock.request.mock.calls.find(([p])=>p==="context/entries")![1].data.body as string;
  expect(body).toContain('"response_disposition":"full_abstention"'); expect(body).toContain(JSON.stringify(row)); expect(body).not.toContain("c1: ");
 });
+it("downloads the complete abstention and eight multi-gap rows with exact source references", async()=>{
+ const job=jobs[0]!,out=job.assistance_output!;out.claims=[];out.response_disposition="full_abstention";out.request_coverage=Array.from({length:8},(_,i)=>({id:`p${i+1}`,request:`Part ${i+1} `+"x".repeat(1800),kind:"answer",status:"lacks_evidence",gap:"methods",gap_text:"First Second Third",gap_reasons:["methods","protocol","data_splits"],gap_texts:["First","Second","Third"],answer_claim_ids:[],context_claim_ids:[]}));
+ const blobs:Blob[]=[];Object.defineProperty(URL,"createObjectURL",{configurable:true,value:vi.fn((blob:Blob)=>{blobs.push(blob);return "blob:test";})});Object.defineProperty(URL,"revokeObjectURL",{configurable:true,value:vi.fn()});vi.spyOn(HTMLAnchorElement.prototype,"click").mockImplementation(()=>{});
+ const user=userEvent.setup();await mount();await screen.findByRole("region",{name:"Persisted qualification result"});await user.click(screen.getByRole("button",{name:"Save experimental learning thread"}));await screen.findByText(/Experimental result saved with its exact source context. The note links/);
+ const body=mock.request.mock.calls.find(([p])=>p==="context/entries")![1].data.body as string;expect(Array.from(body).length).toBeLessThanOrEqual(10000);expect(body).toContain(JID);expect(body).toContain(`qualification=${JID}`);
+ await user.click(screen.getByRole("button",{name:"Download qualification result JSON"}));const json=await new Promise<string>(resolve=>{const r=new FileReader();r.onload=()=>resolve(String(r.result));r.readAsText(blobs[0]!);});const saved=JSON.parse(json);expect(saved.assistance_output).toEqual(out);expect(saved.source_references).toEqual(job.request.units);expect(saved.job_id).toBe(JID);expect(saved).not.toHaveProperty("contacts");
+});

@@ -1,7 +1,7 @@
 "use client";
 
 import { ScoredSections } from "./ScoredSections";
-import { AssistanceTaskContext, AssistanceDisposition, RequestCoverage, coverageNote, taskDefaults } from "./AssistanceTaskContext";
+import { AssistanceTaskContext, AssistanceDisposition, RequestCoverage, coverageNote, downloadAssistanceResult, taskDefaults } from "./AssistanceTaskContext";
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -106,7 +106,15 @@ export default function AssistancePanel({ owner, workId, versionId, returnTo, on
     const chosen = Object.values(job.request.units).find(ref => ref.work_id === stored.work_id && ref.version_id === stored.version_id); if (!chosen) return;
     const origin: ResumeContext = stored.origin ?? { mode: stored.mode, project_id: stored.project_id, thread_id: null, return_to: returnTo };
     const entryId = `assistance-${job.id}`, threadId = `thread-${job.id.slice(5, 37)}`;
-    const body = ["Simulated assistance · factual quality and human support unmeasured.", ...job.assistance_output.claims.map(c => `${c.claim_id}: ${c.text}`), ...coverageNote(job.assistance_output), "Proposed next action: " + job.assistance_output.proposal, "Durable simulation: " + job.id].join("\n\n");
+    const fullBody = ["Simulated assistance · factual quality and human support unmeasured.", ...job.assistance_output.claims.map(c => `${c.claim_id}: ${c.text}`), ...coverageNote(job.assistance_output), "Proposed next action: " + job.assistance_output.proposal, "Durable simulation: " + job.id].join("\n\n");
+    const referenceOnly = Array.from(fullBody).length > 10000;
+    const href = readerHref({ work_id: chosen.work_id }, chosen.version_id, passageAnchor(chosen));
+    const [pathAndQuery, fragment] = href.split("#", 2);
+    const [path, query] = pathAndQuery!.split("?", 2);
+    const params = new URLSearchParams(query); params.set("assistance", job.id); params.set("mode", stored.mode);
+    if (stored.project_id) params.set("project", stored.project_id);
+    const targetUrl = `${path}?${params}${fragment === undefined ? "" : `#${fragment}`}`;
+    const body = referenceOnly ? `Reference to complete retained simulated assistance result (quality unmeasured).\n\n${targetUrl}\n\nDurable simulation: ${job.id}` : fullBody;
     form.setBusy(true);
     try {
       const entry = await contextRequest<EntryRevision>("/entries", { id: entryId, revision: 0, request_id: `save-${job.id}`, context: origin, data: { work_id: stored.work_id, version_id: stored.version_id, kind: "note", body, anchor: passageAnchor(chosen) } });
@@ -114,10 +122,10 @@ export default function AssistancePanel({ owner, workId, versionId, returnTo, on
         if (!stored.project_id) throw new Error("Select a project before linking this saved note.");
         const current = await contextRequest<ProjectDetail>(`/projects/${stored.project_id}`);
         if (!current.entries.some(link => link.entry_id === entry.id && link.entry_revision === entry.revision)) await contextRequest(`/projects/${stored.project_id}/entries`, { revision: current.revision, request_id: `link-${job.id}`, entry_id: entry.id, entry_revision: entry.revision });
-        setNotice("Simulated result saved as a shared note and linked to the project. It remains unverified.");
+        setNotice(referenceOnly ? "Reference note linked to the project. It links to the complete retained simulation because its full text exceeds the note body limit." : "Simulated result saved as a shared note and linked to the project. It remains unverified.");
       } else {
         const thread = await contextRequest<LearningThread>("/threads", { id: threadId, revision: 0, request_id: `thread-${job.id}`, data: { title: "Simulated guided reading", goal: stored.follow_up || job.assistance_output.questions[0], prerequisite: `Resume simulation ${job.id}; understanding is unmeasured.`, status: "active", origin, source: { work_id: chosen.work_id, version_id: chosen.version_id, anchor: passageAnchor(chosen) }, entry: { entry_id: entry.id, entry_revision: entry.revision } } });
-        setSavedThread(thread.id); setNotice("Learning thread and shared note saved. Return to this source's Understand tab to inspect the durable simulation.");
+        setSavedThread(thread.id); setNotice(referenceOnly ? "Learning thread and reference note saved. The note links to the complete retained simulation because its full text exceeds the note body limit." : "Learning thread and shared note saved. Return to this source's Understand tab to inspect the durable simulation.");
       }
       invalidateContextIndex();
     } catch (failure) { setNotice(`The simulation remains saved. ${errorMessage(failure)} A shared note may already be saved; retry uses the same identity.`); }
@@ -170,7 +178,7 @@ export default function AssistancePanel({ owner, workId, versionId, returnTo, on
         </>}
         <h4>Choose the next question</h4>{result.questions.map(question => <button key={question} type="button" disabled={form.busy} onClick={() => { change("follow_up", question); change("units", JSON.stringify(job.request.assistance.unit_ids)); }}>{question}</button>)}
         <h4>{result.response_disposition === "full_abstention" ? "Missing details · next action" : "Proposed experiment · not a finding"}</h4><p>{result.proposal}</p>
-        <div className="workspace-toolbar"><button type="button" disabled={form.busy} onClick={() => void save("thread")}>Save simulation to a learning thread</button>{job.request.assistance.project_id && <button type="button" disabled={form.busy} onClick={() => void save("project")}>Save simulation to project notes</button>}</div>
+        <div className="workspace-toolbar"><button type="button" onClick={() => downloadAssistanceResult(job.id, true, result, job.request.units)}>Download simulated result JSON</button><button type="button" disabled={form.busy} onClick={() => void save("thread")}>Save simulation to a learning thread</button>{job.request.assistance.project_id && <button type="button" disabled={form.busy} onClick={() => void save("project")}>Save simulation to project notes</button>}</div>
         {savedThread && <Link href={contextHref(`/workspace/threads/${savedThread}?mode=learn&thread=${savedThread}`, { ...context, mode: "learn", thread: savedThread, explicit: true })}>Open saved learning thread</Link>}
       </section>}
     </section>}

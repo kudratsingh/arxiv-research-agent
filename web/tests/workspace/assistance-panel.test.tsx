@@ -289,3 +289,12 @@ it("saves all declared comparison gaps and context identities", async () => {
  const body=mock.request.mock.calls.find(([p])=>p==="context/entries")![1].data.body as string;
  expect(body).toContain('"comparison_unanswered":true'); expect(body).toContain('"response_disposition":"comparison_abstention"'); expect(body).toContain(JSON.stringify(row));
 });
+it("saves an oversized simulation by reference and downloads its complete multi-gap output", async () => {
+ current=job("ready",true); const out=current.assistance_output!; out.response_disposition="comparison_abstention"; out.comparison_unanswered=true;
+ out.request_coverage=Array.from({length:8},(_,i)=>({id:`p${i+1}`,request:`Part ${i+1} `+"x".repeat(1800),kind:"comparison",status:"lacks_evidence",gap:"methods",gap_text:"First Second Third",gap_reasons:["methods","protocol","data_splits"],gap_texts:["First","Second","Third"],answer_claim_ids:[],context_claim_ids:["c1"]}));
+ const blobs:Blob[]=[]; Object.defineProperty(URL,"createObjectURL",{configurable:true,value:vi.fn((blob:Blob)=>{blobs.push(blob);return "blob:test";})}); Object.defineProperty(URL,"revokeObjectURL",{configurable:true,value:vi.fn()});vi.spyOn(HTMLAnchorElement.prototype,"click").mockImplementation(()=>{});
+ const user=userEvent.setup();await mount(true,true);await screen.findByRole("region",{name:"Simulated assistance result"});
+ await user.click(screen.getByRole("button",{name:"Save simulation to project notes"}));await screen.findByText(/complete retained simulation because its full text exceeds/);
+ const body=mock.request.mock.calls.find(([p])=>p==="context/entries")![1].data.body as string;expect(Array.from(body).length).toBeLessThanOrEqual(10000);expect(body).toContain(JID);expect(body).toContain(`assistance=${JID}`);expect(body).not.toContain("First Second Third");
+ await user.click(screen.getByRole("button",{name:"Download simulated result JSON"}));const json=await new Promise<string>(resolve=>{const r=new FileReader();r.onload=()=>resolve(String(r.result));r.readAsText(blobs[0]!);});const saved=JSON.parse(json);expect(saved.assistance_output).toEqual(out);expect(saved.source_references).toEqual(current!.request.units);expect(saved.job_id).toBe(JID);expect(saved).not.toHaveProperty("wire_records");
+});

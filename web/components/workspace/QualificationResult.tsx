@@ -1,5 +1,5 @@
 "use client";
-import { AssistanceDisposition, RequestCoverage, coverageNote } from "./AssistanceTaskContext";
+import { AssistanceDisposition, RequestCoverage, coverageNote, downloadAssistanceResult } from "./AssistanceTaskContext";
 
 import { ScoredSections } from "./ScoredSections";
 
@@ -134,6 +134,7 @@ export default function QualificationResult({ workId, versionId, returnTo, onSou
         <h4>Follow-up questions</h4><ul>{output.questions.map(text => <li key={text}>{text}</li>)}</ul>
         <h4>{output.response_disposition === "full_abstention" ? "Missing details · next action" : "Proposed experiment · not a finding"}</h4><p>{output.proposal}</p>
         {Array.from(fullNote(job, output)).length > 10000 && <p>The saved note links to the complete retained experimental result because the full text exceeds the note body limit.</p>}
+        <button type="button" disabled={!job.source_binding_intact} onClick={() => downloadAssistanceResult(job.id, job.simulated, output, job.request.units)}>Download qualification result JSON</button>
         <button type="button" disabled={busy} onClick={() => void save("thread")}>Save experimental learning thread</button>
         {savedThread && <Link href={contextHref(`/workspace/threads/${savedThread}`, { ...context, mode: job.request.assistance.mode, project: job.request.assistance.project_id })}>Open experimental learning thread →</Link>}
         {job.request.assistance.project_id && <button type="button" disabled={busy} onClick={() => void save("project")}>Link experimental result to project</button>}
