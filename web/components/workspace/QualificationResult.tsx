@@ -36,6 +36,19 @@ function checkerReasons(steps: unknown[]): { step: number; group: string; index:
   return reasons;
 }
 
+function fullNote(job: QualificationJob, output: AssistanceOutput): string {
+  return [job.simulated ? "Offline simulated qualification result · not quality evidence." : "Quarantined experimental result · human review pending.", ...output.claims.map(c => `${c.claim_id}: ${c.text}`), "Proposed next action: " + output.proposal, "Qualification record: " + job.id].join("\n\n");
+}
+
+function referenceNote(job: QualificationJob, ref: EvidenceReference): string {
+  const stored = job.request.assistance;
+  const url = new URL(readerHref({ work_id: ref.work_id }, ref.version_id, passageAnchor(ref)), "https://workspace.invalid");
+  url.searchParams.set("qualification", job.id);
+  url.searchParams.set("mode", stored.mode);
+  if (stored.project_id) url.searchParams.set("project", stored.project_id);
+  return `Reference to complete retained experimental qualification result (human review pending).\n\n${url.pathname}${url.search}${url.hash}\n\nQualification record: ${job.id}`;
+}
+
 /** Read-only, quarantined production-pipeline results. No dispatch API exists. */
 export default function QualificationResult({ workId, versionId, returnTo, onSource }: {
   workId: string; versionId: string; returnTo: string; onSource: (anchor: string) => void;
@@ -67,7 +80,9 @@ export default function QualificationResult({ workId, versionId, returnTo, onSou
     const ref = Object.values(job.request.units).find(r => r.work_id === stored.work_id && r.version_id === stored.version_id);
     if (!ref) return;
     const origin = stored.origin ?? { ...resumeContext(context, returnTo), mode: stored.mode, project_id: stored.project_id };
-    const body = [job.simulated ? "Offline simulated qualification result · not quality evidence." : "Quarantined experimental result · human review pending.", ...job.assistance_output.claims.map(c => `${c.claim_id}: ${c.text}`), "Proposed next action: " + job.assistance_output.proposal, "Qualification record: " + job.id].join("\n\n");
+    const fullBody = fullNote(job, job.assistance_output);
+    const referenceOnly = Array.from(fullBody).length > 10000;
+    const body = referenceOnly ? referenceNote(job, ref) : fullBody;
     setBusy(true);
     try {
       const entry = await contextRequest<EntryRevision>("/entries", { id: `qualification-${job.id}`, revision: 0, request_id: `save-${job.id}`, context: origin, data: { work_id: stored.work_id, version_id: stored.version_id, kind: "note", body, anchor: passageAnchor(ref) } });
@@ -79,7 +94,7 @@ export default function QualificationResult({ workId, versionId, returnTo, onSou
         const thread = await contextRequest<LearningThread>("/threads", { id: `thread-${job.id.slice(4, 36)}`, revision: 0, request_id: `thread-${job.id}`, data: { title: "Experimental guided reading", goal: stored.follow_up || "Inspect the retained evidence", prerequisite: "Resume quarantined result " + job.id, status: "active", origin, source: { work_id: ref.work_id, version_id: ref.version_id, anchor: passageAnchor(ref) }, entry: { entry_id: entry.id, entry_revision: entry.revision } } });
         setSavedThread(thread.id);
       }
-      invalidateContextIndex(); setNotice("Experimental result saved with its exact source context. It remains unqualified.");
+      invalidateContextIndex(); setNotice(referenceOnly ? "Experimental result saved with its exact source context. The note links to the complete retained experimental result because its full text exceeds the note body limit. It remains unqualified." : "Experimental result saved with its exact source context. It remains unqualified.");
     } catch (failure) { setNotice(`${errorMessage(failure)} A note may already be saved; retry preserves the same identities.`); }
     finally { setBusy(false); }
   }
@@ -114,6 +129,7 @@ export default function QualificationResult({ workId, versionId, returnTo, onSou
         </>}
         <h4>Follow-up questions</h4><ul>{output.questions.map(text => <li key={text}>{text}</li>)}</ul>
         <h4>{output.response_disposition === "full_abstention" ? "Missing details · next action" : "Proposed experiment · not a finding"}</h4><p>{output.proposal}</p>
+        {Array.from(fullNote(job, output)).length > 10000 && <p>The saved note links to the complete retained experimental result because the full text exceeds the note body limit.</p>}
         <button type="button" disabled={busy} onClick={() => void save("thread")}>Save experimental learning thread</button>
         {savedThread && <Link href={contextHref(`/workspace/threads/${savedThread}`, { ...context, mode: job.request.assistance.mode, project: job.request.assistance.project_id })}>Open experimental learning thread →</Link>}
         {job.request.assistance.project_id && <button type="button" disabled={busy} onClick={() => void save("project")}>Link experimental result to project</button>}
