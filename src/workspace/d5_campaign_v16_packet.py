@@ -74,6 +74,8 @@ def capture(store: Any, program_id: str) -> dict[str, Any]:
             ("workspace_d5_campaign_successor_revocations", "recorded_campaign_successor_revocations"),
             ("workspace_d5_capacity_revisions", "recorded_capacity_revisions"),
             ("workspace_d5_capacity_revision_revocations", "recorded_capacity_revision_revocations"),
+            ("workspace_d5_keyed_continuations", "recorded_keyed_continuations"),
+            ("workspace_d5_keyed_continuation_revocations", "recorded_keyed_continuation_revocations"),
         ):
             extras[key] = [
                 r[0]

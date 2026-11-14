@@ -49,12 +49,13 @@ def parent(conn: Any, program_id: str) -> dict[str, Any]:
     if not row:
         raise AdmissionError("campaign_v16_parent_receipt_required")
     value = row[0]
+    fixture = _fixture(conn)
     record = value["record"]
     core = record.get("campaign_extension", {}).get("core", {})
     scope = conn.execute("SELECT to_jsonb(t) FROM workspace_d5_scopes t WHERE scope_id=%s", (value["scope_id"],)).fetchone()
     if (
         value.get("revision") != 7
-        or value.get("authorization_digest") != "6dfa60a072ea45fbd097e1b26b06d27d489d18afaaf57d06d49c5af2a15c7596"
+        or not fixture and value.get("authorization_digest") != "6dfa60a072ea45fbd097e1b26b06d27d489d18afaaf57d06d49c5af2a15c7596"
         or _digest(record) != value["authorization_digest"]
         or _digest(core) != value["proposal_digest"]
         or core.get("revision") != PRIOR_REVISION
@@ -76,7 +77,8 @@ def parent(conn: Any, program_id: str) -> dict[str, Any]:
         or datetime.fromisoformat(record["expires_at"]) != datetime.fromisoformat(value["expires_at"])
         or datetime.fromisoformat(scope[0]["expires_at"]) != datetime.fromisoformat(record["expires_at"])
         or datetime.fromisoformat(record["programme_expires_at"]) != datetime.fromisoformat(value["programme_expires_at"])
-        or datetime.fromisoformat(record["programme_expires_at"]) != datetime.fromisoformat("2026-11-21T11:03:57+00:00")
+        or not fixture and datetime.fromisoformat(record["programme_expires_at"]) != datetime.fromisoformat("2026-11-21T11:03:57+00:00")
+        or fixture and (record.get("authorization_kind") != "offline_fixture" or record.get("transport_mode") != "mock")
         or conn.execute("SELECT 1 FROM workspace_d5_capacity_revision_revocations WHERE extension_id=%s", (value["extension_id"],)).fetchone()
     ):
         raise AdmissionError("campaign_v16_parent_or_stopped_scope_drift")
@@ -236,10 +238,10 @@ def _validate(conn: Any, receipt: dict[str, Any], program_id: str) -> dict[str, 
 def active(
     conn: Any, program_id: str, required: str | None = None
 ) -> tuple[dict[str, Any], dict[str, Any]] | None:
-    if not conn.execute("SELECT to_regclass('workspace_d5_capacity_revisions')").fetchone()[0]:
+    if not conn.execute("SELECT to_regclass('workspace_d5_keyed_continuations')").fetchone()[0]:
         return None
     row = conn.execute(
-        "SELECT record,authorization_digest,proposal_digest,packet_digest,scope_id,expires_at,extension_id,programme_expires_at,predecessor_extension_id,predecessor_authorization_digest FROM workspace_d5_capacity_revisions WHERE program_id=%s AND record->'campaign_extension'->'core'->>'revision'='programme-keyed-contract-successor-v16' AND (%s::text IS NULL OR proposal_digest=%s) ORDER BY created_at DESC,extension_id DESC LIMIT 1",
+        "SELECT record,authorization_digest,proposal_digest,packet_digest,scope_id,expires_at,extension_id,programme_expires_at,predecessor_extension_id,predecessor_authorization_digest FROM workspace_d5_keyed_continuations WHERE program_id=%s AND record->'campaign_extension'->'core'->>'revision'='programme-keyed-contract-successor-v16' AND (%s::text IS NULL OR proposal_digest=%s) ORDER BY created_at DESC,extension_id DESC LIMIT 1",
         (program_id, required, required),
     ).fetchone()
     if not row or required is not None and required != row[2]:
@@ -269,7 +271,7 @@ def active(
         or datetime.fromisoformat(receipt["expires_at"]) != expiry
         or datetime.fromisoformat(receipt["programme_expires_at"]) != programme_expiry
         or conn.execute(
-            "SELECT 1 FROM workspace_d5_capacity_revision_revocations WHERE extension_id=%s",
+            "SELECT 1 FROM workspace_d5_keyed_continuation_revocations WHERE extension_id=%s",
             (extension_id,),
         ).fetchone()
     ):
@@ -290,12 +292,12 @@ def record_external(store: Any, receipt: dict[str, Any]) -> dict[str, Any]:
         _validate(conn, receipt, pid)
         digest = _digest(receipt)
         prior = conn.execute(
-            "SELECT authorization_digest FROM workspace_d5_capacity_revisions WHERE extension_id=%s",
+            "SELECT authorization_digest FROM workspace_d5_keyed_continuations WHERE extension_id=%s",
             (core["extension_id"],),
         ).fetchone()
         if prior:
             if conn.execute(
-                "SELECT 1 FROM workspace_d5_capacity_revision_revocations WHERE extension_id=%s",
+                "SELECT 1 FROM workspace_d5_keyed_continuation_revocations WHERE extension_id=%s",
                 (core["extension_id"],),
             ).fetchone():
                 raise AdmissionError("campaign_v16_revoked_or_receipt_drift")
@@ -305,7 +307,7 @@ def record_external(store: Any, receipt: dict[str, Any]) -> dict[str, Any]:
         if proposal(conn, pid, core["plan_digest"])["core"] != core:
             raise AdmissionError("campaign_v16_activation_census_drift")
         conn.execute(
-            "INSERT INTO workspace_d5_capacity_revisions(program_id,revision,extension_id,predecessor_extension_id,predecessor_authorization_digest,proposal_digest,authorization_digest,packet_digest,scope_id,record,expires_at,programme_expires_at) VALUES(%s,7,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+            "INSERT INTO workspace_d5_keyed_continuations(program_id,revision,extension_id,predecessor_extension_id,predecessor_authorization_digest,proposal_digest,authorization_digest,packet_digest,scope_id,record,expires_at,programme_expires_at) VALUES(%s,8,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
             (
                 pid,
                 core["extension_id"],

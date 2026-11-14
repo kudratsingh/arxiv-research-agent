@@ -172,7 +172,13 @@ async def run(
             inputs = restore_input(entry["input"])
             kwargs: dict[str, Any]
             if offline:
-                transport = transport_factory(key) if transport_factory else CampaignTransport(key)
+                if transport_factory is not None:
+                    transport = transport_factory(key)
+                elif packet.get("revision") == "d5-keyed-machine-campaign-v16":
+                    from src.workspace.d5_keyed_transport import KeyedCampaignTransport
+                    transport = KeyedCampaignTransport(key)
+                else:
+                    transport = CampaignTransport(key)
                 kwargs = {"transport": httpx.MockTransport(transport)}
             else:
                 # Only an explicitly authorized runner reaches credential loading.
@@ -325,8 +331,12 @@ def main() -> None:
             authorize_fixture(store, packet)
         if args.out is None:
             parser.error("run/report requires new --out directory")
+        transport_type = CampaignTransport
+        if packet.get("revision") == "d5-keyed-machine-campaign-v16":
+            from src.workspace.d5_keyed_transport import KeyedCampaignTransport
+            transport_type = KeyedCampaignTransport
         factory = (
-            (lambda key: CampaignTransport(key, repair_all=True))
+            (lambda key: transport_type(key, repair_all=True))
             if args.fixture_repair_all
             else None
         )

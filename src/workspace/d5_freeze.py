@@ -190,6 +190,7 @@ def code_bindings() -> dict[str, str]:
         'assistance_keyed_contract.py',
         'assistance_keyed_checks.py',
         'migrations/020_d5_capacity_campaign.sql',
+        'migrations/021_d5_keyed_continuation.sql',
 
         "d5_coverage_policy.py",
         "d5_coverage_packet.py",

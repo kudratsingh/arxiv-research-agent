@@ -166,6 +166,8 @@ def revoke(store: Any, packet: dict[str, Any], authorization: dict[str, Any]) ->
     if capacity and authorization.get("scope_id") != "d5-" + packet["packet_digest"][:24]:
         raise AdmissionError("campaign_revocation_scope_binding_required")
     statement = (
+        "INSERT INTO workspace_d5_keyed_continuation_revocations VALUES(%s,%s,clock_timestamp()) ON CONFLICT DO NOTHING"
+        if packet.get("revision") == "d5-keyed-machine-campaign-v16" else
         "INSERT INTO workspace_d5_capacity_revision_revocations VALUES(%s,%s,clock_timestamp()) ON CONFLICT DO NOTHING"
         if capacity else
         "INSERT INTO workspace_d5_campaign_successor_revocations VALUES(%s,%s,clock_timestamp()) ON CONFLICT DO NOTHING"
