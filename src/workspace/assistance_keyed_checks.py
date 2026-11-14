@@ -11,16 +11,15 @@ from __future__ import annotations
 from collections.abc import Sequence
 from enum import StrEnum
 from types import GenericAlias
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
 from anthropic import transform_schema
-from pydantic import BaseModel, Field, TypeAdapter, create_model, model_validator
+from pydantic import AfterValidator, BaseModel, Field, TypeAdapter, create_model, model_validator
 
 from src.workspace.assistance_capacity_contract import (
     ClaimKey,
     PartReview,
     ProbeSupportReview,
-    ProseFinding,
     QualityReview,
     SupportReview,
     _bounded,
@@ -28,6 +27,9 @@ from src.workspace.assistance_capacity_contract import (
     _limits,
     _Reason,
     _validate_locations,
+)
+from src.workspace.assistance_capacity_contract import (
+    ProseFinding as PriorProseFinding,
 )
 from src.workspace.assistance_contract import digest
 from src.workspace.assistance_coverage import Retention
@@ -71,6 +73,12 @@ def _structure(claims: Any, parts: Any, review: str, findings: Any) -> None:
         raise ValueError("prose_finding_required_or_inconsistent")
     if len({(row.field, row.index, row.reason) for row in findings}) != len(findings):
         raise ValueError("duplicate_prose_finding")
+
+
+class ProseFinding(PriorProseFinding):
+    """Exact current v16 list locations are bounded by context, not legacy index2."""
+
+    index: int | None = Field(ge=0, strict=True)
 
 
 class _ProseChecks(_Closed):
@@ -184,10 +192,52 @@ def _context(
     return result[0], result[1]
 
 
+def prose_locations(context: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    """Catalog only exact nonblank locations in the current unscored prose.
+
+    Stable opaque keys follow sorted allowed field names and ascending existing
+    list indices. Descriptions locate text already present in the request; no
+    prose, private context, digest or model-authored location is copied here.
+    """
+    prose = context.get("unscored_prose", {})
+    if not isinstance(prose, dict):
+        raise ValueError("keyed_context_prose_invalid")
+    result: dict[str, dict[str, Any]] = {}
+    for field in sorted(
+        ("background", "assumptions", "comparison", "gaps", "questions", "proposal", "abstention")
+    ):
+        value = prose.get(field)
+        candidates: list[tuple[int | None, Any]]
+        if field in {"assumptions", "gaps", "questions"}:
+            candidates = list(enumerate(value)) if isinstance(value, list) else []
+        else:
+            candidates = [(None, value)]
+        for index, text in candidates:
+            if not isinstance(text, str) or not text.strip():
+                continue
+            location = field + (f"[{index}]" if index is not None else "")
+            result[f"l{len(result) + 1}"] = {
+                "field": field,
+                "index": index,
+                "description": f"Independent finding reasons for exact unscored_prose.{location}; its text is already in the request. Empty array means no finding at this location.",
+            }
+    return result
+
+
+def _nonblank_finding_reason(value: str) -> str:
+    return _Reason(reason=value).reason
+
+
+_ProseReason = Annotated[
+    str, Field(min_length=1, strict=True), AfterValidator(_nonblank_finding_reason)
+]
+
+
 def _wire_model(context: dict[str, Any], *, probe: bool) -> type[BaseModel]:
     claims, parts = _context(context, probe=probe)
+    locations = prose_locations(context)
     identity = digest(
-        [REVISION, probe, [r["claim_id"] for r in claims], [r["part_id"] for r in parts]]
+        [REVISION, probe, [r["claim_id"] for r in claims], [r["part_id"] for r in parts], locations]
     )[7:23]
     claim_fields: dict[str, Any] = {
         f"row_{i}": (
@@ -197,7 +247,16 @@ def _wire_model(context: dict[str, Any], *, probe: bool) -> type[BaseModel]:
         for i, row in enumerate(claims)
     }
     claim_rows = create_model("KeyedClaims_" + identity, __base__=_Closed, **claim_fields)
+    prose_fields: dict[str, Any] = {
+        key: (
+            tuple[_ProseReason, ...],
+            Field(max_length=MAX_FINDINGS, description=location["description"]),
+        )
+        for key, location in locations.items()
+    }
+    prose_model = create_model("KeyedProse_" + identity, __base__=_Closed, **prose_fields)
     fields: dict[str, Any] = {
+        "prose_findings": (prose_model, ...),
         "revision": (_Revision, ...),
         "checks" if probe else "claim_reviews": (claim_rows, ...),
     }
@@ -235,7 +294,11 @@ def normalize(
             for binding in claims
         ],
         "prose_review": value["prose_review"],
-        "prose_findings": value["prose_findings"],
+        "prose_findings": [
+            {"field": location["field"], "index": location["index"], "reason": reason}
+            for key, location in prose_locations(context).items()
+            for reason in value["prose_findings"][key]
+        ],
     }
     if not probe:
         result.update(
@@ -274,11 +337,19 @@ def compact(
                 raise ValueError("keyed_compact_conflicting_claim_review")
             row.update({key: quality[key] for key in ("atomicity", "qualifications")})
         claims[support["claim_id"]] = row
+    locations = prose_locations(context)
+    reverse = {(value["field"], value["index"]): key for key, value in locations.items()}
+    findings: dict[str, list[str]] = {key: [] for key in locations}
+    for finding in value["prose_findings"]:
+        key = reverse.get((finding["field"], finding["index"]))
+        if key is None:
+            raise ValueError("checker_prose_location_mismatch")
+        findings[key].append(finding["reason"])
     raw = {
         "revision": REVISION,
         "checks" if probe else "claim_reviews": claims,
         "prose_review": value["prose_review"],
-        "prose_findings": value["prose_findings"],
+        "prose_findings": findings,
     }
     if not probe:
         raw.update(

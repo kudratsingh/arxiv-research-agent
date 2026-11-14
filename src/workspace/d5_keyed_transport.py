@@ -162,7 +162,8 @@ class KeyedCampaignTransport:
                 "same_location_findings",
                 "different_findings_same_location",
             }:
-                payload.update(
+                normalized = checks.normalize(payload, context, probe=probe)
+                normalized.update(
                     prose_review="unscored_factual_content",
                     prose_findings=[
                         {
@@ -173,13 +174,14 @@ class KeyedCampaignTransport:
                     ],
                 )
                 if self.scenario != "prose":
-                    payload["prose_findings"].append(
+                    normalized["prose_findings"].append(
                         {
                             "field": "gaps",
                             "index": 0,
                             "reason": "Independent synthetic scope finding at this same existing location.",
                         }
                     )
+                payload = checks.compact(normalized, context, probe=probe)
         else:
             payload = draft_payload(context, long=long)
         text = json.dumps(payload, ensure_ascii=False)

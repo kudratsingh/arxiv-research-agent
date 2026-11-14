@@ -42,7 +42,7 @@ def fixture(count=8, parts=8, *, probe=False):
         "revision": keyed.REVISION,
         "checks" if probe else "claim_reviews": judgments,
         "prose_review": "procedural_only",
-        "prose_findings": [],
+        "prose_findings": {},
     }
     if not probe:
         raw.update(
@@ -260,28 +260,38 @@ def test_probe_opaque_keys_are_exact_even_for_model_field_names(identifier):
         ("comparison", None),
         ("proposal", None),
         ("abstention", None),
-        ("assumptions", 2),
+        ("assumptions", 11),
         ("gaps", 0),
         ("questions", 1),
     ],
 )
 def test_independent_prose_findings_share_location_and_keep_full_validation(probe, field, index):
     raw, context = fixture(5, probe=probe)
+    prose = {field: "Nonblank" if index is None else ["Nonblank"] * (index + 1)}
+    context["unscored_prose"] = prose
+    locations = keyed.prose_locations(context)
+    key = next(
+        key for key, row in locations.items() if (row["field"], row["index"]) == (field, index)
+    )
     raw["prose_review"] = "unscored_factual_content"
-    raw["prose_findings"] = [
-        {"field": field, "index": index, "reason": reason}
-        for reason in ("Unsupported numerical result.", "Independent scope omission.")
-    ]
+    raw["prose_findings"] = {location: [] for location in locations}
+    raw["prose_findings"][key] = ["Unsupported numerical result.", "Independent scope omission."]
+    for schema in keyed.schemas(context, probe=probe).values():
+        Draft202012Validator(schema).validate(raw)
     normalized = keyed.normalize(raw, context, probe=probe)
     model = keyed.probe_checks_model() if probe else keyed.checks_model()
     checks = model.model_validate(normalized)
-    checks.validate_locations({field: "Nonblank" if index is None else ["Nonblank"] * 3})
-    for prose in ({}, {field: " "}, {field: []}, {field: [" "] * 3}):
+    checks.validate_locations(prose)
+    for invalid in (
+        {},
+        {field: " "},
+        {field: []},
+        {field: [" "] * (12 if index is not None else 3)},
+    ):
         with pytest.raises(ValueError, match="checker_prose_location_mismatch"):
-            checks.validate_locations(prose)
+            checks.validate_locations(invalid)
     assert keyed.compact(normalized, context, probe=probe) == raw
-    # The historical class retains its duplicate-location semantics.
-    with pytest.raises(ValueError, match="duplicate_prose_finding"):
+    with pytest.raises(ValueError):
         (v15.probe_checks_model() if probe else v15.checks_model()).model_validate(normalized)
 
 
@@ -289,41 +299,42 @@ def test_independent_prose_findings_share_location_and_keep_full_validation(prob
     "mutation",
     [
         "duplicate",
-        "scalar_index",
-        "null_list_index",
-        "negative_index",
-        "large_index",
-        "boolean_index",
+        "old_scalar_index",
+        "old_null_list_index",
+        "unknown_location",
+        "missing_location",
         "procedural_findings",
         "missing_findings",
         "blank_reason",
         "too_many",
+        "nonstring_reason",
     ],
 )
 def test_prose_errors_still_rejected(mutation):
     raw, context = fixture()
+    context["unscored_prose"] = {"gaps": ["First current gap.", "Second current gap."]}
     raw["prose_review"] = "abstain"
-    raw["prose_findings"] = [{"field": "gaps", "index": 0, "reason": "Review material result."}]
-    finding = raw["prose_findings"][0]
+    raw["prose_findings"] = {"l1": ["Review material result."], "l2": []}
     if mutation == "duplicate":
-        raw["prose_findings"] *= 2
-    elif mutation == "scalar_index":
-        finding["field"] = "background"
-    elif mutation.endswith("index"):
-        finding["index"] = {
-            "null_list_index": None,
-            "negative_index": -1,
-            "large_index": 3,
-            "boolean_index": True,
-        }[mutation]
+        raw["prose_findings"]["l1"] *= 2
+    elif mutation == "old_scalar_index":
+        raw["prose_findings"] = [{"field": "background", "index": 0, "reason": "Review."}]
+    elif mutation == "old_null_list_index":
+        raw["prose_findings"] = [{"field": "gaps", "index": None, "reason": "Review."}]
+    elif mutation == "unknown_location":
+        raw["prose_findings"]["unknown"] = []
+    elif mutation == "missing_location":
+        del raw["prose_findings"]["l2"]
     elif mutation == "procedural_findings":
         raw["prose_review"] = "procedural_only"
     elif mutation == "missing_findings":
-        raw["prose_findings"] = []
+        raw["prose_findings"] = {"l1": [], "l2": []}
     elif mutation == "blank_reason":
-        finding["reason"] = " "
+        raw["prose_findings"]["l1"] = [" "]
+    elif mutation == "nonstring_reason":
+        raw["prose_findings"]["l1"] = [{"field": "gaps", "index": 0, "reason": "Review."}]
     else:
-        raw["prose_findings"] = [{**finding, "reason": str(i)} for i in range(17)]
+        raw["prose_findings"] = {"l1": [str(i) for i in range(8)], "l2": [str(i) for i in range(9)]}
     with pytest.raises(ValueError):
         keyed.normalize(raw, context)
 
@@ -466,3 +477,112 @@ def test_probe_identity_factory_and_context_require_valid_inputs():
             keyed.probe_checks_model(identifiers)
     with pytest.raises(ValueError, match="keyed_context_invalid"):
         keyed.schemas(None)
+
+
+def test_prose_catalog_is_exact_deterministic_nonmutating_and_exposes_no_private_context():
+    raw, context = fixture(12)
+    context["unscored_prose"] = {
+        "questions": ["Q0", "", "Q2"],
+        "background": "Background",
+        "assumptions": [f"Assumption {i}" for i in range(12)],
+        "gaps": [" ", "Gap1"],
+        "proposal": None,
+        "private_not_a_review_field": "Never include this.",
+    }
+    context["private_data"] = "Never include this either."
+    original = deepcopy(context)
+    locations = keyed.prose_locations(context)
+    expected = [("assumptions", i) for i in range(12)] + [
+        ("background", None),
+        ("gaps", 1),
+        ("questions", 0),
+        ("questions", 2),
+    ]
+    assert [(row["field"], row["index"]) for row in locations.values()] == expected
+    assert list(locations) == [f"l{i + 1}" for i in range(16)]
+    assert "private" not in json.dumps(locations)
+    assert context == original
+    raw["prose_findings"] = {key: [] for key in locations}
+    raw["prose_findings"]["l12"] = [
+        "One independent qualification finding.",
+        "Another independent scope finding.",
+    ]
+    raw["prose_review"] = "unscored_factual_content"
+    for schema in keyed.schemas(context).values():
+        definition = schema["$defs"][schema["properties"]["prose_findings"]["$ref"].split("/")[-1]]
+        assert set(definition["required"]) == set(locations)
+        assert definition["additionalProperties"] is False
+        assert definition["properties"]["l12"]["items"]["type"] == "string"
+        assert "unscored_prose.assumptions[11]" in definition["properties"]["l12"]["description"]
+        assert "private" not in encoded(schema).decode()
+        Draft202012Validator(schema).validate(raw)
+        for bad in (
+            {**raw, "prose_findings": {**raw["prose_findings"], "l17": []}},
+            {
+                **raw,
+                "prose_findings": {
+                    key: row for key, row in raw["prose_findings"].items() if key != "l1"
+                },
+            },
+        ):
+            assert list(Draft202012Validator(schema).iter_errors(bad))
+    normalized = keyed.normalize(raw, context)
+    assert normalized["prose_findings"] == [
+        {"field": "assumptions", "index": 11, "reason": reason}
+        for reason in raw["prose_findings"]["l12"]
+    ]
+    assert keyed.compact(normalized, context) == raw
+    changed = deepcopy(context)
+    changed["unscored_prose"]["assumptions"] = changed["unscored_prose"]["assumptions"][:11]
+    with pytest.raises(ValueError, match="checker_prose_location_mismatch"):
+        keyed.compact(normalized, changed)
+
+
+@pytest.mark.parametrize("index", [-1, True, None])
+def test_normalized_v16_findings_keep_strict_index_validation(index):
+    raw, context = fixture()
+    normalized = keyed.normalize(raw, context)
+    normalized["prose_review"] = "unscored_factual_content"
+    normalized["prose_findings"] = [{"field": "assumptions", "index": index, "reason": "Review."}]
+    with pytest.raises(ValueError):
+        keyed.checks_model().model_validate(normalized)
+
+
+def test_probe_with_no_prose_has_exact_empty_location_map_and_no_abstention_fabrication():
+    raw, context = fixture(5, 0, probe=True)
+    assert keyed.prose_locations(context) == {}
+    assert raw["prose_findings"] == {}
+    keyed.normalize(raw, context, probe=True)
+    raw["prose_review"] = "abstain"
+    with pytest.raises(ValueError, match="prose_finding_required_or_inconsistent"):
+        keyed.normalize(raw, context, probe=True)
+    context["unscored_prose"] = []
+    with pytest.raises(ValueError, match="keyed_context_prose_invalid"):
+        keyed.schemas(context, probe=True)
+
+
+def test_more_locations_than_findings_allow_empty_arrays_but_keep_aggregate_limit():
+    raw, context = fixture(12)
+    context["unscored_prose"] = {
+        "assumptions": [f"A{i}" for i in range(12)],
+        "gaps": [f"G{i}" for i in range(3)],
+        "questions": [f"Q{i}" for i in range(3)],
+        "background": "B",
+        "comparison": "C",
+        "proposal": "P",
+        "abstention": "A",
+    }
+    locations = keyed.prose_locations(context)
+    assert len(locations) == 22
+    raw["prose_findings"] = {key: [] for key in locations}
+    normalized = keyed.normalize(raw, context)
+    assert normalized["prose_findings"] == []
+    assert keyed.compact(normalized, context) == raw
+    raw["prose_review"] = "abstain"
+    raw["prose_findings"]["l1"] = [f"Independent reason {i}" for i in range(16)]
+    normalized = keyed.normalize(raw, context)
+    assert len(normalized["prose_findings"]) == 16
+    assert keyed.compact(normalized, context) == raw
+    raw["prose_findings"]["l22"] = ["Seventeenth finding."]
+    with pytest.raises(ValueError):
+        keyed.normalize(raw, context)
