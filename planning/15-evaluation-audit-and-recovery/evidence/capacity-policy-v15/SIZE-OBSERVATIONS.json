@@ -1,0 +1,9 @@
+{
+  "basis": "Exact offline byte and character observations, synthetic usage/counts, not provider token fit",
+  "max_request_utf8_bytes": 72027,
+  "max_raw_output_utf8_bytes": 27201,
+  "max_normalized_output_utf8_bytes": 50132,
+  "complete_http_receipts_verified": 44,
+  "real_contacts": 0,
+  "machine_quality": "HOLD"
+}

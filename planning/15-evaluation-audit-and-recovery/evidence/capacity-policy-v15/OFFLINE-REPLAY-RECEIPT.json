@@ -1,0 +1,32 @@
+{
+  "packet_digest": "243e225ec32bcc882c502af56f0131e19fe6fd87d2fac1a20ea4f1e55b7a2665",
+  "application": "c5b859cc22abe7b66fec562881ba274d4eef9afc",
+  "synthetic_jobs": 14,
+  "synthetic_messages": 44,
+  "synthetic_paired_counts": 44,
+  "all_current_workflow_checks_bound": true,
+  "mode_claim_caps": {
+    "learn": 8,
+    "research": 12
+  },
+  "long_narratives_not_truncated": true,
+  "original_records_and_holds_preserved": true,
+  "answerability_rows": 24,
+  "repeat_dispatches": 0,
+  "retained_hold_usd": "0.875066",
+  "older_unknown_completion_hold_usd": "0.425066",
+  "received_http400_usage_unvalidated_hold_usd": "0.45",
+  "raw_historical_snapshot_digest": "180a26aa6ccbeea78f516f8c8b972a4b9b3022142d64f54dd9085c01b1011825",
+  "new_programme_capacity": {
+    "new_jobs": 64,
+    "messages": 160,
+    "counts": 200,
+    "usd": "20",
+    "concurrency": 1
+  },
+  "real_provider_contacts": 0,
+  "real_count_contacts": 0,
+  "real_ledger_mutated": false,
+  "report_digest": "5bc6e5f22751e69f4e29bb8f0d5ac2468d19e91fede35ce4e05d0c702a840796",
+  "human_qualification": false
+}

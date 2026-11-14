@@ -1,0 +1,133 @@
+{
+  "application_commit": "c5b859cc22abe7b66fec562881ba274d4eef9afc",
+  "test_only_corrections": [
+    "a5842a0f0a24b862b096b6b62f2cb4d493a25494",
+    "9228575966e0d8964d935fc9a785ca4a46f5a0c6"
+  ],
+  "packet_digest": "243e225ec32bcc882c502af56f0131e19fe6fd87d2fac1a20ea4f1e55b7a2665",
+  "full_final_selection": {
+    "command": "make test-cov-diff with context instrumentation and additional permanent reports; unchanged not-e2e selection",
+    "passed": 7730,
+    "skipped": 62,
+    "separate_e2e_deselected": 53,
+    "duration_seconds": 2480.33,
+    "project_floor": 89,
+    "project_percent": 94.38,
+    "patch_floor": 90,
+    "patch_percent_printed": 96,
+    "packages": {
+      "api": {
+        "floor": 86,
+        "actual_printed_percent": 88
+      },
+      "agents": {
+        "floor": 92,
+        "actual_printed_percent": 96
+      },
+      "security": {
+        "floor": 97,
+        "actual_printed_percent": 100
+      },
+      "eval": {
+        "floor": 91,
+        "actual_printed_percent": 95
+      }
+    }
+  },
+  "frontend": {
+    "files": 222,
+    "tests": 4294,
+    "statements": 98.17,
+    "branches": 94.28,
+    "functions": 94.15,
+    "lines": 99.52,
+    "floors_unchanged": true,
+    "local_max_workers": 2
+  },
+  "separate_e2e": 53,
+  "simulate_research": {
+    "succeeded": 20,
+    "episodes": 20,
+    "usd": "0"
+  },
+  "registry": {
+    "objects": 260,
+    "mismatches": 0
+  },
+  "copied_archive_extension_controls": 42,
+  "selection_receipt_controls": 16,
+  "remote_ci": "Separate exact-publication receipt and GitHub workflow; never inferred from local checks",
+  "real_provider_contacts": 0,
+  "real_token_count_contacts": 0,
+  "live_mutations": 0,
+  "logs": {
+    "make-test-cov-diff-03.log": {
+      "sha256": "2651dae334b5b05e81b4b8552fa9b8bde74ea58c971935433df4d70c9c7963a1",
+      "bytes": 36927
+    },
+    "make-test-cov-01.log": {
+      "sha256": "fc1d8e916b217afcf4be84695f936c85aa1deb9e83bd7da4f3f46a3f5f1ca273",
+      "bytes": 57631
+    },
+    "make-test-cov-diff-01.log": {
+      "sha256": "4cdda79bdf5b74584cde1a8be0b7ab9cc5d7123a032702dae31df4073bae0f14",
+      "bytes": 16211
+    },
+    "make-test-cov-diff-02.log": {
+      "sha256": "7f57fcca29794d5779d415eb2d514016a3b96af9664ea43b31b2cdaa0e1c5140",
+      "bytes": 19464
+    },
+    "root-mypy-11.log": {
+      "sha256": "7a9771fa149280a943fe917324b1a67bdcf232e3a259d3350d995e641b7c08ab",
+      "bytes": 45
+    },
+    "web-coverage-04.log": {
+      "sha256": "66cd375e0f6b67632b9736500aeb3dedc345eac9e4661805a9a9575060a0ec5f",
+      "bytes": 41355
+    },
+    "web-reader-timing-diagnostic-01.log": {
+      "sha256": "479259e11f6c8d8140b3dd1261988daf7db205eae3522a11444a8d63f69f9957",
+      "bytes": 396
+    },
+    "web-typecheck-02.log": {
+      "sha256": "a7d3e417b6cd1706638232a0866a3d00e29d67d337e100e7c609cec19e0c149d",
+      "bytes": 60
+    },
+    "web-lint-02.log": {
+      "sha256": "3abf1d9178e65389b228b48abcf35554976381024c89ace777f11f80205faf37",
+      "bytes": 99
+    },
+    "web-build-budgets-02.log": {
+      "sha256": "7f0307c1ce76226fe28b87286af686beb75d6c359a6b3be8b00695bce91e7dce",
+      "bytes": 5421
+    },
+    "make-test-e2e-01.log": {
+      "sha256": "563fbca84919da6079c9de4406b1d919d62bd5dd95041995897b8f8b949423ed",
+      "bytes": 8461
+    },
+    "make-simulate-research-01.log": {
+      "sha256": "0943a090561d1aa7696ce14e62b2470a837cbcc6a1e91aeb1a6618235d5b69ec",
+      "bytes": 66269
+    },
+    "registry-parity-01.log": {
+      "sha256": "ffe3a2763694f735d44ac4b58fee474f7091fa78a56db0f351933f7a88375886",
+      "bytes": 503
+    },
+    "final-copied-ledger-controls.log": {
+      "sha256": "a4e79c967c6a7cbd8a27056a8a01dccf66c1dc1453e39c75038036291c1efac7",
+      "bytes": 100
+    },
+    "migration-fixture-repair-01.log": {
+      "sha256": "ebe7616af2106c5a70f8921beb67cd42a995ff8b95248ec550c72100dbbc6554",
+      "bytes": 98
+    },
+    "tier-preflight-01.log": {
+      "sha256": "a0c607f7e9ada9c6af5d181bd765e70062b37fbcbfe809851e3ef20180659cba",
+      "bytes": 115
+    },
+    "harness-repair-preflight-01.log": {
+      "sha256": "9278d3a938b322522d7e0e1a7c3eee945d102113fe482feb25eee02f895e8897",
+      "bytes": 99
+    }
+  }
+}

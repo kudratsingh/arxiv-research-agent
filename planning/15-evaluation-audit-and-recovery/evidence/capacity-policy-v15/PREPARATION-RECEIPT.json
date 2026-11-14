@@ -1,0 +1,10 @@
+{
+  "packet_digest": "243e225ec32bcc882c502af56f0131e19fe6fd87d2fac1a20ea4f1e55b7a2665",
+  "snapshot_digest": "180a26aa6ccbeea78f516f8c8b972a4b9b3022142d64f54dd9085c01b1011825",
+  "snapshot_file_sha256": "2a023e7dc8cf161db486e9ef6267cd15ba2f99c850b61ce99d5345e6a2ea8769",
+  "application_commit": "c5b859cc22abe7b66fec562881ba274d4eef9afc",
+  "capacity_policy_digest": "ae0cf4e1d1ef9c0d7b80261aa0b4f3cef5690c5868c8c066478a79a41f299dbc",
+  "external_authorization": false,
+  "real_contacts": 0,
+  "live_ledger_mutations": 0
+}

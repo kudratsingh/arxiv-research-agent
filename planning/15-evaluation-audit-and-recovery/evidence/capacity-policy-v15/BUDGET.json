@@ -1,0 +1,29 @@
+{
+  "basis": "Estimated standard token charges; not measured usage or invoice",
+  "model_envelope": {
+    "draft_or_repair": "0.16",
+    "check_recheck_or_probe": "0.4",
+    "workflow": "1.12",
+    "ten_workflows_four_probes": "12.80"
+  },
+  "known_usd": "2.110597",
+  "retained_overlapping_holds_usd": "0.875066",
+  "new_scope_cap_usd": "14",
+  "additional_buffer_usd": "2",
+  "total_with_buffer_usd": "18.985663",
+  "proposed_cumulative_cap_usd": "20",
+  "remaining_after_buffer_usd": "1.014337",
+  "cumulative_after_maximum_scope": {
+    "jobs": 50,
+    "messages": 114,
+    "counts": 139
+  },
+  "proposed_programme_caps": {
+    "new_jobs": 64,
+    "messages": 160,
+    "counts": 200,
+    "usd": "20",
+    "concurrency": 1
+  },
+  "activated": false
+}

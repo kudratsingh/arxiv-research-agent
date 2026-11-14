@@ -1,4 +1,69 @@
-# Current prospective repair — v14
+# Comprehensive prospective capacity repair — v15
+
+Application: `c5b859cc22abe7b66fec562881ba274d4eef9afc`.
+Branch: `codex/workspace-d5-capacity-policy`; permanent checkout:
+`arxiv-workspaces/workspace-d5-capacity-policy`.
+Packet: `243e225ec32bcc882c502af56f0131e19fe6fd87d2fac1a20ea4f1e55b7a2665`.
+[Exact inactive approval package](evidence/capacity-policy-v15/README.md).
+
+The new independent contract retains ordinary explanations rather than inheriting
+96/120/240-character or8KB checker ceilings. It centralizes Learn8/Research12
+claims,3/6 citations,12 selected units, raw/normalized/HTTP/serialized protections,
+operation routes and deadlines. The explicit10000-character factual-claim guard
+matches grounding;500/240-character targets remain non-gating observations.
+Current-response provenance, whole-claim, atomicity, qualifications, coverage,
+prose and abstention checks remain mandatory. One repair requires recheck.
+
+Original v14 draft and checker, with only the checker revision changed in the
+separately labelled derivative, reached actual semantic review with all original
+104/110/82/87/92-character explanations intact. Its p1 uncertainty still required
+repair; the historical result stays FAILED. A complete exact-packet replay passed
+14mockjobs/44mockMessages/44mockcounts, current-response bindings and duplicate
+suppression. Long normalized output reached50132UTF8bytes; maximum request72027,
+raw output27201, with all44 complete HTTP byte receipts losslessly verified.
+These are software/byte observations, not measured provider token fit or quality.
+
+The16 selection/receipt controls cover persisted26000-character material with12
+exact units, legacy caps, drift, trimming, invalid UTF8/NUL, atomic receipt writes
+and immutable duplicate handling.42 extension controls pass, including8archive-dependent cases
+against copied records. The full Python gate exposed a stale legacy fixture that
+removed020 tables but retained its migration marker; test-only `a5842a0f` fixes
+the setup and retains every original assertion. It changes no producer binding.
+Test-only92285759 adds the missing unit-tier declarations to two pure modules and
+makes an existing redaction control's request ID deterministic: a random UUID had
+coincidentally contained the driver port5432. Every raw-body/header leak assertion
+remains, with an added correlation assertion. Complete tier preflight3 and changed
+harness/API controls40 pass; no test selection, floor or application rule weakens.
+The full final coverage selection and all floors are recorded in package
+VERIFICATION and permanent logs, including initial failures and conditional skips.
+
+Frontend coverage:4294/4294 tests,222 files, all floors retained; strict typing,
+lint, production build and unchanged budgets pass. An egress violation in a
+placeholder-origin link was fixed; one resource-contention lazy-Reader timing
+failure was retained and diagnosed before the unchanged suite passed at bounded
+worker concurrency. Separate E2E53, research simulation20/20USD0, registry260/0.
+Remote exact-head CI must be read from the publication receipt/linked workflow,
+never inferred from local success. Only its aggregate Python job bound changes
+45→60minutes; every selection, floor, network-step and per-test bound remains.
+
+The final read-only census and all selected sources still match the sealed
+snapshot exactly at2026-11-14T03:00:15Z:36/70/95,known2.110597,full holds0.875066.
+Migration020 is absent from the live ledger. All75 predecessor manifest entries
+(27v13,48v14) verify unchanged; no missing copies, deletion or overwritten originals.
+The prior W0 preservation audit remains separately recorded below.
+
+One future decision proposes fourteen exposed-corpus identities,44/44 contacts,
+$14 maximum new use, full checking/repair/recheck, new64/160/200/$20 ceilings and
+explicit programme≤7day/campaign≤24hour deadlines after approval. Both historical
+holds remain untouched. Known+holds+newcaps+$2buffer=$18.985663 under proposed$20.
+Actual token fit, remote compilation, output completeness and checker quality
+remain provider-dependent. Human qualification is outside scope. Owner3137 and
+review3178, everyday generation, recurrence and notifications remain unchanged;
+all work remains unmerged and undeployed.
+
+---
+
+# Historical prospective v14 checkpoint
 
 The sections below retain the W0–W3 historical checkpoint. V13 subsequently ran and stopped after the truncated Learn checker and received Compare grammar HTTP400. Current offline repair: application `8497f320`, [sealed prospective package](evidence/provider-contract-v14/README.md). The live baseline is35 jobs/68 Messages/93 counts/$1.986755 known plus$0.875066 overlapping retained holds. No new provider/count contacts, grants, settlement or expiry change. Proposed capacities49/112/137 and$12 are inactive. Local full gates and exact publication evidence are recorded in the package verification and permanent receipts.
 

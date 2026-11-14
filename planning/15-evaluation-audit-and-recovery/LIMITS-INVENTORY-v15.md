@@ -66,3 +66,36 @@ characters; exact source/Unicode offsets are retained. Selected-evidence JSON ha
 an independent 131,072-byte cap. Oversize sentences are unavailable rather than
 clipped into a misleading quotation. These are sealed scope/cardinality protections,
 not evidence of source completeness or measured provider token fit.
+
+### Remaining retained input, extraction and storage limits
+
+| Limit and purpose | Effective enforcement in the successor | Decision |
+|---|---|---|
+| Work/version identifiers300characters; input sources10; question4000 | `assistance.AssistanceInput`, `admission.GenerationInput.snapshot`, `context_schemas.ProjectData`, `assistance_coverage.RequestedPart`, qualification-only `d5_capacity_selection.QualificationSelection` | Keep finite identity/request bounds. The public legacy follow-up remains1000; qualification follow-up matches the4000-character sealed question. Research whitespace normalizes once before both persistence and sealing. |
+| Safety context four fields, each1000characters | `assistance_policy.ApplicationContext` and sealed task policy | Keep explicit finite application inputs; absent required context forces full abstention. No model-authored workaround. |
+| Retained acquisition8MiB,12pages,120000characters; source spans2000characters | `material.MAX_PDF_BYTES`, `MAX_PAGES`, `MAX_CHARS`, `MAX_SPAN_CHARS`, bounded extraction worker | Unchanged acquisition guards, independent from selected coherent units≤1600characters. No acquisition, page expansion or full-paper claim is authorized here. |
+| Source/material/version hashes and exact Unicode offsets | `material`, `assistance_contract.coherent_units`, `grounding._resolve`, `claim_input_digest`; selected-unit equality in `d5_capacity_selection.build` | Keep exact mechanical provenance and selected-span enforcement. Separate citations never join nonadjacent text. |
+| Notes10000Unicodecharacters; thread goal4000/title240/prerequisite2000 | `context_schemas`, `QualificationResult.fullNote/referenceNote` and existing server mutations | Preserve existing durable API limits. A large result saves an explicit exact-version result link rather than truncating its claims; complete retained output stays available. Short note requests are unchanged. |
+| Navigation return4000; ordinary query values500/cursor2048/fragment500 | `context_schemas.ResumeContext.safe_return`, existing Reader/context helpers | Keep local navigation and anti-redirect guards. Evidence anchors are compact page/offset IDs, never copied narrative text. |
+| Provider content blocks16, final text exactlyone | `d5_operations.verdict_text` | Keep bounded reasoning/envelope validation; thinking counts toward output allowance. No tool calls or malformed/missing final verdict may pass. |
+| Python CI aggregate45minutes before; proposed60minutes | `.github/workflows/ci.yml`, `jobs.tests.timeout-minutes` only | Prior exact-head CI35m57s plus new replay273s and protected controls208s leaves insufficient variation margin. Keep every selection/floor/step network bound/per-test timeout unchanged. Verify remote CI independently. |
+
+The actual prospective enforcement entrypoints are `assistance_capacity_contract`
+for wire/local cardinality, raw/normalized protection and references;
+`d5_capacity_wire` for prompts/model/settings/schema; `d5_adapter` for request,
+provenance, normalized internal views, usage and complete/partial receipts;
+`admission.GenerationInput.snapshot` for sealed JSON; `d5_deadlines` and inherited
+`provider_adapter._post/advance` for contacts/recovery; `d5_scope` plus append-only
+`d5_campaign_v15_extension` for reservation and programme admission;
+`d5_report_binding/current_check` and `d5_campaign_report` for current assessments;
+and `QualificationResult` for complete Reader display and durable link saving.
+The separate public fake executor retains its historical byte-based budgets and
+lease. Qualification preparation no longer inherits that fake preview's8-unit or
+16000-byte selection cap.
+
+Qualification result listing is owner- and exact-work/version scoped and limited
+to20jobs in `d5_results.QualificationResults.jobs`; the proposed campaign has at
+most14 identities under its distinct principal. The runner's full census does not
+use that UI list. Complete selected-job data and reasons remain inspectable; this
+batch's Reader tests establish local rendering and exact saved links, while remote
+browser acceptance remains separately identified in CI.

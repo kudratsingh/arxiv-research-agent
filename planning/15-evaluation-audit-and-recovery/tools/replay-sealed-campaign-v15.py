@@ -49,10 +49,10 @@ with storage() as store:
     check_storage(store, packet)
     try:
         authorize_fixture(store, packet)
-    
+
         def factory(key):
             return CapacityCampaignTransport(key, repair_all=True)
-    
+
         report = asyncio.run(
             run(
                 store,

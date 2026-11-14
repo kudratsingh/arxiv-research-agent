@@ -1,0 +1,146 @@
+{
+  "limits": {
+    "jobs": 14,
+    "messages": 44,
+    "counts": 44,
+    "usd": "20",
+    "concurrency": 1,
+    "workflow_usd": "1.20",
+    "probe_usd": "0.50",
+    "headroom_usd": "2.00",
+    "new_usd": "14.00"
+  },
+  "operation_routes": {
+    "revision": "d5-sonnet-opus-high-capacity-v3",
+    "draft_repair": {
+      "model": "claude-sonnet-5-5",
+      "thinking": {
+        "type": "between_tools"
+      },
+      "effort": "medium",
+      "input_tokens": 40000,
+      "output_tokens": 8000,
+      "prices": {
+        "input": "2",
+        "output": "10",
+        "verified_at": "2026-11-14"
+      }
+    },
+    "check_recheck_probe": {
+      "model": "claude-opus-5-5",
+      "thinking": {
+        "type": "adaptive"
+      },
+      "effort": "high",
+      "input_tokens": 40000,
+      "output_tokens": 12000,
+      "prices": {
+        "input": "4",
+        "output": "20",
+        "verified_at": "2026-11-14"
+      }
+    }
+  },
+  "operation_deadlines": {
+    "revision": "d5-operation-deadlines-v2-capacity",
+    "count_seconds": 60,
+    "draft_seconds": 120,
+    "repair_seconds": 120,
+    "check_seconds": 240,
+    "recheck_seconds": 240,
+    "workflow_seconds": 1200,
+    "origin": "durable_reservation_created_at"
+  },
+  "capacity_policy": {
+    "revision": "d5-comprehensive-capacity-v15",
+    "assistance_revision": "workspace-assistance-capacity-v15",
+    "checker_revision": "workspace-assistance-capacity-checks-v15",
+    "normalization_revision": "workspace-assistance-capacity-normalization-v15",
+    "claims_by_mode": {
+      "learn": 8,
+      "research": 12
+    },
+    "max_citations_per_claim": 6,
+    "citations_by_mode": {
+      "learn": 3,
+      "research": 6
+    },
+    "max_selected_units": 12,
+    "max_materials": 3,
+    "max_unit_characters": 1600,
+    "max_selected_evidence_utf8_bytes": 131072,
+    "max_requested_parts": 8,
+    "max_prose_findings": 16,
+    "soft_claim_characters": 500,
+    "max_claim_characters": 10000,
+    "max_procedural_gaps": 3,
+    "max_follow_up_intents": 3,
+    "soft_reason_characters": 240,
+    "raw_draft_utf8_bytes": 131072,
+    "compact_checker_utf8_bytes": 262144,
+    "normalized_checker_utf8_bytes": 1048576,
+    "internal_json_bytes": 8388608,
+    "sealed_input_json_bytes": 8388608,
+    "http_body_bytes": 4194304,
+    "paired_input_tokens_fit": 32000,
+    "reservation_input_tokens": 40000,
+    "max_messages_per_workflow": 4,
+    "max_repairs": 1,
+    "deadlines": {
+      "revision": "d5-operation-deadlines-v2-capacity",
+      "count_seconds": 60,
+      "draft_seconds": 120,
+      "repair_seconds": 120,
+      "check_seconds": 240,
+      "recheck_seconds": 240,
+      "workflow_seconds": 1200,
+      "origin": "durable_reservation_created_at"
+    },
+    "operation_routes": {
+      "revision": "d5-sonnet-opus-high-capacity-v3",
+      "draft_repair": {
+        "model": "claude-sonnet-5-5",
+        "thinking": {
+          "type": "between_tools"
+        },
+        "effort": "medium",
+        "input_tokens": 40000,
+        "output_tokens": 8000,
+        "prices": {
+          "input": "2",
+          "output": "10",
+          "verified_at": "2026-11-14"
+        }
+      },
+      "check_recheck_probe": {
+        "model": "claude-opus-5-5",
+        "thinking": {
+          "type": "adaptive"
+        },
+        "effort": "high",
+        "input_tokens": 40000,
+        "output_tokens": 12000,
+        "prices": {
+          "input": "4",
+          "output": "20",
+          "verified_at": "2026-11-14"
+        }
+      }
+    }
+  },
+  "expiry_policy": {
+    "historical_programme_expiry": "2026-11-14T07:24:01+00:00",
+    "programme_max_seconds_from_approval": 604800,
+    "campaign_max_seconds_from_approval": 86400,
+    "requires_explicit_extension": true
+  },
+  "progression": {
+    "revision": "development-bound-complete-checks-v1",
+    "development_jobs": 2,
+    "before_evaluation": "Both development identities must have complete, input-bound final checker responses after their current draft/repair. A valid negative quality verdict is not a broken contract and does not become accepted content.",
+    "broken_development_contract": "STOP; no evaluation or probe dispatch",
+    "negative_development_quality": "Preserve failure, allow the next sealed identity when its complete response contract is proven",
+    "evaluation_content_rejection": "Preserve fully metered failures and continue unrelated sealed cases",
+    "provider_error_or_new_uncertainty": "STOP; no retry or replacement identity"
+  }
+}

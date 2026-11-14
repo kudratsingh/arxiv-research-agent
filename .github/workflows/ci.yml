@@ -227,7 +227,13 @@ jobs:
     # Give the full sequential gate ten bounded aggregate minutes of margin;
     # preserve every selection, coverage input/floor, per-step network bound
     # and 60-second per-test ceiling. No provider/workflow deadline changes.
-    timeout-minutes: 45
+    # V15 adds full-cardinality coverage, including a long-response campaign
+    # and 21 protected failure controls. Predecessor run43524869802 took
+    # 35m57s end-to-end; isolated new controls measured208s and replay273s.
+    # That leaves about one minute under45m before cold-run variation. Allow
+    # bounded60m aggregate headroom. Every test tier, input/floor, network step
+    # bound and per-test timeout is unchanged; this is not a provider deadline.
+    timeout-minutes: 60
     env:
       # Never a real key, in a job that now runs the e2e tier and the
       # adversarial safety suite as well as the unit and integration

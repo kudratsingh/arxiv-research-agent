@@ -1,0 +1,15 @@
+{
+  "verified_at": "2026-11-14T03:00:15.450515+00:00",
+  "funded_programme_jobs": 36,
+  "messages": 70,
+  "counts": 95,
+  "known_estimated_usd": "2.110597",
+  "overlapping_pending_unknown_usd": "0.875066",
+  "holds_counted_once": true,
+  "snapshot_digest": "180a26aa6ccbeea78f516f8c8b972a4b9b3022142d64f54dd9085c01b1011825",
+  "matches_frozen_snapshot": true,
+  "sources_and_programme_unchanged": true,
+  "migration020_applied": false,
+  "financial_authority_mutations": 0,
+  "provider_contacts": 0
+}

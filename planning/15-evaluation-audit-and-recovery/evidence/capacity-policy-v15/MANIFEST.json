@@ -1,0 +1,117 @@
+{
+  "basis": "Unapproved prospective package; raw ledger/history remain in permanent private archives",
+  "application_commit": "c5b859cc22abe7b66fec562881ba274d4eef9afc",
+  "packet_digest": "243e225ec32bcc882c502af56f0131e19fe6fd87d2fac1a20ea4f1e55b7a2665",
+  "files": [
+    {
+      "path": "ANSWERABILITY.json",
+      "bytes": 68895,
+      "sha256": "69b3fd74e6a4bab188491a025b4da4d58ad1401bb84c095231b0a2e4b17eea6f"
+    },
+    {
+      "path": "APPROVAL-REQUEST.md",
+      "bytes": 4298,
+      "sha256": "abf1f01a359ae4de1919acd71ee283f99b95fcafdf333281f6b5d6e5a4325ed7"
+    },
+    {
+      "path": "AUTHORIZATION-TEMPLATE.json",
+      "bytes": 45404,
+      "sha256": "b427b8c80e4843346fd7df131ba3437aca4328e7a1ed16c1443a2041eeae1e39"
+    },
+    {
+      "path": "BUDGET.json",
+      "bytes": 754,
+      "sha256": "eab6a80c7469f94b8b3f52c6a416b3b6b623b138928e88c6874fb7ae6f1bccdf"
+    },
+    {
+      "path": "CHECKER-SCHEMAS.json",
+      "bytes": 14118,
+      "sha256": "3151879c33020d8956649457bb50684e9b11af3bfbcb4ef514335bbe6bd79174"
+    },
+    {
+      "path": "IDENTITY.json",
+      "bytes": 603,
+      "sha256": "e82d87e4021d7c1a7fae968d8dc787138feb2276fe47179119886ec7ca650e84"
+    },
+    {
+      "path": "INDEPENDENT-REVIEW.md",
+      "bytes": 1916,
+      "sha256": "d302137d981f26ed2dafaff9a5c5a7cf0e90679dc5d67bec8d2d4c92b3714ea6"
+    },
+    {
+      "path": "LOCAL-GATE-RECEIPT.json",
+      "bytes": 4152,
+      "sha256": "6d55b767695b5695558d4e75c8a89597993d67ae07e7a4ba4321d1e5d019e277"
+    },
+    {
+      "path": "OFFLINE-REPLAY-RECEIPT.json",
+      "bytes": 1077,
+      "sha256": "c11b2f6b792f67b9c0422fc73d0bf04d763775fa82a7848f9c215746ac16406c"
+    },
+    {
+      "path": "PREPARATION-RECEIPT.json",
+      "bytes": 524,
+      "sha256": "b0cd17a014fe5e0a472a5a5674d2c5424ae5b64be529b1016828769751064059"
+    },
+    {
+      "path": "PROPOSAL.json",
+      "bytes": 19293,
+      "sha256": "c78de5f07c6e214952466d3baa1c838a81727c85ab1c9272beb7102d2e3141a7"
+    },
+    {
+      "path": "README.md",
+      "bytes": 1576,
+      "sha256": "204b110cac6c4fc34aac796c41d86d2841fbb3c7c71ca966af0a592aabaf83d4"
+    },
+    {
+      "path": "READONLY-CENSUS-RECEIPT.json",
+      "bytes": 501,
+      "sha256": "869fd3a50f169e62c210efc7dcddb8972a1ff42f38e14f27ff95b4e1dd8726dc"
+    },
+    {
+      "path": "REGRESSION-AND-CUSTODY-RECEIPT.json",
+      "bytes": 981,
+      "sha256": "e7ff2d6e785405f7eee0902e9b4cb2e1fa563dd7b774be61cf14b17a3d80b344"
+    },
+    {
+      "path": "REQUEST-INDEX.json.gz",
+      "bytes": 69515,
+      "sha256": "5f6732a1511881226446830a56612f79b5906ec81560917960591f2abc426529"
+    },
+    {
+      "path": "ROUTES-AND-LIMITS.json",
+      "bytes": 4480,
+      "sha256": "933f8772def0f472bb4d558c044e21248af5ae6a463ba3cc6496865d9edf19ca"
+    },
+    {
+      "path": "RUNBOOK.md",
+      "bytes": 6812,
+      "sha256": "5960ca57fb864592095cc9081453651538f31a2734c8d5b3dfdb0da26a1d3337"
+    },
+    {
+      "path": "SCHEMA-METRICS.json",
+      "bytes": 4122,
+      "sha256": "682ba2ef6dcc39db9f1eb0e001ba00627bd4eb6c619f9a5c83f050cca92d0b74"
+    },
+    {
+      "path": "SIZE-OBSERVATIONS.json",
+      "bytes": 321,
+      "sha256": "f7cb4f8dd330550dfc5606a710671161f350c7cff53ea5cef28358dcb8db2ec5"
+    },
+    {
+      "path": "VERIFICATION.md",
+      "bytes": 7210,
+      "sha256": "47a6f8e643c66d88c4750a0ca2555abccd7af314f185b89daf61ff123ef1df9a"
+    },
+    {
+      "path": "compiled-inputs.json.gz",
+      "bytes": 56223,
+      "sha256": "d099a53746784c07201fcdb226fa9337917d926a7a6a272fdba4cfc0c7ea4f9c"
+    },
+    {
+      "path": "packet.json.gz",
+      "bytes": 435814,
+      "sha256": "8bf5505b6def03f03dd24c14aa4efcc39dff056bfe5e45bd6f552d040e713d4d"
+    }
+  ]
+}

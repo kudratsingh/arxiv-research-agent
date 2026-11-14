@@ -1,4 +1,22 @@
-# Latest prospective repair
+# Current prospective capacity repair — v15
+
+V14 executed and stopped at its Learn contract failure. Its original response,
+scores, receipts and both holds remain immutable. The [comprehensive v15 repair](CAPACITY-REPAIR-v15.md)
+and [limits inventory](LIMITS-INVENTORY-v15.md) cover the full protected pipeline,
+normalization, storage, reports and Reader. [One frozen approval package](evidence/capacity-policy-v15/README.md)
+contains the exact requests, proposed capacity/budget/expiry extension and both
+historical quarantine exceptions. All new approval flags remain false.
+
+Application `c5b859cc22abe7b66fec562881ba274d4eef9afc`; current read-only census
+36 jobs/70 Messages/95 counts/$2.110597 known estimated usage plus$0.875066
+in overlapping retained holds counted once. No new provider/count contacts, live
+migrations, authority or accounting changes. Proposed64/160/200/$20 ceilings and
+14/44/44/$14 campaign remain inactive. Verification and exact-publication CI are
+separate from simulated quality, with receipts linked in the package/handoff.
+
+---
+
+# Historical v14 proposal snapshot
 
 V13 executed and stopped; its results/accounting remain immutable. The [v14 provider-contract repair](evidence/provider-contract-v14/README.md) is a separate inactive proposal. Its$12 ceiling, capacities and two liability exceptions require one explicit owner approval. The audit snapshot below remains historical.
 
