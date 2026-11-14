@@ -470,6 +470,7 @@ def test_migration_from_v3_preserves_predecessors_and_does_not_activate(store):
         # Keep real FK constraints and recreate the whole upgrade sequence.
         c.execute("DROP TABLE workspace_d5_capacity_revision_revocations")
         c.execute("DROP TABLE workspace_d5_capacity_revisions")
+        c.execute("DELETE FROM workspace_schema WHERE revision='020_d5_capacity_campaign'")
         c.execute("DROP TABLE workspace_d5_campaign_successor_revocations")
         c.execute("DROP TABLE workspace_d5_campaign_successors")
         c.execute("DELETE FROM workspace_schema WHERE revision='019_d5_campaign_successor'")
