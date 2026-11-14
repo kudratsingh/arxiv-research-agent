@@ -77,6 +77,9 @@ def capture(store: Any, program_id: str) -> dict[str, Any]:
             ("workspace_d5_keyed_continuations", "recorded_keyed_continuations"),
             ("workspace_d5_keyed_continuation_revocations", "recorded_keyed_continuation_revocations"),
         ):
+            if table in {"workspace_d5_keyed_continuations", "workspace_d5_keyed_continuation_revocations"} and not conn.execute("SELECT to_regclass(%s)", (table,)).fetchone()[0]:
+                extras[key] = []
+                continue
             extras[key] = [
                 r[0]
                 for r in conn.execute(
