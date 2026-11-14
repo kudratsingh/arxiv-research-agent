@@ -64,7 +64,12 @@ def _refs(identifier: Any, minimum: int = 0, maximum: int = 12) -> tuple[Any, An
 
 
 def _coverage(
-    identity: str, policy: dict[str, Any], identifier: Any, *, full: bool
+    identity: str,
+    policy: dict[str, Any],
+    identifier: Any,
+    *,
+    full: bool,
+    comparison_only: bool = False,
 ) -> type[BaseModel]:
     refs = {} if full else {"context_claim_ids": _refs(identifier)}
     gap_type: Any = _fixed("application_context") if policy["missing_context"] else EvidenceGap
@@ -85,6 +90,7 @@ def _coverage(
             **refs,
         )
         record = evidence | omission
+    unanswered_record = record
     if not full:
         answered = _new(
             "KeyedAnswered_" + identity,
@@ -101,14 +107,22 @@ def _coverage(
     # Named required properties make identity completeness structural. Reused
     # record definitions avoid a copy of each branch for each requested part.
     return _new(
-        "KeyedCoverage_" + identity + str(full),
+        "KeyedCoverage_" + identity + str(full) + str(comparison_only),
         __base__=prior._Closed,
-        **{p["id"]: (record, ...) for p in policy["requested_parts"]},
+        **{
+            p["id"]: (
+                unanswered_record if comparison_only and p["kind"] == "comparison" else record,
+                ...,
+            )
+            for p in policy["requested_parts"]
+        },
     )
 
 
 def response_model(handles: Sequence[str], purpose: str, policy: dict[str, Any]) -> type[BaseModel]:
-    return _model(tuple(handles), purpose, json.dumps(policy, sort_keys=True, ensure_ascii=False))
+    return _model(
+        tuple(sorted(set(handles))), purpose, json.dumps(policy, sort_keys=True, ensure_ascii=False)
+    )
 
 
 @lru_cache(maxsize=128)
@@ -185,16 +199,54 @@ def _model(handles: tuple[str, ...], purpose: str, encoded: str) -> type[BaseMod
             ):
                 if name in original.model_fields:
                     fields[name] = _refs(identifiers, maximum=count)
-            question = _new(
-                "KeyedQuestion_" + identity,
+            question_intents = [
+                "measured_and_proposed",
+                "methods",
+                "qualifications",
+                "implementation",
+                "counterevidence",
+                "application_scope",
+            ]
+            factory = cast(Any, StrEnum)
+            neutral_question = _new(
+                "KeyedNeutralQuestion_" + identity,
                 __base__=prior.CapacityQuestion,
+                intent=(
+                    factory("KeyedNeutralIntent_" + identity, {v: v for v in question_intents}),
+                    ...,
+                ),
                 claim_ids=_refs(identifiers, maximum=count),
             )
+            cited_question = _new(
+                "KeyedCitedQuestion_" + identity,
+                __base__=prior.CapacityQuestion,
+                intent=(_fixed("investigate_claim"), ...),
+                claim_ids=_refs(identifiers, minimum=1, maximum=count),
+            )
+            question = neutral_question | cited_question
             fields["questions"] = (
                 GenericAlias(tuple, (question, ...)),
                 Field(min_length=1, max_length=3),
             )
-        branches.append(_new("Keyed" + original.__name__, __base__=original, **fields))
+        if full:
+            branches.append(_new("Keyed" + original.__name__, __base__=original, **fields))
+        else:
+            for disposition in allowed:
+                specific = {**fields, "disposition": (_fixed(disposition), ...)}
+                if disposition == "comparison_abstention":
+                    specific["coverage"] = (
+                        _coverage(identity, policy, identifiers, full=False, comparison_only=True),
+                        ...,
+                    )
+                    for key in ("comparison_claims", "comparison_basis"):
+                        if key in original.model_fields:
+                            specific[key] = _refs(identifiers, maximum=0)
+                elif policy["task_intent"] == "comparison":
+                    specific["comparison_claims"] = _refs(identifiers, minimum=1, maximum=count)
+                    specific["comparison_basis"] = _refs(identifiers, minimum=2, maximum=count)
+                branches.append(
+                    _new("Keyed" + disposition + original.__name__, __base__=original, **specific)
+                )
     annotation = branches[0]
     for branch in branches[1:]:
         annotation = annotation | branch

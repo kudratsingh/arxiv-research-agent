@@ -937,7 +937,7 @@ class D5Adapter(QualificationAdapter):
             if capacity_enabled(dict(self.inputs.settings)):
                 if sealed["schema_revision"] == "workspace-assistance-keyed-v16":
                     from src.workspace.assistance_keyed_checks import compact
-                    prior_context = checker_context(sealed, workflow["output"], materials)
+                    prior_context = checker_context(sealed, workflow, materials)
                     value["previous_prose_review"] = compact(checked.model_dump(mode="json"), prior_context)
                 else:
                     from src.workspace.assistance_capacity_contract import compact_checks

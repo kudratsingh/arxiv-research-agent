@@ -210,5 +210,30 @@ def test_comparison_notes_cannot_become_answered_comparison():
         "answer_claim_ids": ["c1"],
         "context_claim_ids": [],
     }
-    with pytest.raises(ValueError, match="source_notes_cannot_answer_comparison"):
+    with pytest.raises(ValueError):
         keyed.normalize(value, h, "research_comparison", pol)
+    assert list(
+        Draft202012Validator(keyed.schemas(h, "research_comparison", pol)["wire"]).iter_errors(
+            value
+        )
+    )
+
+
+def test_schema_identity_is_stable_after_jsonb_key_reordering():
+    value, _, purpose, pol = sample("research")
+    first = keyed.schemas(["u2", "u1"], purpose, pol)
+    assert first == keyed.schemas(["u1", "u2"], purpose, pol)
+    assert first == keyed.schemas(["u2", "u1", "u2"], purpose, pol)
+    assert keyed.normalize(value, ["u2", "u1"], purpose, pol) == keyed.normalize(
+        value, ["u1", "u2"], purpose, pol
+    )
+
+
+def test_question_premises_and_comparison_basis_are_wire_enforced():
+    value, h, p, pol = sample()
+    value["response"]["questions"] = [{"intent": "investigate_claim", "claim_ids": []}]
+    assert list(Draft202012Validator(keyed.schemas(h, p, pol)["wire"]).iter_errors(value))
+    with pytest.raises(ValueError):
+        keyed.normalize(value, h, p, pol)
+    value["response"]["questions"] = [{"intent": "methods", "claim_ids": []}]
+    wire_accepts(value, h, p, pol)

@@ -377,7 +377,7 @@ def results(
         "limitations": "Frozen public snapshot, known extraction limits, exposed sources, proposed machine references and correlated claims. Human usefulness/qualification and literature recall remain unmeasured.",
     }
 
-    if packet.get("revision") == "d5-comprehensive-machine-campaign-v15":
+    if packet.get("revision") in {"d5-comprehensive-machine-campaign-v15", "d5-keyed-machine-campaign-v16"}:
         from src.workspace.d5_capacity_outcomes import classify_outcome
         from src.workspace.d5_capacity_policy import POLICY as CAPACITY_POLICY
         diagnostics = {}
@@ -406,7 +406,7 @@ def results(
     return {
         **report,
         "analysis_receipt": {
-            "revision": "workspace-campaign-analysis-capacity-v2" if packet.get("revision") == "d5-comprehensive-machine-campaign-v15" else "workspace-campaign-analysis-v1",
+            "revision": "workspace-campaign-analysis-capacity-v2" if packet.get("revision") in {"d5-comprehensive-machine-campaign-v15", "d5-keyed-machine-campaign-v16"} else "workspace-campaign-analysis-v1",
             "original_packet_digest": packet["packet_digest"],
             "raw_results_digest": _digest(snapshots),
             "report_digest_excluding_receipt": _digest(report),
@@ -416,7 +416,7 @@ def results(
                 name: value
                 for name, value in packet["code"].items()
                 if name.endswith(
-                    ("d5_campaign_report.py", "d5_report_binding.py", "d5_answerability.py") + (("d5_capacity_outcomes.py", "d5_capacity_policy.py") if packet.get("revision") == "d5-comprehensive-machine-campaign-v15" else ())
+                    ("d5_campaign_report.py", "d5_report_binding.py", "d5_answerability.py") + (("d5_capacity_outcomes.py", "d5_capacity_policy.py") if packet.get("revision") in {"d5-comprehensive-machine-campaign-v15", "d5-keyed-machine-campaign-v16"} else ())
                 )
             },
             "human_review_digest": None,

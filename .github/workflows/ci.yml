@@ -423,6 +423,22 @@ jobs:
           WORKSPACE_D5_OFFLINE: '1'
         run: python -m tests.d5_campaign_gate --out build/d5-campaign-offline
 
+      - name: Complete keyed D5 campaign (v16, mock transport, disposable Postgres)
+        timeout-minutes: 5
+        env:
+          ANTHROPIC_API_KEY: local-preview-disabled
+          WORKSPACE_D5_OFFLINE: '1'
+        run: python -m tests.d5_keyed_gate --out build/d5-keyed-campaign-offline
+
+      - name: Upload keyed D5 mock campaign evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: d5-keyed-campaign-offline
+          path: build/d5-keyed-campaign-offline
+          if-no-files-found: warn
+          retention-days: 30
+
       - name: Upload D5 mock campaign evidence
         if: always()
         uses: actions/upload-artifact@v4
