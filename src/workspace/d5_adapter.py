@@ -111,6 +111,7 @@ def qualification_producer() -> dict[str, Any]:
         "workspace/d5_campaign_v16_policy.py",
         "workspace/d5_campaign_v16_extension.py",
         "workspace/d5_campaign_v16_packet.py",
+        "workspace/migrations/021_d5_keyed_continuation.sql",
         'workspace/d5_capacity_selection.py',
         'workspace/d5_capacity_policy.py',
         'workspace/d5_capacity_wire.py',
