@@ -20,6 +20,22 @@ export interface QualificationJob {
   steps: unknown[]; contacts: unknown[];
 }
 
+function checkerReasons(steps: unknown[]): { step: number; group: string; index: number; reason: string }[] {
+  const reasons: { step: number; group: string; index: number; reason: string }[] = [];
+  steps.forEach((step, stepIndex) => {
+    if (!step || typeof step !== "object" || !("stage" in step) || step.stage !== "check" || !("output" in step) || !step.output || typeof step.output !== "object") return;
+    const output = step.output as Record<string, unknown>;
+    for (const group of ["checks", "claim_reviews", "claim_quality", "coverage_checks", "prose_findings"]) {
+      const rows = output[group];
+      if (!Array.isArray(rows)) continue;
+      rows.forEach((row, index) => {
+        if (row && typeof row === "object" && typeof row.reason === "string") reasons.push({ step: stepIndex, group, index, reason: row.reason });
+      });
+    }
+  });
+  return reasons;
+}
+
 /** Read-only, quarantined production-pipeline results. No dispatch API exists. */
 export default function QualificationResult({ workId, versionId, returnTo, onSource }: {
   workId: string; versionId: string; returnTo: string; onSource: (anchor: string) => void;
@@ -102,6 +118,7 @@ export default function QualificationResult({ workId, versionId, returnTo, onSou
         {savedThread && <Link href={contextHref(`/workspace/threads/${savedThread}`, { ...context, mode: job.request.assistance.mode, project: job.request.assistance.project_id })}>Open experimental learning thread →</Link>}
         {job.request.assistance.project_id && <button type="button" disabled={busy} onClick={() => void save("project")}>Link experimental result to project</button>}
       </>}
+      {checkerReasons(job.steps).length > 0 && <details><summary>Stored machine checker reasons</summary><p>Machine judgments are not human review.</p><ul>{checkerReasons(job.steps).map(item => <li key={`${item.step}-${item.group}-${item.index}`}>Step {item.step + 1} · {item.group} {item.index + 1}: <span>{item.reason}</span></li>)}</ul></details>}
       <details><summary>Request, exact packet and split accounting</summary><pre tabIndex={0}>{JSON.stringify({ packet_digest: job.packet_digest, request: job.request, workflow_usd: job.workflow_usd, checker_usd: job.checker_usd, unknown_usd: job.unknown_usd, steps: job.steps, contacts: job.contacts }, null, 2)}</pre></details>
     </section>}
   </section>;
