@@ -68,6 +68,9 @@ async def setup_keyed(store, *, authorize=True):
         install(store, snapshot, fixture=True)
         if authorize:
             authorize_fixture(store, packet)
+            from src.workspace.programme_amendments import effective_limits
+            with store.pool.connection() as conn:
+                assert effective_limits(conn, packet["program_id"], required_proposal_digest=packet["campaign_extension"]["proposal_digest"])["new_jobs"] == 64
         return packet
     prior = await prepare(store)
     stopped = await run(store, prior, offline=True, transport_factory=RejectedV15Draft)
@@ -92,6 +95,9 @@ async def setup_keyed(store, *, authorize=True):
     _BASELINE = deepcopy((snapshot, packet))
     if authorize:
         authorize_fixture(store, packet)
+        from src.workspace.programme_amendments import effective_limits
+        with store.pool.connection() as conn:
+            assert effective_limits(conn, packet["program_id"], required_proposal_digest=packet["campaign_extension"]["proposal_digest"])["new_jobs"] == 64
     return packet
 
 

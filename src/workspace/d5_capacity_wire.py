@@ -18,9 +18,10 @@ def build_wire(request: dict[str, Any]) -> dict[str, Any]:
     if phase not in {"draft", "repair", "check"}:
         raise ValueError("d5_operation_stage_required")
     value = deepcopy(request)
+    keyed = value.get("sealed_request", {}).get("schema_revision") == "workspace-assistance-keyed-v16"
     mode = value.get("sealed_request", {}).get("assistance", {}).get("mode", "research")
     value["capacity_policy"] = deepcopy(POLICY)
-    if value.get("sealed_request", {}).get("schema_revision") == "workspace-assistance-keyed-v16":
+    if keyed:
         value["identity_contract"] = "Required named coverage entries exactly match sealed requested parts. Use gap_reasons within one part for all missing details. Claims use named slots c1..mode cap; c1 is required, null means an unused remaining slot. Never emit claim_id/part_id or a reverse mapping inside values. Checker named identities/digests are derived server-side from the exact current sealed context; provide every verdict, never repeat IDs."
     value["request_quality_rule"] = (
         f"At most {CLAIMS_BY_MODE[mode]} atomic claims in {mode} mode; "
@@ -53,11 +54,27 @@ def build_wire(request: dict[str, Any]) -> dict[str, Any]:
         for field in ("request_quality_rule", "coverage_wire_rule", "procedural_rendering"):
             value.pop(field, None)
         value["checker_wire_rule"] = "Support-only blinded diagnostic: every supplied claim ID/digest requires one support decision and an explanation. Return only checks, prose_review and located prose_findings. No revision, atomicity, qualification, request coverage or priority fields exist in this probe schema. Do not answer the task or invent source material."
+    if keyed and phase == "check":
+        value["identity_contract"] = "Return every exact named verdict key and the fixed revision from output_schema. Identities and digests are derived server-side from this exact current request. Never emit claim_id, part_id, input_digest, field or index inside verdict values."
+        value["checker_wire_rule"] = (
+            "Return the fixed revision and every required named claim_reviews and coverage_checks entry in output_schema. "
+            "Preserve support, atomicity, all qualification, coverage, priority and prose judgments. "
+            "For prose_findings return each required l-location key with an array of independent reasons; empty means no finding. "
+            "Schema location descriptions identify the exact unscored_prose field/index. Do not echo IDs, digests or location fields. "
+            "Never omit a negative or uncertain judgment, and never truncate an explanation."
+        )
+        if probe:
+            value["checker_wire_rule"] = (
+                "Support-only blinded diagnostic. Return the fixed revision, checks for every exact opaque probe key, "
+                "prose_review and every required prose_findings location key. Each check has a support decision and reason. "
+                "No workflow atomicity, qualification, coverage or priority fields exist here. IDs, input digests and prose "
+                "field/index values are server-derived and must not be echoed. Do not answer the task or invent evidence."
+            )
     selected = ROUTES["check_recheck_probe" if phase == "check" else "draft_repair"]
     wire = _build_request_kwargs(
         profile=RequestProfile(selected["model"], None, False, selected["effort"], True),
         prompt=json.dumps({key: val for key, val in value.items() if key != "output_schema"}, sort_keys=True, ensure_ascii=False, separators=(",", ":"), allow_nan=False),
-        system_prompt=("Assess each statement against its exact selected passage and preserve uncertainty. A resolving citation is not factual support. Return every support verdict and prose judgment required by the closed support-only schema; no workflow quality fields." if probe else CHECK_SYSTEM if phase == "check" else DRAFT_SYSTEM),
+        system_prompt=("Assess each statement against its exact selected passage and preserve uncertainty. A resolving citation is not factual support. Return every support verdict and prose judgment required by the closed support-only schema; no workflow quality fields." if probe else CHECK_SYSTEM.replace("with their exact field/index", "using the exact required prose location keys from output_schema") if keyed and phase == "check" else CHECK_SYSTEM if phase == "check" else DRAFT_SYSTEM),
         cache_system=False, max_tokens=selected["output_tokens"], schema=None,
     )
     wire["thinking"] = selected["thinking"]

@@ -181,6 +181,10 @@ def _model(handles: tuple[str, ...], purpose: str, encoded: str) -> type[BaseMod
                 for name, field in old_claim.model_fields.items()
                 if name != "claim_id"
             }
+            claim_fields["required_scope"] = (
+                old_claim.model_fields["required_scope"].annotation,
+                Field(...),
+            )
             claim_value = _new("KeyedClaim_" + identity, __base__=prior._Closed, **claim_fields)
             slots = {
                 f"c{i}": (claim_value if i == 1 else claim_value | None, ...)

@@ -237,3 +237,13 @@ def test_question_premises_and_comparison_basis_are_wire_enforced():
         keyed.normalize(value, h, p, pol)
     value["response"]["questions"] = [{"intent": "methods", "claim_ids": []}]
     wire_accepts(value, h, p, pol)
+
+
+def test_exact_scope_is_required_on_new_wire_not_defaulted_from_legacy():
+    value, handles, purpose, pol = sample()
+    value["response"]["claims"]["c1"].pop("required_scope")
+    assert list(
+        Draft202012Validator(keyed.schemas(handles, purpose, pol)["wire"]).iter_errors(value)
+    )
+    with pytest.raises(ValueError):
+        keyed.normalize(value, handles, purpose, pol)
