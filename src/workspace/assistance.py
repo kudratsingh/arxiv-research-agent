@@ -209,7 +209,10 @@ class CoverageChecks(Checks):
     priority_review: Literal["respected", "violated", "uncertain"]
 
 
-def checks_model(revision: str) -> type[Checks]:
+def checks_model(revision: str) -> Any:
+    if revision == "workspace-assistance-capacity-v15":
+        from src.workspace.assistance_capacity_contract import checks_model as capacity_checks
+        return capacity_checks()
     return CoverageChecks if revision in COVERAGE_REVISIONS else Checks
 
 
@@ -221,6 +224,9 @@ def enabled() -> None:
 
 def build_wire(request: dict[str, Any]) -> dict[str, Any]:
     """Pure candidate wire construction; no client, credential or contact."""
+    if request.get("sealed_request", {}).get("schema_revision") == "workspace-assistance-capacity-v15":
+        from src.workspace.d5_capacity_wire import build_wire as capacity_wire
+        return capacity_wire(request)
     phase = request["phase"]
     task_bound = request.get("sealed_request", {}).get("schema_revision") in {
         TASK_REVISION,
@@ -298,6 +304,9 @@ def capacity(request: dict[str, Any]) -> dict[str, Any]:
     tokens are a disclosed heuristic; a future approval needs paired provider
     measurements of every actual stage and must stop before an oversized call.
     """
+    if request.get("schema_revision") == "workspace-assistance-capacity-v15":
+        from src.workspace.d5_capacity_policy import envelope
+        return envelope(request)
     base = _size(request.get("candidate_initial_wire", request))
     internal_output = MAX_DRAFT_BYTES + 6 * _size(request.get("units", {})) + 6000
     bounds = {

@@ -206,6 +206,10 @@ def install(store: WorkspaceStore, captured: dict[str, Any], *, fixture: bool) -
             ("workspace_d5_campaign_extensions", "recorded_campaign_extensions"),
             ("workspace_d5_campaign_revocations", "recorded_campaign_revocations"),
             ("workspace_d5_campaign_outcomes", "recorded_campaign_outcomes"),
+            ("workspace_d5_campaign_successors", "recorded_campaign_successors"),
+            ("workspace_d5_campaign_successor_revocations", "recorded_campaign_successor_revocations"),
+            ("workspace_d5_capacity_revisions", "recorded_capacity_revisions"),
+            ("workspace_d5_capacity_revision_revocations", "recorded_capacity_revision_revocations"),
         ):
             for receipt in captured.get(key, []):
                 conn.execute(

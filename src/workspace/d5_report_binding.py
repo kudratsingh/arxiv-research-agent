@@ -40,6 +40,9 @@ def message_output(contact: dict[str, Any]) -> dict[str, Any]:
     parsed = response_output(response, body["model"])
     if json_object(response["content"][0]["text"]) != parsed:
         raise ReportBindingError("response_parse_mismatch")
+    from src.workspace.assistance_capacity_contract import check_schemas, normalize_checks
+    if body.get("output_config", {}).get("format", {}).get("schema") == check_schemas()["wire"]:
+        return normalize_checks(parsed)
     from src.workspace.assistance_compact_checks import normalize, schemas
 
     if body.get("output_config", {}).get("format", {}).get("schema") == schemas()["wire"]:

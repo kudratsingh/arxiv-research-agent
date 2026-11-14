@@ -162,7 +162,7 @@ def execution_owners(packet: dict[str, Any]) -> tuple[str, str]:
     from src.workspace.d5_campaign_packet import owners as campaign_owners
     from src.workspace.d5_coverage_packet import is_packet, owners
 
-    if packet.get("revision") in {CAMPAIGN_REVISION, "d5-complete-machine-campaign-v14"}:
+    if packet.get("revision") in {CAMPAIGN_REVISION, "d5-complete-machine-campaign-v14", "d5-comprehensive-machine-campaign-v15"}:
         return campaign_owners(packet)
 
     if is_packet(packet):
@@ -176,6 +176,15 @@ def code_bindings() -> dict[str, str]:
     root = Path(__file__).resolve().parents[2]
     names = [
         "d5_freeze.py",
+        'd5_capacity_policy.py',
+        'd5_capacity_wire.py',
+        'assistance_capacity_contract.py',
+        'd5_capacity_outcomes.py',
+        'd5_campaign_v15_policy.py',
+        'd5_campaign_v15_extension.py',
+        'd5_campaign_v15_packet.py',
+        'migrations/020_d5_capacity_campaign.sql',
+
         "d5_coverage_policy.py",
         "d5_coverage_packet.py",
         "d5_coverage_shapes_packet.py",
@@ -275,7 +284,7 @@ def verify(packet: dict[str, Any]) -> None:
     from src.workspace.d5_campaign_packet import REVISION as CAMPAIGN_REVISION
     from src.workspace.d5_campaign_packet import verify_packet
 
-    if packet.get("revision") in {CAMPAIGN_REVISION, "d5-complete-machine-campaign-v14"}:
+    if packet.get("revision") in {CAMPAIGN_REVISION, "d5-complete-machine-campaign-v14", "d5-comprehensive-machine-campaign-v15"}:
         verify_packet(packet)
         return
     from src.workspace.d5_coverage_packet import is_packet, verify_controls
@@ -384,7 +393,7 @@ def compile_inputs(packet: dict[str, Any]) -> dict[str, dict[str, Any]]:
     from src.workspace.d5_campaign_packet import REVISION as CAMPAIGN_REVISION
     from src.workspace.d5_campaign_packet import compile_campaign
 
-    if packet.get("revision") in {CAMPAIGN_REVISION, "d5-complete-machine-campaign-v14"}:
+    if packet.get("revision") in {CAMPAIGN_REVISION, "d5-complete-machine-campaign-v14", "d5-comprehensive-machine-campaign-v15"}:
         return compile_campaign(packet)
     from src.workspace.d5_coverage_packet import compile_controls, is_packet
 

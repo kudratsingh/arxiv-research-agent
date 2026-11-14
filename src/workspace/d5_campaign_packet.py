@@ -234,7 +234,7 @@ def plan_digest(packet: dict[str, Any]) -> str:
                 "adapter",
                 "source_bindings",
             )
-        } | ({"progression": packet["progression"], "checker_normalization_revision": packet["checker_normalization_revision"]} if packet.get("revision") == "d5-complete-machine-campaign-v14" else {})
+        } | ({"progression": packet["progression"], "checker_normalization_revision": packet["checker_normalization_revision"]} if packet.get("revision") in {"d5-complete-machine-campaign-v14", "d5-comprehensive-machine-campaign-v15"} else {}) | ({"capacity_policy": packet["capacity_policy"], "expiry_policy": packet["expiry_policy"]} if packet.get("revision") == "d5-comprehensive-machine-campaign-v15" else {})
     )
 
 
@@ -537,6 +537,10 @@ def freeze(store: Any, snapshot: dict[str, Any]) -> dict[str, Any]:
 
 
 def verify_packet(p: dict[str, Any]) -> None:
+    if p.get("revision") == "d5-comprehensive-machine-campaign-v15":
+        from src.workspace.d5_campaign_v15_packet import verify_packet as verify_capacity
+        verify_capacity(p)
+        return
     if p.get("revision") == "d5-complete-machine-campaign-v14":
         from src.workspace.d5_campaign_v14_packet import verify_packet as verify_successor
 
@@ -652,7 +656,8 @@ def compile_campaign(p: dict[str, Any]) -> dict[str, Any]:
                 programme_amendment_digest=p["campaign_extension"]["proposal_digest"],
                 operation_routes=p.get("operation_routes", ROUTES),
                 scope_profile=PROFILE,
-                operation_deadlines=DEADLINES,
+                operation_deadlines=p.get("operation_deadlines", DEADLINES),
+                capacity_policy=p.get("capacity_policy"),
                 repair_located_prose=True,
             ).snapshot(),
         }

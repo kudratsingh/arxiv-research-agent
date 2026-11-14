@@ -48,6 +48,9 @@ def template(packet: dict[str, Any]) -> dict[str, Any]:
     )
     if packet.get("revision") == "d5-complete-machine-campaign-v14":
         value["budget_adjustment_approved"] = False
+    if packet.get("revision") == "d5-comprehensive-machine-campaign-v15":
+        value.update(budget_adjustment_approved=False, expiry_adjustment_approved=False,
+                     programme_expires_at=None, expires_at=None)
     return value
 
 
@@ -72,6 +75,8 @@ def record(store: Any, packet: dict[str, Any], receipt: dict[str, Any]) -> dict[
     }
     if "budget_adjustment_approved" in expected:
         mutable.add("budget_adjustment_approved")
+    if "expiry_adjustment_approved" in expected:
+        mutable.update({"expiry_adjustment_approved", "programme_expires_at"})
     if set(receipt) != set(expected) or any(
         receipt[k] != expected[k] for k in expected if k not in mutable
     ):
@@ -126,7 +131,7 @@ def authorize_fixture(store: Any, packet: dict[str, Any]) -> dict[str, Any]:
         approved_at=now.isoformat(),
         approval_source="Offline fixture only",
         expires_at=min(
-            now + timedelta(hours=23), datetime.fromisoformat(packet["programme"]["expires_at"])
+            now + timedelta(hours=23), datetime.fromisoformat(packet["programme"]["expires_at"]) if packet.get("revision") != "d5-comprehensive-machine-campaign-v15" else now + timedelta(hours=23)
         ).isoformat(),
         authorization_kind="offline_fixture",
         transport_mode="mock",
@@ -135,6 +140,8 @@ def authorize_fixture(store: Any, packet: dict[str, Any]) -> dict[str, Any]:
     )
     if "budget_adjustment_approved" in value:
         value["budget_adjustment_approved"] = True
+    if packet.get("revision") == "d5-comprehensive-machine-campaign-v15":
+        value.update(expiry_adjustment_approved=True, programme_expires_at=(now + timedelta(days=7)).isoformat(), expires_at=(now + timedelta(hours=23)).isoformat())
     return record(store, packet, value)
 
 
@@ -149,7 +156,12 @@ def revoke(store: Any, packet: dict[str, Any], authorization: dict[str, Any]) ->
     prospective = packet.get("revision") == "d5-complete-machine-campaign-v14"
     if prospective and authorization.get("scope_id") != "d5-" + packet["packet_digest"][:24]:
         raise AdmissionError("campaign_revocation_scope_binding_required")
+    capacity = packet.get("revision") == "d5-comprehensive-machine-campaign-v15"
+    if capacity and authorization.get("scope_id") != "d5-" + packet["packet_digest"][:24]:
+        raise AdmissionError("campaign_revocation_scope_binding_required")
     statement = (
+        "INSERT INTO workspace_d5_capacity_revision_revocations VALUES(%s,%s,clock_timestamp()) ON CONFLICT DO NOTHING"
+        if capacity else
         "INSERT INTO workspace_d5_campaign_successor_revocations VALUES(%s,%s,clock_timestamp()) ON CONFLICT DO NOTHING"
         if prospective
         else "INSERT INTO workspace_d5_campaign_revocations VALUES(%s,%s,clock_timestamp()) ON CONFLICT DO NOTHING"

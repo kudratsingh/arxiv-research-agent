@@ -377,6 +377,29 @@ def results(
         "limitations": "Frozen public snapshot, known extraction limits, exposed sources, proposed machine references and correlated claims. Human usefulness/qualification and literature recall remain unmeasured.",
     }
 
+    if packet.get("revision") == "d5-comprehensive-machine-campaign-v15":
+        from src.workspace.d5_capacity_outcomes import classify_outcome
+        from src.workspace.d5_capacity_policy import POLICY as CAPACITY_POLICY
+        diagnostics = {}
+        by_case = {case["id"]: case for case in cases}
+        for key in compiled:
+            case = by_case.get(key, {})
+            observed = snapshots.get(key, {})
+            outcome = dict(outcomes.get(key, {"state": case.get("state", "unrun")}))
+            if key not in outcomes and stop and stop["case_id"] == key:
+                outcome["content_rejection"] = {"error": stop["reason"], "error_class": stop["error_class"], "accepted": False}
+            if case.get("completion") and case.get("assessment_binding", {}).get("status") == "bound":
+                outcome.update(mechanical_complete=True, quality_acceptance=True)
+            diagnostics[key] = classify_outcome(outcome, {**observed, "binding": case.get("assessment_binding")})
+        report["outcome_diagnostics"] = diagnostics
+        report["capacity_policy"] = CAPACITY_POLICY
+        report["diagnostic_basis"] = "Formatting observations never gate. Execution/contract/capacity and machine quality remain separate; no human qualification."
+        report["accounting"]["retained_hold_usd"] = "0.875066"
+        report["accounting"]["retained_hold_components"] = [
+            {"kind": "unknown_upstream_completion", "usd": "0.425066"},
+            {"kind": "received_http400_usage_unvalidated", "usd": "0.45"},
+        ]
+        report["accounting"]["new_scope"]["models"] = sorted({c.get("body", {}).get("model") for snapshot in snapshots.values() for c in snapshot.get("contacts", []) if isinstance(c.get("body", {}).get("model"), str)})
     return {
         **report,
         "analysis_receipt": {

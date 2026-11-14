@@ -298,6 +298,9 @@ class QualificationAdapter:
     def _complete_http_body(self, job_id: str, ordinal: int, status: int, body: bytes) -> None:
         """Optional receipt for a complete body before envelope decoding."""
 
+    def _partial_http_body(self, job_id: str, ordinal: int, status: int | None, body: bytes, error: BaseException) -> None:
+        """Prospective adapters may preserve received bytes without completion."""
+
     def _contact_timing(self, job_id: str, ordinal: int, event: str, elapsed: float) -> None:
         """Versioned D5 adapters can retain actual timing; legacy receipts stay unchanged."""
 
@@ -610,6 +613,9 @@ class QualificationAdapter:
             )
         started = monotonic()
         self._contact_timing(job_id, ordinal, "dispatch", 0.0)
+        chunks = bytearray()
+        status: int | None = None
+        full_body_received = False
         try:
             async with asyncio.timeout(timeout_seconds):
                 async with httpx.AsyncClient(
@@ -622,7 +628,7 @@ class QualificationAdapter:
                     async with client.stream(
                         "POST", "https://api.anthropic.com/v1/" + path, json=body
                     ) as response:
-                        chunks = bytearray()
+                        status = response.status_code
                         first = True
                         async for chunk in response.aiter_bytes():
                             if chunk and first:
@@ -633,12 +639,15 @@ class QualificationAdapter:
                             chunks.extend(chunk)
                             if len(chunks) > int(self.inputs.settings["response_bytes"]):
                                 raise AdmissionError("response_size_exceeded")
+                        full_body_received = True
                         self._contact_timing(job_id, ordinal, "full_body", monotonic() - started)
                         self._complete_http_body(
                             job_id, ordinal, response.status_code, bytes(chunks)
                         )
                         response.raise_for_status()
         except BaseException as exc:
+            if not full_body_received:
+                self._partial_http_body(job_id, ordinal, status, bytes(chunks), exc)
             event = (
                 "cancelled"
                 if isinstance(exc, asyncio.CancelledError)

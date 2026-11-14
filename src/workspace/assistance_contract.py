@@ -15,7 +15,7 @@ from dataclasses import asdict
 from enum import StrEnum
 from functools import lru_cache
 from types import GenericAlias
-from typing import Any, Literal, cast
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 from anthropic import transform_schema
 from pydantic import BaseModel, ConfigDict, Field, create_model, model_validator
@@ -28,6 +28,10 @@ from src.workspace.grounding import (
     validate_claims,
 )
 from src.workspace.material import SourceMaterial
+
+if TYPE_CHECKING:
+    from src.workspace.assistance_capacity_contract import CapacityDraft
+
 
 LEGACY_REVISION = "workspace-assistance-purpose-specific-v2"
 CITED_REVISION = "workspace-assistance-cited-sections-v3"
@@ -550,6 +554,11 @@ def _response_model(
     from src.workspace.assistance_coverage import response_model as coverage_model
     from src.workspace.assistance_policy import TASK_REVISION, task_response_model
 
+    if revision == "workspace-assistance-capacity-v15":
+        from src.workspace.assistance_capacity_contract import response_model as capacity_model
+        if task_policy is None:
+            raise ValueError("sealed_task_policy_required")
+        return capacity_model(list(handles), purpose, task_policy)
     if revision in COVERAGE_REVISIONS:
         if task_policy is None:
             raise ValueError("sealed_task_policy_required")
@@ -641,7 +650,7 @@ def resolve_draft(
     revision: str | None = None,
     task_policy: dict[str, Any] | None = None,
 ) -> tuple[
-    SinglePaperDraft | CitedSinglePaperDraft | ProceduralSinglePaperDraft, tuple[ResearchClaim, ...]
+    SinglePaperDraft | CitedSinglePaperDraft | ProceduralSinglePaperDraft | CapacityDraft, tuple[ResearchClaim, ...]
 ]:
     from src.workspace.assistance_coverage import (
         COVERAGE_REVISIONS,
@@ -650,6 +659,11 @@ def resolve_draft(
     )
     from src.workspace.assistance_policy import TASK_REVISION, normalize_task_output
 
+    if revision == "workspace-assistance-capacity-v15":
+        from src.workspace.assistance_capacity_contract import resolve_draft as capacity_resolve
+        if task_policy is None:
+            raise ValueError("sealed_task_policy_required")
+        return capacity_resolve(payload, catalog, materials, purpose=purpose, policy=task_policy)
     if revision in COVERAGE_REVISIONS:
         if task_policy is None:
             raise ValueError("sealed_task_policy_required")

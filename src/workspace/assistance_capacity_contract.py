@@ -12,6 +12,7 @@ import json
 from collections.abc import Sequence
 from copy import deepcopy
 from enum import StrEnum
+from functools import lru_cache
 from types import GenericAlias
 from typing import Any, Literal, cast
 
@@ -268,6 +269,12 @@ def _coverage_model(identity: str, policy: dict[str, Any], *, full: bool) -> typ
 
 
 def response_model(handles: Sequence[str], purpose: str, policy: dict[str, Any]) -> type[BaseModel]:
+    return _cached_model(tuple(handles), purpose, json.dumps(policy, sort_keys=True, ensure_ascii=False))
+
+
+@lru_cache(maxsize=128)
+def _cached_model(handles: tuple[str, ...], purpose: str, policy_json: str) -> type[BaseModel]:
+    policy = json.loads(policy_json)
     policy = deepcopy(policy)
     validate_policy(policy)
     selected = sorted(set(handles))

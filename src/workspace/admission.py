@@ -126,7 +126,11 @@ class GenerationInput:
             "private_question": self.private_question,
         }
         encoded = _json(value)
-        if len(encoded) > 32_000:
+        from src.workspace.d5_capacity_policy import MAX_INTERNAL_BYTES
+        from src.workspace.d5_capacity_policy import enabled as capacity_enabled
+
+        maximum = MAX_INTERNAL_BYTES if capacity_enabled(dict(self.settings)) else 32_000
+        if (len(encoded.encode("utf-8")) if maximum == MAX_INTERNAL_BYTES else len(encoded)) > maximum:
             raise AdmissionError("invalid_sealed_input")
         return dict(json.loads(encoded))
 

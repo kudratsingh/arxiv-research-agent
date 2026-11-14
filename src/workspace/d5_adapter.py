@@ -17,7 +17,7 @@ from typing import Any
 
 from anthropic import transform_schema
 from psycopg.types.json import Jsonb
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from src.workspace.admission import (
     AdmissionError,
@@ -58,6 +58,30 @@ from src.workspace.assistance_policy import (
     seal_task_policy,
 )
 from src.workspace.context_store import WorkspaceContext
+from src.workspace.d5_capacity_policy import (
+    ASSISTANCE_REVISION as CAPACITY_REVISION,
+)
+from src.workspace.d5_capacity_policy import (
+    DEADLINES as CAPACITY_DEADLINES,
+)
+from src.workspace.d5_capacity_policy import (
+    MAX_COMPACT_CHECK_BYTES,
+    MAX_HTTP_BYTES,
+    MAX_INTERNAL_BYTES,
+    protect,
+)
+from src.workspace.d5_capacity_policy import (
+    MAX_DRAFT_BYTES as CAPACITY_DRAFT_BYTES,
+)
+from src.workspace.d5_capacity_policy import (
+    POLICY as CAPACITY_POLICY,
+)
+from src.workspace.d5_capacity_policy import (
+    ROUTES as CAPACITY_ROUTES,
+)
+from src.workspace.d5_capacity_policy import (
+    enabled as capacity_enabled,
+)
 from src.workspace.d5_scope import D5Admission, guard_scope
 from src.workspace.executor import FakeExecutor
 from src.workspace.grounding import (
@@ -82,6 +106,15 @@ def qualification_producer() -> dict[str, Any]:
     root = Path(__file__).resolve().parents[1]
     files = (
         "workspace/d5_adapter.py",
+        'workspace/d5_capacity_policy.py',
+        'workspace/d5_capacity_wire.py',
+        'workspace/assistance_capacity_contract.py',
+        'workspace/d5_capacity_outcomes.py',
+        'workspace/d5_campaign_v15_policy.py',
+        'workspace/d5_campaign_v15_extension.py',
+        'workspace/d5_campaign_v15_packet.py',
+        'workspace/migrations/020_d5_capacity_campaign.sql',
+
         "workspace/d5_coverage_policy.py",
         "workspace/d5_coverage_packet.py",
         "workspace/d5_coverage_shapes_packet.py",
@@ -156,6 +189,38 @@ class D5StudyDraft(StudyDraft):
     abstention: str | None = Field(default=None, max_length=180)
 
 
+class D5CapacityStudyDraft(D5StudyDraft):
+    """Internal view avoids inherited eight-claim FakeDraft validation."""
+    claims: tuple[ResearchClaim, ...] = Field(max_length=12)
+    sections: tuple[Any, ...] = Field(max_length=6)
+
+    @model_validator(mode="after")
+    def semantic_sections(self) -> D5CapacityStudyDraft:
+        if not self.claims:
+            if self.abstention and not self.sections:
+                return self
+            raise ValueError("claims_or_explicit_abstention_required")
+        identifiers = {claim.claim_id for claim in self.claims}
+        if len(identifiers) != len(self.claims):
+            raise ValueError("duplicate_claim_id")
+        names: set[str] = set()
+        seen: set[str] = set()
+        for section in self.sections:
+            if not isinstance(section, dict) or set(section) != {"name", "claim_ids"}:
+                raise ValueError("invalid_section")
+            if section["name"] in names or not section["claim_ids"]:
+                raise ValueError("duplicate_or_empty_section")
+            names.add(section["name"])
+            refs = section["claim_ids"]
+            if len(set(refs)) != len(refs) or not set(refs) <= identifiers:
+                raise ValueError("section_claim_binding_mismatch")
+            seen.update(refs)
+        if seen != identifiers:
+            raise ValueError("orphan_claim")
+        protect(self.model_dump(mode="json"), MAX_INTERNAL_BYTES)
+        return self
+
+
 def seal_procedural_request(sealed: dict[str, Any]) -> dict[str, Any]:
     """Prospective schema/prompt binding; never modify a historical request."""
     from copy import deepcopy
@@ -186,7 +251,14 @@ def prepare_input(
     scope_profile: str | None = None,
     programme_binding: dict[str, Any] | None = None,
     operation_deadlines: dict[str, Any] | None = None,
+    capacity_policy: dict[str, Any] | None = None,
 ) -> GenerationInput:
+    prospective = sealed.get("schema_revision") == CAPACITY_REVISION
+    if prospective:
+        if capacity_policy != CAPACITY_POLICY or operation_deadlines != CAPACITY_DEADLINES or operation_routes != CAPACITY_ROUTES:
+            raise AdmissionError("d5_capacity_sealed_policy_binding_required")
+    elif capacity_policy is not None:
+        raise AdmissionError("d5_capacity_legacy_policy_forbidden")
     if operation not in {"workflow", "measurement", "probe"}:
         raise AdmissionError("d5_operation_required")
     sources = tuple(
@@ -261,6 +333,10 @@ def prepare_input(
         "probe_context": probe_context,
         "probe_wire_digest": _digest(probe_wire) if probe_wire else None,
     }
+    if prospective:
+        settings.update(d5_capacity_policy=capacity_policy, input_tokens=40000,
+                        output_tokens=8000, timeout_seconds=120, response_bytes=MAX_HTTP_BYTES,
+                        price_estimate_usd_per_million=CAPACITY_ROUTES["draft_repair"]["prices"])
     if operation_deadlines is not None:
         from src.workspace.d5_deadlines import validate as validate_deadlines
 
@@ -371,6 +447,11 @@ def checker_context(
 
         value["output_schema"] = compact_schemas()["wire"]
         value["checker_normalization_revision"] = COMPACT_NORMALIZATION_REVISION
+    if sealed["schema_revision"] == CAPACITY_REVISION:
+        from src.workspace.assistance_capacity_contract import check_schemas
+        from src.workspace.d5_capacity_policy import NORMALIZATION_REVISION
+        value["output_schema"] = check_schemas()["wire"]
+        value["checker_normalization_revision"] = NORMALIZATION_REVISION
     value["draft"] = {"claims": [asdict(c) for c in claims]}
     value["claim_inputs"] = [
         {"claim_id": c.claim_id, "input_digest": claim_input_digest(c, materials)} for c in claims
@@ -417,6 +498,7 @@ class D5Adapter(QualificationAdapter):
         from src.workspace.d5_campaign_v14_policy import enabled as v14
 
         amount = amount_usd or (
+            "1.20" if capacity_enabled(dict(self.inputs.settings)) else
             "0.65"
             if v14(self.inputs.settings)
             else "0.45"
@@ -440,6 +522,31 @@ class D5Adapter(QualificationAdapter):
                 "usage_validated": False,
             },
         )
+
+    def _partial_http_body(self, job_id: str, ordinal: int, status: int | None, body: bytes, error: BaseException) -> None:
+        if not capacity_enabled(dict(self.inputs.settings)):
+            return
+        import base64
+        # Preserve every received byte, not an accepted or repaired JSON prefix.
+        redacted = body.replace(self.api_key.encode(), b"[credential redacted]")
+        with self.store.pool.connection() as conn:
+            self.control._lock(conn, self.owner)
+            _, _, data = self.control._job(conn, self.owner, job_id)
+            contacts = data["adapter"]["contacts"]
+            contact = contacts[ordinal]
+            receipt = {
+                "complete_body": False, "usage_validated": False, "http_status": status,
+                "received_bytes": len(body), "received_sha256": hashlib.sha256(body).hexdigest(),
+                "received_body_base64": base64.b64encode(redacted).decode("ascii"),
+                "credential_redacted": redacted != body,
+                "error_class": type(error).__name__, "acceptance": "unavailable",
+                "unread_tail": "unknown; no completion, cancellation or billing inferred",
+            }
+            if "partial_response" in contact and contact["partial_response"] != receipt:
+                raise AdmissionError("d5_partial_receipt_immutable")
+            contact["partial_response"] = receipt
+            # Do not use _record: dispatching and uncertainty must remain intact.
+            conn.execute("UPDATE workspace_generation_jobs SET data=%s WHERE id=%s", (Jsonb(data), job_id))
 
     def _quarantine_failure(
         self, job_id: str, reason: str, *, error: BaseException | None = None
@@ -515,6 +622,11 @@ class D5Adapter(QualificationAdapter):
         sealed = settings.get("d5_request", {})
         operation = settings.get("d5_operation")
         routes = settings.get("operation_routes")
+        prospective = capacity_enabled(dict(settings))
+        if prospective and (sealed.get("schema_revision") != CAPACITY_REVISION or settings.get("operation_deadlines") != CAPACITY_DEADLINES or routes != CAPACITY_ROUTES):
+            raise AdmissionError("d5_capacity_sealed_policy_binding_required")
+        if not prospective and sealed.get("schema_revision") == CAPACITY_REVISION:
+            raise AdmissionError("d5_capacity_policy_required")
         if "operation_deadlines" in settings:
             from src.workspace.d5_deadlines import validate as validate_deadlines
 
@@ -532,24 +644,24 @@ class D5Adapter(QualificationAdapter):
             or self.inputs.model_id != (probe_route["model"] if probe_route else CANDIDATE_MODEL)
             or self.inputs.prompt_revision != ADAPTER_REVISION
             or operation not in {"workflow", "measurement", "probe"}
-            or settings.get("input_tokens") != 20000
+            or settings.get("input_tokens") != (40000 if prospective else 20000)
             or settings.get("output_tokens")
             != (
                 probe_route["output_tokens"]
                 if probe_route
                 else 1800
                 if operation == "probe"
-                else 4000
+                else 8000 if prospective else 4000
             )
-            or settings.get("timeout_seconds") != 30
-            or settings.get("response_bytes") != 131072
+            or settings.get("timeout_seconds") != (120 if prospective else 30)
+            or settings.get("response_bytes") != (MAX_HTTP_BYTES if prospective else 131072)
             or settings.get("max_calls") != (1 if operation in {"probe", "measurement"} else 4)
             or settings.get("max_repairs") != (0 if operation in {"probe", "measurement"} else 1)
             or settings.get("price_estimate_usd_per_million")
             != (
                 probe_route["prices"]
                 if probe_route
-                else {"input": "2", "output": "10", "verified_at": "2026-11-06"}
+                else CAPACITY_ROUTES["draft_repair"]["prices"] if prospective else {"input": "2", "output": "10", "verified_at": "2026-11-06"}
             )
             or sealed.get("schema_revision")
             not in {
@@ -715,12 +827,12 @@ class D5Adapter(QualificationAdapter):
                 raise AdmissionError("d5_probe_contract_drift")
             if (
                 body.get("output_config", {}).get("format", {}).get("schema")
-                != transform_schema(Checks)
+                != self._probe_schema()
                 or context.get("role") != "checker"
             ):
                 raise AdmissionError("d5_probe_schema_drift")
             self._checked_draft({})
-            rebuilt = self._wire({**context, "output_schema": transform_schema(Checks)})
+            rebuilt = self._wire({**context, "output_schema": self._probe_schema()})
             if rebuilt != body:
                 raise AdmissionError("d5_probe_wire_drift")
             return {"stage": "check", "body": body, "request_digest": _digest(body)}
@@ -823,6 +935,9 @@ class D5Adapter(QualificationAdapter):
                 from src.workspace.assistance_compact_checks import normalize as normalize_checks
 
                 return normalize_checks(parsed)
+            if capacity_enabled(dict(self.inputs.settings)) and self.inputs.settings["d5_operation"] != "probe":
+                from src.workspace.assistance_capacity_contract import normalize_checks
+                return normalize_checks(parsed)
             return parsed
         return super()._response_output(response, body)
 
@@ -844,6 +959,12 @@ class D5Adapter(QualificationAdapter):
             },
         }
 
+    def _probe_schema(self) -> dict[str, Any]:
+        if capacity_enabled(dict(self.inputs.settings)):
+            from src.workspace.assistance_capacity_contract import probe_checks_model
+            return dict(transform_schema(probe_checks_model()))
+        return dict(transform_schema(Checks))
+
     def _probe_wire(self) -> dict[str, Any]:
         context = self.inputs.settings.get("probe_context")
         if not isinstance(context, dict):
@@ -862,7 +983,7 @@ class D5Adapter(QualificationAdapter):
             }
         except KeyError as exc:
             raise AdmissionError("d5_probe_unselected_evidence") from exc
-        body_context["output_schema"] = transform_schema(Checks)
+        body_context["output_schema"] = self._probe_schema()
         body = self._wire(body_context)
         if _digest(body) != self.inputs.settings["probe_wire_digest"]:
             raise AdmissionError("d5_probe_wire_drift")
@@ -889,7 +1010,8 @@ class D5Adapter(QualificationAdapter):
         report = validate_claims(claims, materials)
         if any(not item.scope_compatible for item in report.assessments):
             raise AdmissionError("d5_draft_scope_incompatible")
-        return D5StudyDraft.model_validate(
+        model = D5CapacityStudyDraft if sealed["schema_revision"] == CAPACITY_REVISION else D5StudyDraft
+        return model.model_validate(
             {
                 "kind": "deep_dive",
                 "title": "Quarantined D5 assistance",
@@ -905,6 +1027,9 @@ class D5Adapter(QualificationAdapter):
         )
 
     def _checks(self, output: dict[str, Any]) -> Any:
+        if capacity_enabled(dict(self.inputs.settings)) and self.inputs.settings["d5_operation"] == "probe":
+            from src.workspace.assistance_capacity_contract import probe_checks_model
+            return probe_checks_model().model_validate(output)
         return checks_model(self.inputs.settings["d5_request"]["schema_revision"]).model_validate(
             output
         )
@@ -913,7 +1038,7 @@ class D5Adapter(QualificationAdapter):
         from src.workspace.d5_campaign_v14_policy import enabled
 
         return (
-            enabled(self.inputs.settings)
+            (enabled(self.inputs.settings) or capacity_enabled(dict(self.inputs.settings)))
             and self.inputs.settings.get("d5_operation") == "workflow"
             and str(error)
             in {
@@ -925,7 +1050,7 @@ class D5Adapter(QualificationAdapter):
 
     def _review_complete(self, grounding: Any, snapshot: dict[str, Any], checks: Any) -> bool:
         sealed = self.inputs.settings["d5_request"]
-        if sealed["schema_revision"] in COVERAGE_REVISIONS:
+        if sealed["schema_revision"] in COVERAGE_REVISIONS and self.inputs.settings["d5_operation"] != "probe":
             rendered = render_task_output(
                 snapshot["steps"][-1]["output"],
                 list(sealed["units"]),
@@ -1032,15 +1157,21 @@ class D5Adapter(QualificationAdapter):
                         )
 
                         parsed = normalize_checks(parsed)
+                    if capacity_enabled(dict(self.inputs.settings)) and self.inputs.settings["d5_operation"] != "probe":
+                        from src.workspace.assistance_capacity_contract import (
+                            normalize_checks as normalize_capacity_checks,
+                        )
+                        parsed = normalize_capacity_checks(parsed)
                     checks = self._checks(parsed)
-                    if self.inputs.settings["d5_request"]["schema_revision"] in COVERAGE_REVISIONS:
+                    if self.inputs.settings["d5_request"]["schema_revision"] in COVERAGE_REVISIONS and self.inputs.settings["d5_operation"] != "probe":
                         validate_review(checks, context)
                     checks.validate_locations(context.get("unscored_prose", {}))
                     expected = {c["claim_id"]: c["input_digest"] for c in context["claim_inputs"]}
                     actual = {c.claim_id: c.input_digest for c in checks.checks}
                     if len(actual) != len(checks.checks) or actual != expected:
                         raise AdmissionError("d5_checker_claim_binding_drift")
-                if len(text.encode()) > 8000:
+                maximum = (MAX_COMPACT_CHECK_BYTES if last["stage"] == "check" else CAPACITY_DRAFT_BYTES) if capacity_enabled(dict(self.inputs.settings)) else 8000
+                if len(text.encode()) > maximum:
                     raise AdmissionError("d5_compact_output_exceeded")
             response_id = last["response"].get("id")
             receipt_count = conn.execute(
@@ -1055,7 +1186,7 @@ class D5Adapter(QualificationAdapter):
         self._context()
 
     def _usage_within_stage(self, ins: int, outs: int, wire: dict[str, Any]) -> bool:
-        return ins <= 20000 and outs <= wire["body"]["max_tokens"]
+        return ins <= (40000 if capacity_enabled(dict(self.inputs.settings)) else 20000) and outs <= wire["body"]["max_tokens"]
 
 
 class D5MeasurementAdapter(D5Adapter, MeasurementAdapter):
@@ -1100,6 +1231,7 @@ class D5ProbeAdapter(D5Adapter):
         from src.workspace.d5_campaign_v14_policy import enabled as v14
 
         required = (
+            "0.50" if capacity_enabled(dict(self.inputs.settings)) else
             "0.25"
             if v14(self.inputs.settings)
             else "0.15"
@@ -1137,7 +1269,7 @@ class D5ProbeAdapter(D5Adapter):
                 if c["claim_id"] == claim.claim_id
             ):
                 raise AdmissionError("d5_probe_claim_binding_drift")
-        return StudyDraft.model_validate(
+        return (D5CapacityStudyDraft if capacity_enabled(dict(self.inputs.settings)) else StudyDraft).model_validate(
             {
                 "kind": "deep_dive",
                 "title": "Quarantined adversarial checker diagnostic",

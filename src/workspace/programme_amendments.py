@@ -219,8 +219,11 @@ def effective_limits(
     conn: Any, program_id: str, *, required_proposal_digest: str | None = None
 ) -> dict[str, Any]:
     """The default remains20, and all other programmes/caps stay unchanged."""
+    from src.workspace.d5_campaign_v15_extension import active as capacity_active
     from src.workspace.qualification_budget import census
-
+    prospective = capacity_active(conn, program_id, required_proposal_digest)
+    if prospective is not None:
+        return dict(prospective[1]["limits"])
     row = _program(conn, program_id)
     amended = conn.execute(
         "SELECT record,authorization_digest,proposal_digest,expires_at FROM workspace_programme_amendments WHERE program_id=%s",

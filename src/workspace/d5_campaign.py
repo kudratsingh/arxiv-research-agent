@@ -213,14 +213,24 @@ async def run(
                         (Jsonb(time.monotonic() - started), job["id"]),
                     )
             terminal = record_outcome(store, scope, key, job["id"], _digest(entry["input"]))
+            if packet.get("revision") == "d5-comprehensive-machine-campaign-v15" and terminal["state"] == "failed":
+                if inputs.settings["d5_operation"] == "probe":
+                    raise AdmissionError("campaign_probe_contract_incomplete")
+                from src.workspace.d5_campaign_v15_policy import (
+                    development_contract as current_contract,
+                )
+                with store.pool.connection() as conn:
+                    current_contract(conn, scope, key)
             advanced += 1
             if progress is not None:
                 progress(terminal)
             if (
-                packet.get("revision") == "d5-complete-machine-campaign-v14"
+                packet.get("revision") in {"d5-complete-machine-campaign-v14", "d5-comprehensive-machine-campaign-v15"}
                 and entry["stage"] == "B"
             ):
                 from src.workspace.d5_campaign_v14_policy import development_contract
+                if packet.get("revision") == "d5-comprehensive-machine-campaign-v15":
+                    from src.workspace.d5_campaign_v15_policy import development_contract
 
                 with store.pool.connection() as conn:
                     development_contract(conn, scope, key)
@@ -230,7 +240,7 @@ async def run(
             stop = {
                 "case_id": key,
                 "error_class": type(exc).__name__,
-                "reason": str(exc)[:1200],
+                "reason": str(exc) if packet.get("revision") == "d5-comprehensive-machine-campaign-v15" else str(exc)[:1200],
                 "remaining_cases": list(compiled)[list(compiled).index(key) + 1 :],
                 "automatic_retries": 0,
             }
@@ -252,7 +262,7 @@ def main() -> None:
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "verb", choices=["freeze", "freeze-v14", "verify", "offline", "run", "report"]
+        "verb", choices=["freeze", "freeze-v14", "freeze-v15", "verify", "offline", "run", "report"]
     )
     parser.add_argument("--packet", type=Path, required=True)
     parser.add_argument("--snapshot", type=Path)
@@ -269,7 +279,7 @@ def main() -> None:
         return
     with database(os.environ["D5_POSTGRES_URL"]) as pool:
         store = WorkspaceStore(pool)
-        if args.verb in {"freeze", "freeze-v14"}:
+        if args.verb in {"freeze", "freeze-v14", "freeze-v15"}:
             if (
                 args.snapshot is None
                 or os.environ.get("ANTHROPIC_API_KEY") != "local-preview-disabled"
@@ -278,7 +288,10 @@ def main() -> None:
                 raise AdmissionError("campaign_freeze_offline_snapshot_required")
             captured = read(args.snapshot)
             install(store, captured, fixture=True)
-            if args.verb == "freeze-v14":
+            if args.verb == "freeze-v15":
+                from src.workspace.d5_campaign_v15_packet import freeze as freeze_capacity
+                write(args.packet, freeze_capacity(store, captured))
+            elif args.verb == "freeze-v14":
                 from src.workspace.d5_campaign_v14_packet import freeze as freeze_successor
 
                 write(args.packet, freeze_successor(store, captured))

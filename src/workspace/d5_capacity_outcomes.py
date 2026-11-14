@@ -19,11 +19,15 @@ _CAPACITY = frozenset({
     "d5_compact_output_exceeded", "response_size_exceeded",
     "assistance_response_too_large", "compact_checks_utf8_limit",
     "compact_normalized_checks_utf8_limit", "input_measurement_exceeds_cap_or_invalid",
+    "capacity_draft_bytes_exceeded", "capacity_compact_checks_bytes_exceeded",
+    "capacity_normalized_checks_bytes_exceeded", "capacity_internal_output_exceeded",
+    "capacity_selected_unit_limit",
 })
 _CONTRACT = frozenset({
     "d5_checker_claim_binding_drift", "incomplete_check_batch",
     "d5_duplicate_json_key", "d5_nonfinite_json", "d5_probe_claim_binding_drift",
     "section_claim_binding_mismatch", "orphan_claim", "duplicate_claim_id",
+    "claim_quality_binding_mismatch", "coverage_review_binding_mismatch",
 })
 _PROVIDER = frozenset({"provider_error", "http_error", "invalid_provider_response"})
 _UNCERTAIN = frozenset({"uncertain", "running", "interrupted", "dispatching"})
@@ -52,9 +56,10 @@ def classify_outcome(outcome: Any, snapshot: Any = None) -> dict[str, Any]:
     contacts = contacts if isinstance(contacts, list) else []
     messages = [c for c in contacts if isinstance(c, dict) and c.get("endpoint") == "messages"]
     last = messages[-1] if messages else {}
-    response = last.get("response") if isinstance(last.get("response"), dict) else {}
-    rejection = outcome.get("content_rejection")
-    rejection = rejection if isinstance(rejection, dict) else {}
+    raw_response = last.get("response")
+    response: dict[str, Any] = raw_response if isinstance(raw_response, dict) else {}
+    raw_rejection = outcome.get("content_rejection")
+    rejection: dict[str, Any] = raw_rejection if isinstance(raw_rejection, dict) else {}
     code = rejection.get("error") if isinstance(rejection.get("error"), str) else None
     error_class = rejection.get("error_class") if isinstance(rejection.get("error_class"), str) else None
     state = outcome.get("state") if isinstance(outcome.get("state"), str) else None
@@ -64,7 +69,7 @@ def classify_outcome(outcome: Any, snapshot: Any = None) -> dict[str, Any]:
         result["classification"] = "uncertain_completion"
     elif last.get("state") == "completed" and response.get("stop_reason") == "max_tokens":
         result.update(classification="contract_failure", subtype="capacity_suspected")
-    elif code in _CAPACITY:
+    elif code in _CAPACITY or any(value in _CAPACITY for value in rejection.get("error_codes", []) if isinstance(value, str)):
         result["classification"] = "capacity_failure"
     elif state in {"unrun", "not_run"} and not contacts:
         result["classification"] = "unrun"

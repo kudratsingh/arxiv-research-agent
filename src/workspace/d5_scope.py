@@ -48,10 +48,11 @@ def limits_for(settings: dict[str, Any]) -> dict[str, Any]:
 def valid_limits(value: Any) -> bool:
     from src.workspace.d5_campaign_policy import LIMITS as CAMPAIGN_LIMITS
     from src.workspace.d5_campaign_v14_policy import LIMITS as V14_LIMITS
+    from src.workspace.d5_campaign_v15_policy import LIMITS as V15_LIMITS
     from src.workspace.d5_coverage_policy import PROFILES
     from src.workspace.d5_operations import OPUS_LIMITS
 
-    return value in (LIMITS, OPUS_LIMITS, CAMPAIGN_LIMITS, V14_LIMITS, *PROFILES.values())
+    return value in (LIMITS, OPUS_LIMITS, CAMPAIGN_LIMITS, V14_LIMITS, V15_LIMITS, *PROFILES.values())
 
 
 def stage_authorizations(

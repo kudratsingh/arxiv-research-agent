@@ -45,8 +45,9 @@ ROUTES: dict[str, Any] = {
 
 def validate(routes: Any) -> None:
     from src.workspace.d5_campaign_v14_policy import ROUTES as COMPLETE_ROUTES
+    from src.workspace.d5_capacity_policy import ROUTES as CAPACITY_ROUTES
 
-    if routes not in (ROUTES, COMPLETE_ROUTES):
+    if routes not in (ROUTES, COMPLETE_ROUTES, CAPACITY_ROUTES):
         raise AdmissionError("d5_operation_routes_drift")
 
 

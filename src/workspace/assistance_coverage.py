@@ -17,7 +17,7 @@ SHAPED_COVERAGE_REVISION = "workspace-assistance-coverage-shapes-v9"
 AUTHORITATIVE_COVERAGE_REVISION = "workspace-assistance-coverage-authority-v10"
 COMPACT_COVERAGE_REVISION = "workspace-assistance-compact-coverage-v14"
 SHAPED_REVISIONS = frozenset({SHAPED_COVERAGE_REVISION, AUTHORITATIVE_COVERAGE_REVISION})
-COVERAGE_REVISIONS = frozenset({COVERAGE_REVISION, *SHAPED_REVISIONS, COMPACT_COVERAGE_REVISION})
+COVERAGE_REVISIONS = frozenset({COVERAGE_REVISION, *SHAPED_REVISIONS, COMPACT_COVERAGE_REVISION, "workspace-assistance-capacity-v15"})
 PartId = Literal["p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8"]
 ClaimId = Literal["c1", "c2", "c3", "c4", "c5", "c6"]
 Status = Literal["answered", "lacks_evidence", "omitted"]
@@ -154,6 +154,9 @@ class NoReferenceCoverage(BaseModel):
 
 
 def response_model(handles: list[str], purpose: str, policy: dict[str, Any]) -> type[BaseModel]:
+    if policy["revision"] == "workspace-assistance-capacity-v15":
+        from src.workspace.assistance_capacity_contract import response_model as capacity_model
+        return capacity_model(handles, purpose, policy)
     if policy["revision"] == COMPACT_COVERAGE_REVISION:
         from src.workspace.assistance_compact_draft import response_model as compact_model
 
@@ -245,6 +248,9 @@ def response_model(handles: list[str], purpose: str, policy: dict[str, Any]) -> 
 def normalize(
     payload: dict[str, Any], handles: list[str], purpose: str, policy: dict[str, Any]
 ) -> tuple[dict[str, Any], dict[str, Any]]:
+    if policy["revision"] == "workspace-assistance-capacity-v15":
+        from src.workspace.assistance_capacity_contract import normalize as capacity_normalize
+        return capacity_normalize(payload, handles, purpose, policy)
     if policy["revision"] == COMPACT_COVERAGE_REVISION:
         from src.workspace.assistance_compact_draft import normalize as compact_normalize
 
@@ -312,6 +318,9 @@ def render(
 ) -> dict[str, Any]:
     from src.workspace.assistance_policy import render_task_output
 
+    if policy["revision"] == "workspace-assistance-capacity-v15":
+        from src.workspace.assistance_capacity_contract import render as capacity_render
+        return capacity_render(payload, handles, purpose, policy)
     base, coverage = normalize(payload, handles, purpose, policy)
     result = render_task_output(base, handles, purpose, prior_policy(policy))
     rows = [
@@ -388,12 +397,12 @@ def review_context(
         "request_parts": policy["requested_parts"],
         "coverage_inputs": parts,
         "declared_coverage": rendered["request_coverage"],
-        **({"claim_request_index": rendered["claim_request_index"]} if policy["revision"] in {AUTHORITATIVE_COVERAGE_REVISION, COMPACT_COVERAGE_REVISION} else {}),
+        **({"claim_request_index": rendered["claim_request_index"]} if policy["revision"] in {AUTHORITATIVE_COVERAGE_REVISION, COMPACT_COVERAGE_REVISION, "workspace-assistance-capacity-v15"} else {}),
         "quality_rubric": {
             "atomicity": "one independently testable finding per claim, not separate outcomes joined together",
             "qualifications": list(QUALIFICATIONS),
             "coverage": "Judge the whole requested part; context notes do not answer a comparison. Available-but-unanswered evidence is omission, not lacks_evidence.",
-            "priority": "Higher-priority question parts before lower-priority context; never bundle findings to evade six claims.",
+            "priority": "Higher-priority question parts before lower-priority context; never bundle findings to evade the sealed mode-specific claim allowance." if policy["revision"] == "workspace-assistance-capacity-v15" else "Higher-priority question parts before lower-priority context; never bundle findings to evade six claims.",
         },
     }
 

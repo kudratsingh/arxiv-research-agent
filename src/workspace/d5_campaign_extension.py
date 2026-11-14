@@ -298,6 +298,10 @@ def _validate(conn: Any, record: dict[str, Any], program_id: str) -> dict[str, A
 def active(
     conn: Any, program_id: str, required: str | None = None
 ) -> tuple[dict[str, Any], dict[str, Any]] | None:
+    from src.workspace.d5_campaign_v15_extension import active as capacity_active
+    capacity = capacity_active(conn, program_id, required)
+    if capacity is not None:
+        return capacity
     from src.workspace.d5_campaign_v14_extension import active as successor_active
 
     successor = successor_active(conn, program_id, required)
@@ -348,6 +352,10 @@ def effective(
 
 
 def record_external(store: Any, receipt: dict[str, Any]) -> dict[str, Any]:
+    from src.workspace.d5_campaign_v15_extension import REVISION as CAPACITY_REVISION
+    from src.workspace.d5_campaign_v15_extension import record_external as record_capacity
+    if receipt.get("campaign_extension", {}).get("core", {}).get("revision") == CAPACITY_REVISION:
+        return record_capacity(store, receipt)
     from src.workspace.d5_campaign_v14_extension import REVISION as SUCCESSOR_REVISION
     from src.workspace.d5_campaign_v14_extension import record_external as record_successor
 
@@ -413,6 +421,10 @@ def guard_exception(
     if not found:
         raise AdmissionError("program_external_completion_uncertain")
     receipt, core = found
+    from src.workspace.d5_campaign_v15_extension import REVISION as CAPACITY_REVISION
+    from src.workspace.d5_campaign_v15_extension import guard_exception as capacity_guard
+    if core["revision"] == CAPACITY_REVISION:
+        return capacity_guard(conn, policy, found, current_job)
     from src.workspace.d5_campaign_v14_extension import REVISION as SUCCESSOR_REVISION
     from src.workspace.d5_campaign_v14_extension import guard_exception as successor_guard
 
