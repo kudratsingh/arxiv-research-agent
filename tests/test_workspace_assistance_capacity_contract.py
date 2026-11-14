@@ -546,3 +546,37 @@ def test_model_captures_owned_policy_and_selected_handles_in_canonical_order():
     handles.clear()
     first.model_validate(value)
     assert value == before
+
+
+def test_blinded_probe_ids_are_not_workflow_claim_ids_and_wire_binds_them():
+    ids = ["p" + format(i, "018x") for i in range(12)]
+    raw = raw_checks(count=12, parts=0, reason="Full reason " * 100)
+    expanded = capacity.normalize_checks(raw)
+    value = {k: expanded[k] for k in ("checks", "prose_review", "prose_findings")}
+    for row, identifier in zip(value["checks"], ids, strict=True):
+        row["claim_id"] = identifier
+    model = capacity.probe_checks_model(ids)
+    Draft202012Validator(transform_schema(model)).validate(value)
+    assert [str(row.claim_id) for row in model.model_validate(value).checks] == ids
+    value["checks"][0]["claim_id"] = "c1"
+    assert list(Draft202012Validator(transform_schema(model)).iter_errors(value))
+    with pytest.raises(ValueError):
+        model.model_validate(value)
+    for invalid in ([], ["a", "a"], [""], ["a" * 121], list(map(str, range(13)))):
+        with pytest.raises(ValueError):
+            capacity.probe_checks_model(invalid)
+
+@pytest.mark.parametrize("mode,maximum", [("learn", 3), ("research", 6)])
+def test_citations_mode_cap_and_explicit_generous_claim_guard(mode, maximum):
+    value, _, purpose, pol = fixture(mode)
+    handles = [f"u{i}" for i in range(1, maximum + 2)]
+    value["response"]["claims"][0]["handles"] = handles[:maximum]
+    value["response"]["claims"][0]["text"] = "x" * 10000
+    capacity.normalize(value, handles, purpose, pol)
+    value["response"]["claims"][0]["text"] += "x"
+    with pytest.raises(ValueError):
+        capacity.normalize(value, handles, purpose, pol)
+    value["response"]["claims"][0]["text"] = "An atomic supported result."
+    value["response"]["claims"][0]["handles"] = handles
+    with pytest.raises(ValueError):
+        capacity.normalize(value, handles, purpose, pol)

@@ -94,50 +94,10 @@ def capture(store: Any, program_id: str) -> dict[str, Any]:
 
 
 def prepare_selection(store: Any, key: str, mode: str, question: str, units: dict[str, Any], *, intent: str = "answer") -> dict[str, Any]:
-    """Qualification-only exact selection; public legacy input bounds stay fixed."""
-    from src.workspace.assistance_contract import coherent_units, response_purpose
-    from src.workspace.d5_campaign_packet import BUILD_OWNER, selection
-    from src.workspace.d5_capacity_policy import MAX_SELECTED_UNITS, POLICY, protect
-    from src.workspace.executor import FakeExecutor
-
-    if not 1 <= len(units) <= MAX_SELECTED_UNITS:
-        raise AdmissionError("capacity_selected_unit_limit")
-    protect(units, POLICY["max_selected_evidence_utf8_bytes"], code="capacity_selected_evidence_bytes_exceeded")
-    refs = list(units.values())
-    material_ids = list(dict.fromkeys(r["material_id"] for r in refs))
-    span_ids = list(dict.fromkeys(r["span_id"] for r in refs))
-    if len(material_ids) > POLICY["max_materials"]:
-        raise AdmissionError("capacity_material_limit")
-    with store.pool.connection() as conn:
-        material = FakeExecutor(store)._sources(conn, BUILD_OWNER, material_ids)
-        catalog = coherent_units(material, set(span_ids))
-        if any(k not in catalog or asdict(catalog[k]) != v for k, v in units.items()):
-            raise AdmissionError("d5_selected_evidence_drift")
-        version_hashes = {}
-        for ref in refs:
-            row = conn.execute("SELECT data->>'content_hash' FROM workspace_versions WHERE work_id=%s AND version_id=%s", (ref["work_id"], ref["version_id"])).fetchone()
-            if not row:
-                raise AdmissionError("d5_source_version_drift")
-            version_hashes[ref["version_id"]] = row[0]
-    # Reuse existing project/ownership setup on one valid unit; expand only to
-    # independently verified, explicitly selected contiguous evidence above.
-    first = next(iter(units))
-    value = selection(store, key, mode, question, {first: units[first]}, intent=intent)
-    value["units"] = deepcopy(units)
-    value["selection"] = {"material_ids": material_ids, "span_ids": span_ids}
-    value["version_hashes"] = version_hashes
-    value["assistance"].update(material_ids=material_ids, span_ids=span_ids, unit_ids=list(units))
-    value["response_purpose"] = response_purpose(mode, units)
-    value["sources"] = [
-        {"material_id": m.material_id, "work_id": m.work_id, "version_id": m.version_id,
-         "content_hash": m.content_hash, "source_hash": m.source_hash, "scope": m.scope,
-         "parser_revision": m.parser_revision, "complete": m.complete, "quality": m.quality,
-         "offset_basis": m.offset_basis, "page_count": m.page_count, "page_numbers": m.page_numbers,
-         "warnings": list(m.warnings), "spans": [asdict(span) for span in m.spans if span.span_id in span_ids]}
-        for m in material
-    ]
-    value["question"] = json.dumps(value["assistance"], sort_keys=True)
-    return upgrade(value)
+    """Use the qualification-only DTO and actual retained storage, never fake caps."""
+    from src.workspace.d5_campaign_packet import BUILD_OWNER
+    from src.workspace.d5_capacity_selection import build
+    return upgrade(build(store, BUILD_OWNER, key, mode, question, units, intent=intent))
 
 
 def upgrade(sealed: dict[str, Any]) -> dict[str, Any]:
@@ -225,7 +185,7 @@ def freeze(store: Any, snapshot: dict[str, Any]) -> dict[str, Any]:
         context = json.loads(probe["wire"]["messages"][0]["content"])
         context["operation"] = "probe"
         context["sealed_request"]["schema_revision"] = probe["sealed"]["schema_revision"]
-        context["output_schema"] = transform_schema(probe_checks_model())
+        context["output_schema"] = transform_schema(probe_checks_model([c["claim_id"] for c in context["claim_inputs"]]))
         probe["wire"] = wire(context, ROUTES)
     selected_materials = {
         r["material_id"] for c in (*cases, *probes) for r in c["sealed"]["units"].values()
@@ -275,7 +235,7 @@ def freeze(store: Any, snapshot: dict[str, Any]) -> dict[str, Any]:
         "operation_routes": ROUTES,
         "operation_deadlines": DEADLINES,
         "capacity_policy": CAPACITY_POLICY,
-        "expiry_policy": expiry_policy(snapshot["programme"]["expires_at"]),
+        "expiry_policy": expiry_policy(snapshot["programme"]["programme_expires_at"]),
         "progression": PROGRESSION,
         "cases": cases,
         "probes": probes,
@@ -326,7 +286,7 @@ def verify_packet(value: dict[str, Any]) -> None:
         or value.get("operation_routes") != ROUTES
         or value.get("operation_deadlines") != DEADLINES
         or value.get("capacity_policy") != CAPACITY_POLICY
-        or value.get("expiry_policy") != expiry_policy(value["programme"]["expires_at"])
+        or value.get("expiry_policy") != expiry_policy(value["programme"]["programme_expires_at"])
         or value.get("progression") != PROGRESSION
         or value.get("measurement_cases") != []
         or value.get("human_qualification") is not False
@@ -380,7 +340,7 @@ def verify_packet(value: dict[str, Any]) -> None:
     from src.workspace.assistance_capacity_contract import probe_checks_model
     for probe, prior in zip(value["probes"], old["probes"], strict=True):
         earlier = json.loads(prior["wire"]["messages"][0]["content"])
-        expected_context = {**earlier, "operation": "probe", "output_schema": transform_schema(probe_checks_model())}
+        expected_context = {**earlier, "operation": "probe", "output_schema": transform_schema(probe_checks_model([c["claim_id"] for c in earlier["claim_inputs"]]))}
         expected_context["sealed_request"] = {**earlier["sealed_request"], "schema_revision": DRAFT_REVISION}
         if (
             probe["id"] != prior["id"] or probe.get("human_labels") is not None
@@ -397,6 +357,7 @@ def verify_packet(value: dict[str, Any]) -> None:
     core = value["campaign_extension"]["core"]
     if (
         core.get("revision") != EXTENSION_REVISION
+        or core.get("expiry_policy") != value["expiry_policy"]
         or core.get("basis") != value["history"]
         or core.get("plan_digest") != plan_digest(value)
         or value["campaign_extension"]["proposal_digest"] != _digest(core)

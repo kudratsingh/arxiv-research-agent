@@ -9,7 +9,7 @@ validation establishes a response contract, never scientific or human quality.
 from __future__ import annotations
 
 import json
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from copy import deepcopy
 from enum import StrEnum
 from functools import lru_cache
@@ -47,6 +47,7 @@ from src.workspace.d5_capacity_policy import (
     CHECKS_REVISION,
     CLAIMS_BY_MODE,
     MAX_CITATIONS,
+    MAX_CLAIM_CHARACTERS,
     MAX_FINDINGS,
     MAX_PARTS,
     NORMALIZATION_REVISION,
@@ -139,8 +140,9 @@ class CapacityClaim(_Closed):
     claim_id: ClaimKey
     text: str = Field(
         min_length=1,
+        max_length=MAX_CLAIM_CHARACTERS,
         strict=True,
-        description="One atomic finding with every material qualification; 500 characters is a soft target, not a hard limit.",
+        description="One atomic finding with every material qualification; 500 characters is a soft target; 10,000 characters is a generous payload safety guard, not an atomicity or support threshold.",
     )
     handles: tuple[str, ...] = Field(min_length=1, max_length=MAX_CITATIONS)
     required_scope: Literal["abstract", "excerpt", "full_text"] = "abstract"
@@ -294,7 +296,7 @@ def _cached_model(handles: tuple[str, ...], purpose: str, policy_json: str) -> t
     claim = create_model(
         "CapacityClaim_" + identity,
         __base__=CapacityClaim,
-        handles=(GenericAlias(tuple, (handle, ...)), Field(min_length=1, max_length=MAX_CITATIONS)),
+        handles=(GenericAlias(tuple, (handle, ...)), Field(min_length=1, max_length=_limits()["citations_by_mode"][policy["mode"]])),
     )
     full_fields: dict[str, Any] = {
         "disposition": (Literal["full_abstention"], ...),
@@ -759,7 +761,7 @@ def normalize_checks(raw: dict[str, Any]) -> dict[str, Any]:
     ).model_dump(mode="json")
 
 
-def compact_checks_fixture(normalized: dict[str, Any]) -> dict[str, Any]:
+def compact_checks(normalized: dict[str, Any]) -> dict[str, Any]:
     """Lossless synthetic inverse; refuse different reasons instead of merging."""
     value = CoverageChecks.model_validate(normalized)
     rows = []
@@ -780,10 +782,22 @@ def compact_checks_fixture(normalized: dict[str, Any]) -> dict[str, Any]:
     return CompactChecks.model_validate(result).model_dump(mode="json")
 
 
+def compact_checks_fixture(normalized: dict[str, Any]) -> dict[str, Any]:
+    """Compatibility alias for synthetic test fixtures; conversion is lossless."""
+    return compact_checks(normalized)
+
+
+class ProbeSupportReview(_Reason):
+    """Opaque blinded IDs are distinct from generated workflow c1..c12 IDs."""
+    claim_id: str = Field(min_length=1, max_length=120, strict=True)
+    input_digest: str = Field(strict=True, pattern=r"^sha256:[a-f0-9]{64}$")
+    decision: SupportDecision
+
+
 class ProbeChecks(_Closed):
     """Support/prose probe contract; independent of whole-answer coverage rows."""
 
-    checks: tuple[SupportReview, ...] = Field(max_length=_MAX_CLAIMS)
+    checks: tuple[ProbeSupportReview, ...] = Field(max_length=_MAX_CLAIMS)
     prose_review: Literal["procedural_only", "unscored_factual_content", "abstain"]
     prose_findings: tuple[ProseFinding, ...] = Field(max_length=MAX_FINDINGS)
 
@@ -801,5 +815,19 @@ class ProbeChecks(_Closed):
         _validate_locations(self.prose_findings, prose)
 
 
-def probe_checks_model() -> type[ProbeChecks]:
-    return ProbeChecks
+def probe_checks_model(identifiers: Sequence[str] | None = None) -> type[ProbeChecks]:
+    if identifiers is None:
+        return ProbeChecks
+    selected = tuple(identifiers)
+    if not selected or len(selected) > _MAX_CLAIMS or len(set(selected)) != len(selected) or any(not isinstance(value, str) or not value.strip() or len(value) > 120 for value in selected):
+        raise ValueError("capacity_probe_id_binding_invalid")
+    return _probe_model(selected)
+
+
+@lru_cache(maxsize=128)
+def _probe_model(identifiers: tuple[str, ...]) -> type[ProbeChecks]:
+    identity = digest(identifiers)[7:23]
+    factory = cast(Callable[[str, dict[str, str]], type[StrEnum]], StrEnum)
+    identifier = factory("ProbeIdentity_" + identity, {f"P{i}": value for i, value in enumerate(identifiers)})
+    row = create_model("ProbeSupport_" + identity, __base__=ProbeSupportReview, claim_id=(identifier, ...))
+    return create_model("ProbeChecks_" + identity, __base__=ProbeChecks, checks=(GenericAlias(tuple, (row, ...)), Field(max_length=_MAX_CLAIMS)))

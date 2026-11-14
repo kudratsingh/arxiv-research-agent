@@ -394,6 +394,9 @@ def results(
         report["outcome_diagnostics"] = diagnostics
         report["capacity_policy"] = CAPACITY_POLICY
         report["diagnostic_basis"] = "Formatting observations never gate. Execution/contract/capacity and machine quality remain separate; no human qualification."
+        if simulated:
+            report["machine_quality"] = "HOLD"
+            report["simulation_disposition"] = "Software behavior only; token fit, remote schema acceptance and model quality remain unmeasured."
         report["accounting"]["retained_hold_usd"] = "0.875066"
         report["accounting"]["retained_hold_components"] = [
             {"kind": "unknown_upstream_completion", "usd": "0.425066"},
@@ -403,7 +406,7 @@ def results(
     return {
         **report,
         "analysis_receipt": {
-            "revision": "workspace-campaign-analysis-v1",
+            "revision": "workspace-campaign-analysis-capacity-v2" if packet.get("revision") == "d5-comprehensive-machine-campaign-v15" else "workspace-campaign-analysis-v1",
             "original_packet_digest": packet["packet_digest"],
             "raw_results_digest": _digest(snapshots),
             "report_digest_excluding_receipt": _digest(report),
@@ -413,7 +416,7 @@ def results(
                 name: value
                 for name, value in packet["code"].items()
                 if name.endswith(
-                    ("d5_campaign_report.py", "d5_report_binding.py", "d5_answerability.py")
+                    ("d5_campaign_report.py", "d5_report_binding.py", "d5_answerability.py") + (("d5_capacity_outcomes.py", "d5_capacity_policy.py") if packet.get("revision") == "d5-comprehensive-machine-campaign-v15" else ())
                 )
             },
             "human_review_digest": None,

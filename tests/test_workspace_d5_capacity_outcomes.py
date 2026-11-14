@@ -53,3 +53,13 @@ def test_observations_are_soft_and_inputs_are_unchanged():
     assert len(result["formatting_observations"]) == 1
     assert result["formatting_observations"][0]["disposition"] == "formatting_observation_only"
     assert (outcome, snapshot) == before
+
+
+@pytest.mark.parametrize("code", ["capacity_draft_bytes_exceeded", "capacity_compact_checks_bytes_exceeded", "capacity_normalized_checks_bytes_exceeded", "capacity_internal_output_exceeded", "capacity_selected_unit_limit"])
+def test_structured_capacity_reasons_remain_distinct_from_contract_or_quality(code):
+    outcome = reject("Pydantic rendering", "ValidationError")
+    outcome["content_rejection"]["error_codes"] = [code]
+    assert classify_outcome(outcome)["classification"] == "capacity_failure"
+    assert classify_outcome(reject(code))["classification"] == "capacity_failure"
+    outcome["content_rejection"]["error_codes"] = None
+    assert classify_outcome(outcome)["classification"] == "contract_failure"

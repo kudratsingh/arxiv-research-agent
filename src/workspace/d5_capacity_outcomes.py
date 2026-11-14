@@ -21,7 +21,7 @@ _CAPACITY = frozenset({
     "compact_normalized_checks_utf8_limit", "input_measurement_exceeds_cap_or_invalid",
     "capacity_draft_bytes_exceeded", "capacity_compact_checks_bytes_exceeded",
     "capacity_normalized_checks_bytes_exceeded", "capacity_internal_output_exceeded",
-    "capacity_selected_unit_limit",
+    "capacity_selected_unit_limit", "capacity_selected_evidence_bytes_exceeded", "capacity_material_limit",
 })
 _CONTRACT = frozenset({
     "d5_checker_claim_binding_drift", "incomplete_check_batch",
@@ -65,11 +65,13 @@ def classify_outcome(outcome: Any, snapshot: Any = None) -> dict[str, Any]:
     state = outcome.get("state") if isinstance(outcome.get("state"), str) else None
     snapshot_state = snap.get("state") if isinstance(snap.get("state"), str) else None
     contact_state = last.get("state") if isinstance(last.get("state"), str) else None
+    raw_codes = rejection.get("error_codes")
+    codes = raw_codes if isinstance(raw_codes, list) else []
     if state in _UNCERTAIN or snapshot_state in _UNCERTAIN or contact_state in _UNCERTAIN:
         result["classification"] = "uncertain_completion"
     elif last.get("state") == "completed" and response.get("stop_reason") == "max_tokens":
         result.update(classification="contract_failure", subtype="capacity_suspected")
-    elif code in _CAPACITY or any(value in _CAPACITY for value in rejection.get("error_codes", []) if isinstance(value, str)):
+    elif code in _CAPACITY or any(value in _CAPACITY for value in codes if isinstance(value, str)):
         result["classification"] = "capacity_failure"
     elif state in {"unrun", "not_run"} and not contacts:
         result["classification"] = "unrun"
@@ -83,7 +85,7 @@ def classify_outcome(outcome: Any, snapshot: Any = None) -> dict[str, Any]:
             and rejection.get("accepted") is False
         ):
             result["classification"] = "negative_quality"
-    elif code in _CONTRACT or error_class in {"ValidationError", "JSONDecodeError"}:
+    elif code in _CONTRACT or error_class in {"ValidationError", "JSONDecodeError", "UnicodeEncodeError", "UnicodeDecodeError"}:
         result["classification"] = "contract_failure"
     elif code in _PROVIDER or error_class in {"HTTPStatusError", "ProviderError"}:
         result["classification"] = "provider_failure"

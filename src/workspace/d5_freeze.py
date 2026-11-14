@@ -176,6 +176,7 @@ def code_bindings() -> dict[str, str]:
     root = Path(__file__).resolve().parents[2]
     names = [
         "d5_freeze.py",
+        'd5_capacity_selection.py',
         'd5_capacity_policy.py',
         'd5_capacity_wire.py',
         'assistance_capacity_contract.py',

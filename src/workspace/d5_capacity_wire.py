@@ -1,11 +1,11 @@
 """Prospective provider request construction; no client or remote contact."""
 from __future__ import annotations
 
+import json
 from copy import deepcopy
 from typing import Any
 
 from src.llm import RequestProfile, _build_request_kwargs
-from src.workspace.admission import _json
 from src.workspace.assistance_contract import ABSTENTION_INTENTS, ACTION_INTENTS, QUESTION_INTENTS
 from src.workspace.d5_capacity_policy import CLAIMS_BY_MODE, POLICY, ROUTES
 
@@ -40,7 +40,7 @@ def build_wire(request: dict[str, Any]) -> dict[str, Any]:
     }
     if phase == "check":
         value["checker_wire_rule"] = (
-            "Return the exact prospective checker revision with every current claim and "
+            "Resolve each draft.claims.handles entry independently in review_evidence; each is one exact selected passage. Return the exact prospective checker revision with every current claim and "
             "part digest. All support/atomicity/four qualification checks, coverage, "
             "priority, prose review and located findings are mandatory. No per-reason "
             "tiny character/byte limit: keep ordinary explanations concise when possible. "
@@ -48,11 +48,13 @@ def build_wire(request: dict[str, Any]) -> dict[str, Any]:
         )
     probe = request.get("operation") == "probe"
     if probe:
+        for field in ("request_quality_rule", "coverage_wire_rule", "procedural_rendering"):
+            value.pop(field, None)
         value["checker_wire_rule"] = "Support-only blinded diagnostic: every supplied claim ID/digest requires one support decision and an explanation. Return only checks, prose_review and located prose_findings. No revision, atomicity, qualification, request coverage or priority fields exist in this probe schema. Do not answer the task or invent source material."
     selected = ROUTES["check_recheck_probe" if phase == "check" else "draft_repair"]
     wire = _build_request_kwargs(
         profile=RequestProfile(selected["model"], None, False, selected["effort"], True),
-        prompt=_json({key: val for key, val in value.items() if key != "output_schema"}),
+        prompt=json.dumps({key: val for key, val in value.items() if key != "output_schema"}, sort_keys=True, ensure_ascii=False, separators=(",", ":"), allow_nan=False),
         system_prompt=("Assess each statement against its exact selected passage and preserve uncertainty. A resolving citation is not factual support. Return every support verdict and prose judgment required by the closed support-only schema; no workflow quality fields." if probe else CHECK_SYSTEM if phase == "check" else DRAFT_SYSTEM),
         cache_system=False, max_tokens=selected["output_tokens"], schema=None,
     )

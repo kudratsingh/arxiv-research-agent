@@ -88,3 +88,15 @@ def test_sealed_input_has_versioned_generous_serialization_guard():
     settings["padding"] = "x" * MAX_INTERNAL_BYTES
     with pytest.raises(ValueError, match="invalid_sealed_input"):
         new.snapshot()
+
+
+def test_consolidated_budget_preserves_estimates_and_overlapping_holds_once():
+    from decimal import Decimal
+
+    from src.workspace.d5_campaign_v15_policy import LIMITS, PROGRAM_LIMITS
+    known, holds = Decimal("2.110597"), Decimal("0.425066") + Decimal("0.45")
+    total = known + holds + Decimal(LIMITS["new_usd"]) + Decimal(LIMITS["headroom_usd"])
+    assert total == Decimal("18.985663")
+    assert Decimal(PROGRAM_LIMITS["usd"]) - total == Decimal("1.014337")
+    assert (36 + LIMITS["jobs"], 70 + LIMITS["messages"], 95 + LIMITS["counts"]) == (50, 114, 139)
+    assert PROGRAM_LIMITS["new_jobs"] >= 50 and PROGRAM_LIMITS["messages"] >= 114 and PROGRAM_LIMITS["counts"] >= 139

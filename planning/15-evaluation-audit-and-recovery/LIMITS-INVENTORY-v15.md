@@ -1,6 +1,6 @@
 # D5 v15 prospective limits inventory — baseline before changes
 
-This is a source inventory of frozen application commit `b17bb4f29c094d0c033de9db342c8dce9f643add`, not an approved v15 policy, provider fit measurement, execution receipt, or quality finding. Paths and lines below refer to that commit. The stopped v14 evidence at `arxiv-evidence/campaign-live-v14-20261114T000552Z` is immutable. The supplied accounting baseline is 36 jobs, 70 messages, 95 counts, $2.110597 actual and $0.875066 retained holds; it is not a fresh ledger census. Do not confuse output tokens with characters, bytes, or provider billing, or treat timeout as remote cancellation. Replacement values and approval remain coordinator policy pending.
+This is a source inventory of frozen application commit `b17bb4f29c094d0c033de9db342c8dce9f643add`, not an approved v15 policy, provider fit measurement, execution receipt, or quality finding. Paths and lines below refer to that commit. The stopped v14 evidence at `arxiv-evidence/campaign-live-v14-20261114T000552Z` is immutable. The supplied accounting baseline is 36 jobs, 70 messages, 95 counts, $2.110597 known estimated usage and $0.875066 retained holds; it is not a fresh ledger census. Do not confuse output tokens with characters, bytes, or provider billing, or treat timeout as remote cancellation. Replacement values and approval remain coordinator policy pending.
 
 | Surface and BEFORE value | Enforcement, inheritance and consequence |
 |---|---|
@@ -23,23 +23,23 @@ This is a source inventory of frozen application commit `b17bb4f29c094d0c033de9d
 
 Before choosing successor limits, enumerate every repeated numeric literal and ID vocabulary above, trace worst-case JSON escaping and normalization expansion, rederive envelope and reservation arithmetic, and exercise complete production-path synthetic boundary cases including probes, report binding and Reader. Tests and local arithmetic cannot prove provider acceptance, quality, billing settlement, or live behavior. Preserve stopped inputs, raw results and holds; no provider or token-count contact, live ledger write, replay, or grant is authorized by this inventory.
 
-## Proposed v15 targets, not yet established enforcement
+## Prospective v15 qualification policy
 
-The coordinator's prospective policy object (`src/workspace/d5_capacity_policy.py` in the capacity-policy worktree, inspected before integration) proposes 8 Learn / 12 Research claims; 12 selected units, 3 citations per claim, 8 requested parts, 16 prose findings; 500-character claim and 240-character reason observations only, never content rejection. Separate byte protections are 131,072 draft, 262,144 compact checker, 1,048,576 normalized checker, 8,388,608 internal/sealed input and 4,194,304 HTTP bytes. These do not imply model token fit. It proposes 40,000 reserved input tokens, 32,000 paired fit, Sonnet 8,000 output, Opus 12,000 output; 60/120/240-second count/draft-or-repair/check-or-recheck limits and 1,200 seconds overall. These are prospective values, not retroactive changes or execution permission.
+The centralized prospective policy (`src/workspace/d5_capacity_policy.py`) seals 8 Learn / 12 Research claims; 12 selected units, 3 materials, 128 KiB selected-evidence JSON, 3 Learn / 6 Research citations per claim, 8 requested parts, 16 prose findings; 500-character claim and 240-character reason observations only, never content rejection. Separate byte protections are 131,072 draft, 262,144 compact checker, 1,048,576 normalized checker, 8,388,608 internal/sealed input and 4,194,304 HTTP bytes. These do not imply model token fit. It proposes 40,000 reserved input tokens, 32,000 paired fit, Sonnet 8,000 output, Opus 12,000 output; 60/120/240-second count/draft-or-repair/check-or-recheck limits and 1,200 seconds overall. These are prospective values, not retroactive changes or execution permission.
 
-The baseline audit omitted another inherited bound: `GenerationInput.snapshot` checks at most 10 sources, private question ≤4,000 Unicode characters, and serialized JSON ≤32,000 characters (`src/workspace/admission.py:98–130`); those are distinct from 8 MiB UTF-8 bytes. Existing route validation only accepts legacy/v14 (`src/workspace/d5_operations.py:46`), and D5 settings check pins old input and HTTP limits (`src/workspace/d5_adapter.py:535`). A policy object alone does not alter these gates. For budget calculations, rate assumptions, fresh census, expiry and approval boundaries see `PROVIDER-BUDGET-v15.md`.
+The baseline audit omitted another inherited bound: `GenerationInput.snapshot` checks at most 10 sources, private question ≤4,000 Unicode characters, and serialized JSON ≤32,000 characters (`src/workspace/admission.py:98–130`); those are distinct from 8 MiB UTF-8 bytes. The frozen baseline route validation only accepted legacy/v14 (`src/workspace/d5_operations.py:46`), and the frozen D5 settings check pinned old input and HTTP limits (`src/workspace/d5_adapter.py:535`). A policy object alone does not alter these gates. For budget calculations, rate assumptions, fresh census, expiry and approval boundaries see `PROVIDER-BUDGET-v15.md`.
 
 
 ## Before and prospective after in one table
 
-The v14 BEFORE column is frozen source behavior. The v15 column describes the coordinator policy under integration, not proof of effective end-to-end enforcement or approval. Everyday assistance and historical qualification revisions retain their own legacy contracts; the v15 column applies only to a newly sealed v15 qualification path. Source locations for the BEFORE values and enforcement dependencies are in the detailed table above; prospective values are in `src/workspace/d5_capacity_policy.py` at the integration head.
+The v14 BEFORE column is frozen source behavior. The v15 column describes the integrated prospective policy, subject to the exact verification receipt and never execution approval. Everyday assistance and historical qualification revisions retain their own legacy contracts; the v15 column applies only to a newly sealed v15 qualification path. Source locations for the BEFORE values and enforcement dependencies are in the detailed table above; prospective values are in `src/workspace/d5_capacity_policy.py` at the integration head.
 
 | Surface | v14 before | Prospective v15 qualification policy | Boundary / dependency |
 |---|---|---|---|
 | Claims and identities | ≤6, c1–c6 | Learn ≤8; Research ≤12 | Update IDs, references, schema, checker and reports together. Everyday legacy remains ≤6. |
-| Selected evidence and citations | ≤8 selected units, ≤1,600 characters/unit, ≤3 handles/claim | ≤12 selected units, ≤3 citations/claim | Source unit text and extraction limits remain separate; no unsupported evidence is invented. |
+| Selected evidence and citations | ≤8 selected units, ≤1,600 characters/unit, ≤3 handles/claim | ≤12 selected units, 3 materials, 128 KiB selected-evidence JSON, ≤3 Learn / ≤6 Research citations/claim | Source unit text and extraction limits remain separate; no unsupported evidence is invented. |
 | Requested parts / findings | ≤8 parts, ≤10 prose findings | ≤8 parts, ≤16 findings | Preserve exact mapping and finding location validation. |
-| Claim text / checker reasons | Claim ≤360 Unicode characters; reason ≤96 characters, ≤120 UTF-8 bytes and ≤120 escaped JSON bytes | 500-character claim and 240-character reason observations only; aggregate protection still applies | Observations do not reject, truncate or confer support. Historical schemas remain unchanged. |
+| Claim text / checker reasons | Claim ≤360 Unicode characters; reason ≤96 characters, ≤120 UTF-8 bytes and ≤120 escaped JSON bytes | 500-character claim and 240-character reason observations; explicit generous 10,000-character factual-claim safety guard; aggregate protection still applies | Observations do not reject, truncate or confer support. Historical schemas remain unchanged. |
 | Draft, raw and normalized | 8,000 UTF-8 bytes at distinct raw, serialized and normalized draft gates | 131,072 UTF-8 bytes draft | Check all representations and explicitly distinguish raw whitespace from canonical JSON. |
 | Checker compact / normalized | Each ≤8,000 serialized bytes; raw text separately ≤8,000 | Compact ≤262,144; normalized ≤1,048,576 bytes | Fourfold allowance for duplicated reasons and metadata; it is headroom, not a proof every compact payload fits after expansion. |
 | Internal and sealed input | 64,000 internal-output, 128,000 per-stage, 512,000 aggregate capacity; serialized sealed input 32,000 characters | 8,388,608 bytes internal and sealed JSON | Eight MiB offers space for repair JSON escaping and normalized checker payloads; actual serialized stage checks and paired token count remain decisive. The 32,000-character legacy gate is separate. |
@@ -47,6 +47,22 @@ The v14 BEFORE column is frozen source behavior. The v15 column describes the co
 | Per-call token admission | 20,000 reserved input, 16,000 paired fit; Sonnet output 4,000, Opus 8,000 | 40,000 reserved input, 32,000 paired fit; Sonnet output 8,000, Opus 12,000 | Outputs include thinking; byte capacity does not establish token fit. Exact provider count remains required. |
 | Deadlines | Count/draft/repair 30s; check/recheck 120s; workflow 480s | Count 60s; draft/repair 120s; check/recheck 240s; workflow 1,200s | Overall deadline starts at durable reservation and limits each contact; timeout is not remote cancellation. |
 | Workflow and probes | Up to four messages, one repair; four separately bound probe batches | Same workflow and separately bound probe shape | Update probe schemas, count linkage, route selection and report reconstruction independently. |
-| Cost and programme | v14 sealed ceilings, immutable actuals and holds | Proposed $1.20/workflow, $0.50/probe; $14 new cap total; programme $20 | Exact arithmetic, $2 buffer and 1.4337-cent remaining margin in `PROVIDER-BUDGET-v15.md`; no extra execution authority. |
+| Cost and programme | v14 sealed ceilings, immutable actuals and holds | Proposed $1.20/workflow, $0.50/probe; $14 new cap total; programme $20 | Exact arithmetic, $2 buffer and 1.014337-dollar remaining margin in `PROVIDER-BUDGET-v15.md`; no extra execution authority. |
 | Reader / persistence | Stored raw contact and step JSON; claims shown without six-item display slice | Synthetic twelve-claim Reader test and inspectable complete stored checker reasons | UI tests prove local rendering only; they do not prove live browser acceptance, support or human review. |
 | Fake/offline lane, leases and recovery | Local fake executor has separate bytes-as-units budgets and 120-second lease; durable provider unknown holds retained | Legacy fake controls remain separate unless explicitly versioned; preserve uncertainty and late-response fences | No inference that provider deadline extends an unrelated fake lease or that a timeout settles liability. |
+
+### Explicit semantic and procedural guards
+
+The prospective factual statement safety guard is 10,000 Unicode characters per
+claim, centralized alongside its soft 500-character target. This is enough for
+ordinary attributed scientific prose; the checker must still reject bundled facts.
+The unchanged grounding guard provides the same upper protection for claim digests
+and review. It is not a concision or factual-support threshold. Checker explanations
+have no individual character cap, and all full text remains accessible.
+
+There are at most three procedural gaps and three follow-up intents, and twelve
+selected coherent units from at most three materials. A unit is at most 1,600
+characters; exact source/Unicode offsets are retained. Selected-evidence JSON has
+an independent 131,072-byte cap. Oversize sentences are unavailable rather than
+clipped into a misleading quotation. These are sealed scope/cardinality protections,
+not evidence of source completeness or measured provider token fit.

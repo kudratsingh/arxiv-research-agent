@@ -17,7 +17,9 @@ CHECKS_REVISION = "workspace-assistance-capacity-checks-v15"
 NORMALIZATION_REVISION = "workspace-assistance-capacity-normalization-v15"
 CLAIMS_BY_MODE = {"learn": 8, "research": 12}
 MAX_SELECTED_UNITS = 12
-MAX_CITATIONS = 3
+MAX_CLAIM_CHARACTERS = 10000
+MAX_CITATIONS = 6
+CITATIONS_BY_MODE = {"learn": 3, "research": 6}
 MAX_PARTS = 8
 MAX_FINDINGS = 16
 MAX_DRAFT_BYTES = 131072
@@ -51,6 +53,7 @@ POLICY: dict[str, Any] = {
     "normalization_revision": NORMALIZATION_REVISION,
     "claims_by_mode": CLAIMS_BY_MODE,
     "max_citations_per_claim": MAX_CITATIONS,
+    "citations_by_mode": CITATIONS_BY_MODE,
     "max_selected_units": MAX_SELECTED_UNITS,
     "max_materials": 3,
     "max_unit_characters": 1600,
@@ -58,6 +61,9 @@ POLICY: dict[str, Any] = {
     "max_requested_parts": MAX_PARTS,
     "max_prose_findings": MAX_FINDINGS,
     "soft_claim_characters": 500,
+    "max_claim_characters": MAX_CLAIM_CHARACTERS,
+    "max_procedural_gaps": 3,
+    "max_follow_up_intents": 3,
     "soft_reason_characters": 240,
     "raw_draft_utf8_bytes": MAX_DRAFT_BYTES,
     "compact_checker_utf8_bytes": MAX_COMPACT_CHECK_BYTES,

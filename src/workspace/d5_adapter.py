@@ -106,6 +106,7 @@ def qualification_producer() -> dict[str, Any]:
     root = Path(__file__).resolve().parents[1]
     files = (
         "workspace/d5_adapter.py",
+        'workspace/d5_capacity_selection.py',
         'workspace/d5_capacity_policy.py',
         'workspace/d5_capacity_wire.py',
         'workspace/assistance_capacity_contract.py',
@@ -482,6 +483,16 @@ def checker_context(
             )
         )
         value["review_evidence"] = sealed["units"]
+    if sealed["schema_revision"] == CAPACITY_REVISION:
+        # Keep each exact passage once. Claims carry separate sealed handles;
+        # claim_input_digest still binds the complete resolved evidence identity.
+        value["draft"] = {"claims": [
+            {"claim_id": claim.claim_id, "text": claim.text, "kind": claim.kind,
+             "handles": [next(key for key, ref in sealed["units"].items() if ref == asdict(evidence)) for evidence in claim.evidence],
+             "required_scope": claim.required_scope}
+            for claim in claims
+        ]}
+        value["evidence_encoding"] = "Separate selected handles resolve only through review_evidence; no joined quotation or source expansion."
     return value
 
 
@@ -508,20 +519,37 @@ class D5Adapter(QualificationAdapter):
         return super().start(request_id, amount, now=now)
 
     def _complete_http_body(self, job_id: str, ordinal: int, status: int, body: bytes) -> None:
-        # Credential headers never enter the journal. If an upstream error echoes
-        # one, redact that value before preserving the bounded complete body.
+        # Complete bytes and their display representation enter one transaction.
+        # JSONB cannot store NUL; the lossless receipt retains its original bytes.
         text = body.decode("utf-8", errors="replace").replace(self.api_key, "[credential redacted]")
-        self._record(
-            job_id,
-            ordinal,
-            {
-                "http_status": status,
-                "complete_body": True,
-                "raw_body": text,
-                "body_digest": hashlib.sha256(body).hexdigest(),
-                "usage_validated": False,
-            },
-        )
+        response = {
+            "http_status": status, "complete_body": True,
+            "raw_body": text.replace("\x00", "\\u0000"),
+            "body_digest": hashlib.sha256(body).hexdigest(), "usage_validated": False,
+        }
+        if not capacity_enabled(dict(self.inputs.settings)):
+            self._record(job_id, ordinal, response)
+            return
+        import base64
+        import gzip
+        redacted = body.replace(self.api_key.encode(), b"[credential redacted]")
+        receipt = {
+            "representation": "httpx decoded response body bytes before JSON parsing",
+            "http_status": status, "complete_body": True, "usage_validated": False,
+            "received_bytes": len(body), "received_sha256": hashlib.sha256(body).hexdigest(),
+            "body_gzip_base64": base64.b64encode(gzip.compress(redacted, mtime=0)).decode("ascii"),
+            "credential_redacted": redacted != body,
+        }
+        with self.store.pool.connection() as conn:
+            self.control._lock(conn, self.owner)
+            _, _, data = self.control._job(conn, self.owner, job_id)
+            contact = data["adapter"]["contacts"][ordinal]
+            if "http_body_receipt" in contact:
+                if contact["http_body_receipt"] != receipt:
+                    raise AdmissionError("d5_complete_body_receipt_immutable")
+                return
+            contact.update(state="completed", response=response, http_body_receipt=receipt)
+            conn.execute("UPDATE workspace_generation_jobs SET data=%s WHERE id=%s", (Jsonb(data), job_id))
 
     def _partial_http_body(self, job_id: str, ordinal: int, status: int | None, body: bytes, error: BaseException) -> None:
         if not capacity_enabled(dict(self.inputs.settings)):
@@ -895,6 +923,14 @@ class D5Adapter(QualificationAdapter):
             }
             value["previous_grounding"] = asdict(report)
             value["previous_prose_review"] = checked.model_dump(mode="json")
+            if capacity_enabled(dict(self.inputs.settings)):
+                from src.workspace.assistance_capacity_contract import compact_checks
+                value["previous_prose_review"] = compact_checks(checked.model_dump(mode="json"))
+                value["previous_grounding"]["assessments"] = [
+                    {key: item for key, item in assessment.items() if key != "reason"}
+                    for assessment in value["previous_grounding"]["assessments"]
+                ]
+                value["previous_review_encoding"] = "Lossless compact verdict: shared reason once per claim; all support, atomicity, qualification, coverage and prose judgments retained. Original raw and expanded verdicts remain journaled."
             if sealed["schema_revision"] in COVERAGE_REVISIONS:
                 value["previous_declared_coverage"] = workflow_view["request_coverage"]
             value["procedural_draft"] = {
@@ -962,7 +998,7 @@ class D5Adapter(QualificationAdapter):
     def _probe_schema(self) -> dict[str, Any]:
         if capacity_enabled(dict(self.inputs.settings)):
             from src.workspace.assistance_capacity_contract import probe_checks_model
-            return dict(transform_schema(probe_checks_model()))
+            return dict(transform_schema(probe_checks_model([c["claim_id"] for c in self.inputs.settings["probe_context"]["claims"]])))
         return dict(transform_schema(Checks))
 
     def _probe_wire(self) -> dict[str, Any]:
@@ -1029,7 +1065,7 @@ class D5Adapter(QualificationAdapter):
     def _checks(self, output: dict[str, Any]) -> Any:
         if capacity_enabled(dict(self.inputs.settings)) and self.inputs.settings["d5_operation"] == "probe":
             from src.workspace.assistance_capacity_contract import probe_checks_model
-            return probe_checks_model().model_validate(output)
+            return probe_checks_model([c["claim_id"] for c in self.inputs.settings["probe_context"]["claims"]]).model_validate(output)
         return checks_model(self.inputs.settings["d5_request"]["schema_revision"]).model_validate(
             output
         )
