@@ -1,5 +1,5 @@
 "use client";
-import { AssistanceDisposition, RequestCoverage } from "./AssistanceTaskContext";
+import { AssistanceDisposition, RequestCoverage, coverageNote } from "./AssistanceTaskContext";
 
 import { ScoredSections } from "./ScoredSections";
 
@@ -37,7 +37,7 @@ function checkerReasons(steps: unknown[]): { step: number; group: string; index:
 }
 
 function fullNote(job: QualificationJob, output: AssistanceOutput): string {
-  return [job.simulated ? "Offline simulated qualification result · not quality evidence." : "Quarantined experimental result · human review pending.", ...output.claims.map(c => `${c.claim_id}: ${c.text}`), "Proposed next action: " + output.proposal, "Qualification record: " + job.id].join("\n\n");
+  return [job.simulated ? "Offline simulated qualification result · not quality evidence." : "Quarantined experimental result · human review pending.", ...output.claims.map(c => `${c.claim_id}: ${c.text}`), ...coverageNote(output), "Proposed next action: " + output.proposal, "Qualification record: " + job.id].join("\n\n");
 }
 
 function referenceNote(job: QualificationJob, ref: EvidenceReference): string {

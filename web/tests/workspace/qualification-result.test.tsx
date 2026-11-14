@@ -138,3 +138,11 @@ it("retains cited qualification notes while declaring the comparison unanswered"
  expect(screen.getByRole("region",{name:"Background claim references"})).toHaveTextContent(ref.quote);
  expect(mock.request.mock.calls.every(([,body])=>body===undefined)).toBe(true);
 });
+it("saves every declared gap and disposition with its original coverage metadata", async () => {
+ const out=jobs[0]!.assistance_output!; out.claims=[]; out.response_disposition="full_abstention"; out.coverage_complete=false;
+ const row={id:"p1",request:"Assess",kind:"answer",status:"lacks_evidence",gap:"methods",gap_text:"First gap",gap_reasons:["methods","protocol"],gap_texts:["First gap","Second gap"],answer_claim_ids:[],context_claim_ids:[]};
+ out.request_coverage=[row]; const user=userEvent.setup(); await mount(); await screen.findByRole("region",{name:"Persisted qualification result"});
+ await user.click(screen.getByRole("button",{name:"Save experimental learning thread"})); await screen.findByText(/Experimental result saved with its exact source/);
+ const body=mock.request.mock.calls.find(([p])=>p==="context/entries")![1].data.body as string;
+ expect(body).toContain('"response_disposition":"full_abstention"'); expect(body).toContain(JSON.stringify(row)); expect(body).not.toContain("c1: ");
+});

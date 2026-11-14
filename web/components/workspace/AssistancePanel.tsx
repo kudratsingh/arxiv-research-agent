@@ -1,7 +1,7 @@
 "use client";
 
 import { ScoredSections } from "./ScoredSections";
-import { AssistanceTaskContext, AssistanceDisposition, RequestCoverage, taskDefaults } from "./AssistanceTaskContext";
+import { AssistanceTaskContext, AssistanceDisposition, RequestCoverage, coverageNote, taskDefaults } from "./AssistanceTaskContext";
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -106,7 +106,7 @@ export default function AssistancePanel({ owner, workId, versionId, returnTo, on
     const chosen = Object.values(job.request.units).find(ref => ref.work_id === stored.work_id && ref.version_id === stored.version_id); if (!chosen) return;
     const origin: ResumeContext = stored.origin ?? { mode: stored.mode, project_id: stored.project_id, thread_id: null, return_to: returnTo };
     const entryId = `assistance-${job.id}`, threadId = `thread-${job.id.slice(5, 37)}`;
-    const body = ["Simulated assistance · factual quality and human support unmeasured.", ...job.assistance_output.claims.map(c => `${c.claim_id}: ${c.text}`), "Proposed next action: " + job.assistance_output.proposal, "Durable simulation: " + job.id].join("\n\n");
+    const body = ["Simulated assistance · factual quality and human support unmeasured.", ...job.assistance_output.claims.map(c => `${c.claim_id}: ${c.text}`), ...coverageNote(job.assistance_output), "Proposed next action: " + job.assistance_output.proposal, "Durable simulation: " + job.id].join("\n\n");
     form.setBusy(true);
     try {
       const entry = await contextRequest<EntryRevision>("/entries", { id: entryId, revision: 0, request_id: `save-${job.id}`, context: origin, data: { work_id: stored.work_id, version_id: stored.version_id, kind: "note", body, anchor: passageAnchor(chosen) } });

@@ -23,7 +23,7 @@ export interface AssistanceOutput {
   assumptions?: string[]; gaps: string[]; questions: string[];
   proposal: string; abstention: string | null;
   response_disposition?: "answer" | "full_abstention" | "comparison_abstention";
-  request_coverage?: { id: string; request: string; kind: string; status: "answered" | "lacks_evidence" | "omitted"; gap_text: string; answer_claim_ids?: string[]; context_claim_ids?: string[] }[];
+  request_coverage?: { id: string; request: string; kind: string; status: string; gap?: string; gap_text: string; gap_reasons?: string[]; gap_texts?: string[]; answer_claim_ids?: string[]; context_claim_ids?: string[] }[];
   coverage_complete?: boolean; coverage_basis?: string;
   context_requests?: string[]; comparison_unanswered?: boolean;
 }

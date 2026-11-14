@@ -39,10 +39,29 @@ export function AssistanceDisposition({ output }: { output: AssistanceOutput }) 
 
 export function RequestCoverage({ output, prefix }: { output: AssistanceOutput; prefix: string }) {
   if (!output.request_coverage) return null;
-  return <section aria-label="Request coverage"><h4>{output.coverage_complete ? "All requested parts declared answered" : "Request only partially answered or unanswered"}</h4>
+  const rows = output.request_coverage.map(part => {
+    const gaps = [...new Set((part.gap_texts ?? (part.status === "answered" ? [] : [part.gap_text])).filter(Boolean))];
+    const inconsistent = part.status === "answered" && (gaps.length > 0 || output.response_disposition === "full_abstention" || (output.comparison_unanswered && part.kind === "comparison"));
+    const label = inconsistent ? "Coverage status inconsistent" : part.status === "answered" ? "Declared answered" : part.status === "lacks_evidence" ? "Lacks evidence" : part.status === "omitted" ? "Omitted from this response" : "Coverage status unavailable";
+    return { part, gaps, label, inconsistent };
+  });
+  const complete = output.coverage_complete && rows.every(({ part, inconsistent }) => part.status === "answered" && !inconsistent);
+  return <section aria-label="Request coverage"><h4>{complete ? "All requested parts declared answered" : "Request only partially answered or unanswered"}</h4>
     <p>{output.coverage_basis ?? "Declared coverage · machine checks unqualified; human review unmeasured."}</p>
-    <ol>{output.request_coverage.map(part => <li key={part.id}><strong>{part.request}</strong><p>{part.status === "answered" ? "Declared answered" : part.status === "lacks_evidence" ? "Lacks evidence" : "Omitted from this response"}{part.status !== "answered" && ` · ${part.gap_text}`}</p>
-      {!!part.answer_claim_ids?.length && <p>Answer claims: {part.answer_claim_ids.map(id => <a key={id} href={`#${prefix}-${id}`}>{id} </a>)}</p>}
-      {!!part.context_claim_ids?.length && <p>Context only · does not answer this part: {part.context_claim_ids.map(id => <a key={id} href={`#${prefix}-${id}`}>{id} </a>)}</p>}
+    <ol>{rows.map(({ part, gaps, label }) => <li key={part.id}><strong>{part.request}</strong><p>{label}{gaps.map(text => ` · ${text}`)}</p>
+      {output.response_disposition !== "full_abstention" && !!part.answer_claim_ids?.length && <p>Answer claims: {part.answer_claim_ids.map(id => <a key={id} href={`#${prefix}-${id}`}>{id} </a>)}</p>}
+      {output.response_disposition !== "full_abstention" && !!part.context_claim_ids?.length && <p>Context only · does not answer this part: {part.context_claim_ids.map(id => <a key={id} href={`#${prefix}-${id}`}>{id} </a>)}</p>}
     </li>)}</ol></section>;
+}
+
+/** Preserve the complete declared coverage and disposition in saved notes. */
+export function coverageNote(output: AssistanceOutput): string[] {
+  if (!output.request_coverage && !output.response_disposition && output.comparison_unanswered === undefined) return [];
+  return ["Declared coverage and disposition (not independently verified):\n" + JSON.stringify({
+    response_disposition: output.response_disposition,
+    comparison_unanswered: output.comparison_unanswered,
+    coverage_complete: output.coverage_complete,
+    coverage_basis: output.coverage_basis,
+    request_coverage: output.request_coverage,
+  })];
 }

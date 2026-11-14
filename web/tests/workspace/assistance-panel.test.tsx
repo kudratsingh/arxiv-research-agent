@@ -281,3 +281,11 @@ it("renders a single-paper explanation without cross-source comparison fields", 
  expect((await screen.findAllByText(units[0]!.reference.quote)).length).toBeGreaterThan(0);
  expect(screen.queryByText(/Comparison interpretation/)).not.toBeInTheDocument();
 });
+it("saves all declared comparison gaps and context identities", async () => {
+ current=job("ready",true); const out=current.assistance_output!; out.comparison_unanswered=true; out.response_disposition="comparison_abstention"; out.coverage_complete=false;
+ const row={id:"p1",request:"Compare",kind:"comparison",status:"lacks_evidence",gap:"methods",gap_text:"First gap",gap_reasons:["methods","protocol"],gap_texts:["First gap","Second gap"],answer_claim_ids:[],context_claim_ids:["c1"]};
+ out.request_coverage=[row]; const user=userEvent.setup(); await mount(true,true); await screen.findByRole("region",{name:"Simulated assistance result"});
+ await user.click(screen.getByRole("button",{name:"Save simulation to project notes"})); await screen.findByText(/saved as a shared note and linked/);
+ const body=mock.request.mock.calls.find(([p])=>p==="context/entries")![1].data.body as string;
+ expect(body).toContain('"comparison_unanswered":true'); expect(body).toContain('"response_disposition":"comparison_abstention"'); expect(body).toContain(JSON.stringify(row));
+});
