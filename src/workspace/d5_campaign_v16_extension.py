@@ -52,10 +52,17 @@ def parent(conn: Any, program_id: str) -> dict[str, Any]:
     fixture = _fixture(conn)
     record = value["record"]
     core = record.get("campaign_extension", {}).get("core", {})
+    original_owner = (
+        value.get("authorization_digest") == "6dfa60a072ea45fbd097e1b26b06d27d489d18afaaf57d06d49c5af2a15c7596"
+        and record.get("programme_expires_at") == "2026-11-21T11:03:57+00:00"
+        and record.get("authorization_kind") == "owner"
+        and record.get("transport_mode") == "provider"
+    )
+    synthetic_fixture = fixture and record.get("authorization_kind") == "offline_fixture" and record.get("transport_mode") == "mock"
     scope = conn.execute("SELECT to_jsonb(t) FROM workspace_d5_scopes t WHERE scope_id=%s", (value["scope_id"],)).fetchone()
     if (
         value.get("revision") != 7
-        or not fixture and value.get("authorization_digest") != "6dfa60a072ea45fbd097e1b26b06d27d489d18afaaf57d06d49c5af2a15c7596"
+        or not (original_owner or synthetic_fixture)
         or _digest(record) != value["authorization_digest"]
         or _digest(core) != value["proposal_digest"]
         or core.get("revision") != PRIOR_REVISION
@@ -77,8 +84,7 @@ def parent(conn: Any, program_id: str) -> dict[str, Any]:
         or datetime.fromisoformat(record["expires_at"]) != datetime.fromisoformat(value["expires_at"])
         or datetime.fromisoformat(scope[0]["expires_at"]) != datetime.fromisoformat(record["expires_at"])
         or datetime.fromisoformat(record["programme_expires_at"]) != datetime.fromisoformat(value["programme_expires_at"])
-        or not fixture and datetime.fromisoformat(record["programme_expires_at"]) != datetime.fromisoformat("2026-11-21T11:03:57+00:00")
-        or fixture and (record.get("authorization_kind") != "offline_fixture" or record.get("transport_mode") != "mock")
+
         or conn.execute("SELECT 1 FROM workspace_d5_capacity_revision_revocations WHERE extension_id=%s", (value["extension_id"],)).fetchone()
     ):
         raise AdmissionError("campaign_v16_parent_or_stopped_scope_drift")

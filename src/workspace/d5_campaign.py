@@ -331,7 +331,7 @@ def main() -> None:
             authorize_fixture(store, packet)
         if args.out is None:
             parser.error("run/report requires new --out directory")
-        transport_type = CampaignTransport
+        transport_type: Any = CampaignTransport
         if packet.get("revision") == "d5-keyed-machine-campaign-v16":
             from src.workspace.d5_keyed_transport import KeyedCampaignTransport
             transport_type = KeyedCampaignTransport
