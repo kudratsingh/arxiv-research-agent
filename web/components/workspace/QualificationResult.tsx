@@ -83,7 +83,9 @@ export default function QualificationResult({ workId, versionId, returnTo, onSou
     const stored = job.request.assistance;
     const ref = Object.values(job.request.units).find(r => r.work_id === stored.work_id && r.version_id === stored.version_id);
     if (!ref) return;
-    const origin = stored.origin ?? { ...resumeContext(context, returnTo), mode: stored.mode, project_id: stored.project_id };
+    const sealedContext = { mode: stored.mode, project: stored.project_id, thread: null, explicit: true, invalid: false };
+    // Return routes cannot point into a Reader; use one stable owned route.
+    const origin = stored.origin ?? resumeContext(sealedContext, "/workspace/today");
     const fullBody = fullNote(job, job.assistance_output);
     const referenceOnly = Array.from(fullBody).length > 10000;
     const body = referenceOnly ? referenceNote(job, ref) : fullBody;

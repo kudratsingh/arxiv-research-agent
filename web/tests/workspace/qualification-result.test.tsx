@@ -21,7 +21,16 @@ beforeEach(() => {
   mock.request.mockReset().mockImplementation(async (p: string, b?: Record<string, unknown>) => {
     if (fail === p) { fail = null; throw new Error("Synthetic save conflict"); }
     if (p.startsWith("qualification/results?")) return jobs;
-    if (p === "context/entries") return { id: `qualification-${JID}`, revision: 1 };
+    if (p === "context/entries") {
+      const context = b!.context as { mode: string; project_id: string | null; thread_id: string | null; return_to: string };
+      const url = new URL(context.return_to, "http://localhost");
+      for (const [key, expected] of [["mode", context.mode], ["project", context.project_id], ["thread", context.thread_id]] as const) {
+        const values = url.searchParams.getAll(key);
+        if (values.length && (values.length !== 1 || values[0] !== expected)) throw new Error("return_context_identity_mismatch");
+      }
+      if (url.pathname.startsWith("/workspace/threads/") && url.pathname.split("/").pop() !== context.thread_id) throw new Error("return_context_thread_identity_mismatch");
+      return { id: `qualification-${JID}`, revision: 1 };
+    }
     if (p === "context/threads") return { id: `thread-${"a".repeat(32)}` };
     if (p === `context/projects/${PID}`) return { revision: 3, entries: linked ? [{ entry_id: `qualification-${JID}`, entry_revision: 1 }] : [] };
     if (p === `context/projects/${PID}/entries`) { linked = true; return b; }
@@ -29,9 +38,9 @@ beforeEach(() => {
   });
 });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
-async function mount(selected = true) {
-  history.replaceState(null, "", `/workspace/items/one?mode=learn${selected ? `&qualification=${JID}` : ""}`);
-  return render(<QualificationResult workId="one" versionId="one:v1" returnTo="/workspace/today" onSource={onSource} />);
+async function mount(selected = true, search = "mode=learn", returnTo = "/workspace/today") {
+  history.replaceState(null, "", `/workspace/items/one?${search}${selected ? `&qualification=${JID}` : ""}`);
+  return render(<QualificationResult workId="one" versionId="one:v1" returnTo={returnTo} onSource={onSource} />);
 }
 it("loads persisted results read-only, opens an exact passage and preserves result identity", async () => {
   const user=userEvent.setup();await mount();await screen.findByRole("region",{name:"Persisted qualification result"});
@@ -57,6 +66,7 @@ it("links a research result once and preserves separately cited sources",async()
  first.request.units.u2={...ref,work_id:"two",version_id:"two:v2",scope:"excerpt",page:3};first.assistance_output!.claims.push({claim_id:"c2",text:"Other conditions",handles:["u2"],required_scope:"excerpt"});
  const user=userEvent.setup();await mount();await screen.findByText("Sealed comparison");expect(screen.getByRole("link",{name:"Open qualification passage"}).getAttribute("href")).toContain("version=two%3Av2");
  await user.click(screen.getByRole("button",{name:"Link experimental result to project"}));await screen.findByText(/Experimental result saved with its exact source/);
+ const entry=mock.request.mock.calls.find(([p])=>p==="context/entries")![1];expect(entry.context).toEqual({mode:"research",project_id:PID,thread_id:null,return_to:`/workspace/today?mode=research&project=${PID}`});
  await user.click(screen.getByRole("button",{name:"Link experimental result to project"}));await waitFor(()=>expect(screen.getByRole("button",{name:"Link experimental result to project"})).toBeEnabled());expect(mock.request.mock.calls.filter(([p])=>p===`context/projects/${PID}/entries`)).toHaveLength(1);
 });
 it.each(["failed","cancelled","uncertain","stale"])("does not present %s as accepted content or offer replay",async state=>{
@@ -152,4 +162,31 @@ it("downloads the complete abstention and eight multi-gap rows with exact source
  const user=userEvent.setup();await mount();await screen.findByRole("region",{name:"Persisted qualification result"});await user.click(screen.getByRole("button",{name:"Save experimental learning thread"}));await screen.findByText(/Experimental result saved with its exact source context. The note links/);
  const body=mock.request.mock.calls.find(([p])=>p==="context/entries")![1].data.body as string;expect(Array.from(body).length).toBeLessThanOrEqual(10000);expect(body).toContain(JID);expect(body).toContain(`qualification=${JID}`);
  await user.click(screen.getByRole("button",{name:"Download qualification result JSON"}));const json=await new Promise<string>(resolve=>{const r=new FileReader();r.onload=()=>resolve(String(r.result));r.readAsText(blobs[0]!);});const saved=JSON.parse(json);expect(saved.assistance_output).toEqual(out);expect(saved.source_references).toEqual(job.request.units);expect(saved.job_id).toBe(JID);expect(saved).not.toHaveProperty("contacts");
+});
+
+
+it("uses sealed Learn context when inspected from Research and clears an unsealed thread",async()=>{
+ const thread=`thread-${"f".repeat(32)}`;const user=userEvent.setup();
+ await mount(true,`mode=research&project=${PID}&thread=${thread}`,`/workspace/threads/${thread}?mode=research&project=${PID}&thread=${thread}`);
+ await screen.findByRole("region",{name:"Persisted qualification result"});await user.click(screen.getByRole("button",{name:"Save experimental learning thread"}));await screen.findByText(/Experimental result saved with its exact source/);
+ const entry=mock.request.mock.calls.find(([p])=>p==="context/entries")![1];expect(entry.context).toEqual({mode:"learn",project_id:null,thread_id:null,return_to:"/workspace/today?mode=learn"});
+ expect(mock.request.mock.calls.find(([p])=>p==="context/threads")![1].data.origin).toEqual(entry.context);
+});
+
+it("removes unsealed project and thread query parameters from the fallback return",async()=>{
+ const thread=`thread-${"f".repeat(32)}`;const user=userEvent.setup();
+ await mount(true,`mode=research&project=${PID}&thread=${thread}`,`/workspace/library?mode=research&project=${PID}&thread=${thread}&view=notes`);
+ await screen.findByRole("region",{name:"Persisted qualification result"});await user.click(screen.getByRole("button",{name:"Save experimental learning thread"}));await screen.findByText(/Experimental result saved with its exact source/);
+ const entry=mock.request.mock.calls.find(([p])=>p==="context/entries")![1];expect(entry.context).toEqual({mode:"learn",project_id:null,thread_id:null,return_to:"/workspace/today?mode=learn"});
+});
+
+
+it("keeps the same fallback save payload across inspection modes and return paths",async()=>{
+ const stored=jobs[0]!.request.assistance;stored.mode="research";stored.project_id=PID;const user=userEvent.setup();
+ const first=await mount(true,"mode=learn","/workspace/library?mode=learn&view=notes");await screen.findByRole("region",{name:"Persisted qualification result"});
+ await user.click(screen.getByRole("button",{name:"Save experimental learning thread"}));await screen.findByText(/Experimental result saved with its exact source/);first.unmount();
+ await mount(true,`mode=research&project=${PID}`,`/workspace/projects?mode=research&project=${PID}`);await screen.findByRole("region",{name:"Persisted qualification result"});
+ await user.click(screen.getByRole("button",{name:"Save experimental learning thread"}));await screen.findByText(/Experimental result saved with its exact source/);
+ const entries=mock.request.mock.calls.filter(([p])=>p==="context/entries");expect(entries).toHaveLength(2);expect(entries[0]![1]).toEqual(entries[1]![1]);
+ expect(entries[0]![1].context).toEqual({mode:"research",project_id:PID,thread_id:null,return_to:`/workspace/today?mode=research&project=${PID}`});
 });
