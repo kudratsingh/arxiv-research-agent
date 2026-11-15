@@ -1,3 +1,30 @@
+# Local CI-context follow-up verified; new hosted run pending
+
+Applicationd3fec6e5 and packet35292dcc remain unchanged. Fresh full local gate:
+8101passed/62skipped/53E2Edeselected,
+94.520214%project,96%printed patch,9853recorded contexts; all package
+floors pass. All184affectedCI/contracts pass and all14compiledinputs match the
+frozen package exactly. Only CI backstop/evidence retention and these notes changed.
+The first hosted run43681834031 stays cancelled; the next exact-head full CI result
+will be recorded separately in the final permanent publication receipt.
+
+---
+
+# v16r2 publication follow-up — CI backstop only
+
+The runtime applicationd3fec6e5 and packet35292dcc remain unchanged.
+[Measured CI correction](CI-BACKSTOP-v16r2.md): the first published head16ce72f3
+had8successful jobs and coverage cancelled at94%by60minute job time. It is not a
+full hosted pass. The execution bound becomes90minutes; the existing coverage artifact additionally
+retains exported synthetic journals and .coverage. All9jobs, run commands, test
+selections, floors, per-step limits and provider/workflow deadlines remain identical. A fresh CI-context local coverage run and exact-head CI are
+required for the follow-up. The original31-file package and every failed log,
+receipt and hold remain immutable. No provider/count contacts, live mutations
+or financial/expiry changes. Latest verified results go in the final permanent
+publication receipt, not an inferred CI claim.
+
+---
+
 # Current offline successor — v16r2 provider compatibility correction
 
 Application `d3fec6e576ff5223ff414eb5fff29505378b6a0e`; packet

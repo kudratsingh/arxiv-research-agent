@@ -233,7 +233,16 @@ jobs:
     # That leaves about one minute under45m before cold-run variation. Allow
     # bounded60m aggregate headroom. Every test tier, input/floor, network step
     # bound and per-test timeout is unchanged; this is not a provider deadline.
-    timeout-minutes: 60
+    # Run43681834031 cancelled at60m while coverage had reached94% of
+    # 8163selected tests; no failed-test/timeout marker was observed and
+    # the new union-safe integration module passed. Its remaining coverage,
+    # three existing bounded5m campaign commands, E2E/safety/simulation and
+    # uploads still need to report. Give this complete serial CI job90m:
+    # roughly65m coverage plus15m aggregate campaign bounds, downstream
+    # gates and cold-run margin. All9jobs, selectors, inputs, coverage floors,
+    # per-test/per-step limits and provider/workflow deadlines stay unchanged.
+    # This is a CI backstop only, never provider/campaign spending authority.
+    timeout-minutes: 90
     env:
       # Never a real key, in a job that now runs the e2e tier and the
       # adversarial safety suite as well as the unit and integration
@@ -385,10 +394,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: python-coverage
+          # Explicitly retain only the named synthetic journals/context data.
+          include-hidden-files: true
           path: |
             build/coverage.xml
             build/coverage-summary.txt
             build/patch-coverage.html
+            build/d5-v15-test-evidence/
+            build/.coverage
           if-no-files-found: warn
           retention-days: 30
 
