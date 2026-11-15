@@ -1,3 +1,8 @@
+> Current package integrity index: [MANIFEST-v2.json](MANIFEST-v2.json).
+> The original pre-formatting manifest and all its members are preserved in
+> [HISTORY/manifest-v1-snapshot.zip](HISTORY/manifest-v1-snapshot.zip). Only empty
+> Markdown quote-prefix spacing changed; model request/evidence JSON did not.
+
 # Small provider-schema diagnostic (prospective v17r2)
 
 This is a compatibility diagnostic, not another evaluation campaign. No provider
