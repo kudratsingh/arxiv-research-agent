@@ -1,0 +1,1 @@
+Archived public provider-contract controls, copied byte-for-byte. v15r2 compiler acceptance did not produce locally valid content; v16r2 is a complete grammar rejection with unvalidated usage. Preserve these originals. Mock replay cannot establish current remote compilation or zero billing. Private notes/history/preferences and credentials are absent.

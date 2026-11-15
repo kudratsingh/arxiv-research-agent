@@ -1,0 +1,20 @@
+{
+  "provenance": "Immutable archived public request/response regressions. New mock dispatch is synthetic, not a rerun, settled usage or successful content. Both live scopes remain stopped; received HTTP400 has no validated billing.",
+  "files": {
+    "v15r2-accepted-learn-request.json": {
+      "original": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-evidence/campaign-live-v15r2-20261114T110357Z/MESSAGE-REQUEST.json",
+      "sha256": "23ccad36e28280f9de36fc11fcfa53c2d6e8075115582b2b925f1b776bc711a4",
+      "bytes": 24289
+    },
+    "v16r2-rejected-learn-request.json": {
+      "original": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-evidence/campaign-live-v16r2-20261115T103853Z/MESSAGE-REQUEST-JSON-VALUE.json",
+      "sha256": "a58f09deb5d3fdedcd0ff1c55f9fb276f3cf430937174d7cc588c02211f02e9f",
+      "bytes": 32290
+    },
+    "v16r2-received-http400.json": {
+      "original": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-evidence/campaign-live-v16r2-20261115T103853Z/MESSAGE-RESPONSE-EXACT.raw",
+      "sha256": "ed9a6e4b7c21e9a2abcaf04e29997676b47317ccc8de3c2a76910380129e423e",
+      "bytes": 251
+    }
+  }
+}

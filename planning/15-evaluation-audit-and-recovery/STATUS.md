@@ -389,3 +389,22 @@ clarifications before approval: origin tags are proposed categories, not proven
 extraction failures; preservation verified zero NEW copies, not zero existing
 duplicates; cancelled coverage reached99%, never completed. Frozen files remain
 unchanged, with the addendum kept separately.
+
+---
+
+## Prospective small grammar diagnostic (offline preparation)
+
+The stopped v16r2 live scope remains historical. Current read-only baseline is
+38 programme jobs/72 Messages/97 counts, USD2.138481 known estimated usage plus
+USD2.075066 overlapping retained liability counted once. No active jobs or new
+provider contacts. The third USD1.20 received-rejection hold is preserved.
+
+Work in codex/workspace-d5-grammar-diagnostic removes unused model-authored claim
+slots, derives claim identities, and flattens redundant coverage/question branches
+without changing the richer internal model, exact selected evidence or gates.
+The proposed six-contact diagnostic covers the accepted Learn schema control,
+two controlled Learn reductions, Research and two checker sizes. It is not a
+full campaign, is not approved and proves no remote compatibility offline.
+See [the focused package](evidence/grammar-diagnostic-v17/README.md).
+
+Verification and final packet identity will be recorded after gates pass.
