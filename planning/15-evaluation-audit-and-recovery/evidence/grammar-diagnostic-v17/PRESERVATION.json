@@ -1,0 +1,27 @@
+{
+  "at": "2026-11-15T13:15:58.570055+00:00",
+  "application_commit": "5ef823434f79c029cb92046508fa4acfba3f7b71",
+  "packet_digest": "a156d71082cb327cd460ab0ba4ed07e614acfb56867c0025314c1a956777b61a",
+  "original_archives": [
+    {
+      "root": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-evidence/d5-union-compatibility-20261115",
+      "original_manifest": "FINAL-CUSTODY-MANIFEST-v1.json.gz",
+      "files_unchanged": 623,
+      "manifest_sha256": "e7bab675102a151b31ea4d1b898b5c7a9446c408c5aebc61b139986632158db5"
+    },
+    {
+      "root": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-evidence/campaign-live-v16r2-20261115T103853Z",
+      "original_manifest": "EVIDENCE-MANIFEST-v1.json.gz",
+      "files_unchanged": 45,
+      "manifest_sha256": "532f7242c8142924342b487a26a725d83cfb598bdc98ce170c9cb2f831f02c52"
+    }
+  ],
+  "live_history_digest_unchanged": "207ff2fc2308fda42b0ccaeb70f0d8b1a7f8bc7796a029bd1c18df385ac48f0e",
+  "known_USD": "2.138481",
+  "overlapping_liability_USD": "2.075066",
+  "live_baseline": "38 jobs/72 Messages/97 counts",
+  "new_live_authority": false,
+  "new_provider_API_contacts": 0,
+  "deleted_or_overwritten_predecessors": 0,
+  "new_unknown_completion": false
+}

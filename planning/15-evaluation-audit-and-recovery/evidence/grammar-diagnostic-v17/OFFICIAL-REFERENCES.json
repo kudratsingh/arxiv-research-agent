@@ -1,0 +1,24 @@
+{
+  "checked_date_UTC": "2026-11-15",
+  "provider_API_contacts": 0,
+  "references": [
+    {
+      "url": "https://platform.claude.com/docs/en/build-with-claude/structured-outputs",
+      "relevance": "Schemas are compiled into grammars; interacting complexity dimensions make published counters insufficient proof."
+    },
+    {
+      "url": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "standard_uncached_estimate_per_million": {
+        "claude-sonnet-5-5": {
+          "input": "2",
+          "output": "10"
+        },
+        "claude-opus-5-5": {
+          "input": "4",
+          "output": "20"
+        }
+      }
+    }
+  ],
+  "billing_established": false
+}

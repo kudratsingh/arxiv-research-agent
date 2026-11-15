@@ -1,0 +1,16 @@
+{
+  "application_commit": "5ef823434f79c029cb92046508fa4acfba3f7b71",
+  "packet_digest": "a156d71082cb327cd460ab0ba4ed07e614acfb56867c0025314c1a956777b61a",
+  "report_sha256": "1f6c2729c2876e76cee909155068e742b58e0355dbefe1374d4ce3e95f9443bc",
+  "report_path": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-evidence/d5-grammar-diagnostic-20261115/FINAL-OFFLINE-REPLAY/REPORT.json",
+  "complete_mock_diagnostic_identities": 6,
+  "mock_Messages": 6,
+  "mock_counts": 6,
+  "actual_provider_contacts": 0,
+  "actual_token_measurements": 0,
+  "new_live_approval": false,
+  "new_live_spend": "0",
+  "research_quality": "UNMEASURED",
+  "human_qualification": false,
+  "full_campaign_readiness": "NOT_ESTABLISHED"
+}

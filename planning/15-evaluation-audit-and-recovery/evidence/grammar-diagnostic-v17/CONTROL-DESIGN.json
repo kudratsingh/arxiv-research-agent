@@ -1,0 +1,23 @@
+{
+  "Learn_controls": [
+    {
+      "control": "learn-list-control",
+      "non_schema_context_differences": [
+        "case",
+        "task_policy"
+      ],
+      "note": "Audit case label differs; accepted legacy control also retains its original task-policy revision. Selected evidence/question/settings/common instructions are unchanged."
+    },
+    {
+      "control": "learn-compact",
+      "non_schema_context_differences": [
+        "case",
+        "task_policy"
+      ],
+      "note": "Audit case label differs; accepted legacy control also retains its original task-policy revision. Selected evidence/question/settings/common instructions are unchanged."
+    }
+  ],
+  "Research": "Different task/evidence family, not a causal Learn-versus-Research quality comparison",
+  "checker": "Fixed two-claim versus twelve-claim/eight-part shape stress; repeated passages are correlated and not quality samples",
+  "causal_limit": "Reductions test an encoding, not a proprietary compiler mechanism; acceptance cannot identify a unique internal cause."
+}

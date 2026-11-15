@@ -1,3 +1,7 @@
+> **Superseded inactive prototype.** Use [v17r2](../grammar-diagnostic-v17r2/README.md).
+> No grant or provider dispatch occurred for this prototype; its original files
+> remain preserved. Current code deliberately refuses its stale producer binding.
+
 # Small provider-schema diagnostic (prospective v17)
 
 This is a compatibility diagnostic, not another evaluation campaign. No provider
@@ -138,3 +142,13 @@ disposable storage with MockTransport and cannot construct a provider client.
 Owner3137/review3178, recurrence, notifications and everyday generation remain
 unchanged. This package is not remote acceptance or human qualification.
 
+
+Local semantic validity in this diagnostic means contract semantics (references,
+dispositions, exact provenance), not truth of the asserted meaning. Diagnostic
+drafts never become accepted assistance. Whole-claim scientific support for those
+new drafts is unmeasured; the two fixed checker controls do not fill that gap.
+
+The generic rejection mentions strict tools; neither archived request sent tools.
+It does not identify which particular schema feature caused the proprietary
+compiler to exceed its internal budget. The diagnostic cannot establish remote
+acceptance for every future evidence enum or requested-part configuration.

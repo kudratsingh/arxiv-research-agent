@@ -1,0 +1,49 @@
+{
+  "known_estimated_USD": "2.138481",
+  "retained_overlapping_USD": "2.075066",
+  "retained_records": [
+    {
+      "job_id": "gen-36b50e6a28f054220916d70528863957092c3a83",
+      "owner": "d5-campaign-35292dcc485d8d7f-run",
+      "state": "uncertain",
+      "amount": "1.20",
+      "unknown": "1.20",
+      "data_digest": "f083ccf417e34f35909cc34f9afa768638af3253e37e025301b94f9004c28f24"
+    },
+    {
+      "job_id": "gen-a6e23d9f41c98fbf0327d33f1658a207a7f7d860",
+      "owner": "d5-campaign-97d24567bc987531-run",
+      "state": "uncertain",
+      "amount": "0.45",
+      "unknown": "0.45",
+      "data_digest": "e6a7fcbe5a08fa304396186641e807ef74af276771c7309a9fd4a7d525507432"
+    },
+    {
+      "job_id": "gen-ba942321c16d5ed10cc41cff7f6c1ac9f5a98877",
+      "owner": "d5-coverage-880e4794cd08d26a-run",
+      "state": "uncertain",
+      "amount": "0.45",
+      "unknown": "0.425066",
+      "data_digest": "837cc21135984105b05fed9a863dedc2646909cc519784f070618ba363915894"
+    }
+  ],
+  "new_jobs": 6,
+  "new_Messages": 6,
+  "new_exact_paired_counts": 6,
+  "Sonnet_each_reserved_USD": "0.20",
+  "Opus_each_reserved_USD": "0.50",
+  "new_reserved_total_USD": "1.80",
+  "token_priced_bound_USD": "1.44",
+  "historical_known_held_plus_new_reserve_USD": "6.013547",
+  "including_existing_two_dollar_buffer_USD": "8.013547",
+  "programme_ceiling_USD": "20",
+  "maximum_cumulative_census": {
+    "jobs": 44,
+    "Messages": 78,
+    "counts": 103
+  },
+  "capacity_amendment": false,
+  "programme_expiry": "2026-11-21T11:03:57+00:00",
+  "approval_max_hours": 24,
+  "activated": false
+}

@@ -1,0 +1,652 @@
+{
+  "accepted_v15r2": {
+    "request_path": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-evidence/campaign-live-v15r2-20261114T110357Z/MESSAGE-REQUEST.json",
+    "request_file_sha256": "23ccad36e28280f9de36fc11fcfa53c2d6e8075115582b2b925f1b776bc711a4",
+    "model": "claude-sonnet-5-5",
+    "settings": {
+      "max_tokens": 8000,
+      "thinking": {
+        "type": "between_tools"
+      }
+    },
+    "effort": "medium",
+    "schema_bytes": 7531,
+    "definitions": 14,
+    "keyword_occurrences": {
+      "$defs": 1,
+      "CapacityAnswered_f6fdf97fc67be37e": 1,
+      "additionalProperties": 12,
+      "properties": 12,
+      "answer_claim_ids": 1,
+      "description": 20,
+      "items": 17,
+      "$ref": 26,
+      "minItems": 11,
+      "title": 45,
+      "type": 45,
+      "context_claim_ids": 3,
+      "part_id": 5,
+      "required": 12,
+      "CapacityClaim_f6fdf97fc67be37e": 1,
+      "claim_id": 1,
+      "handles": 1,
+      "required_scope": 1,
+      "enum": 15,
+      "text": 1,
+      "CapacityClaims_f6fdf97fc67be37e": 1,
+      "assumption_claims": 1,
+      "background_claims": 1,
+      "claims": 1,
+      "coverage": 2,
+      "disposition": 2,
+      "gaps": 1,
+      "limitation_claims": 1,
+      "proposal": 1,
+      "questions": 1,
+      "CapacityCoverage_f6fdf97fc67be37eFalse": 1,
+      "answered": 1,
+      "lacks_evidence": 2,
+      "omitted": 2,
+      "CapacityCoverage_f6fdf97fc67be37eTrue": 1,
+      "CapacityFull_f6fdf97fc67be37e": 1,
+      "next_action": 1,
+      "reason": 1,
+      "CapacityGap_f6fdf97fc67be37eFalse": 1,
+      "gap": 4,
+      "CapacityGap_f6fdf97fc67be37eTrue": 1,
+      "CapacityHandle_f6fdf97fc67be37e": 1,
+      "CapacityOmitted_f6fdf97fc67be37eFalse": 1,
+      "CapacityOmitted_f6fdf97fc67be37eTrue": 1,
+      "CapacityPart_f6fdf97fc67be37e": 1,
+      "CapacityQuestion": 1,
+      "claim_ids": 1,
+      "intent": 1,
+      "ClaimKey": 1,
+      "response": 1,
+      "anyOf": 1
+    },
+    "references": {
+      "#/$defs/ClaimKey": 9,
+      "#/$defs/CapacityPart_f6fdf97fc67be37e": 5,
+      "#/$defs/CapacityHandle_f6fdf97fc67be37e": 1,
+      "#/$defs/CapacityClaim_f6fdf97fc67be37e": 1,
+      "#/$defs/CapacityCoverage_f6fdf97fc67be37eFalse": 1,
+      "#/$defs/CapacityQuestion": 1,
+      "#/$defs/CapacityAnswered_f6fdf97fc67be37e": 1,
+      "#/$defs/CapacityGap_f6fdf97fc67be37eFalse": 1,
+      "#/$defs/CapacityOmitted_f6fdf97fc67be37eFalse": 1,
+      "#/$defs/CapacityGap_f6fdf97fc67be37eTrue": 1,
+      "#/$defs/CapacityOmitted_f6fdf97fc67be37eTrue": 1,
+      "#/$defs/CapacityCoverage_f6fdf97fc67be37eTrue": 1,
+      "#/$defs/CapacityFull_f6fdf97fc67be37e": 1,
+      "#/$defs/CapacityClaims_f6fdf97fc67be37e": 1
+    },
+    "enums": [
+      {
+        "path": "$.$defs.CapacityClaim_f6fdf97fc67be37e.properties.required_scope",
+        "values": [
+          "abstract",
+          "excerpt",
+          "full_text"
+        ]
+      },
+      {
+        "path": "$.$defs.CapacityClaims_f6fdf97fc67be37e.properties.disposition",
+        "values": [
+          "answer"
+        ]
+      },
+      {
+        "path": "$.$defs.CapacityClaims_f6fdf97fc67be37e.properties.gaps.items",
+        "values": [
+          "methods",
+          "evaluation",
+          "ablations",
+          "full_text",
+          "counterevidence",
+          "source_scope"
+        ]
+      },
+      {
+        "path": "$.$defs.CapacityClaims_f6fdf97fc67be37e.properties.proposal",
+        "values": [
+          "inspect_methods",
+          "inspect_evaluation",
+          "seek_counterevidence",
+          "inspect_scope",
+          "request_context"
+        ]
+      },
+      {
+        "path": "$.$defs.CapacityFull_f6fdf97fc67be37e.properties.disposition",
+        "values": [
+          "full_abstention"
+        ]
+      },
+      {
+        "path": "$.$defs.CapacityFull_f6fdf97fc67be37e.properties.next_action",
+        "values": [
+          "request_context"
+        ]
+      },
+      {
+        "path": "$.$defs.CapacityFull_f6fdf97fc67be37e.properties.reason",
+        "values": [
+          "insufficient_selected_evidence"
+        ]
+      },
+      {
+        "path": "$.$defs.CapacityGap_f6fdf97fc67be37eFalse.properties.gap",
+        "values": [
+          "application_context",
+          "source_scope",
+          "common_evaluation",
+          "methods",
+          "protocol",
+          "data_splits",
+          "metric_definition",
+          "uncertainty_calibration",
+          "memory_error_persistence"
+        ]
+      },
+      {
+        "path": "$.$defs.CapacityGap_f6fdf97fc67be37eTrue.properties.gap",
+        "values": [
+          "application_context",
+          "source_scope",
+          "common_evaluation",
+          "methods",
+          "protocol",
+          "data_splits",
+          "metric_definition",
+          "uncertainty_calibration",
+          "memory_error_persistence"
+        ]
+      },
+      {
+        "path": "$.$defs.CapacityHandle_f6fdf97fc67be37e",
+        "values": [
+          "ua6f0f4d05fd72b2b86b2"
+        ]
+      },
+      {
+        "path": "$.$defs.CapacityOmitted_f6fdf97fc67be37eFalse.properties.gap",
+        "values": [
+          "claim_budget",
+          "not_prioritized"
+        ]
+      },
+      {
+        "path": "$.$defs.CapacityOmitted_f6fdf97fc67be37eTrue.properties.gap",
+        "values": [
+          "claim_budget",
+          "not_prioritized"
+        ]
+      },
+      {
+        "path": "$.$defs.CapacityPart_f6fdf97fc67be37e",
+        "values": [
+          "p1",
+          "p2",
+          "p3"
+        ]
+      },
+      {
+        "path": "$.$defs.CapacityQuestion.properties.intent",
+        "values": [
+          "measured_and_proposed",
+          "methods",
+          "qualifications",
+          "implementation",
+          "counterevidence",
+          "application_scope",
+          "investigate_claim"
+        ]
+      },
+      {
+        "path": "$.$defs.ClaimKey",
+        "values": [
+          "c1",
+          "c2",
+          "c3",
+          "c4",
+          "c5",
+          "c6",
+          "c7",
+          "c8",
+          "c9",
+          "c10",
+          "c11",
+          "c12"
+        ]
+      }
+    ],
+    "guard_measurements": {
+      "revision": "anthropic-structured-schema-compat-v1",
+      "request_digest": "ecd6e05db76400b2e9fed967d35c341a6ff36a0e40e7df076a319b414738ece6",
+      "schemas": [
+        {
+          "location": "output",
+          "schema_digest": "68ffc868491d3e63f9d339ec3daa38ed3fc699536a1f079d8eb07c379bb0b9c1",
+          "direct_union_properties": 1,
+          "resolved_union_properties": 1,
+          "anyof_nodes": 1,
+          "type_array_nodes": 0,
+          "optional_properties": 1,
+          "expanded_union_properties": 1,
+          "expanded_union_nodes": 1,
+          "expanded_optional_properties": 1,
+          "reference_uses": 26
+        }
+      ],
+      "union_parameters_conservative": 1,
+      "optional_parameters_conservative": 1,
+      "expanded_union_nodes": 1,
+      "strict_tools": 0,
+      "documented_limits_pass": true,
+      "planning_headroom_pass": true,
+      "remote_compiler_acceptance": "UNMEASURED"
+    },
+    "remote_observation": "HTTP200 complete draft; local duplicate p3 rejection, not accepted content"
+  },
+  "rejected_v16r2": {
+    "request_path": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-evidence/campaign-live-v16r2-20261115T103853Z/MESSAGE-REQUEST-JSON-VALUE.json",
+    "request_file_sha256": "a58f09deb5d3fdedcd0ff1c55f9fb276f3cf430937174d7cc588c02211f02e9f",
+    "model": "claude-sonnet-5-5",
+    "settings": {
+      "max_tokens": 8000,
+      "thinking": {
+        "type": "between_tools"
+      }
+    },
+    "effort": "medium",
+    "schema_bytes": 10565,
+    "definitions": 24,
+    "keyword_occurrences": {
+      "type": 60,
+      "$defs": 1,
+      "KeyedFixed_none": 1,
+      "enum": 27,
+      "title": 51,
+      "KeyedFixed_omitted": 1,
+      "KeyedFixed_answered": 1,
+      "KeyedFixed_lacks_evidence": 1,
+      "KeyedFixed_full_abstention": 1,
+      "KeyedFixed_request_context": 1,
+      "KeyedClaim_5ec898cd44c2cc02": 1,
+      "required": 14,
+      "properties": 14,
+      "text": 2,
+      "description": 20,
+      "handles": 2,
+      "items": 17,
+      "$ref": 40,
+      "minItems": 17,
+      "required_scope": 2,
+      "additionalProperties": 14,
+      "KeyedFixed_investigate_claim": 1,
+      "KeyedAnswered_5ec898cd44c2cc02": 1,
+      "status": 4,
+      "gap_reasons": 4,
+      "answer_claim_ids": 1,
+      "context_claim_ids": 3,
+      "UnionSafeFull_537ff410bd4a1e01": 1,
+      "reason": 1,
+      "coverage": 2,
+      "disposition": 2,
+      "next_action": 1,
+      "UnionSafeSlot_537ff410bd4a1e01": 1,
+      "CapacityHandle_f6fdf97fc67be37e": 1,
+      "UnionSafeClaims_537ff410bd4a1e01": 1,
+      "c1": 1,
+      "c2": 1,
+      "c3": 1,
+      "c4": 1,
+      "c5": 1,
+      "c6": 1,
+      "c7": 1,
+      "c8": 1,
+      "UnionSafeNormal_537ff410bd4a1e01": 1,
+      "gaps": 1,
+      "claims": 1,
+      "proposal": 1,
+      "questions": 1,
+      "anyOf": 5,
+      "assumption_claims": 1,
+      "background_claims": 1,
+      "limitation_claims": 1,
+      "KeyedCitedQuestion_5ec898cd44c2cc02": 1,
+      "intent": 2,
+      "claim_ids": 2,
+      "KeyedNeutralIntent_5ec898cd44c2cc02": 1,
+      "KeyedOmission_5ec898cd44c2cc02False": 1,
+      "KeyedEvidenceGap_5ec898cd44c2cc02True": 1,
+      "KeyedNeutralQuestion_5ec898cd44c2cc02": 1,
+      "UnionSafeDisposition_537ff410bd4a1e01": 1,
+      "KeyedEvidenceGap_5ec898cd44c2cc02False": 1,
+      "UnionSafeFullCoverage_537ff410bd4a1e01": 1,
+      "p1": 2,
+      "p2": 2,
+      "p3": 2,
+      "KeyedCoverage_5ec898cd44c2cc02FalseFalse": 1,
+      "KeyedFixed_insufficient_selected_evidence": 1,
+      "response": 1
+    },
+    "references": {
+      "#/$defs/CapacityHandle_f6fdf97fc67be37e": 2,
+      "#/$defs/KeyedFixed_answered": 1,
+      "#/$defs/KeyedFixed_none": 1,
+      "#/$defs/KeyedFixed_insufficient_selected_evidence": 1,
+      "#/$defs/UnionSafeFullCoverage_537ff410bd4a1e01": 1,
+      "#/$defs/KeyedFixed_full_abstention": 1,
+      "#/$defs/KeyedFixed_request_context": 1,
+      "#/$defs/KeyedClaim_5ec898cd44c2cc02": 1,
+      "#/$defs/UnionSafeSlot_537ff410bd4a1e01": 7,
+      "#/$defs/UnionSafeClaims_537ff410bd4a1e01": 1,
+      "#/$defs/KeyedCoverage_5ec898cd44c2cc02FalseFalse": 1,
+      "#/$defs/KeyedNeutralQuestion_5ec898cd44c2cc02": 1,
+      "#/$defs/KeyedCitedQuestion_5ec898cd44c2cc02": 1,
+      "#/$defs/UnionSafeDisposition_537ff410bd4a1e01": 1,
+      "#/$defs/KeyedFixed_investigate_claim": 1,
+      "#/$defs/KeyedFixed_omitted": 1,
+      "#/$defs/KeyedFixed_lacks_evidence": 2,
+      "#/$defs/KeyedNeutralIntent_5ec898cd44c2cc02": 1,
+      "#/$defs/KeyedEvidenceGap_5ec898cd44c2cc02True": 3,
+      "#/$defs/KeyedAnswered_5ec898cd44c2cc02": 3,
+      "#/$defs/KeyedEvidenceGap_5ec898cd44c2cc02False": 3,
+      "#/$defs/KeyedOmission_5ec898cd44c2cc02False": 3,
+      "#/$defs/UnionSafeNormal_537ff410bd4a1e01": 1,
+      "#/$defs/UnionSafeFull_537ff410bd4a1e01": 1
+    },
+    "enums": [
+      {
+        "path": "$.$defs.KeyedFixed_none",
+        "values": [
+          "none"
+        ]
+      },
+      {
+        "path": "$.$defs.KeyedFixed_omitted",
+        "values": [
+          "omitted"
+        ]
+      },
+      {
+        "path": "$.$defs.KeyedFixed_answered",
+        "values": [
+          "answered"
+        ]
+      },
+      {
+        "path": "$.$defs.KeyedFixed_lacks_evidence",
+        "values": [
+          "lacks_evidence"
+        ]
+      },
+      {
+        "path": "$.$defs.KeyedFixed_full_abstention",
+        "values": [
+          "full_abstention"
+        ]
+      },
+      {
+        "path": "$.$defs.KeyedFixed_request_context",
+        "values": [
+          "request_context"
+        ]
+      },
+      {
+        "path": "$.$defs.KeyedClaim_5ec898cd44c2cc02.properties.required_scope",
+        "values": [
+          "abstract",
+          "excerpt",
+          "full_text"
+        ]
+      },
+      {
+        "path": "$.$defs.KeyedFixed_investigate_claim",
+        "values": [
+          "investigate_claim"
+        ]
+      },
+      {
+        "path": "$.$defs.KeyedAnswered_5ec898cd44c2cc02.properties.answer_claim_ids.items",
+        "values": [
+          "c1",
+          "c2",
+          "c3",
+          "c4",
+          "c5",
+          "c6",
+          "c7",
+          "c8"
+        ]
+      },
+      {
+        "path": "$.$defs.KeyedAnswered_5ec898cd44c2cc02.properties.context_claim_ids.items",
+        "values": [
+          "c1",
+          "c2",
+          "c3",
+          "c4",
+          "c5",
+          "c6",
+          "c7",
+          "c8"
+        ]
+      },
+      {
+        "path": "$.$defs.UnionSafeSlot_537ff410bd4a1e01.properties.required_scope",
+        "values": [
+          "abstract",
+          "excerpt",
+          "full_text",
+          "unused"
+        ]
+      },
+      {
+        "path": "$.$defs.CapacityHandle_f6fdf97fc67be37e",
+        "values": [
+          "ua6f0f4d05fd72b2b86b2"
+        ]
+      },
+      {
+        "path": "$.$defs.UnionSafeNormal_537ff410bd4a1e01.properties.gaps.items",
+        "values": [
+          "methods",
+          "evaluation",
+          "ablations",
+          "full_text",
+          "counterevidence",
+          "source_scope"
+        ]
+      },
+      {
+        "path": "$.$defs.UnionSafeNormal_537ff410bd4a1e01.properties.proposal",
+        "values": [
+          "inspect_methods",
+          "inspect_evaluation",
+          "seek_counterevidence",
+          "inspect_scope",
+          "request_context"
+        ]
+      },
+      {
+        "path": "$.$defs.UnionSafeNormal_537ff410bd4a1e01.properties.assumption_claims.items",
+        "values": [
+          "c1",
+          "c2",
+          "c3",
+          "c4",
+          "c5",
+          "c6",
+          "c7",
+          "c8"
+        ]
+      },
+      {
+        "path": "$.$defs.UnionSafeNormal_537ff410bd4a1e01.properties.background_claims.items",
+        "values": [
+          "c1",
+          "c2",
+          "c3",
+          "c4",
+          "c5",
+          "c6",
+          "c7",
+          "c8"
+        ]
+      },
+      {
+        "path": "$.$defs.UnionSafeNormal_537ff410bd4a1e01.properties.limitation_claims.items",
+        "values": [
+          "c1",
+          "c2",
+          "c3",
+          "c4",
+          "c5",
+          "c6",
+          "c7",
+          "c8"
+        ]
+      },
+      {
+        "path": "$.$defs.KeyedCitedQuestion_5ec898cd44c2cc02.properties.claim_ids.items",
+        "values": [
+          "c1",
+          "c2",
+          "c3",
+          "c4",
+          "c5",
+          "c6",
+          "c7",
+          "c8"
+        ]
+      },
+      {
+        "path": "$.$defs.KeyedNeutralIntent_5ec898cd44c2cc02",
+        "values": [
+          "measured_and_proposed",
+          "methods",
+          "qualifications",
+          "implementation",
+          "counterevidence",
+          "application_scope"
+        ]
+      },
+      {
+        "path": "$.$defs.KeyedOmission_5ec898cd44c2cc02False.properties.gap_reasons.items",
+        "values": [
+          "claim_budget",
+          "not_prioritized"
+        ]
+      },
+      {
+        "path": "$.$defs.KeyedOmission_5ec898cd44c2cc02False.properties.context_claim_ids.items",
+        "values": [
+          "c1",
+          "c2",
+          "c3",
+          "c4",
+          "c5",
+          "c6",
+          "c7",
+          "c8"
+        ]
+      },
+      {
+        "path": "$.$defs.KeyedEvidenceGap_5ec898cd44c2cc02True.properties.gap_reasons.items",
+        "values": [
+          "application_context",
+          "source_scope",
+          "common_evaluation",
+          "methods",
+          "protocol",
+          "data_splits",
+          "metric_definition",
+          "uncertainty_calibration",
+          "memory_error_persistence"
+        ]
+      },
+      {
+        "path": "$.$defs.KeyedNeutralQuestion_5ec898cd44c2cc02.properties.claim_ids.items",
+        "values": [
+          "c1",
+          "c2",
+          "c3",
+          "c4",
+          "c5",
+          "c6",
+          "c7",
+          "c8"
+        ]
+      },
+      {
+        "path": "$.$defs.UnionSafeDisposition_537ff410bd4a1e01",
+        "values": [
+          "answer"
+        ]
+      },
+      {
+        "path": "$.$defs.KeyedEvidenceGap_5ec898cd44c2cc02False.properties.gap_reasons.items",
+        "values": [
+          "application_context",
+          "source_scope",
+          "common_evaluation",
+          "methods",
+          "protocol",
+          "data_splits",
+          "metric_definition",
+          "uncertainty_calibration",
+          "memory_error_persistence"
+        ]
+      },
+      {
+        "path": "$.$defs.KeyedEvidenceGap_5ec898cd44c2cc02False.properties.context_claim_ids.items",
+        "values": [
+          "c1",
+          "c2",
+          "c3",
+          "c4",
+          "c5",
+          "c6",
+          "c7",
+          "c8"
+        ]
+      },
+      {
+        "path": "$.$defs.KeyedFixed_insufficient_selected_evidence",
+        "values": [
+          "insufficient_selected_evidence"
+        ]
+      }
+    ],
+    "guard_measurements": {
+      "revision": "anthropic-structured-schema-compat-v1",
+      "request_digest": "f45706185467a3d5678c0f2f9dae8d7b6e86148513e4726d89830aedbc19cdf8",
+      "schemas": [
+        {
+          "location": "output",
+          "schema_digest": "17f952e22242130714f3862c6260962602389b4388ef4b458761912b45acd925",
+          "direct_union_properties": 4,
+          "resolved_union_properties": 4,
+          "anyof_nodes": 5,
+          "type_array_nodes": 0,
+          "optional_properties": 0,
+          "expanded_union_properties": 4,
+          "expanded_union_nodes": 5,
+          "expanded_optional_properties": 0,
+          "reference_uses": 56
+        }
+      ],
+      "union_parameters_conservative": 4,
+      "optional_parameters_conservative": 0,
+      "expanded_union_nodes": 5,
+      "strict_tools": 0,
+      "documented_limits_pass": true,
+      "planning_headroom_pass": true,
+      "remote_compiler_acceptance": "UNMEASURED"
+    },
+    "remote_observation": "HTTP400 compiled grammar too large; complete received rejection and unvalidated usage"
+  }
+}

@@ -1,0 +1,107 @@
+{
+  "packet_digest": "a156d71082cb327cd460ab0ba4ed07e614acfb56867c0025314c1a956777b61a",
+  "requests": [
+    {
+      "id": "learn-accepted-control",
+      "family": "learn",
+      "encoding": "accepted-v15r2",
+      "source_case": "campaign-dev-learn",
+      "request_digest": "8a50fc4aee17de609c8591bab8b5f0a0629e63d56d7381409770fab82ea61fa5",
+      "count_digest": "6564aef3cef65039f1e03720133cb1c2821e185ce27bbbe45dfc7882202b6d40",
+      "reservation_USD": "0.20",
+      "conditional": null,
+      "schema_digest": "68ffc868491d3e63f9d339ec3daa38ed3fc699536a1f079d8eb07c379bb0b9c1",
+      "model": "claude-sonnet-5-5",
+      "thinking": {
+        "type": "between_tools"
+      },
+      "effort": "medium",
+      "max_output_tokens": 8000
+    },
+    {
+      "id": "learn-list-control",
+      "family": "learn",
+      "encoding": "workspace-assistance-variable-claims-v17-control",
+      "source_case": "campaign-dev-learn",
+      "request_digest": "d2041708b10da97b77da7ee3e0588d80310c7cd6fcbbb0d5c472a364186dac50",
+      "count_digest": "08b8cfd9c3f68f2d4195bc098bbfdda7b8494bc30c4d325bf693e7592ea53993",
+      "reservation_USD": "0.20",
+      "conditional": null,
+      "schema_digest": "028ace721c55401f1a39d27fc079745075497af9078508e9ae06d48a4f27b566",
+      "model": "claude-sonnet-5-5",
+      "thinking": {
+        "type": "between_tools"
+      },
+      "effort": "medium",
+      "max_output_tokens": 8000
+    },
+    {
+      "id": "learn-compact",
+      "family": "learn",
+      "encoding": "workspace-assistance-compact-wire-v17",
+      "source_case": "campaign-dev-learn",
+      "request_digest": "a692ba6078b813f8d64ccb04da8692a5ee242509b7e6abdd5bafb4de4e8a8983",
+      "count_digest": "24bdee11fba9b232ff15f972dbec83a14595a899ca168d212c2984a485fbf48e",
+      "reservation_USD": "0.20",
+      "conditional": null,
+      "schema_digest": "b68d91c236e81715e439d5c3fe78215b59470f105ed94ffc4cc0325bd6336050",
+      "model": "claude-sonnet-5-5",
+      "thinking": {
+        "type": "between_tools"
+      },
+      "effort": "medium",
+      "max_output_tokens": 8000
+    },
+    {
+      "id": "research-compact",
+      "family": "research",
+      "encoding": "workspace-assistance-compact-wire-v17",
+      "source_case": "campaign-dev-compare",
+      "request_digest": "cb0d8b0e73db91ac1e32aa74ff491482c62a8835c6baacd7295d04db23d6d65d",
+      "count_digest": "229b1706aaa6f05d971d2ef43170ed881da89cec43d8e437e5769846d31c2c85",
+      "reservation_USD": "0.20",
+      "conditional": "learn-compact complete and locally valid",
+      "schema_digest": "bb034482ff106657eef44d5e08062488b60c90af415f3ad7697b8b7df2236b42",
+      "model": "claude-sonnet-5-5",
+      "thinking": {
+        "type": "between_tools"
+      },
+      "effort": "medium",
+      "max_output_tokens": 8000
+    },
+    {
+      "id": "checker-small",
+      "family": "checker",
+      "encoding": "workspace-assistance-keyed-checks-v16",
+      "source_case": "campaign-dev-compare",
+      "request_digest": "5fa52b3c0b99e6de59f1cf6380063d4930803ab688b128d61052909dbbf8f51b",
+      "count_digest": "3435f405c25bdac991b304f32a7db4f6cdf7d8e19707edad2663f6e49f4b05b5",
+      "reservation_USD": "0.50",
+      "conditional": null,
+      "schema_digest": "34bf388fab91f26477a119a02d84f534b0dd7b68d95fe6b2f953be3a0398eb1b",
+      "model": "claude-opus-5-5",
+      "thinking": {
+        "type": "adaptive"
+      },
+      "effort": "high",
+      "max_output_tokens": 12000
+    },
+    {
+      "id": "checker-maximum",
+      "family": "checker",
+      "encoding": "workspace-assistance-keyed-checks-v16",
+      "source_case": "campaign-dev-compare",
+      "request_digest": "da123cfc130f77d4cb0110a2384be9c45231e8040a0b7714c9890b2c416cbcc0",
+      "count_digest": "f14ab6ba895b0375fdd27d0e58927b32994663233ca6027f3ddeec646e9d33f1",
+      "reservation_USD": "0.50",
+      "conditional": "checker-small complete and locally valid",
+      "schema_digest": "156ea77851ce7d72ef03400bee19ae65ec7bf8bafa2d57dacb2770fc3276c6c8",
+      "model": "claude-opus-5-5",
+      "thinking": {
+        "type": "adaptive"
+      },
+      "effort": "high",
+      "max_output_tokens": 12000
+    }
+  ]
+}

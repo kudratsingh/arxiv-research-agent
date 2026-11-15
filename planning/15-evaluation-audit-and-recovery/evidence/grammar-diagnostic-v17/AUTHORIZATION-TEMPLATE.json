@@ -1,0 +1,63 @@
+{
+  "approved": false,
+  "approved_by": null,
+  "approved_at": null,
+  "approval_source": null,
+  "expires_at": null,
+  "authorization_kind": "owner",
+  "transport_mode": "provider",
+  "packet_digest": "a156d71082cb327cd460ab0ba4ed07e614acfb56867c0025314c1a956777b61a",
+  "scope_id": "compat-a156d71082cb327cd460ab0b",
+  "limits": {
+    "jobs": 6,
+    "messages": 6,
+    "counts": 6,
+    "new_USD": "1.80",
+    "concurrency": 1
+  },
+  "programme_limits": {
+    "jobs": 64,
+    "messages": 160,
+    "counts": 200,
+    "USD": "20",
+    "concurrency": 1
+  },
+  "programme_expiry": "2026-11-21T11:03:57+00:00",
+  "retained_liability_exception_approved": false,
+  "anticipated_received_rejection_continuation_approved": false,
+  "retained_liabilities": [
+    {
+      "job_id": "gen-36b50e6a28f054220916d70528863957092c3a83",
+      "owner": "d5-campaign-35292dcc485d8d7f-run",
+      "state": "uncertain",
+      "amount": "1.20",
+      "unknown": "1.20",
+      "data_digest": "f083ccf417e34f35909cc34f9afa768638af3253e37e025301b94f9004c28f24"
+    },
+    {
+      "job_id": "gen-a6e23d9f41c98fbf0327d33f1658a207a7f7d860",
+      "owner": "d5-campaign-97d24567bc987531-run",
+      "state": "uncertain",
+      "amount": "0.45",
+      "unknown": "0.45",
+      "data_digest": "e6a7fcbe5a08fa304396186641e807ef74af276771c7309a9fd4a7d525507432"
+    },
+    {
+      "job_id": "gen-ba942321c16d5ed10cc41cff7f6c1ac9f5a98877",
+      "owner": "d5-coverage-880e4794cd08d26a-run",
+      "state": "uncertain",
+      "amount": "0.45",
+      "unknown": "0.425066",
+      "data_digest": "837cc21135984105b05fed9a863dedc2646909cc519784f070618ba363915894"
+    }
+  ],
+  "case_order": [
+    "learn-accepted-control",
+    "learn-list-control",
+    "learn-compact",
+    "research-compact",
+    "checker-small",
+    "checker-maximum"
+  ],
+  "case_bindings_digest": "4c4b00f80288ec240ffb30342a3faf6f0af9640740754a363d144acfff96f037"
+}

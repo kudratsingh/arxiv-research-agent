@@ -1,3 +1,8 @@
+> Current prospective handoff: [v17r2 grammar diagnostic](evidence/grammar-diagnostic-v17r2/README.md).
+> The stopped v16r2 run and original audit plan below are historical records.
+> No provider contacts are authorized by this kit; the six-request diagnostic
+> requires its separately recorded exact owner approval.
+
 # Local CI-context follow-up verified; new hosted run pending
 
 Applicationd3fec6e5 and packet35292dcc remain unchanged. Fresh full local gate:

@@ -1,0 +1,55 @@
+{
+  "at": "2026-11-15T14:10:45.556472+00:00",
+  "application_commit": "5e7a32581064e6509fb5af620726593dcf09b173",
+  "packet_digest": "002529632b338a7982bb59b5eebd00cabc4b796516d92476912bf95944a599bf",
+  "original_archives": [
+    {
+      "root": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-evidence/d5-union-compatibility-20261115",
+      "original_manifest": "FINAL-CUSTODY-MANIFEST-v1.json.gz",
+      "files_unchanged": 623,
+      "manifest_sha256": "e7bab675102a151b31ea4d1b898b5c7a9446c408c5aebc61b139986632158db5"
+    },
+    {
+      "root": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-evidence/campaign-live-v16r2-20261115T103853Z",
+      "original_manifest": "EVIDENCE-MANIFEST-v1.json.gz",
+      "files_unchanged": 45,
+      "manifest_sha256": "532f7242c8142924342b487a26a725d83cfb598bdc98ce170c9cb2f831f02c52"
+    }
+  ],
+  "live_history_digest_unchanged": "207ff2fc2308fda42b0ccaeb70f0d8b1a7f8bc7796a029bd1c18df385ac48f0e",
+  "known_USD": "2.138481",
+  "overlapping_liability_USD": "2.075066",
+  "live_baseline": "38 jobs/72 Messages/97 counts",
+  "new_live_authority": false,
+  "new_provider_API_contacts": 0,
+  "deleted_or_overwritten_predecessors": 0,
+  "new_unknown_completion": false,
+  "snapshot_sections_identical": [
+    "tables",
+    "recorded_amendments",
+    "recorded_successor_amendments",
+    "recorded_third_amendments",
+    "recorded_capacity_amendments",
+    "historical_scopes",
+    "historical_stage_grants",
+    "historical_case_runs",
+    "recorded_campaign_extensions",
+    "recorded_campaign_revocations",
+    "recorded_campaign_outcomes",
+    "recorded_campaign_successors",
+    "recorded_campaign_successor_revocations",
+    "recorded_capacity_revisions",
+    "recorded_capacity_revision_revocations",
+    "recorded_keyed_continuations",
+    "recorded_keyed_continuation_revocations",
+    "programme",
+    "members",
+    "programme_baseline",
+    "parent_stopped_scope",
+    "retained_liabilities",
+    "history",
+    "program_id",
+    "provenance"
+  ],
+  "public_and_financial_tables_unchanged": 12
+}

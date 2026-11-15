@@ -1,3 +1,37 @@
+# Current offline handoff: bounded grammar diagnostic v17r2
+
+Application: `5e7a32581064e6509fb5af620726593dcf09b173`.
+Packet: `002529632b338a7982bb59b5eebd00cabc4b796516d92476912bf95944a599bf`.
+Proposal: `a408bcf09a738da6954494309124aeea61f04c8f52cbd344f65983e6d2e5073a`.
+
+[One inactive approval package](evidence/grammar-diagnostic-v17r2/APPROVAL-REQUEST.md)
+replaces another full campaign with six exact diagnostic Messages and paired
+counts. It covers the old accepted Learn schema, controlled variable-claim and
+flat-coverage reductions, Research, and small/maximum checker contracts. New
+reservation USD1.80, no capacity or expiry change. Compiler acceptance and quality
+remain UNMEASURED. The full v16r2 scope stays stopped.
+
+Current actual ledger: 38 jobs / 72 Messages / 97 counts, USD2.138481 known estimated plus
+USD2.075066 overlapping retained liability counted once. All 12 captured public/
+financial tables and 668 predecessor evidence files match. No provider/count calls,
+key loading, live grants, migrations, settlement, cap or expiry changes.
+
+The final source includes credential-safe failure reasons and explicit synthetic
+report headings.325 focused tests, 241 strictly typed source files and full Ruff
+pass. The final full gate passed 8200 tests with 62 skips, 94.402875% project coverage,
+96% printed patch coverage and all four package floors. Exact-publication CI is tracked in
+[verification](evidence/grammar-diagnostic-v17r2/VERIFICATION.md) and the permanent
+arxiv-evidence/d5-grammar-diagnostic-20261115 publication receipt. No green hosted
+result is inferred from local results. Owner3137/review3178 remain unchanged;
+everyday generation, recurrence and notifications remain disabled.
+
+Earlier initial v17/5ef82343 and every intermediate failed/cancelled test log
+remain preserved. They never received live authority. Original-agent LangGraph
+metric/source-ID/completion-status work stays separate and is not validated by
+this diagnostic.
+
+---
+
 # v16r2 publication verification index
 
 Applicationd3fec6e5 and frozen packet35292dcc remain unchanged. The CI-only

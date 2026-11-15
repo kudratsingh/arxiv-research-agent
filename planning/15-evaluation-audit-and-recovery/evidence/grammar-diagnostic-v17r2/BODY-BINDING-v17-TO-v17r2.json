@@ -1,0 +1,45 @@
+{
+  "old_inactive_packet": "a156d71082cb327cd460ab0ba4ed07e614acfb56867c0025314c1a956777b61a",
+  "new_inactive_packet": "002529632b338a7982bb59b5eebd00cabc4b796516d92476912bf95944a599bf",
+  "cases": [
+    {
+      "id": "learn-accepted-control",
+      "Messages_digest_identical": true,
+      "count_digest_identical": true,
+      "schema_identical": true
+    },
+    {
+      "id": "learn-list-control",
+      "Messages_digest_identical": true,
+      "count_digest_identical": true,
+      "schema_identical": true
+    },
+    {
+      "id": "learn-compact",
+      "Messages_digest_identical": true,
+      "count_digest_identical": true,
+      "schema_identical": true
+    },
+    {
+      "id": "research-compact",
+      "Messages_digest_identical": true,
+      "count_digest_identical": true,
+      "schema_identical": true
+    },
+    {
+      "id": "checker-small",
+      "Messages_digest_identical": true,
+      "count_digest_identical": true,
+      "schema_identical": true
+    },
+    {
+      "id": "checker-maximum",
+      "Messages_digest_identical": true,
+      "count_digest_identical": true,
+      "schema_identical": true
+    }
+  ],
+  "actual_measurements_reused": 0,
+  "new_live_authority": false,
+  "prior_v16r2_counts_cannot_establish_new_request_fit": true
+}

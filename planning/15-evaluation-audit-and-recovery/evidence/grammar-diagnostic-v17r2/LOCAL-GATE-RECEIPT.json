@@ -1,0 +1,44 @@
+{
+  "application_commit": "5e7a32581064e6509fb5af620726593dcf09b173",
+  "packet_digest": "002529632b338a7982bb59b5eebd00cabc4b796516d92476912bf95944a599bf",
+  "full_gate": "8200 passed, 62 skipped, 53 deselected in 2772.16s",
+  "patch_printed_percent": 96,
+  "project_percent": 94.40287504607446,
+  "package_floors": {
+    "api": {
+      "floor": 86,
+      "printed_actual": "88",
+      "exit_code": 0
+    },
+    "agents": {
+      "floor": 92,
+      "printed_actual": "96",
+      "exit_code": 0
+    },
+    "security": {
+      "floor": 97,
+      "printed_actual": "100",
+      "exit_code": 0
+    },
+    "eval": {
+      "floor": 91,
+      "printed_actual": "95",
+      "exit_code": 0
+    }
+  },
+  "focused": "325 passed in 325.04s",
+  "docs": "95 passed",
+  "e2e": "53 passed in 20.59s",
+  "simulation": "20/20 succeeded; USD0.0000",
+  "registry_parity": {
+    "objects": 260,
+    "mismatches": 0
+  },
+  "mypy_source_files": 241,
+  "ruff": "pass",
+  "provider_API_contacts": 0,
+  "token_count_API_contacts": 0,
+  "live_authority": false,
+  "new_live_spend": "0",
+  "hosted_CI": "Not claimed here; exact publication result follows in permanent receipt"
+}
