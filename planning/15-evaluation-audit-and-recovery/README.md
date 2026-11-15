@@ -1,3 +1,41 @@
+# Current offline successor — v16r2 provider compatibility correction
+
+Application `d3fec6e576ff5223ff414eb5fff29505378b6a0e`; packet
+`35292dcc485d8d7f6f7c126453a8dce17409c470debe2b56828898cef8f57d6d`.
+[Latest inactive consolidated package](evidence/keyed-contract-v16r2/README.md),
+[one owner decision](evidence/keyed-contract-v16r2/APPROVAL-REQUEST.md),
+[commands](evidence/keyed-contract-v16r2/RUNBOOK.md),
+[verification](evidence/keyed-contract-v16r2/VERIFICATION.md) and
+[compatibility analysis](PROVIDER-COMPATIBILITY-v16r2.md).
+
+Old direct union properties14/21/18 are distinct from literal anyOf15/23/19;
+shared reference expansion is also counted conservatively. New maximum
+Learn8/Research12claims×8parts uses9union-valued parameters,10expanded nodes,
+0optional properties; maximum check/recheck/probe0/0. Actual SDK guards apply
+before every count/Messages path and preserve keyed identities, multi-gap
+coverage, complete current judgments and all original semantic/provenance gates.
+Legacy schemas/results remain unchanged. Invalid-first-draft repair stays deferred.
+
+Full local gate8101passed/62skipped/53E2Edeselected,94.520214%project and96%printed
+patch; all package floors pass. SeparateE2E53,simulation20/20USD0,registry260/0,
+Ruff/mypy pass. Protected mock14/44/44 verifies all88actual SDK/journal bodies
+and10current final checkers, qualityHOLD/humanblank. Frontend tree unchanged;
+no new local browser claim. Exact published-head CI is recorded separately in
+the final completion receipt; local green is not hosted green.
+
+Read-only ledger37/71/96/USD2.138481known plusUSD0.875066overlappingholds unchanged,
+noactivejobs orlive021. Existing64/160/200/USD20 and2026-11-21T11:03:57Zexpiry
+stay unchanged. Proposed14/44/44/USD14 remains inactive; no preliminary count
+handoff or paid workflow split. No provider/count/key access, live authority,
+financial settlement,cap/expiry change,merge/deployment. Owner3137/review3178,
+everyday generation,recurrence,notifications untouched/disabled. All predecessor
+artifacts and failed development evidence remain in permanent storage. Remote
+compiler acceptance,real token fit and scientific/checker quality remain unmeasured.
+
+The following sections are historical; their grants are not renewed.
+
+---
+
 # Current offline campaign package — v16
 
 The latest unapproved successor is [keyed-contract-v16](evidence/keyed-contract-v16/README.md),

@@ -1,0 +1,272 @@
+{
+  "at": "2026-11-15T05:31:23.199858+00:00",
+  "old_public_package_files_verified": 43,
+  "old_permanent_custody_files_verified": 453,
+  "original_v15r2_manifest_entries_verified": 63,
+  "original_archive_files_rehashed": 65,
+  "original_archive_files": {
+    "COUNT-RESPONSE-EXACT.json": {
+      "sha256": "6b7de193c75941fb47a8b32bbed96ad7fa1e60c16105d177aa822840fe15e2e2",
+      "bytes": 21
+    },
+    "EVIDENCE-MANIFEST-v1.json": {
+      "sha256": "fa289580e09821661f1cf98bcb5a62f3f5ab909b1b0eb41e06561e3f5843ac8e",
+      "bytes": 10697
+    },
+    "MESSAGE-REQUEST.json": {
+      "sha256": "23ccad36e28280f9de36fc11fcfa53c2d6e8075115582b2b925f1b776bc711a4",
+      "bytes": 24289
+    },
+    "EXACT-HEAD-CI-RECHECK.json": {
+      "sha256": "f544847c57eb0ece13096dc41dc0042235671e28728bf1a67f35c4f6228ea5e2",
+      "bytes": 1669
+    },
+    "COUNT-REQUEST.json": {
+      "sha256": "97ccce68f583fb113c8fd856979dd7c80cdbe6b8d8d5348a5a34e01018f492c5",
+      "bytes": 24267
+    },
+    "EXACT-RETAINED-EVIDENCE.json": {
+      "sha256": "7caba5bed57532a224bfb294334bfb0d7e2f6e818a16dd22dafc0f27e9e6ff1b",
+      "bytes": 2495
+    },
+    "POST-ACTIVATION-BEFORE-DISPATCH.json.gz": {
+      "sha256": "ca3e7ca5f6e4a519bfdc385121aa974e5210aa06a3fc78ce14d76eda6dbaef3e",
+      "bytes": 978383
+    },
+    "COORDINATION-RECEIPT.json": {
+      "sha256": "2a053380fd2e2fee8d7eb47018b1765b9036f691d6cefb4d8b4b3cd19111286c",
+      "bytes": 1506
+    },
+    "RUN.log": {
+      "sha256": "f03fc7236847e5f43260ca9c5721b946b4ce884d3dd8f31efe860e81e6eeaa3d",
+      "bytes": 1247
+    },
+    "MESSAGE-RESPONSE-EXACT.json": {
+      "sha256": "71409cecaefb4c3e154853ac73a179ce331fd034ad09ff22cf8fe5a90414769f",
+      "bytes": 3611
+    },
+    "ACTIVATION-VERIFIED.json": {
+      "sha256": "2dbc0f05e0a0291be9d9f831a9128f262db6777c8b50ebd438f2204c7da33446",
+      "bytes": 932
+    },
+    "RUN-APPROVED-CAMPAIGN.py": {
+      "sha256": "e940aae6a3ec3f63afb7609f88cdd7d3bd803ae60110b4ad2a28ede918fccb21",
+      "bytes": 3065
+    },
+    "EXACT-TRANSMITTED-SCHEMA.json": {
+      "sha256": "d0cd5694ae7ab669e850b66491dbf407e92bfb206183b81512857ddbd0ae8010",
+      "bytes": 12369
+    },
+    "LIVE-CAMPAIGN-REPORT.html": {
+      "sha256": "df088d46f396635332c888fc2d3192f2db14cda6d8d7a524c4b5028018fa24a3",
+      "bytes": 9849
+    },
+    "MESSAGE-CONTACT-RECEIPT.json": {
+      "sha256": "2ba8f0c9b553a22e051640412de9672a11ae67254a8b09971c99b8e739e28f1a",
+      "bytes": 32279
+    },
+    "FINAL-HANDOFF.json": {
+      "sha256": "b49eee5039f228371263c323fa4b232d7adc16e90d193c608843a710d22f67a3",
+      "bytes": 2486
+    },
+    "OPERATOR-RECORD.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "CONTRACT-DIAGNOSTIC.json": {
+      "sha256": "dd3ad2fbf6732481990d88c573dd586a828dd46a0434fb8666d097cd8dd127e5",
+      "bytes": 2307
+    },
+    "PRE-ACTIVATION-READONLY.json.gz": {
+      "sha256": "5b3eedf8795ad3a9178b1331c1dd995d85aae32756a8c0125b111b10b166eae3",
+      "bytes": 961328
+    },
+    "MIGRATION-020-RECEIPT.json": {
+      "sha256": "adb48f5131b1ac50f8e29fbe2f34289c4af99594bd16675a9232776569ae8be0",
+      "bytes": 494
+    },
+    "EXACT-LOCAL-SCHEMA.json": {
+      "sha256": "8547dc1f2d764a96a9db1e02585d974e6f0e5f353ddf5221ebecfa41d6e9b6d1",
+      "bytes": 12085
+    },
+    "COMPLETE-14-IDENTITY-CENSUS.json": {
+      "sha256": "6953df16c7c1ba62362ad8b9a095506ef9dd1d863e45705a6f26bc35a6a4c550",
+      "bytes": 2649
+    },
+    "ACCOUNTING-RECONCILIATION.json": {
+      "sha256": "05f192d515ad2bb36815ef9570c25ed2a330ebf2c8999dd7d7b1d9cd0c72e474",
+      "bytes": 3375
+    },
+    "COUNT-CONTACT-RECEIPT.json": {
+      "sha256": "55598562393cd815f06f6881aff8d714d12a127ab65ea8b46ba59fd87894439b",
+      "bytes": 26634
+    },
+    "REJECTED-DRAFT.json": {
+      "sha256": "7c85d19b12cbfffd21bb1aac60f57157000bd387f61878a8e3106c94ab25d153",
+      "bytes": 4112
+    },
+    "REJECTED-DRAFT-AND-PASSAGE.html": {
+      "sha256": "6e010a6119b34531e407994a7be66f37c995a37326f518cd2d42841ff571c4cd",
+      "bytes": 8316
+    },
+    "ACTIVATION-RECORDED.json": {
+      "sha256": "df94d72cbfa7eec8ec164c34fa73d4bbe4d257f26dd2a74fa7f781b2b9702ed8",
+      "bytes": 681
+    },
+    "NEW-JOB-IMMUTABLE.json.gz": {
+      "sha256": "7ef0728d6a305a2c5802cfa6a2bc2ea81e93916af673be5b1870ce911704ee2e",
+      "bytes": 15107
+    },
+    "LIVE-CAMPAIGN-REPORT.md": {
+      "sha256": "61c3935fa480e77b052a5591ab682094f98e31654a96490c7e72de146f297235",
+      "bytes": 9295
+    },
+    "REJECTED-DRAFT-TEXT.txt": {
+      "sha256": "68fa4fec77e18b149a91815da032ed3d955254f92f3ac8c9b12329af02d89d2c",
+      "bytes": 2830
+    },
+    "OWNER-APPROVAL.json": {
+      "sha256": "fd90cb589809db9063bdd9dc940c7cf2308a4a5813efcf74ae7c50eea142bb26",
+      "bytes": 5165
+    },
+    "RUN-EXIT.json": {
+      "sha256": "406a8a0aa1724c10f5f926a2f237fd6f60ac2f29c55cf66c17c9b3009b9e5593",
+      "bytes": 305
+    },
+    "POST-STOP-LEDGER.json.gz": {
+      "sha256": "3aaf4300394fe29f41170af45f1b4fc1a3c72529178cb52547bfa3b069d9c484",
+      "bytes": 814278
+    },
+    "OPERATOR-RECORD-EXIT.json": {
+      "sha256": "f676c4891d3ebab6ec61aa867fb930e10d2ba17204b34ab9c43d9d903694996e",
+      "bytes": 185
+    },
+    "PREFLIGHT-ATTEMPT-1.json": {
+      "sha256": "9ecb5bfeebd1cd20da856aef8a7e90b07444d86e51cac5997cdb04d134f2db0f",
+      "bytes": 447
+    },
+    "PREFLIGHT.json": {
+      "sha256": "08037d95042ef2740792efde8f652de81b89ca514c68486297f4a6c5d62907de",
+      "bytes": 1262
+    },
+    "OPERATOR-AUTHORIZATION.json": {
+      "sha256": "f2be1b8e03b75be5fd3d6c3eb6987389878a6a8c7096c758f9862791f3a6c755",
+      "bytes": 45620
+    },
+    "HISTORICAL-PRESERVATION.json": {
+      "sha256": "2a3a90d59c2a05ad4f5f5b9a15088946eccd28475986991fc82a3a9ebaaffeb2",
+      "bytes": 3255
+    },
+    "QUARANTINED/index.html": {
+      "sha256": "37fb2ae3f812d17d0282cba1cb45d996488fdb62bb066ad569451754a296c8ec",
+      "bytes": 64770
+    },
+    "QUARANTINED/REPORT.md": {
+      "sha256": "7e9c8f1e122587685893db55ef2cd9d392ca040351791e9821e5ac815017c4eb",
+      "bytes": 51865
+    },
+    "QUARANTINED/results.json": {
+      "sha256": "b360e449ca0a94c56a0ce25f3f5cf7aea6876fac18f6d789f55cd5a8cc9b7d7a",
+      "bytes": 827976
+    },
+    "SEALED-PACKAGE/CHECKER-SCHEMAS.json": {
+      "sha256": "3151879c33020d8956649457bb50684e9b11af3bfbcb4ef514335bbe6bd79174",
+      "bytes": 14118
+    },
+    "SEALED-PACKAGE/LOCAL-GATE-RECEIPT.json": {
+      "sha256": "04132d650e4fc9eda341d3d2e0224a81285f2b3aa301d3e885a0afbc469db15d",
+      "bytes": 4027
+    },
+    "SEALED-PACKAGE/INDEPENDENT-REVIEW.md": {
+      "sha256": "8fa185d1514038a66349a58e8ae69c6708b3875532626be1f0df477efa938d62",
+      "bytes": 3354
+    },
+    "SEALED-PACKAGE/REGRESSION-AND-CUSTODY-RECEIPT.json": {
+      "sha256": "b5a5fff6f5ecb35f29341b0d24e5a998d249b447e96ecae811b0eec7fd616e6b",
+      "bytes": 1202
+    },
+    "SEALED-PACKAGE/ROUTES-AND-LIMITS.json": {
+      "sha256": "933f8772def0f472bb4d558c044e21248af5ae6a463ba3cc6496865d9edf19ca",
+      "bytes": 4480
+    },
+    "SEALED-PACKAGE/RUNBOOK.md": {
+      "sha256": "53eac02408483fee8162eecd41930c0eaa2b037d1cffbf71c243b846897e394d",
+      "bytes": 7391
+    },
+    "SEALED-PACKAGE/READONLY-CENSUS-RECEIPT.json": {
+      "sha256": "0c767bd554f53d9a7cc5a4cb1ca2927878261cd1db8cfdbffb18b716df01469a",
+      "bytes": 670
+    },
+    "SEALED-PACKAGE/SIZE-OBSERVATIONS.json": {
+      "sha256": "f4b70fc914c349c5365776823942359bc8ab7bdb7ba932852b62668509a52514",
+      "bytes": 534
+    },
+    "SEALED-PACKAGE/OFFLINE-REPLAY-RECEIPT.json": {
+      "sha256": "f3164476214c9fc9833bfdf3c35a385731fcb274200880830da743079f0225f3",
+      "bytes": 1077
+    },
+    "SEALED-PACKAGE/README.md": {
+      "sha256": "7497261a561fb01d40d1d02582e56cca085265e3a114c1fa268bccd50314e79f",
+      "bytes": 2107
+    },
+    "SEALED-PACKAGE/VERIFICATION.md": {
+      "sha256": "b4d7aecca19bb9e488296fea7b470180349e97260b0991ddc03101dc031b2edc",
+      "bytes": 6747
+    },
+    "SEALED-PACKAGE/ANSWERABILITY.json": {
+      "sha256": "69b3fd74e6a4bab188491a025b4da4d58ad1401bb84c095231b0a2e4b17eea6f",
+      "bytes": 68895
+    },
+    "SEALED-PACKAGE/IDENTITY.json": {
+      "sha256": "ebb9e793aa951e8cbc0bfc72e7b981e7de903b1bdf6e257a41c1be546702f478",
+      "bytes": 603
+    },
+    "SEALED-PACKAGE/BUDGET.json": {
+      "sha256": "eab6a80c7469f94b8b3f52c6a416b3b6b623b138928e88c6874fb7ae6f1bccdf",
+      "bytes": 754
+    },
+    "SEALED-PACKAGE/REQUEST-INDEX.json.gz": {
+      "sha256": "654d3958a8d2518cd43d08627c071db3c231c39edfb90826c6cf9327db26fb60",
+      "bytes": 69518
+    },
+    "SEALED-PACKAGE/APPROVAL-REQUEST.md": {
+      "sha256": "1372d2efea0e28c1d49bcc2250c72590563e6270373e84719f7ecf59e2b1ac4f",
+      "bytes": 4854
+    },
+    "SEALED-PACKAGE/MANIFEST.json": {
+      "sha256": "320c2c07ba7d461a8bb824e068ac7933808bedea2868cf5d08db041242dcab00",
+      "bytes": 3963
+    },
+    "SEALED-PACKAGE/AUTHORIZATION-TEMPLATE.json": {
+      "sha256": "d16f7b6f04395c5604cc050dcb81b415a744fd0c45a2cf7f80e5ecb03ed867a1",
+      "bytes": 45404
+    },
+    "SEALED-PACKAGE/PERFORMANCE-REPAIR.json": {
+      "sha256": "e81f43a1664ad5b17b7503afb58dfc48d7e53adcf1307917bdaf674a75ed4c99",
+      "bytes": 1559
+    },
+    "SEALED-PACKAGE/SCHEMA-METRICS.json": {
+      "sha256": "682ba2ef6dcc39db9f1eb0e001ba00627bd4eb6c619f9a5c83f050cca92d0b74",
+      "bytes": 4122
+    },
+    "SEALED-PACKAGE/compiled-inputs.json.gz": {
+      "sha256": "05ac7448c3c1a8fc7ab2df99fac9b4ce560905051431128f9970d4df134a8815",
+      "bytes": 56226
+    },
+    "SEALED-PACKAGE/PROPOSAL.json": {
+      "sha256": "26dddd1506673f542e0094939b56ae0e3ccf74e976fa178f399d7d25a2327dbb",
+      "bytes": 19293
+    },
+    "SEALED-PACKAGE/PREPARATION-RECEIPT.json": {
+      "sha256": "cd18c25615742f47d130f860ada115ae5567cef384e7a5fc43c075567dcb7eef",
+      "bytes": 524
+    },
+    "SEALED-PACKAGE/packet.json.gz": {
+      "sha256": "92b63a757557a7cd983c63be10d805651b6ca1787eb3f2365a48a15a58d0325b",
+      "bytes": 435816
+    }
+  },
+  "deleted_or_overwritten": 0,
+  "missing_evidence_to_copy": 0,
+  "legacy_candidate_preserved": "05debe2121e970b79e7e9b097ee28be54a265927c42f370c0bc8d871cab74929"
+}

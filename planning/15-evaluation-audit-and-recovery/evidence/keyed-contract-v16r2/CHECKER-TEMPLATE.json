@@ -1,0 +1,21 @@
+{
+  "revision": "workspace-assistance-keyed-checks-v16",
+  "normalization_revision": "workspace-assistance-keyed-normalization-v16",
+  "request_dependent": true,
+  "rule": "Required judgment keys derive from the exact current validated claim/part/prose identities. Exact actual schema and request digests are retained when each future checker/recheck is derived; no future output is fabricated. Guard runs on the actual SDK-transformed body.",
+  "code": {
+    "src/workspace/d5_capacity_wire.py": "sha256:0bb710c81070850c512f0b45a2e19c38b90d5aa180a091fe910cfeb7870a006a",
+    "src/workspace/assistance_keyed_contract.py": "sha256:ddfc67823bcff360ca2a14c9f2430d2f36867af8cb5812c42d2a59cd50a2c9a1",
+    "src/workspace/assistance_keyed_checks.py": "sha256:5315e8c3fe99bc065eb46140d3db96b0ee1a3d91c7f62ac5dce5352796e3dae1",
+    "src/workspace/assistance_keyed_encoding.py": "sha256:869d23a0543b30c4b18e488de32468e25779b6034b54fcaf05f1e38dac34c4e2",
+    "src/workspace/provider_schema_compat.py": "sha256:fe58bf9c3743e519e4b1f67e37d8bd5aadb73cfdf7bc2f580acfd952f84d88d2",
+    "src/workspace/d5_report_binding.py": "sha256:7997589f23deb735b42295a180f42ce880fa732df78420d151aa37d7ee9d35b1"
+  },
+  "finding_capacity": {
+    "revision": "workspace-assistance-keyed-finding-capacity-v16",
+    "aggregate_findings_limit": null,
+    "per_location_findings_limit": null,
+    "compact_checker_utf8_bytes": 262144,
+    "normalized_checker_utf8_bytes": 1048576
+  }
+}

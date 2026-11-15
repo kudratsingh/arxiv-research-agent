@@ -1,0 +1,16 @@
+{
+  "at": "2026-11-15T04:10:05.659502+00:00",
+  "read_only": true,
+  "snapshot_source": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-evidence/d5-keyed-contract-20261114/FINAL-SNAPSHOT-V16.json.gz",
+  "snapshot_sha256": "479bfa7273b3a4fb45f0536147ecebcba1aacbe05773bd07a90ea1ea5750034a",
+  "snapshot_digest": "29533f8e7f4f6dee641c9a99f7d784617392320ea01ccb1377ec0900188b8bc5",
+  "exact_predecessor_ledger_unchanged": true,
+  "programme_jobs": 37,
+  "messages": 71,
+  "counts": 96,
+  "known_estimated_usd": "2.138481",
+  "historical_overlapping_holds_counted_once_usd": "0.875066",
+  "migration021_absent": true,
+  "new_provider_contacts": 0,
+  "live_mutations": 0
+}

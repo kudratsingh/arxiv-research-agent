@@ -1,0 +1,15 @@
+{
+  "at": "2026-11-15T05:31:23.199858+00:00",
+  "read_only": true,
+  "exact_snapshot_equal": true,
+  "snapshot_digest": "29533f8e7f4f6dee641c9a99f7d784617392320ea01ccb1377ec0900188b8bc5",
+  "programme_jobs": 37,
+  "messages": 71,
+  "counts": 96,
+  "known_estimated_usd": "2.138481",
+  "historical_overlapping_holds_counted_once_usd": "0.875066",
+  "active_jobs": [],
+  "migration021_absent": true,
+  "provider_contacts": 0,
+  "live_mutations": 0
+}

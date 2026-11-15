@@ -1,0 +1,120 @@
+{
+  "application": "d3fec6e576ff5223ff414eb5fff29505378b6a0e",
+  "at": "2026-11-15T05:35:13.263875+00:00",
+  "full_gate": {
+    "command": "make test-cov-diff VENV_PYTHON=/Users/kudratsingh/Machine-Learning-Projects/arxiv-venv-lock/bin/python",
+    "passed": 8101,
+    "skipped": 62,
+    "e2e_deselected": 53,
+    "pytest_reported_seconds": 2561.87,
+    "project_coverage": 94.52021386361504,
+    "project_floor": 89,
+    "patch_printed": 96,
+    "patch_floor": 90,
+    "exit_code": 0,
+    "skip_detail": "62 skips emitted by the full selector; per-test reasons were not printed by this -q invocation. No tests were excluded to obtain the pass."
+  },
+  "package_floors_same_completed_coverage": [
+    {
+      "package": "api",
+      "floor": 86,
+      "actual_printed": "88",
+      "exit_code": 0
+    },
+    {
+      "package": "agents",
+      "floor": 92,
+      "actual_printed": "96",
+      "exit_code": 0
+    },
+    {
+      "package": "security",
+      "floor": 97,
+      "actual_printed": "100",
+      "exit_code": 0
+    },
+    {
+      "package": "eval",
+      "floor": 91,
+      "actual_printed": "95",
+      "exit_code": 0
+    }
+  ],
+  "new_guard_coverage": {
+    "covered_lines": 120,
+    "num_statements": 120,
+    "percent_covered": 100.0,
+    "percent_covered_display": "100",
+    "missing_lines": 0,
+    "excluded_lines": 0,
+    "percent_statements_covered": 100.0,
+    "percent_statements_covered_display": "100",
+    "num_branches": 68,
+    "num_partial_branches": 0,
+    "covered_branches": 68,
+    "missing_branches": 0,
+    "percent_branches_covered": 100.0,
+    "percent_branches_covered_display": "100"
+  },
+  "new_encoder_coverage": {
+    "covered_lines": 123,
+    "num_statements": 123,
+    "percent_covered": 99.33774834437087,
+    "percent_covered_display": "99",
+    "missing_lines": 0,
+    "excluded_lines": 0,
+    "percent_statements_covered": 100.0,
+    "percent_statements_covered_display": "100",
+    "num_branches": 28,
+    "num_partial_branches": 1,
+    "covered_branches": 27,
+    "missing_branches": 1,
+    "percent_branches_covered": 96.42857142857143,
+    "percent_branches_covered_display": "96"
+  },
+  "focused_unit": {
+    "passed": 228,
+    "seconds": 4.83
+  },
+  "protected_integration": {
+    "passed": 3,
+    "seconds": 210.31
+  },
+  "sparse_four_stage": {
+    "passed": 2,
+    "seconds": 35.26
+  },
+  "standalone_e2e": {
+    "passed": 53,
+    "deselected": 8163,
+    "seconds": 21.2
+  },
+  "research_simulation": {
+    "succeeded": 20,
+    "total": 20,
+    "usd": "0"
+  },
+  "registry": {
+    "checked": 260,
+    "mismatches": 0
+  },
+  "mypy": "238 source files pass",
+  "ruff": "pass",
+  "diff_check": "pass",
+  "frontend_tree_unchanged_from": "13c0970a789f17fb3819989c7870996e42f470a8",
+  "new_browser_acceptance_claimed": false,
+  "hosted_exact_head_ci": "PENDING until final published commit; final completion receipt records exact run/conclusions",
+  "real_provider_contacts": 0,
+  "real_spend": "0",
+  "logs": {
+    "full-test-cov-diff-01.log": "9132e118365cd76856663a12d1606c841814a7417b4e3136f7347ffdbb4a4826",
+    "unit-06.log": "abb6e2ee873c473558461061ff5f0727acefcd44c1c3a3b143ddecee22acddaf",
+    "integration-04.log": "6e10dc5f637e3a1e1dda070fecfa82304c26d0165cdae16f4cf48367cd8f4e6c",
+    "sparse-02.log": "edc9b055345816b6b6866a1251c775105011b42c07cbed719000bfed0a4a83e2",
+    "e2e-final-01.log": "802819d0244e2a1f2b978624b581eacbdf701b59a804dd0e29c38d28678fcd2b",
+    "simulate-final-01.log": "fe66be1a03a14becceadbc9ea4b278d64f9c663c2acce7c4b489798bb9fe12e1",
+    "registry-final-01.log": "ffe3a2763694f735d44ac4b58fee474f7091fa78a56db0f351933f7a88375886",
+    "lint-final-01.log": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+    "mypy-03.log": "93d9f832446e7bcc0bc32263a9022d5d03cadcf85fa5fbe7adf224137999ad2e"
+  }
+}
