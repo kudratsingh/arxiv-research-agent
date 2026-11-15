@@ -40,3 +40,35 @@ No test or runtime file changed after the earlier complete gate. Packet verifica
 and all14compiled-input equality checks pass;89producer/71adapter hashes remain
 unchanged. All coverage data and logs are permanent. Hosted CI still needs a fresh
 exact-head run; no cancellation or local result is described as hosted success.
+
+## Lossless artifact container after the completed test gate
+
+The next run43689983976 on d923b207 completed the unit/integration and
+coverage gates:8154passed/9skipped/53E2Edeselected in3781.39s;
+project94.86%, package floors and patch gate passed. Its upload then failed
+because a parameterized raw journal filename contains quotes. Eight other jobs
+passed; the whole run is failed, and downstream Python steps were unrun.
+All available artifacts and raw logs remain permanent. Unuploaded temporary
+journals are unavailable; no recovery is claimed.
+
+The follow-up adds a bounded5minute preservation step before upload. It packs
+raw files under safe opaque tar members and stores each exact original name,
+size, SHA-256, mode and timestamp in an internal/external manifest. Verification
+rehashes every member and refuses missing, duplicate, unlisted or corrupted
+bytes. Originals are never renamed, truncated or overwritten; earlier output
+packages cannot be replaced. Missing/empty source directories are explicit,
+not called complete evidence. Upload contains the safe archive and manifest,
+not raw paths. This is compatible with GitHub's documented artifact filename
+restriction; the original names remain lossless data rather than upload paths.
+
+Regression tests include the actual quoted/CRLF parameter shape, Unicode,
+binary/truncated content, nested/long names, hidden files, duplicate entries,
+manifest mismatch, corruption, symlinks and overwrite refusal. The full local
+gate and a new exact-head hosted run remain required. The runtime application,
+all14compiled inputs and frozen31-file packet are unchanged; this CI helper
+and its tests are outside production producer bindings. It changes no provider,
+quality, cost or approval rule. No rerun is presented as a successful provider
+response or scientific validation.
+
+References: [artifact path validation](https://github.com/actions/toolkit/blob/main/packages/artifact/src/internal/upload/path-and-artifact-name-validation.ts)
+and [upload-artifact packaging guidance](https://github.com/actions/upload-artifact#permission-loss).

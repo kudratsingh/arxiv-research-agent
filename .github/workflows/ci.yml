@@ -379,6 +379,13 @@ jobs:
             --show-uncovered \
             --format "html:build/patch-coverage.html"
 
+      - name: Package raw D5 regression journals losslessly
+        # Raw parametrized names can contain quotes/CR/LF. Upload safe outer
+        # names; the archive manifest retains every original name/hash/byte.
+        if: always()
+        timeout-minutes: 5
+        run: python scripts/package_d5_ci_evidence.py
+
       - name: Upload Python coverage
         # `always()`, for the reason the route-budget report uploads on a
         # breach: the run that broke a floor is the run whose report is
@@ -400,7 +407,8 @@ jobs:
             build/coverage.xml
             build/coverage-summary.txt
             build/patch-coverage.html
-            build/d5-v15-test-evidence/
+            build/d5-regression-journals.tar.gz
+            build/d5-regression-journals-manifest.json
             build/.coverage
           if-no-files-found: warn
           retention-days: 30

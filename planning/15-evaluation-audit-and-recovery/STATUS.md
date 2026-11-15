@@ -1,3 +1,36 @@
+# v16r2 publication verification index
+
+Applicationd3fec6e5 and frozen packet35292dcc remain unchanged. The CI-only
+lossless evidence packaging passes122focusedCI/archive/hygiene contracts and
+preserves96real local regression files/24,387,597bytes with exact names and hashes.
+Fresh full make test-cov-diff:8110passed/62skipped/53E2Edeselected in2501.09s,
+94.520214%project/96%printed patch; all package floors pass. Strict typing238files
+and full Ruff pass. No runtime/src/web or fourteen compiled-input change.
+
+The two predecessor hosted attempts remain cancelled/failed, with available
+artifacts and complete logs preserved. They are not green CI. Completion requires
+all9checks on this exact final follow-up publication; its immutable hosted outcome,
+raw logs, safe evidence archive verification and exact commit are recorded in the
+owner's permanent arxiv-evidence/d5-union-compatibility-20261115/PUBLICATION-RECEIPT.json
+and FINAL-HANDOFF.md after the run. This publication makes no prospective CI-success
+claim. No provider/count/key/grant/migration/accounting/cap/expiry actions occurred.
+
+---
+
+# Final hosted gate pending after lossless evidence-packaging correction
+
+Run43689983976 passed all tests/coverage (8154passed,9skips,94.86%project,
+package/patch floors) but failed the evidence upload on a quoted raw filename.
+It is a failed run, not green CI; downstream Python steps were unrun. The
+[CI-only correction](CI-BACKSTOP-v16r2.md#lossless-artifact-container-after-the-completed-test-gate)
+adds verified opaque archive members with exact original-name/checksum
+mapping. All originals and available failed-run artifacts remain permanent.
+Runtime applicationd3fec6e5, packet35292dcc and all14compiled inputs stay
+unchanged. A fresh full local gate and new exact-head CI are required before
+completion. No provider/count contacts or live/financial changes.
+
+---
+
 # Local CI-context follow-up verified; new hosted run pending
 
 Applicationd3fec6e5 and packet35292dcc remain unchanged. Fresh full local gate:
