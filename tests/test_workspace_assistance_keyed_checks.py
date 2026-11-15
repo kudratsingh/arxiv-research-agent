@@ -180,7 +180,7 @@ def test_exact_coverage_keys_and_mandatory_decisions(mutation):
         "malformed_digest",
         "digest_type",
         "upper_digest",
-        "too_many",
+        "empty_reason",
     ],
 )
 def test_invalid_context_fails_before_schema_or_normalization(probe, mutation):
@@ -306,7 +306,7 @@ def test_independent_prose_findings_share_location_and_keep_full_validation(prob
         "procedural_findings",
         "missing_findings",
         "blank_reason",
-        "too_many",
+        "empty_reason",
         "nonstring_reason",
     ],
 )
@@ -334,7 +334,7 @@ def test_prose_errors_still_rejected(mutation):
     elif mutation == "nonstring_reason":
         raw["prose_findings"]["l1"] = [{"field": "gaps", "index": 0, "reason": "Review."}]
     else:
-        raw["prose_findings"] = {"l1": [str(i) for i in range(8)], "l2": [str(i) for i in range(9)]}
+        raw["prose_findings"]["l1"] = [""]
     with pytest.raises(ValueError):
         keyed.normalize(raw, context)
 
@@ -561,7 +561,8 @@ def test_probe_with_no_prose_has_exact_empty_location_map_and_no_abstention_fabr
         keyed.schemas(context, probe=True)
 
 
-def test_more_locations_than_findings_allow_empty_arrays_but_keep_aggregate_limit():
+@pytest.mark.parametrize("reasons_per_location", [0, 1, 16])
+def test_complete_many_location_findings_have_no_aggregate_count_cap(reasons_per_location):
     raw, context = fixture(12)
     context["unscored_prose"] = {
         "assumptions": [f"A{i}" for i in range(12)],
@@ -574,15 +575,82 @@ def test_more_locations_than_findings_allow_empty_arrays_but_keep_aggregate_limi
     }
     locations = keyed.prose_locations(context)
     assert len(locations) == 22
-    raw["prose_findings"] = {key: [] for key in locations}
+    raw["prose_findings"] = {
+        key: [f"Independent finding {key}/{i}" for i in range(reasons_per_location)]
+        for key in locations
+    }
+    raw["prose_review"] = "unscored_factual_content" if reasons_per_location else "procedural_only"
+    for schema in keyed.schemas(context).values():
+        definition = schema["$defs"][schema["properties"]["prose_findings"]["$ref"].split("/")[-1]]
+        assert all("maxItems" not in value for value in definition["properties"].values())
+        Draft202012Validator(schema).validate(raw)
     normalized = keyed.normalize(raw, context)
-    assert normalized["prose_findings"] == []
+    assert len(normalized["prose_findings"]) == 22 * reasons_per_location
+    keyed.checks_model().model_validate(normalized).validate_locations(context["unscored_prose"])
     assert keyed.compact(normalized, context) == raw
+    assert keyed.normalize(keyed.compact(normalized, context), context) == normalized
+    assert (
+        "maxItems" not in keyed.checks_model().model_json_schema()["properties"]["prose_findings"]
+    )
+
+
+@pytest.mark.parametrize("probe", [False, True])
+@pytest.mark.parametrize("reason_count", [17, 33])
+def test_independent_findings_at_one_location_have_no_count_cap(probe, reason_count):
+    raw, context = fixture(5, probe=probe)
+    context["unscored_prose"] = {"gaps": ["Current exact gap."]}
     raw["prose_review"] = "abstain"
-    raw["prose_findings"]["l1"] = [f"Independent reason {i}" for i in range(16)]
-    normalized = keyed.normalize(raw, context)
-    assert len(normalized["prose_findings"]) == 16
-    assert keyed.compact(normalized, context) == raw
-    raw["prose_findings"]["l22"] = ["Seventeenth finding."]
-    with pytest.raises(ValueError):
-        keyed.normalize(raw, context)
+    raw["prose_findings"] = {"l1": [f"Independent reason {i}." for i in range(reason_count)]}
+    for schema in keyed.schemas(context, probe=probe).values():
+        Draft202012Validator(schema).validate(raw)
+    normalized = keyed.normalize(raw, context, probe=probe)
+    assert len(normalized["prose_findings"]) == reason_count
+    assert keyed.compact(normalized, context, probe=probe) == raw
+    assert (
+        keyed.normalize(keyed.compact(normalized, context, probe=probe), context, probe=probe)
+        == normalized
+    )
+    with pytest.raises(ValueError, match="at most 16"):
+        (v15.probe_checks_model() if probe else v15.checks_model()).model_validate(normalized)
+    raw["prose_findings"]["l1"].append(raw["prose_findings"]["l1"][0])
+    with pytest.raises(ValueError, match="duplicate_prose_finding"):
+        keyed.normalize(raw, context, probe=probe)
+
+
+@pytest.mark.parametrize("probe", [False, True])
+def test_removing_count_caps_preserves_both_prose_byte_guards(probe):
+    from src.workspace.d5_capacity_policy import MAX_COMPACT_CHECK_BYTES, MAX_NORMALIZED_CHECK_BYTES
+
+    raw, context = fixture(5, probe=probe)
+    context["unscored_prose"] = {"gaps": ["Current exact gap."]}
+    raw["prose_review"] = "abstain"
+    raw["prose_findings"] = {"l1": ["A complete independent finding."]}
+    normalized = keyed.normalize(raw, context, probe=probe)
+    oversized = deepcopy(raw)
+    oversized["prose_findings"]["l1"] = ["x" * MAX_COMPACT_CHECK_BYTES]
+    with pytest.raises(ValueError, match="capacity_compact_checks_bytes_exceeded"):
+        keyed.normalize(oversized, context, probe=probe)
+    normalized["prose_findings"][0]["reason"] = "x" * MAX_NORMALIZED_CHECK_BYTES
+    model = keyed.probe_checks_model() if probe else keyed.checks_model()
+    with pytest.raises(ValueError, match="capacity_normalized_checks_bytes_exceeded"):
+        model.model_validate(normalized)
+    with pytest.raises(ValueError, match="capacity_normalized_checks_bytes_exceeded"):
+        keyed.compact(normalized, context, probe=probe)
+
+
+def test_finding_capacity_declares_effective_v16_bounds_without_mutating_legacy_policy():
+    from src.workspace.d5_capacity_policy import MAX_FINDINGS, POLICY
+
+    original = deepcopy(POLICY)
+    metadata = keyed.finding_capacity()
+    assert metadata == {
+        "revision": "workspace-assistance-keyed-finding-capacity-v16",
+        "aggregate_findings_limit": None,
+        "per_location_findings_limit": None,
+        "compact_checker_utf8_bytes": POLICY["compact_checker_utf8_bytes"],
+        "normalized_checker_utf8_bytes": POLICY["normalized_checker_utf8_bytes"],
+    }
+    metadata["compact_checker_utf8_bytes"] = 0
+    assert keyed.finding_capacity()["compact_checker_utf8_bytes"] > 0
+    assert original == POLICY
+    assert MAX_FINDINGS == POLICY["max_prose_findings"] == 16

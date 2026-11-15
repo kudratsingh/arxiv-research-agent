@@ -33,7 +33,7 @@ from src.workspace.assistance_capacity_contract import (
 )
 from src.workspace.assistance_contract import digest
 from src.workspace.assistance_coverage import Retention
-from src.workspace.d5_capacity_policy import CLAIMS_BY_MODE, MAX_FINDINGS, MAX_PARTS
+from src.workspace.d5_capacity_policy import CLAIMS_BY_MODE, MAX_PARTS
 from src.workspace.grounding import SupportDecision
 
 REVISION = "workspace-assistance-keyed-checks-v16"
@@ -83,7 +83,7 @@ class ProseFinding(PriorProseFinding):
 
 class _ProseChecks(_Closed):
     prose_review: Literal["procedural_only", "unscored_factual_content", "abstain"]
-    prose_findings: tuple[ProseFinding, ...] = Field(max_length=MAX_FINDINGS)
+    prose_findings: tuple[ProseFinding, ...]
 
     def validate_locations(self, prose: dict[str, Any]) -> None:
         _validate_locations(self.prose_findings, prose)
@@ -128,6 +128,21 @@ class ProbeChecks(_ProseChecks):
 
 def checks_model() -> type[CoverageChecks]:
     return CoverageChecks
+
+
+def finding_capacity() -> dict[str, Any]:
+    """Prospective v16 findings are byte-bounded, without count-based omission.
+
+    Historical capacity policy and v15 count guards remain unchanged. Exact
+    context locations, nonblank reasons and duplicate rejection remain required.
+    """
+    return {
+        "revision": "workspace-assistance-keyed-finding-capacity-v16",
+        "aggregate_findings_limit": None,
+        "per_location_findings_limit": None,
+        "compact_checker_utf8_bytes": _limits()["compact_checker_utf8_bytes"],
+        "normalized_checker_utf8_bytes": _limits()["normalized_checker_utf8_bytes"],
+    }
 
 
 def probe_checks_model(identifiers: Sequence[str] | None = None) -> type[ProbeChecks]:
@@ -250,7 +265,7 @@ def _wire_model(context: dict[str, Any], *, probe: bool) -> type[BaseModel]:
     prose_fields: dict[str, Any] = {
         key: (
             tuple[_ProseReason, ...],
-            Field(max_length=MAX_FINDINGS, description=location["description"]),
+            Field(description=location["description"]),
         )
         for key, location in locations.items()
     }
