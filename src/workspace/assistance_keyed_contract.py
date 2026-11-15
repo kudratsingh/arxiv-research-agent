@@ -43,6 +43,9 @@ def _new(name: str, *, __base__: Any, **fields: Any) -> type[BaseModel]:
 def prior_policy(policy: dict[str, Any]) -> dict[str, Any]:
     if policy.get("revision") != REVISION:
         raise ValueError("sealed_keyed_revision_mismatch")
+    if "wire_encoding_revision" in policy:
+        from src.workspace.assistance_keyed_encoding import legacy_policy
+        policy = legacy_policy(policy)
     value = {**policy, "revision": prior.REVISION}
     prior.validate_policy(value)
     return value
@@ -120,6 +123,9 @@ def _coverage(
 
 
 def response_model(handles: Sequence[str], purpose: str, policy: dict[str, Any]) -> type[BaseModel]:
+    if "wire_encoding_revision" in policy:
+        from src.workspace import assistance_keyed_encoding as codec
+        return codec.response_model(handles, purpose, policy)
     return _model(
         tuple(sorted(set(handles))), purpose, json.dumps(policy, sort_keys=True, ensure_ascii=False)
     )
@@ -274,6 +280,9 @@ def _model(handles: tuple[str, ...], purpose: str, encoded: str) -> type[BaseMod
 
 
 def schemas(handles: Sequence[str], purpose: str, policy: dict[str, Any]) -> dict[str, Any]:
+    if "wire_encoding_revision" in policy:
+        from src.workspace import assistance_keyed_encoding as codec
+        return codec.schemas(handles, purpose, policy)
     model = response_model(handles, purpose, policy)
     return {"local": model.model_json_schema(), "wire": transform_schema(model)}
 
@@ -322,6 +331,9 @@ def _normalize_validated(
 def normalize(
     payload: dict[str, Any], handles: Sequence[str], purpose: str, policy: dict[str, Any]
 ) -> tuple[dict[str, Any], dict[str, Any]]:
+    if "wire_encoding_revision" in policy:
+        from src.workspace import assistance_keyed_encoding as codec
+        return codec.normalize(payload, handles, purpose, policy)
     prior._bounded(
         payload, prior._limits()["raw_draft_utf8_bytes"], "capacity_draft_bytes_exceeded"
     )
@@ -344,6 +356,9 @@ def _legacy_coverage(coverage: dict[str, Any]) -> dict[str, Any]:
 def wire_payload(
     envelope: dict[str, Any], coverage: dict[str, Any], policy: dict[str, Any]
 ) -> dict[str, Any]:
+    if "wire_encoding_revision" in policy:
+        from src.workspace import assistance_keyed_encoding as codec
+        return codec.wire_payload(envelope, coverage, policy)
     """Lossless inverse for owned normalized data; never convert a live failure."""
     old = prior.wire_payload(envelope, _legacy_coverage(coverage), prior_policy(policy))
     value = old["response"]
@@ -378,6 +393,9 @@ def wire_payload(
 def render(
     payload: dict[str, Any], handles: Sequence[str], purpose: str, policy: dict[str, Any]
 ) -> dict[str, Any]:
+    if "wire_encoding_revision" in policy:
+        from src.workspace import assistance_keyed_encoding as codec
+        return codec.render(payload, handles, purpose, policy)
     envelope, coverage = normalize(payload, handles, purpose, policy)
     draft = prior.normalized_draft(envelope, purpose)
     requests = [CONTEXT_REQUESTS[k] for k in policy["missing_context"]]
@@ -420,6 +438,9 @@ def resolve_draft(
     purpose: str,
     policy: dict[str, Any],
 ) -> tuple[prior.CapacityDraft, tuple[ResearchClaim, ...]]:
+    if "wire_encoding_revision" in policy:
+        from src.workspace import assistance_keyed_encoding as codec
+        return codec.resolve_draft(payload, catalog, materials, purpose=purpose, policy=policy)
     normalized, coverage = normalize(payload, list(catalog), purpose, policy)
     # Exact evidence checks use the existing implementation on a lossless
     # normalized-owned inverse. The additional reasons do not change evidence.

@@ -99,14 +99,14 @@ def capture(store: Any, program_id: str) -> dict[str, Any]:
     }
 
 
-def prepare_selection(store: Any, key: str, mode: str, question: str, units: dict[str, Any], *, intent: str = "answer") -> dict[str, Any]:
+def prepare_selection(store: Any, key: str, mode: str, question: str, units: dict[str, Any], *, intent: str = "answer", union_safe: bool = False) -> dict[str, Any]:
     """Use the qualification-only DTO and actual retained storage, never fake caps."""
     from src.workspace.d5_campaign_packet import BUILD_OWNER
     from src.workspace.d5_capacity_selection import build
-    return upgrade(build(store, BUILD_OWNER, key, mode, question, units, intent=intent))
+    return upgrade(build(store, BUILD_OWNER, key, mode, question, units, intent=intent), union_safe=union_safe)
 
 
-def upgrade(sealed: dict[str, Any]) -> dict[str, Any]:
+def upgrade(sealed: dict[str, Any], *, union_safe: bool = False) -> dict[str, Any]:
     from src.workspace.assistance import capacity
     from src.workspace.assistance_keyed_checks import REVISION as CHECKER_TEMPLATE_REVISION
     from src.workspace.assistance_keyed_checks import finding_capacity
@@ -135,6 +135,12 @@ def upgrade(sealed: dict[str, Any]) -> dict[str, Any]:
         CoverageTaskContext.model_validate(selection["task_context"]), selection["mode"],
         len({u["work_id"] for u in value["units"].values()}), question,
     )
+    if union_safe:
+        from src.workspace.assistance_keyed_encoding import KEY
+        from src.workspace.assistance_keyed_encoding import REVISION as ENCODING
+        from src.workspace.provider_schema_compat import REVISION as COMPAT
+        value["task_policy"][KEY] = ENCODING
+        value["provider_schema_compatibility_revision"] = COMPAT
     value["response_schemas"] = schemas(list(value["units"]), value["response_purpose"], value["task_policy"])
     for stage in ("draft", "repair"):
         value["stage_contracts"][stage]["output_schema"] = value["response_schemas"]["wire"]
@@ -149,7 +155,7 @@ def upgrade(sealed: dict[str, Any]) -> dict[str, Any]:
     return value
 
 
-def freeze(store: Any, snapshot: dict[str, Any]) -> dict[str, Any]:
+def freeze(store: Any, snapshot: dict[str, Any], *, union_safe: bool = False) -> dict[str, Any]:
     from src.workspace.assistance_keyed_checks import (
         NORMALIZATION_REVISION as COMPACT_NORMALIZATION_REVISION,
     )
@@ -177,7 +183,7 @@ def freeze(store: Any, snapshot: dict[str, Any]) -> dict[str, Any]:
     for c in old["cases"]:
         intent = c["sealed"]["task_policy"]["task_intent"]
         sealed = prepare_selection(
-            store, c["id"], c["mode"], c["question"], c["sealed"]["units"], intent=intent
+            store, c["id"], c["mode"], c["question"], c["sealed"]["units"], intent=intent, union_safe=union_safe
         )
         cases.append(
             {
@@ -191,10 +197,12 @@ def freeze(store: Any, snapshot: dict[str, Any]) -> dict[str, Any]:
     probes, references, exclusions = make_probes(store, materials)
     for probe in probes:
         from src.workspace.assistance_keyed_checks import schemas as keyed_schemas
-        probe["sealed"] = upgrade(probe["sealed"])
+        probe["sealed"] = upgrade(probe["sealed"], union_safe=union_safe)
         context = json.loads(probe["wire"]["messages"][0]["content"])
         context["operation"] = "probe"
         context["sealed_request"]["schema_revision"] = probe["sealed"]["schema_revision"]
+        if union_safe:
+            context["sealed_request"]["provider_schema_compatibility_revision"] = probe["sealed"]["provider_schema_compatibility_revision"]
         context["output_schema"] = keyed_schemas(context, probe=True)["wire"]
         probe["wire"] = wire(context, ROUTES)
     selected_materials = {
@@ -264,6 +272,11 @@ def freeze(store: Any, snapshot: dict[str, Any]) -> dict[str, Any]:
         "answerability": matrix(cases),
         "stop_policy": "Broken development response contracts stop before evaluation. Valid negative quality verdicts remain failures and permit unrelated sealed cases. Preserve original hard stops for provider error, new uncertainty, drift, corruption, exhausted limits, expiry/revocation/cancellation. No retry or replacement identity.",
     }
+    if union_safe:
+        from src.workspace.assistance_keyed_encoding import REVISION as ENCODING
+        from src.workspace.provider_schema_compat import POLICY as COMPAT_POLICY
+        value["wire_encoding_revision"] = ENCODING
+        value["provider_schema_compatibility_policy"] = deepcopy(COMPAT_POLICY)
     value.pop("packet_digest", None)
     value.pop("checker_schemas", None)
     with store.pool.connection() as conn:
@@ -281,6 +294,7 @@ def verify_packet(value: dict[str, Any]) -> None:
     from src.workspace.assistance_keyed_checks import finding_capacity
     from src.workspace.assistance_keyed_contract import REVISION as DRAFT_REVISION
     from src.workspace.assistance_keyed_contract import schemas
+    from src.workspace.assistance_keyed_encoding import REVISION as ENCODING
     from src.workspace.d5_adapter import initial_context
     from src.workspace.d5_answerability import matrix
     from src.workspace.d5_campaign_packet import plan_digest
@@ -289,7 +303,11 @@ def verify_packet(value: dict[str, Any]) -> None:
     from src.workspace.d5_capacity_policy import DEADLINES
     from src.workspace.d5_capacity_policy import POLICY as CAPACITY_POLICY
     from src.workspace.d5_operations import wire
-
+    from src.workspace.provider_schema_compat import POLICY as COMPAT_POLICY
+    from src.workspace.provider_schema_compat import REVISION as COMPAT
+    encoding = value.get("wire_encoding_revision")
+    if encoding not in {None, ENCODING} or value.get("provider_schema_compatibility_policy") != (COMPAT_POLICY if encoding else None):
+        raise AdmissionError("campaign_v16_provider_compatibility_policy_drift")
     old = predecessor()
     if (
         value.get("revision") != REVISION
@@ -331,12 +349,13 @@ def verify_packet(value: dict[str, Any]) -> None:
         sealed = current["sealed"]
         if (
             sealed["schema_revision"] != DRAFT_REVISION
+            or sealed.get("provider_schema_compatibility_revision") != (COMPAT if encoding else None)
             or sealed.get("keyed_checker_finding_capacity") != finding_capacity()
             or sealed["stage_contracts"]["check"].get("output_schema_template_revision") != CHECKER_TEMPLATE_REVISION
             or "output_schema" in sealed["stage_contracts"]["check"]
             or sealed["units"] != prior["sealed"]["units"]
             or sealed["task_policy"]
-            != {**prior["sealed"]["task_policy"], "revision": DRAFT_REVISION}
+            != {**prior["sealed"]["task_policy"], "revision": DRAFT_REVISION, **({"wire_encoding_revision": ENCODING} if encoding else {})}
             or sealed["response_schemas"]
             != schemas(
                 list(sealed["units"]),
@@ -357,9 +376,12 @@ def verify_packet(value: dict[str, Any]) -> None:
         earlier = json.loads(prior["wire"]["messages"][0]["content"])
         expected_context = {**earlier, "operation": "probe"}
         expected_context["sealed_request"] = {**earlier["sealed_request"], "schema_revision": DRAFT_REVISION}
+        if encoding:
+            expected_context["sealed_request"]["provider_schema_compatibility_revision"] = COMPAT
         expected_context["output_schema"] = keyed_schemas(expected_context, probe=True)["wire"]
         if (
             probe["id"] != prior["id"] or probe.get("human_labels") is not None
+            or probe["sealed"].get("provider_schema_compatibility_revision") != (COMPAT if encoding else None)
             or probe.get("cohort") != prior["cohort"]
             or probe["sealed"]["units"] != prior["sealed"]["units"]
             or probe["sealed"].get("keyed_checker_finding_capacity") != finding_capacity()

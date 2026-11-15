@@ -65,6 +65,13 @@ def wire(context: dict[str, Any], routes: dict[str, Any]) -> dict[str, Any]:
     result["thinking"] = selected["thinking"]
     result["max_tokens"] = selected["output_tokens"]
     result["output_config"]["effort"] = selected["effort"]
+    sealed = context.get("sealed_request", {})
+    compatibility = sealed.get("provider_schema_compatibility_revision")
+    if compatibility is not None or "wire_encoding_revision" in sealed.get("task_policy", {}):
+        from src.workspace.provider_schema_compat import REVISION, guard
+        if compatibility != REVISION:
+            raise AdmissionError("provider_schema_compatibility_binding_required")
+        guard(result)
     return result
 
 

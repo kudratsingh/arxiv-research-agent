@@ -430,6 +430,22 @@ jobs:
           WORKSPACE_D5_OFFLINE: '1'
         run: python -m tests.d5_keyed_gate --out build/d5-keyed-campaign-offline
 
+      - name: Complete union-safe D5 campaign (v16r2, mock transport)
+        timeout-minutes: 5
+        env:
+          ANTHROPIC_API_KEY: local-preview-disabled
+          WORKSPACE_D5_OFFLINE: '1'
+        run: python -m tests.d5_keyed_gate --union-safe --out build/d5-keyed-union-campaign-offline
+
+      - name: Upload union-safe D5 mock campaign evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: d5-keyed-union-campaign-offline
+          path: build/d5-keyed-union-campaign-offline
+          if-no-files-found: warn
+          retention-days: 30
+
       - name: Upload keyed D5 mock campaign evidence
         if: always()
         uses: actions/upload-artifact@v4

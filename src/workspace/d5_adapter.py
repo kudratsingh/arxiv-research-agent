@@ -108,6 +108,8 @@ def qualification_producer() -> dict[str, Any]:
         "workspace/d5_adapter.py",
         "workspace/assistance_keyed_contract.py",
         "workspace/assistance_keyed_checks.py",
+        "workspace/assistance_keyed_encoding.py",
+        "workspace/provider_schema_compat.py",
         "workspace/d5_campaign_v16_policy.py",
         "workspace/d5_campaign_v16_extension.py",
         "workspace/d5_campaign_v16_packet.py",
@@ -299,6 +301,8 @@ def prepare_input(
     compact["response_purpose"] = sealed.get("response_purpose", "research_comparison")
     if sealed["schema_revision"] in {TASK_REVISION, *COVERAGE_REVISIONS}:
         compact["task_policy"] = sealed["task_policy"]
+    if "provider_schema_compatibility_revision" in sealed:
+        compact["provider_schema_compatibility_revision"] = sealed["provider_schema_compatibility_revision"]
     compact["candidate_initial_wire_digest"] = _digest(sealed["candidate_initial_wire"])
     compact["full_preview_digest"] = _digest(sealed)
     probe_context = None
@@ -395,6 +399,8 @@ def initial_context(sealed: dict[str, Any]) -> dict[str, Any]:
     }
     if sealed["schema_revision"] in {TASK_REVISION, *COVERAGE_REVISIONS}:
         compact["task_policy"] = sealed["task_policy"]
+    if "provider_schema_compatibility_revision" in sealed:
+        compact["provider_schema_compatibility_revision"] = sealed["provider_schema_compatibility_revision"]
     return {
         "phase": "draft",
         "role": "workflow",
@@ -777,6 +783,13 @@ class D5Adapter(QualificationAdapter):
                 expected_policy = seal_task_policy(
                     TaskContext.model_validate(selection["task_context"]), selection["mode"], count
                 )
+            if "provider_schema_compatibility_revision" in sealed:
+                from src.workspace.assistance_keyed_encoding import KEY
+                from src.workspace.assistance_keyed_encoding import REVISION as ENCODING
+                from src.workspace.provider_schema_compat import REVISION as COMPAT
+                if sealed["provider_schema_compatibility_revision"] != COMPAT:
+                    raise AdmissionError("provider_schema_compatibility_binding_required")
+                expected_policy[KEY] = ENCODING
             if sealed["task_policy"] != expected_policy:
                 raise AdmissionError("d5_sealed_task_policy_drift")
         if sealed["settings"] != {
@@ -967,8 +980,16 @@ class D5Adapter(QualificationAdapter):
         if routes:
             from src.workspace.d5_operations import wire
 
-            return wire(context, routes)
-        return build_wire(context)
+            body = wire(context, routes)
+        else:
+            body = build_wire(context)
+        required = self.inputs.settings["d5_request"].get("provider_schema_compatibility_revision")
+        if required is not None:
+            from src.workspace.provider_schema_compat import REVISION, guard
+            if required != REVISION:
+                raise AdmissionError("provider_schema_compatibility_binding_required")
+            guard(body)
+        return body
 
     def _response_output(self, response: dict[str, Any], body: dict[str, Any]) -> dict[str, Any]:
         if self.inputs.settings.get("operation_routes") and body["model"] == "claude-opus-5-5":

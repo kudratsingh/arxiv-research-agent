@@ -274,7 +274,7 @@ def main() -> None:
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "verb", choices=["freeze", "freeze-v14", "freeze-v15", "freeze-v16", "verify", "offline", "run", "report"]
+        "verb", choices=["freeze", "freeze-v14", "freeze-v15", "freeze-v16", "freeze-v16r2", "verify", "offline", "run", "report"]
     )
     parser.add_argument("--packet", type=Path, required=True)
     parser.add_argument("--snapshot", type=Path)
@@ -291,7 +291,7 @@ def main() -> None:
         return
     with database(os.environ["D5_POSTGRES_URL"]) as pool:
         store = WorkspaceStore(pool)
-        if args.verb in {"freeze", "freeze-v14", "freeze-v15", "freeze-v16"}:
+        if args.verb in {"freeze", "freeze-v14", "freeze-v15", "freeze-v16", "freeze-v16r2"}:
             if (
                 args.snapshot is None
                 or os.environ.get("ANTHROPIC_API_KEY") != "local-preview-disabled"
@@ -300,9 +300,9 @@ def main() -> None:
                 raise AdmissionError("campaign_freeze_offline_snapshot_required")
             captured = read(args.snapshot)
             install(store, captured, fixture=True)
-            if args.verb == "freeze-v16":
+            if args.verb in {"freeze-v16", "freeze-v16r2"}:
                 from src.workspace.d5_campaign_v16_packet import freeze as freeze_keyed
-                write(args.packet, freeze_keyed(store, captured))
+                write(args.packet, freeze_keyed(store, captured, union_safe=args.verb == "freeze-v16r2"))
             elif args.verb == "freeze-v15":
                 from src.workspace.d5_campaign_v15_packet import freeze as freeze_capacity
                 write(args.packet, freeze_capacity(store, captured))

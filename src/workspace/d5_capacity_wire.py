@@ -36,6 +36,12 @@ def build_wire(request: dict[str, Any]) -> dict[str, Any]:
             keyed_prose_finding_capacity=finding_capacity(),
         )
         value["identity_contract"] = "Required named coverage entries exactly match sealed requested parts. Use gap_reasons within one part for all missing details. Claims use named slots c1..mode cap; c1 is required, null means an unused remaining slot. Never emit claim_id/part_id or a reverse mapping inside values. Checker named identities/digests are derived server-side from the exact current sealed context; provide every verdict, never repeat IDs."
+    encoding = value.get("sealed_request", {}).get("task_policy", {}).get("wire_encoding_revision")
+    if encoding is not None:
+        from src.workspace.assistance_keyed_encoding import REVISION, UNUSED
+        if encoding != REVISION:
+            raise ValueError("keyed_encoding_revision_mismatch")
+        value["identity_contract"] = "Required named coverage entries exactly match sealed requested parts. Multiple missing details stay together in one gap_reasons collection. Claim slots c1..cap are required objects; c1 is emitted. An unused remaining slot is exactly " + json.dumps(UNUSED, separators=(",", ":")) + ". Never use null or reference an unused slot. Do not emit claim_id/part_id/reverse mappings. Comparison-only abstention cannot answer a comparison, even when context notes are cited; full abstention has no claims or references and every requested part lacks evidence."
     value["request_quality_rule"] = (
         f"At most {CLAIMS_BY_MODE[mode]} atomic claims in {mode} mode; "
         "about 500 characters per claim and 240 per explanation are SOFT targets only. "

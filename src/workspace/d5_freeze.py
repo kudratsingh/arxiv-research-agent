@@ -189,6 +189,8 @@ def code_bindings() -> dict[str, str]:
         'd5_campaign_v16_packet.py',
         'assistance_keyed_contract.py',
         'assistance_keyed_checks.py',
+        'assistance_keyed_encoding.py',
+        'provider_schema_compat.py',
         'migrations/020_d5_capacity_campaign.sql',
         'migrations/021_d5_keyed_continuation.sql',
 
