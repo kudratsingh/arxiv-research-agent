@@ -109,6 +109,7 @@ def prepare_selection(store: Any, key: str, mode: str, question: str, units: dic
 def upgrade(sealed: dict[str, Any]) -> dict[str, Any]:
     from src.workspace.assistance import capacity
     from src.workspace.assistance_keyed_checks import REVISION as CHECKER_TEMPLATE_REVISION
+    from src.workspace.assistance_keyed_checks import finding_capacity
     from src.workspace.assistance_keyed_contract import REVISION as ASSISTANCE_REVISION
     from src.workspace.assistance_keyed_contract import schemas, seal_policy
     from src.workspace.assistance_policy import CoverageTaskContext
@@ -144,6 +145,7 @@ def upgrade(sealed: dict[str, Any]) -> dict[str, Any]:
     value["candidate_initial_wire"] = wire(initial_context(value), ROUTES)
     value["capacity"] = capacity(value)
     value["capacity_policy"] = deepcopy(POLICY)
+    value["keyed_checker_finding_capacity"] = finding_capacity()
     return value
 
 
@@ -152,6 +154,7 @@ def freeze(store: Any, snapshot: dict[str, Any]) -> dict[str, Any]:
         NORMALIZATION_REVISION as COMPACT_NORMALIZATION_REVISION,
     )
     from src.workspace.assistance_keyed_checks import REVISION as CHECKER_TEMPLATE_REVISION
+    from src.workspace.assistance_keyed_checks import finding_capacity
     from src.workspace.d5_adapter import qualification_producer
     from src.workspace.d5_answerability import matrix
     from src.workspace.d5_campaign_packet import BUILD_OWNER, make_probes, plan_digest
@@ -242,6 +245,7 @@ def freeze(store: Any, snapshot: dict[str, Any]) -> dict[str, Any]:
         "operation_routes": ROUTES,
         "operation_deadlines": DEADLINES,
         "capacity_policy": CAPACITY_POLICY,
+        "keyed_checker_finding_capacity": finding_capacity(),
         "expiry_policy": expiry_policy(snapshot["programme"]["programme_expires_at"]),
         "progression": PROGRESSION,
         "cases": cases,
@@ -274,6 +278,7 @@ def verify_packet(value: dict[str, Any]) -> None:
         NORMALIZATION_REVISION as COMPACT_NORMALIZATION_REVISION,
     )
     from src.workspace.assistance_keyed_checks import REVISION as CHECKER_TEMPLATE_REVISION
+    from src.workspace.assistance_keyed_checks import finding_capacity
     from src.workspace.assistance_keyed_contract import REVISION as DRAFT_REVISION
     from src.workspace.assistance_keyed_contract import schemas
     from src.workspace.d5_adapter import initial_context
@@ -294,6 +299,7 @@ def verify_packet(value: dict[str, Any]) -> None:
         or value.get("operation_routes") != ROUTES
         or value.get("operation_deadlines") != DEADLINES
         or value.get("capacity_policy") != CAPACITY_POLICY
+        or value.get("keyed_checker_finding_capacity") != finding_capacity()
         or value.get("expiry_policy") != expiry_policy(value["programme"]["programme_expires_at"])
         or value.get("progression") != PROGRESSION
         or value.get("measurement_cases") != []
@@ -325,6 +331,7 @@ def verify_packet(value: dict[str, Any]) -> None:
         sealed = current["sealed"]
         if (
             sealed["schema_revision"] != DRAFT_REVISION
+            or sealed.get("keyed_checker_finding_capacity") != finding_capacity()
             or sealed["stage_contracts"]["check"].get("output_schema_template_revision") != CHECKER_TEMPLATE_REVISION
             or "output_schema" in sealed["stage_contracts"]["check"]
             or sealed["units"] != prior["sealed"]["units"]
@@ -355,6 +362,7 @@ def verify_packet(value: dict[str, Any]) -> None:
             probe["id"] != prior["id"] or probe.get("human_labels") is not None
             or probe.get("cohort") != prior["cohort"]
             or probe["sealed"]["units"] != prior["sealed"]["units"]
+            or probe["sealed"].get("keyed_checker_finding_capacity") != finding_capacity()
             or probe["wire"] != wire(expected_context, ROUTES)
         ):
             raise AdmissionError("campaign_v16_probe_evidence_or_wire_drift")

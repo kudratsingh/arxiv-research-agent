@@ -22,6 +22,19 @@ def build_wire(request: dict[str, Any]) -> dict[str, Any]:
     mode = value.get("sealed_request", {}).get("assistance", {}).get("mode", "research")
     value["capacity_policy"] = deepcopy(POLICY)
     if keyed:
+        from src.workspace.assistance_keyed_checks import (
+            NORMALIZATION_REVISION as KEYED_NORMALIZATION_REVISION,
+        )
+        from src.workspace.assistance_keyed_checks import REVISION as KEYED_CHECKER_REVISION
+        from src.workspace.assistance_keyed_checks import finding_capacity
+
+        value["capacity_policy"].pop("max_prose_findings")
+        value["capacity_policy"].update(
+            assistance_revision="workspace-assistance-keyed-v16",
+            checker_revision=KEYED_CHECKER_REVISION,
+            normalization_revision=KEYED_NORMALIZATION_REVISION,
+            keyed_prose_finding_capacity=finding_capacity(),
+        )
         value["identity_contract"] = "Required named coverage entries exactly match sealed requested parts. Use gap_reasons within one part for all missing details. Claims use named slots c1..mode cap; c1 is required, null means an unused remaining slot. Never emit claim_id/part_id or a reverse mapping inside values. Checker named identities/digests are derived server-side from the exact current sealed context; provide every verdict, never repeat IDs."
     value["request_quality_rule"] = (
         f"At most {CLAIMS_BY_MODE[mode]} atomic claims in {mode} mode; "
@@ -59,7 +72,7 @@ def build_wire(request: dict[str, Any]) -> dict[str, Any]:
         value["checker_wire_rule"] = (
             "Return the fixed revision and every required named claim_reviews and coverage_checks entry in output_schema. "
             "Preserve support, atomicity, all qualification, coverage, priority and prose judgments. "
-            "For prose_findings return each required l-location key with an array of independent reasons; empty means no finding. "
+            "For prose_findings return each required l-location key with all independent reasons; empty means no finding. No per-location or aggregate finding-count cap applies; retain complete findings within the declared byte protections. "
             "Schema location descriptions identify the exact unscored_prose field/index. Do not echo IDs, digests or location fields. "
             "Never omit a negative or uncertain judgment, and never truncate an explanation."
         )

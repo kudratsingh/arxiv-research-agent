@@ -6,6 +6,7 @@ No private archive, real credential, live ledger or provider contact is used.
 
 from __future__ import annotations
 
+import json
 from copy import deepcopy
 from datetime import UTC, datetime, timedelta
 
@@ -304,6 +305,7 @@ async def test_frozen_source_code_threshold_template_and_schedule_drift_refused(
             "operation_routes",
             "operation_deadlines",
             "capacity_policy",
+            "keyed_checker_finding_capacity",
             "expiry_policy",
             "checker_schema_template_revision",
             "checker_normalization_revision",
@@ -317,10 +319,16 @@ async def test_frozen_source_code_threshold_template_and_schedule_drift_refused(
             "source",
             "check_template",
             "probe_wire",
+            "probe_capacity",
+            "case_capacity",
             "extension",
         ):
             bad = deepcopy(packet)
-            if mutation == "probe_wire":
+            if mutation == "probe_capacity":
+                bad["probes"][0]["sealed"]["keyed_checker_finding_capacity"] = {}
+            elif mutation == "case_capacity":
+                bad["cases"][0]["sealed"]["keyed_checker_finding_capacity"] = {}
+            elif mutation == "probe_wire":
                 bad["probes"][0]["wire"] = {}
             elif mutation == "extension":
                 bad["campaign_extension"]["core"]["plan_digest"] = "changed"
@@ -704,14 +712,36 @@ async def test_missing_parent_and_unmigrated_active_scope_are_not_authority():
     assert extension.active(MemoryConnection({"to_regclass": [(None,)]}), "program") is None
 
 
-async def test_independent_same_location_findings_survive_repair_and_report(store):
+@pytest.mark.parametrize("finding_count", [2, 17])
+async def test_independent_same_location_findings_survive_repair_and_report(store, finding_count):
+    class CompleteFindings(KeyedCampaignTransport):
+        async def __call__(self, request):
+            response = await super().__call__(request)
+            if request.url.path.endswith("count_tokens"):
+                return response
+            body = response.json()
+            text_blocks = [block for block in body["content"] if block["type"] == "text"]
+            assert len(text_blocks) == 1
+            payload = json.loads(text_blocks[0]["text"])
+            if isinstance(payload.get("prose_findings"), dict):
+                locations = payload["prose_findings"]
+                first = next(iter(locations))
+                locations[first] = [f"Independent factual premise {i}" for i in range(finding_count)]
+                payload["prose_review"] = "unscored_factual_content"
+                text_blocks[0]["text"] = json.dumps(payload)
+                from jsonschema import Draft202012Validator
+                request_body = json.loads(request.content)
+                Draft202012Validator(request_body["output_config"]["format"]["schema"]).validate(payload)
+                return httpx.Response(200, json=body)
+            return response
+
     try:
         packet = await setup_keyed(store)
         report = await run(
             store,
             packet,
             offline=True,
-            transport_factory=lambda key: KeyedCampaignTransport(
+            transport_factory=lambda key: CompleteFindings(
                 key, scenario="same_location_findings"
             ),
             checkpoint_after=1,
@@ -720,7 +750,7 @@ async def test_independent_same_location_findings_survive_repair_and_report(stor
         raw = report["raw_results"][packet["schedule"][0]]
         assert [step["stage"] for step in raw["steps"]] == ["draft", "check", "repair", "check"]
         findings = raw["steps"][-1]["output"]["prose_findings"]
-        assert len(findings) == 2
+        assert len(findings) == finding_count
         assert (findings[0]["field"], findings[0]["index"]) == (
             findings[1]["field"],
             findings[1]["index"],
@@ -729,4 +759,4 @@ async def test_independent_same_location_findings_survive_repair_and_report(stor
         assert report["cases"][0]["prose_findings"] == findings
         assert report["cases"][0]["assessment_binding"]["status"] == "bound"
     finally:
-        export_rows(store, "v16-independent-prose-findings")
+        export_rows(store, f"v16-independent-prose-findings-{finding_count}")
