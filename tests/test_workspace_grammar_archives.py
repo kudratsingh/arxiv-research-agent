@@ -35,3 +35,17 @@ def test_exact_archived_request_response_and_structural_facts():
         assert guard(body)["documented_limits_pass"]
     assert error["error"] == {"type": "invalid_request_error", "message": GRAMMAR_ERROR}
     assert "usage" not in error and error["request_id"] == "req_011Ch4ajrrUD98caVDiX8ybq"
+
+
+@pytest.mark.parametrize("key", ["synthetic-placeholder", "synthetic-newline\nplaceholder"])
+@pytest.mark.parametrize("transport", [False, True])
+def test_diagnostic_reasons_never_persist_credentials_or_header_reprs(key, transport):
+    import httpx
+
+    from src.workspace.d5_compatibility import safe_reason
+
+    for message in ("Header: " + key, "Header repr: " + repr(key)):
+        error = httpx.LocalProtocolError(message) if transport else ValueError(message)
+        reason = safe_reason(error, key)
+        assert key not in reason and repr(key)[1:-1] not in reason
+        assert reason == "LocalProtocolError" if transport else "[credential redacted]" in reason

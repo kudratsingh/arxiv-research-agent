@@ -35,6 +35,17 @@ from src.workspace.store import WorkspaceStore
 GRAMMAR_ERROR = "The compiled grammar is too large, which would cause performance issues. Simplify your tool schemas or reduce the number of strict tools."
 
 
+def safe_reason(exc: BaseException, key: str) -> str:
+    """Transport errors can include header reprs; never persist that text."""
+    if isinstance(exc, httpx.HTTPError):
+        return type(exc).__name__
+    reason = str(exc)
+    for value in (key, repr(key)[1:-1]):
+        if value:
+            reason = reason.replace(value, "[credential redacted]")
+    return reason
+
+
 def received_rejection(data: dict[str, Any], case_id: str) -> bool:
     if case_id not in {"learn-list-control", "learn-compact", "research-compact"}:
         return False
@@ -594,7 +605,7 @@ class DiagnosticAdapter(QualificationAdapter):
                         expected_received_grammar_rejection=True,
                         complete_response_received=True,
                     )
-            obs.update(error_class=type(exc).__name__, reason=str(exc))
+            obs.update(error_class=type(exc).__name__, reason=safe_reason(exc, self.api_key))
             obs["stop_required"] = isinstance(exc, AdmissionError) and str(exc) not in {
                 "diagnostic_model_or_incomplete_output",
                 "diagnostic_duplicate_json_key",
@@ -696,7 +707,7 @@ async def run(
             job = adapter.start(entry["request_id"])
             await adapter.advance(job["id"])
         except Exception as exc:
-            stop = {"case": key, "reason": type(exc).__name__ + ":" + str(exc)}
+            stop = {"case": key, "reason": type(exc).__name__ + ":" + safe_reason(exc, api_key)}
             break
         row = next(r for r in snapshots(store, packet, compiled) if r["case"] == key)
         obs = row["observation"]
@@ -740,6 +751,7 @@ async def run(
         )
     return {
         "packet_digest": packet["packet_digest"],
+        "transport_mode": "mock" if isinstance(transport, httpx.MockTransport) else "provider",
         "cases": [{"id": key, **results.get(key, {"state": "unrun"})} for key in spec.ORDER],
         "stop": stop,
         "human_qualification": False,
@@ -755,12 +767,19 @@ def reports(out: Path, result: dict[str, Any]) -> None:
     targets = [out, out.with_suffix(".md"), out.with_suffix(".html")]
     if any(p.exists() for p in targets):
         raise AdmissionError("diagnostic_report_exists_preserve_original")
+    synthetic = result.get("transport_mode") == "mock"
     rows = [
-        "# Quarantined schema compatibility diagnostic",
+        "# OFFLINE SYNTHETIC schema diagnostic"
+        if synthetic
+        else "# Quarantined schema compatibility diagnostic",
         "",
-        "Provider observations are separate from research quality. Human labels remain blank.",
+        "MockTransport only. No provider calls, remote compiler observations or actual token measurements. Human labels remain blank."
+        if synthetic
+        else "Provider observations are separate from research quality. Human labels remain blank.",
         "",
-        "| Identity | Compiler | Complete | Local validity | Quality |",
+        "| Identity | Simulated compiler branch | Complete | Local validity | Quality |"
+        if synthetic
+        else "| Identity | Remote compiler | Complete | Local validity | Quality |",
         "|---|---|---|---|---|",
     ]
     for c in result["cases"]:

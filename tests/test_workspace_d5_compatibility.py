@@ -148,6 +148,10 @@ class Transport:
             )
         if self.callback:
             self.callback(case)
+        if self.scenario == "credential_error" and case["id"] == self.case:
+            raise httpx.LocalProtocolError(
+                "Synthetic header repr: " + repr("local-preview-disabled")
+            )
         if self.scenario == "timeout" and case["id"] == self.case:
             raise httpx.ReadTimeout("Synthetic timeout; no provider contact", request=request)
         if self.scenario in {"grammar", "other400"} and case["id"] == self.case:
@@ -237,6 +241,7 @@ async def test_complete_six_identity_protected_offline_roundtrip(store):
         "wrong_model",
         "bad_usage",
         "duplicate",
+        "credential_error",
     ],
 )
 async def test_received_errors_uncertainty_and_invalid_outputs_are_not_acceptance(store, scenario):
@@ -247,6 +252,9 @@ async def test_received_errors_uncertainty_and_invalid_outputs_are_not_acceptanc
         rows = ctl.snapshots(store, packet)
         failed = rows[1]["observation"]
         assert failed and not failed["content_accepted"]
+        if scenario == "credential_error":
+            assert failed["reason"] == "LocalProtocolError"
+            assert "local-preview-disabled" not in failed["reason"]
         if scenario == "grammar":
             assert report["stop"] is None, report
             assert failed["remote_compiler_acceptance"] is False
@@ -394,7 +402,9 @@ async def test_cli_report_exports_and_exact_jsonb_binding(store, monkeypatch, tm
     ctl.reports(target, report)
     assert read(target)["accounting"]["cumulative"]["funded_programme_jobs"] == 44
     assert "UNMEASURED" in target.with_suffix(".md").read_text()
-    assert "Quarantined" in target.with_suffix(".html").read_text()
+    assert "OFFLINE SYNTHETIC" in target.with_suffix(".html").read_text()
+    assert "No provider calls" in target.with_suffix(".html").read_text()
+    assert report["transport_mode"] == "mock"
     with pytest.raises(AdmissionError, match="preserve_original"):
         ctl.reports(target, report)
 
