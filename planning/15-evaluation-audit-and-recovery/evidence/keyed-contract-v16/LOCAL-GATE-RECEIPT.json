@@ -1,0 +1,66 @@
+{
+  "application": "10f1dba181beb97d013761319cc1ba7e915872e0",
+  "full_gate": "make test-cov-diff",
+  "passed": 8046,
+  "skipped": 62,
+  "separate_e2e_deselected": 53,
+  "duration_seconds": 2426.76,
+  "project_percent": 94.4671510747805,
+  "patch_printed_percent": 96,
+  "patch_lines": 13940,
+  "patch_missing_lines": 491,
+  "package_floors_same_complete_coverage_data": {
+    "api": {
+      "floor": 86,
+      "printed_actual_percent": 88.0
+    },
+    "agents": {
+      "floor": 92,
+      "printed_actual_percent": 96.0
+    },
+    "security": {
+      "floor": 97,
+      "printed_actual_percent": 100.0
+    },
+    "eval": {
+      "floor": 91,
+      "printed_actual_percent": 95.0
+    }
+  },
+  "late_test_only_cherry_pick_separate": true,
+  "files": {
+    ".coverage": "8adfcd16dfcda1c4935e17d37480a41ab6a10d682792709064957d54784ef5e3",
+    "coverage.json": "ec951c3840c9b4f058cbd27a1122cda367ca90a7c76ec399a66808b9e7e6cc9d",
+    "coverage.xml": "fe1974ab1b1de90744d906f6bb04e8235f57d95450b79f5e72adab1cdb38625d"
+  },
+  "test_only_checkout": "e59de9b4f17881be1aa6f163c4e104e603a7e1e3",
+  "late_regression": {
+    "passed": 1,
+    "seconds": 27.79,
+    "log_sha256": "166e5cc244c378bca26dc60726f8763ad7b967919c4fc46a85cf39bf932139b3"
+  },
+  "separate_e2e": {
+    "passed": 53,
+    "deselected": 8108,
+    "seconds": 18.9
+  },
+  "simulation": {
+    "passed": 20,
+    "episodes": 20,
+    "spend_usd": "0"
+  },
+  "registry": {
+    "objects": 260,
+    "mismatches": 0
+  },
+  "typecheck": {
+    "source_files": 236,
+    "result": "PASS"
+  },
+  "frontend_receipt": "FRONTEND-RECEIPT.json",
+  "remote_ci": "Separate exact-published-head run recorded in permanent publication receipt and completion handoff; never inferred from local checks.",
+  "real_provider_contacts": 0,
+  "live_migrations": 0,
+  "financial_or_authority_mutations": 0,
+  "late_test_lint": "One import-order finding fixed without changing assertions; complete Ruff gate passed afterward."
+}

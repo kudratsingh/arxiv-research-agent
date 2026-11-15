@@ -1,0 +1,10 @@
+{
+  "capacity_change": false,
+  "expiry_extension": false,
+  "future_owner_approval_required": true,
+  "historical_001_through_020_changed": false,
+  "live_applied": false,
+  "name": "021_d5_keyed_continuation",
+  "purpose": "Separate append-only successor records with correct v15 predecessor foreign keys",
+  "sha256": "sha256:e916c01b970c987ec1b79ae3d13ff55ca1b0723468448db6ba09cbc59f48307b"
+}

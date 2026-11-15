@@ -1,0 +1,1240 @@
+{
+  "revision": "v16r5-canonical-protected-offline-replay-v1",
+  "application": "10f1dba181beb97d013761319cc1ba7e915872e0",
+  "packet_digest": "05debe2121e970b79e7e9b097ee28be54a265927c42f370c0bc8d871cab74929",
+  "proposal_digest": "99775751b59d4f0a5461c0ed8ccfb6003bf0374fc28a76243ced84a31153f7ac",
+  "outcomes": 14,
+  "mock_messages": 44,
+  "mock_exact_paired_counts": 44,
+  "complete_lossless_http_bodies_verified": 88,
+  "workflow_final_bindings_verified": 10,
+  "machine_quality": "HOLD",
+  "human_review": null,
+  "real_provider_contacts": 0,
+  "real_spend_usd": "0",
+  "retained_holds": "0.875066",
+  "warning": "Mock counts/usage/judgments are fixtures, not real token fit, remote compilation, actual billing or scientific quality evidence.",
+  "body_receipts": [
+    {
+      "case": "campaign-dev-learn",
+      "ordinal": 0,
+      "endpoint": "messages/count_tokens",
+      "sha256": "ef9d109afd6330bddb2873868481589fb48ce6d30ed9127020d113c6fe8eddeb",
+      "bytes": 20
+    },
+    {
+      "case": "campaign-dev-learn",
+      "ordinal": 1,
+      "endpoint": "messages",
+      "sha256": "941482f68ccb85db7365d219aed33fe592539cc15ce3dccdf78c9953bc660b99",
+      "bytes": 17925
+    },
+    {
+      "case": "campaign-dev-learn",
+      "ordinal": 2,
+      "endpoint": "messages/count_tokens",
+      "sha256": "ef9d109afd6330bddb2873868481589fb48ce6d30ed9127020d113c6fe8eddeb",
+      "bytes": 20
+    },
+    {
+      "case": "campaign-dev-learn",
+      "ordinal": 3,
+      "endpoint": "messages",
+      "sha256": "9d71831d7adb5717dd7e12bb64ba38078725ad2938618474f29611989667ca02",
+      "bytes": 14085
+    },
+    {
+      "case": "campaign-dev-learn",
+      "ordinal": 4,
+      "endpoint": "messages/count_tokens",
+      "sha256": "ef9d109afd6330bddb2873868481589fb48ce6d30ed9127020d113c6fe8eddeb",
+      "bytes": 20
+    },
+    {
+      "case": "campaign-dev-learn",
+      "ordinal": 5,
+      "endpoint": "messages",
+      "sha256": "553aac8b2d51f35a02690e4e67cfd6f1bdf43f6007e45f7a43d78b0f1d0c445f",
+      "bytes": 17925
+    },
+    {
+      "case": "campaign-dev-learn",
+      "ordinal": 6,
+      "endpoint": "messages/count_tokens",
+      "sha256": "ef9d109afd6330bddb2873868481589fb48ce6d30ed9127020d113c6fe8eddeb",
+      "bytes": 20
+    },
+    {
+      "case": "campaign-dev-learn",
+      "ordinal": 7,
+      "endpoint": "messages",
+      "sha256": "65cf17756c6a5e13226ab1d18ad07c57bd2ceff1212aadcfbb05eac0b0cc768f",
+      "bytes": 13963
+    },
+    {
+      "case": "campaign-dev-compare",
+      "ordinal": 0,
+      "endpoint": "messages/count_tokens",
+      "sha256": "ef9d109afd6330bddb2873868481589fb48ce6d30ed9127020d113c6fe8eddeb",
+      "bytes": 20
+    },
+    {
+      "case": "campaign-dev-compare",
+      "ordinal": 1,
+      "endpoint": "messages",
+      "sha256": "47b6b7ea58ac4427ad48a8bb025a342ce9d79a21764986099632cf6ef3880ae0",
+      "bytes": 27927
+    },
+    {
+      "case": "campaign-dev-compare",
+      "ordinal": 2,
+      "endpoint": "messages/count_tokens",
+      "sha256": "ef9d109afd6330bddb2873868481589fb48ce6d30ed9127020d113c6fe8eddeb",
+      "bytes": 20
+    },
+    {
+      "case": "campaign-dev-compare",
+      "ordinal": 3,
+      "endpoint": "messages",
+      "sha256": "8fc1c23f873338f538c2e95fef3d5d991b8e26da3e8bac2a61161908e642be9d",
+      "bytes": 19214
+    },
+    {
+      "case": "campaign-dev-compare",
+      "ordinal": 4,
+      "endpoint": "messages/count_tokens",
+      "sha256": "ef9d109afd6330bddb2873868481589fb48ce6d30ed9127020d113c6fe8eddeb",
+      "bytes": 20
+    },
+    {
+      "case": "campaign-dev-compare",
+      "ordinal": 5,
+      "endpoint": "messages",
+      "sha256": "670de6549cd9ed022cc45bd7108fd16569e6c7be2034f8e5d25004b4e6b38854",
+      "bytes": 27927
+    },
+    {
+      "case": "campaign-dev-compare",
+      "ordinal": 6,
+      "endpoint": "messages/count_tokens",
+      "sha256": "ef9d109afd6330bddb2873868481589fb48ce6d30ed9127020d113c6fe8eddeb",
+      "bytes": 20
+    },
+    {
+      "case": "campaign-dev-compare",
+      "ordinal": 7,
+      "endpoint": "messages",
+      "sha256": "2c3735076206a0ece3f19d9174608be2ab644fffc7b09cae64697eeb2074939d",
+      "bytes": 19048
+    },
+    {
+      "case": "campaign-eval-learn-mechanism",
+      "ordinal": 0,
+      "endpoint": "messages/count_tokens",
+      "sha256": "ef9d109afd6330bddb2873868481589fb48ce6d30ed9127020d113c6fe8eddeb",
+      "bytes": 20
+    },
+    {
+      "case": "campaign-eval-learn-mechanism",
+      "ordinal": 1,
+      "endpoint": "messages",
+      "sha256": "e2903faf907777bb7cd99afb39e0e9d3d336747a2f190440b009ca4962f78e3a",
+      "bytes": 18808
+    },
+    {
+      "case": "campaign-eval-learn-mechanism",
+      "ordinal": 2,
+      "endpoint": "messages/count_tokens",
+      "sha256": "ef9d109afd6330bddb2873868481589fb48ce6d30ed9127020d113c6fe8eddeb",
+      "bytes": 20
+    },
+    {
+      "case": "campaign-eval-learn-mechanism",
+      "ordinal": 3,
+      "endpoint": "messages",
+      "sha256": "435b24045e0e5a29eeb05c74dc1e59f1c065b0b720e61281a03e2e3c0f77ec95",
+      "bytes": 14096
+    },
+    {
+      "case": "campaign-eval-learn-mechanism",
+      "ordinal": 4,
+      "endpoint": "messages/count_tokens",
+      "sha256": "ef9d109afd6330bddb2873868481589fb48ce6d30ed9127020d113c6fe8eddeb",
+      "bytes": 20
+    },
+    {
+      "case": "campaign-eval-learn-mechanism",
+      "ordinal": 5,
+      "endpoint": "messages",
+      "sha256": "b6b873b3903e63b4651875cf5a196b73e09ad11a064816cf568595e9e5339707",
+      "bytes": 18808
+    },
+    {
+      "case": "campaign-eval-learn-mechanism",
+      "ordinal": 6,
+      "endpoint": "messages/count_tokens",
+      "sha256": "ef9d109afd6330bddb2873868481589fb48ce6d30ed9127020d113c6fe8eddeb",
+      "bytes": 20
+    },
+    {
+      "case": "campaign-eval-learn-mechanism",
+      "ordinal": 7,
+      "endpoint": "messages",
+      "sha256": "a6894bc1b1e615995ef59a4da4d845e26232943947400ec86e960927d862923a",
+      "bytes": 13974
+    },
+    {
+      "case": "campaign-eval-learn-conditions",
+      "ordinal": 0,
+      "endpoint": "messages/count_tokens",
+      "sha256": "ef9d109afd6330bddb2873868481589fb48ce6d30ed9127020d113c6fe8eddeb",
+      "bytes": 20
+    },
+    {
+      "case": "campaign-eval-learn-conditions",
+      "ordinal": 1,
+      "endpoint": "messages",
+      "sha256": "e41bdbf07e289e1c18ed4dd7c476d176960df9534c7d8b6b938cc47a7282d0b9",
+      "bytes": 17953
+    },
+    {
+      "case": "campaign-eval-learn-conditions",
+      "ordinal": 2,
+      "endpoint": "messages/count_tokens",
+      "sha256": "ef9d109afd6330bddb2873868481589fb48ce6d30ed9127020d113c6fe8eddeb",
+      "bytes": 20
+    },
+    {
+      "case": "campaign-eval-learn-conditions",
+      "ordinal": 3,
+      "endpoint": "messages",
+      "sha256": "802540ebc202b62ebfe7487526c3f6d12c827db298988b6d4c628e0e24cb7210",
+      "bytes": 14097
+    },
+    {
+      "case": "campaign-eval-learn-conditions",
+      "ordinal": 4,
+      "endpoint": "messages/count_tokens",
+      "sha256": "ef9d109afd6330bddb2873868481589fb48ce6d30ed9127020d113c6fe8eddeb",
+      "bytes": 20
+    },
+    {
+      "case": "campaign-eval-learn-conditions",
+      "ordinal": 5,
+      "endpoint": "messages",
+      "sha256": "572b0082967fe4f5ba2a79a6d7775233e62e34593bc2b4fd0308c2668b16069e",
+      "bytes": 17953
+    },
+    {
+      "case": "campaign-eval-learn-conditions",
+      "ordinal": 6,
+      "endpoint": "messages/count_tokens",
+      "sha256": "ef9d109afd6330bddb2873868481589fb48ce6d30ed9127020d113c6fe8eddeb",
+      "bytes": 20
+    },
+    {
+      "case": "campaign-eval-learn-conditions",
+      "ordinal": 7,
+      "endpoint": "messages",
+      "sha256": "fd1f1f34e7775085b5116b7cd3aa64023b8bb4882f4597eb67d6508f7157a644",
+      "bytes": 13975
+    },
+    {
+      "case": "campaign-eval-learn-experiment",
+      "ordinal": 0,
+      "endpoint": "messages/count_tokens",
+      "sha256": "ef9d109afd6330bddb2873868481589fb48ce6d30ed9127020d113c6fe8eddeb",
+      "bytes": 20
+    },
+    {
+      "case": "campaign-eval-learn-experiment",
+      "ordinal": 1,
+      "endpoint": "messages",
+      "sha256": "72f578e61e29a2e840f56becb382a44301d4f8d9e511ba3edd9663ce7f8cd811",
+      "bytes": 18441
+    },
+    {
+      "case": "campaign-eval-learn-experiment",
+      "ordinal": 2,
+      "endpoint": "messages/count_tokens",
+      "sha256": "ef9d109afd6330bddb2873868481589fb48ce6d30ed9127020d113c6fe8eddeb",
+      "bytes": 20
+    },
+    {
+      "case": "campaign-eval-learn-experiment",
+      "ordinal": 3,
+      "endpoint": "messages",
+      "sha256": "021ffe659e0bc68c95d1f970924c1dba8131ae7cd5af50d7faea9b29dbd9815e",
+      "bytes": 14097
+    },
+    {
+      "case": "campaign-eval-learn-experiment",
+      "ordinal": 4,
+      "endpoint": "messages/count_tokens",
+      "sha256": "ef9d109afd6330bddb2873868481589fb48ce6d30ed9127020d113c6fe8eddeb",
+      "bytes": 20
+    },
+    {
+      "case": "campaign-eval-learn-experiment",
+      "ordinal": 5,
+      "endpoint": "messages",
+      "sha256": "b2d41ef9060a5fce32d2f7e9b9af0a242a570b9fc8da8b363d2250aff0f04f07",
+      "bytes": 18441
+    },
+    {
+      "case": "campaign-eval-learn-experiment",
+      "ordinal": 6,
+      "endpoint": "messages/count_tokens",
+      "sha256": "ef9d109afd6330bddb2873868481589fb48ce6d30ed9127020d113c6fe8eddeb",
+      "bytes": 20
+    },
+    {
+      "case": "campaign-eval-learn-experiment",
+      "ordinal": 7,
+      "endpoint": "messages",
+      "sha256": "a2b1b988816587277eb0b633900b5be6fb56ad67cc77b110b0f13386420b4c1d",
+      "bytes": 13975
+    },
+    {
+      "case": "campaign-eval-learn-measurement",
+      "ordinal": 0,
+      "endpoint": "messages/count_tokens",
+      "sha256": "ef9d109afd6330bddb2873868481589fb48ce6d30ed9127020d113c6fe8eddeb",
+      "bytes": 20
+    },
+    {
+      "case": "campaign-eval-learn-measurement",
+      "ordinal": 1,
+      "endpoint": "messages",
+      "sha256": "5bd48f644d5d0cf6875852fa17593f7b4595acb45a22702fde640b60a01af3f7",
+      "bytes": 18658
+    },
+    {
+      "case": "campaign-eval-learn-measurement",
+      "ordinal": 2,
+      "endpoint": "messages/count_tokens",
+      "sha256": "ef9d109afd6330bddb2873868481589fb48ce6d30ed9127020d113c6fe8eddeb",
+      "bytes": 20
+    },
+    {
+      "case": "campaign-eval-learn-measurement",
+      "ordinal": 3,
+      "endpoint": "messages",
+      "sha256": "ce0add82e16a7bb17c039bef9edfc2e6231affbc6aa7c3602f8c0e503f197e3d",
+      "bytes": 14098
+    },
+    {
+      "case": "campaign-eval-learn-measurement",
+      "ordinal": 4,
+      "endpoint": "messages/count_tokens",
+      "sha256": "ef9d109afd6330bddb2873868481589fb48ce6d30ed9127020d113c6fe8eddeb",
+      "bytes": 20
+    },
+    {
+      "case": "campaign-eval-learn-measurement",
+      "ordinal": 5,
+      "endpoint": "messages",
+      "sha256": "74281af6bc25d923265ca91865515bc648dcba4f63f14beff78dd86521e21044",
+      "bytes": 18658
+    },
+    {
+      "case": "campaign-eval-learn-measurement",
+      "ordinal": 6,
+      "endpoint": "messages/count_tokens",
+      "sha256": "ef9d109afd6330bddb2873868481589fb48ce6d30ed9127020d113c6fe8eddeb",
+      "bytes": 20
+    },
+    {
+      "case": "campaign-eval-learn-measurement",
+      "ordinal": 7,
+      "endpoint": "messages",
+      "sha256": "09c06807dc0da1048b5654958879247078b597f499b3a597babdf99fb35f662b",
+      "bytes": 13976
+    },
+    {
+      "case": "campaign-eval-research-memory",
+      "ordinal": 0,
+      "endpoint": "messages/count_tokens",
+      "sha256": "ef9d109afd6330bddb2873868481589fb48ce6d30ed9127020d113c6fe8eddeb",
+      "bytes": 20
+    },
+    {
+      "case": "campaign-eval-research-memory",
+      "ordinal": 1,
+      "endpoint": "messages",
+      "sha256": "4dfe2f06717893dc90ea000de1670adcb0c4bad06ae6986030d6f3302d81aae9",
+      "bytes": 21990
+    },
+    {
+      "case": "campaign-eval-research-memory",
+      "ordinal": 2,
+      "endpoint": "messages/count_tokens",
+      "sha256": "ef9d109afd6330bddb2873868481589fb48ce6d30ed9127020d113c6fe8eddeb",
+      "bytes": 20
+    },
+    {
+      "case": "campaign-eval-research-memory",
+      "ordinal": 3,
+      "endpoint": "messages",
+      "sha256": "7f3545271f1b5d650de5100e7b935c4e9f71ad6f875cdfe2c2f296b6ccd0f441",
+      "bytes": 19223
+    },
+    {
+      "case": "campaign-eval-research-memory",
+      "ordinal": 4,
+      "endpoint": "messages/count_tokens",
+      "sha256": "ef9d109afd6330bddb2873868481589fb48ce6d30ed9127020d113c6fe8eddeb",
+      "bytes": 20
+    },
+    {
+      "case": "campaign-eval-research-memory",
+      "ordinal": 5,
+      "endpoint": "messages",
+      "sha256": "bb8abb2ab4215a8d4b5fa1bf763f2f55ca5ae224baac22d151d4fbf5b3c967d4",
+      "bytes": 21990
+    },
+    {
+      "case": "campaign-eval-research-memory",
+      "ordinal": 6,
+      "endpoint": "messages/count_tokens",
+      "sha256": "ef9d109afd6330bddb2873868481589fb48ce6d30ed9127020d113c6fe8eddeb",
+      "bytes": 20
+    },
+    {
+      "case": "campaign-eval-research-memory",
+      "ordinal": 7,
+      "endpoint": "messages",
+      "sha256": "6a367ca13017d649455a19d1d59d6ff716ab9a70a4445b89edf4cbe8f97b9b86",
+      "bytes": 19057
+    },
+    {
+      "case": "campaign-eval-research-retrieval",
+      "ordinal": 0,
+      "endpoint": "messages/count_tokens",
+      "sha256": "ef9d109afd6330bddb2873868481589fb48ce6d30ed9127020d113c6fe8eddeb",
+      "bytes": 20
+    },
+    {
+      "case": "campaign-eval-research-retrieval",
+      "ordinal": 1,
+      "endpoint": "messages",
+      "sha256": "535ecbe4947bae7cd0710d6f6a635a3cfa328fa9a037ed46bbe75ca7e6a8517e",
+      "bytes": 25533
+    },
+    {
+      "case": "campaign-eval-research-retrieval",
+      "ordinal": 2,
+      "endpoint": "messages/count_tokens",
+      "sha256": "ef9d109afd6330bddb2873868481589fb48ce6d30ed9127020d113c6fe8eddeb",
+      "bytes": 20
+    },
+    {
+      "case": "campaign-eval-research-retrieval",
+      "ordinal": 3,
+      "endpoint": "messages",
+      "sha256": "7d93628d9ed8f9f3860387f16ca077096605fc84aba0e86420a948809f1799dd",
+      "bytes": 19226
+    },
+    {
+      "case": "campaign-eval-research-retrieval",
+      "ordinal": 4,
+      "endpoint": "messages/count_tokens",
+      "sha256": "ef9d109afd6330bddb2873868481589fb48ce6d30ed9127020d113c6fe8eddeb",
+      "bytes": 20
+    },
+    {
+      "case": "campaign-eval-research-retrieval",
+      "ordinal": 5,
+      "endpoint": "messages",
+      "sha256": "0d38cfff8a7ef276647ea4fde9f6f3a83786cdd6d7b96a0cd265ebc9b0fd87b6",
+      "bytes": 25533
+    },
+    {
+      "case": "campaign-eval-research-retrieval",
+      "ordinal": 6,
+      "endpoint": "messages/count_tokens",
+      "sha256": "ef9d109afd6330bddb2873868481589fb48ce6d30ed9127020d113c6fe8eddeb",
+      "bytes": 20
+    },
+    {
+      "case": "campaign-eval-research-retrieval",
+      "ordinal": 7,
+      "endpoint": "messages",
+      "sha256": "2b2df0925d22ca5190ff704af9fe5842fa72554664531a9d486113a4fd6344c5",
+      "bytes": 19060
+    },
+    {
+      "case": "campaign-eval-research-verification",
+      "ordinal": 0,
+      "endpoint": "messages/count_tokens",
+      "sha256": "ef9d109afd6330bddb2873868481589fb48ce6d30ed9127020d113c6fe8eddeb",
+      "bytes": 20
+    },
+    {
+      "case": "campaign-eval-research-verification",
+      "ordinal": 1,
+      "endpoint": "messages",
+      "sha256": "2dc00ef8f1e9ed84d4e83fc390991ed6314263c245d8ed12d3af4247a88c7e62",
+      "bytes": 25092
+    },
+    {
+      "case": "campaign-eval-research-verification",
+      "ordinal": 2,
+      "endpoint": "messages/count_tokens",
+      "sha256": "ef9d109afd6330bddb2873868481589fb48ce6d30ed9127020d113c6fe8eddeb",
+      "bytes": 20
+    },
+    {
+      "case": "campaign-eval-research-verification",
+      "ordinal": 3,
+      "endpoint": "messages",
+      "sha256": "39292329921f623babdce6e4da38a8dc084b4f7b48502892ac64977a017b6d46",
+      "bytes": 19229
+    },
+    {
+      "case": "campaign-eval-research-verification",
+      "ordinal": 4,
+      "endpoint": "messages/count_tokens",
+      "sha256": "ef9d109afd6330bddb2873868481589fb48ce6d30ed9127020d113c6fe8eddeb",
+      "bytes": 20
+    },
+    {
+      "case": "campaign-eval-research-verification",
+      "ordinal": 5,
+      "endpoint": "messages",
+      "sha256": "433ead808ad98b5a027114d48c9196f3b097d4d37111b4e3c472366eaaf9d357",
+      "bytes": 25092
+    },
+    {
+      "case": "campaign-eval-research-verification",
+      "ordinal": 6,
+      "endpoint": "messages/count_tokens",
+      "sha256": "ef9d109afd6330bddb2873868481589fb48ce6d30ed9127020d113c6fe8eddeb",
+      "bytes": 20
+    },
+    {
+      "case": "campaign-eval-research-verification",
+      "ordinal": 7,
+      "endpoint": "messages",
+      "sha256": "c35562b32f9d0a450138d86b58fbb0a10997365ec6aeb06f5dbf2113a88a584e",
+      "bytes": 19063
+    },
+    {
+      "case": "campaign-eval-research-insufficient",
+      "ordinal": 0,
+      "endpoint": "messages/count_tokens",
+      "sha256": "ef9d109afd6330bddb2873868481589fb48ce6d30ed9127020d113c6fe8eddeb",
+      "bytes": 20
+    },
+    {
+      "case": "campaign-eval-research-insufficient",
+      "ordinal": 1,
+      "endpoint": "messages",
+      "sha256": "8fa69b62a8ddee570da6032ed5677aa3de7b790b651e06ec22f9cd88e5469cf8",
+      "bytes": 793
+    },
+    {
+      "case": "campaign-eval-research-insufficient",
+      "ordinal": 2,
+      "endpoint": "messages/count_tokens",
+      "sha256": "ef9d109afd6330bddb2873868481589fb48ce6d30ed9127020d113c6fe8eddeb",
+      "bytes": 20
+    },
+    {
+      "case": "campaign-eval-research-insufficient",
+      "ordinal": 3,
+      "endpoint": "messages",
+      "sha256": "2769f1f35010f421b76d5db430dbd4503df8ed26fbd5d5c7f9afedb361edeb68",
+      "bytes": 3880
+    },
+    {
+      "case": "campaign-eval-research-insufficient",
+      "ordinal": 4,
+      "endpoint": "messages/count_tokens",
+      "sha256": "ef9d109afd6330bddb2873868481589fb48ce6d30ed9127020d113c6fe8eddeb",
+      "bytes": 20
+    },
+    {
+      "case": "campaign-eval-research-insufficient",
+      "ordinal": 5,
+      "endpoint": "messages",
+      "sha256": "281ec04eb639b8d39176d19b74d0137815d340813032465aaac30752b61f9891",
+      "bytes": 793
+    },
+    {
+      "case": "campaign-eval-research-insufficient",
+      "ordinal": 6,
+      "endpoint": "messages/count_tokens",
+      "sha256": "ef9d109afd6330bddb2873868481589fb48ce6d30ed9127020d113c6fe8eddeb",
+      "bytes": 20
+    },
+    {
+      "case": "campaign-eval-research-insufficient",
+      "ordinal": 7,
+      "endpoint": "messages",
+      "sha256": "c1139765b6b66fac0b7ac399ce9f4f3ec6679813c40c7f2cc2bca4ff4f1fe7f8",
+      "bytes": 3852
+    },
+    {
+      "case": "campaign-probe-1",
+      "ordinal": 0,
+      "endpoint": "messages/count_tokens",
+      "sha256": "ef9d109afd6330bddb2873868481589fb48ce6d30ed9127020d113c6fe8eddeb",
+      "bytes": 20
+    },
+    {
+      "case": "campaign-probe-1",
+      "ordinal": 1,
+      "endpoint": "messages",
+      "sha256": "7e6c5a838c69e409ef3771d944767f2c418781d09866145298756c6df920b6b6",
+      "bytes": 5979
+    },
+    {
+      "case": "campaign-probe-2",
+      "ordinal": 0,
+      "endpoint": "messages/count_tokens",
+      "sha256": "ef9d109afd6330bddb2873868481589fb48ce6d30ed9127020d113c6fe8eddeb",
+      "bytes": 20
+    },
+    {
+      "case": "campaign-probe-2",
+      "ordinal": 1,
+      "endpoint": "messages",
+      "sha256": "6fbf2cd631b3fefad0aef43c2ccaf1aabc6e255b07385896f64853b7218da107",
+      "bytes": 5979
+    },
+    {
+      "case": "campaign-probe-3",
+      "ordinal": 0,
+      "endpoint": "messages/count_tokens",
+      "sha256": "ef9d109afd6330bddb2873868481589fb48ce6d30ed9127020d113c6fe8eddeb",
+      "bytes": 20
+    },
+    {
+      "case": "campaign-probe-3",
+      "ordinal": 1,
+      "endpoint": "messages",
+      "sha256": "a0747fb9e0563c99f7cd757a5b2e41e2e430a7aa56df14b6f2871b138530a4bc",
+      "bytes": 5981
+    },
+    {
+      "case": "campaign-probe-4",
+      "ordinal": 0,
+      "endpoint": "messages/count_tokens",
+      "sha256": "ef9d109afd6330bddb2873868481589fb48ce6d30ed9127020d113c6fe8eddeb",
+      "bytes": 20
+    },
+    {
+      "case": "campaign-probe-4",
+      "ordinal": 1,
+      "endpoint": "messages",
+      "sha256": "db0c0438e7f11f41254a4641995437f179a0844cd61a10e225b5506e5448a2f9",
+      "bytes": 5981
+    }
+  ],
+  "current_checks": [
+    {
+      "case": "campaign-dev-learn",
+      "current_binding": {
+        "status": "bound",
+        "current_response_digest": "2fd545d31c437a1befe232bfc59f68a7282237dc0eb0423b56c40345639035f5",
+        "current_response_ordinal": 5,
+        "checker_ordinal": 7,
+        "checker_request_digest": "10dd25553fa57f8dd79baafc182332901435fada08d75fb087f30a791465245f",
+        "checked_context_digest": "15229d9fcf461570e98dfed5b1f7a2b973d8f33e5249d234beb459b08511e452",
+        "completed_checker_after_current_response": true,
+        "checker_normalization_revision": "workspace-assistance-keyed-normalization-v16",
+        "raw_checker_response_digest": "bbc55a8ed9810476081e11e82f91b18c44e6c2d79611380d6e1687d241f2c241",
+        "normalized_verdict_digest": "d4d145aa8b4e41383460fc50aa95e46b425f104cf31c22068a84a287a66fb9cf"
+      },
+      "verdict_digest": "d4d145aa8b4e41383460fc50aa95e46b425f104cf31c22068a84a287a66fb9cf"
+    },
+    {
+      "case": "campaign-dev-compare",
+      "current_binding": {
+        "status": "bound",
+        "current_response_digest": "f9d01a6742af8a9f88e1c1fd05f2d4b3b4e0a13a3578b8864eb2e8f5ce31649c",
+        "current_response_ordinal": 5,
+        "checker_ordinal": 7,
+        "checker_request_digest": "fbf6b96049c82d810b70c5a2487bc955dd69b5eb7d83372ed387115a7524a1b5",
+        "checked_context_digest": "e54091e5a54da81c011e69ed8906d62cfe9d12a6664457b0334345812061612e",
+        "completed_checker_after_current_response": true,
+        "checker_normalization_revision": "workspace-assistance-keyed-normalization-v16",
+        "raw_checker_response_digest": "ad985ac990a0bddbfe18fe4ab81d7beac69ea5c918b915b86b67a0e654a0d8cc",
+        "normalized_verdict_digest": "2ac405b093e19aa81983236e80c5eee35b5e2edf286e6d17bfd373c85b2c66b8"
+      },
+      "verdict_digest": "2ac405b093e19aa81983236e80c5eee35b5e2edf286e6d17bfd373c85b2c66b8"
+    },
+    {
+      "case": "campaign-eval-learn-mechanism",
+      "current_binding": {
+        "status": "bound",
+        "current_response_digest": "f89de916e7830e02b6af357e7cd7d02bc09835b0270d93abd9e205ee8d72954c",
+        "current_response_ordinal": 5,
+        "checker_ordinal": 7,
+        "checker_request_digest": "a66fccbcc03a5375830081f99ce68af593b67e10b5f25e8dc2a688072fb8806f",
+        "checked_context_digest": "e104823ae9928922b59dda225ccbee3d0898472d64f6cbda3ea3eb4d9cdd2944",
+        "completed_checker_after_current_response": true,
+        "checker_normalization_revision": "workspace-assistance-keyed-normalization-v16",
+        "raw_checker_response_digest": "812f8acd31c63db02b31912be121257791cd1438d949a8a6c620b1794b17ce9c",
+        "normalized_verdict_digest": "e23a5a5ab72d023a3fdefbc1346d4ba14c6dfbba46639617b0b0538e31a46310"
+      },
+      "verdict_digest": "e23a5a5ab72d023a3fdefbc1346d4ba14c6dfbba46639617b0b0538e31a46310"
+    },
+    {
+      "case": "campaign-eval-learn-conditions",
+      "current_binding": {
+        "status": "bound",
+        "current_response_digest": "53d5656d8ca9505461a904f3c562411570ff228a240bd01db7c5d1685c96eb93",
+        "current_response_ordinal": 5,
+        "checker_ordinal": 7,
+        "checker_request_digest": "e4d567b4fc0aa7501ad824fcc7df070c4f574d841740a0e875629f2c7f4bac20",
+        "checked_context_digest": "7eb27ce94b248a30d8125d7f892d321fc983d0d64787178883cdb4f193154844",
+        "completed_checker_after_current_response": true,
+        "checker_normalization_revision": "workspace-assistance-keyed-normalization-v16",
+        "raw_checker_response_digest": "89e4ecc030293d08dd27834a6e9a7ba14369674328fc20f98a2f9f2edd54deeb",
+        "normalized_verdict_digest": "46d50fef5972091935c67fc45e1fc6f6fb79a7f17909b9b546e54da72bd3c525"
+      },
+      "verdict_digest": "46d50fef5972091935c67fc45e1fc6f6fb79a7f17909b9b546e54da72bd3c525"
+    },
+    {
+      "case": "campaign-eval-learn-experiment",
+      "current_binding": {
+        "status": "bound",
+        "current_response_digest": "e1b31db2daf32ba765bfee0049d10d501a462657880950bdf86065ab50c75d20",
+        "current_response_ordinal": 5,
+        "checker_ordinal": 7,
+        "checker_request_digest": "5f62641e43231054c456acbb7c7dbf8a78438786c21233ff5b7e5fcd1fc2f852",
+        "checked_context_digest": "1c034622f23ae29a8c6693713e8e872435a844d55922675155ea84428a33b60d",
+        "completed_checker_after_current_response": true,
+        "checker_normalization_revision": "workspace-assistance-keyed-normalization-v16",
+        "raw_checker_response_digest": "230a33b1a57be7bda433a9325e5dd3ae31c430779e88a5fcc8051ed76cdcd879",
+        "normalized_verdict_digest": "67e3ff0e3714237c3b79eeb89c8f10b0aa5a22cb146d6577b7485e010cbc7cf4"
+      },
+      "verdict_digest": "67e3ff0e3714237c3b79eeb89c8f10b0aa5a22cb146d6577b7485e010cbc7cf4"
+    },
+    {
+      "case": "campaign-eval-learn-measurement",
+      "current_binding": {
+        "status": "bound",
+        "current_response_digest": "85dc382380296c8560454ed513a57dadc7b9005f1c19d4ef075f303dd24cffb0",
+        "current_response_ordinal": 5,
+        "checker_ordinal": 7,
+        "checker_request_digest": "8623e95f189b3a5a28c252e4cac4f955cf52a7132fe47e5816f4672c398d28ce",
+        "checked_context_digest": "c18b12bc06b91e59084dd4acb6cbaf5ce994537047ac1b2ee9067eb9dd342e45",
+        "completed_checker_after_current_response": true,
+        "checker_normalization_revision": "workspace-assistance-keyed-normalization-v16",
+        "raw_checker_response_digest": "9fcb7897a2e40e086b66e3dec8c55feb3ec32341f6139a3ce5dbf92d01145d29",
+        "normalized_verdict_digest": "4f9f38e584441d29ac1a8f43f5e3a232dcfbc933b712b6390aa95fb56f430d19"
+      },
+      "verdict_digest": "4f9f38e584441d29ac1a8f43f5e3a232dcfbc933b712b6390aa95fb56f430d19"
+    },
+    {
+      "case": "campaign-eval-research-memory",
+      "current_binding": {
+        "status": "bound",
+        "current_response_digest": "77034f6159dfe3a84f4f63cea2b013942133954106fd96edce0c9b5b7e1b1354",
+        "current_response_ordinal": 5,
+        "checker_ordinal": 7,
+        "checker_request_digest": "d60fc50f0c606806c884b3ea94efd02b421be09096f3572e8d35ca11beb335a7",
+        "checked_context_digest": "70b0060076fc4e9b41f8d46cb57995ba98aa66b9ecb62b43ed810d6c363bc77c",
+        "completed_checker_after_current_response": true,
+        "checker_normalization_revision": "workspace-assistance-keyed-normalization-v16",
+        "raw_checker_response_digest": "93a3454f558fd17855c06b3aa93d83257fe87b8d45f138f97318331f061db66c",
+        "normalized_verdict_digest": "90380e96891df690124a0d43a5bfd2a7cebae7f2af601e97bfdeefcc0488d1e0"
+      },
+      "verdict_digest": "90380e96891df690124a0d43a5bfd2a7cebae7f2af601e97bfdeefcc0488d1e0"
+    },
+    {
+      "case": "campaign-eval-research-retrieval",
+      "current_binding": {
+        "status": "bound",
+        "current_response_digest": "380b0825a115d63fd28b095dca500595e5453d2bca770f5621709412ed1e121b",
+        "current_response_ordinal": 5,
+        "checker_ordinal": 7,
+        "checker_request_digest": "5758deb43c9d29892339815f1aa80e38b68eab2d0a71f32d08f292b55734664f",
+        "checked_context_digest": "fe3b372bb03b3285d0008f9e68100b7c066a34222f804df411c4bef8e2367471",
+        "completed_checker_after_current_response": true,
+        "checker_normalization_revision": "workspace-assistance-keyed-normalization-v16",
+        "raw_checker_response_digest": "2dc8c1a20abe0af0d7f464c9f1431b142a682587624b3042c284f593dd87788c",
+        "normalized_verdict_digest": "a5a494a75891458c15efe16b3e29dd63ea146d7a006dc53033932a187bcf8ded"
+      },
+      "verdict_digest": "a5a494a75891458c15efe16b3e29dd63ea146d7a006dc53033932a187bcf8ded"
+    },
+    {
+      "case": "campaign-eval-research-verification",
+      "current_binding": {
+        "status": "bound",
+        "current_response_digest": "f60f10c7ec23bf19ea9711b5a9e5373213b525a5457ebdd7bc9633af8c605a3d",
+        "current_response_ordinal": 5,
+        "checker_ordinal": 7,
+        "checker_request_digest": "879fecdee26b1f3fff7e5baf0f61dc063c567de6b8ec06ff302f54f9f9c78582",
+        "checked_context_digest": "4b0220a8668599e3fd0f577c644de6a0adef40874d98b5b4f73c1aeb7f5135d6",
+        "completed_checker_after_current_response": true,
+        "checker_normalization_revision": "workspace-assistance-keyed-normalization-v16",
+        "raw_checker_response_digest": "e74cbead519f47e42d62d92d8988b61d813218c8983e9356ee8e1765bb9bc069",
+        "normalized_verdict_digest": "eb7646bf64569f38b41abab855183e44d3676bc8fe4ea490e97ee8a5222fcd92"
+      },
+      "verdict_digest": "eb7646bf64569f38b41abab855183e44d3676bc8fe4ea490e97ee8a5222fcd92"
+    },
+    {
+      "case": "campaign-eval-research-insufficient",
+      "current_binding": {
+        "status": "bound",
+        "current_response_digest": "e17b1d78089289277a97b49dff4c185863bc64ba178ca3e5baefc6ef6fccec5b",
+        "current_response_ordinal": 5,
+        "checker_ordinal": 7,
+        "checker_request_digest": "d1c31a9f0f7d6df1a2a4b6ba0714bdb127255232de6cc6f855b1fa3a0546cfb6",
+        "checked_context_digest": "2821781473edbb177eb1ef92e2d50bacc97ccc2346db1f88969bff0873584fab",
+        "completed_checker_after_current_response": true,
+        "checker_normalization_revision": "workspace-assistance-keyed-normalization-v16",
+        "raw_checker_response_digest": "3b6c4d9e9bc1d3fa84ac6b6dea4e678241b8693c7386fc0a111847ad298a2f57",
+        "normalized_verdict_digest": "48d0f3c5b42064397fb105a067d2d8dff73050d6ffc19cd23e4062aa36190252"
+      },
+      "verdict_digest": "48d0f3c5b42064397fb105a067d2d8dff73050d6ffc19cd23e4062aa36190252"
+    }
+  ],
+  "source_requests": [
+    {
+      "case": "campaign-dev-learn",
+      "ordinal": 0,
+      "bytes": 20152
+    },
+    {
+      "case": "campaign-dev-learn",
+      "ordinal": 1,
+      "bytes": 20170
+    },
+    {
+      "case": "campaign-dev-learn",
+      "ordinal": 2,
+      "bytes": 35952
+    },
+    {
+      "case": "campaign-dev-learn",
+      "ordinal": 3,
+      "bytes": 35971
+    },
+    {
+      "case": "campaign-dev-learn",
+      "ordinal": 4,
+      "bytes": 55220
+    },
+    {
+      "case": "campaign-dev-learn",
+      "ordinal": 5,
+      "bytes": 55238
+    },
+    {
+      "case": "campaign-dev-learn",
+      "ordinal": 6,
+      "bytes": 35952
+    },
+    {
+      "case": "campaign-dev-learn",
+      "ordinal": 7,
+      "bytes": 35971
+    },
+    {
+      "case": "campaign-dev-compare",
+      "ordinal": 0,
+      "bytes": 26701
+    },
+    {
+      "case": "campaign-dev-compare",
+      "ordinal": 1,
+      "bytes": 26719
+    },
+    {
+      "case": "campaign-dev-compare",
+      "ordinal": 2,
+      "bytes": 49361
+    },
+    {
+      "case": "campaign-dev-compare",
+      "ordinal": 3,
+      "bytes": 49380
+    },
+    {
+      "case": "campaign-dev-compare",
+      "ordinal": 4,
+      "bytes": 77962
+    },
+    {
+      "case": "campaign-dev-compare",
+      "ordinal": 5,
+      "bytes": 77980
+    },
+    {
+      "case": "campaign-dev-compare",
+      "ordinal": 6,
+      "bytes": 49361
+    },
+    {
+      "case": "campaign-dev-compare",
+      "ordinal": 7,
+      "bytes": 49380
+    },
+    {
+      "case": "campaign-eval-learn-mechanism",
+      "ordinal": 0,
+      "bytes": 20408
+    },
+    {
+      "case": "campaign-eval-learn-mechanism",
+      "ordinal": 1,
+      "bytes": 20426
+    },
+    {
+      "case": "campaign-eval-learn-mechanism",
+      "ordinal": 2,
+      "bytes": 37234
+    },
+    {
+      "case": "campaign-eval-learn-mechanism",
+      "ordinal": 3,
+      "bytes": 37253
+    },
+    {
+      "case": "campaign-eval-learn-mechanism",
+      "ordinal": 4,
+      "bytes": 56417
+    },
+    {
+      "case": "campaign-eval-learn-mechanism",
+      "ordinal": 5,
+      "bytes": 56435
+    },
+    {
+      "case": "campaign-eval-learn-mechanism",
+      "ordinal": 6,
+      "bytes": 37234
+    },
+    {
+      "case": "campaign-eval-learn-mechanism",
+      "ordinal": 7,
+      "bytes": 37253
+    },
+    {
+      "case": "campaign-eval-learn-conditions",
+      "ordinal": 0,
+      "bytes": 20311
+    },
+    {
+      "case": "campaign-eval-learn-conditions",
+      "ordinal": 1,
+      "bytes": 20329
+    },
+    {
+      "case": "campaign-eval-learn-conditions",
+      "ordinal": 2,
+      "bytes": 36291
+    },
+    {
+      "case": "campaign-eval-learn-conditions",
+      "ordinal": 3,
+      "bytes": 36310
+    },
+    {
+      "case": "campaign-eval-learn-conditions",
+      "ordinal": 4,
+      "bytes": 55469
+    },
+    {
+      "case": "campaign-eval-learn-conditions",
+      "ordinal": 5,
+      "bytes": 55487
+    },
+    {
+      "case": "campaign-eval-learn-conditions",
+      "ordinal": 6,
+      "bytes": 36291
+    },
+    {
+      "case": "campaign-eval-learn-conditions",
+      "ordinal": 7,
+      "bytes": 36310
+    },
+    {
+      "case": "campaign-eval-learn-experiment",
+      "ordinal": 0,
+      "bytes": 20382
+    },
+    {
+      "case": "campaign-eval-learn-experiment",
+      "ordinal": 1,
+      "bytes": 20400
+    },
+    {
+      "case": "campaign-eval-learn-experiment",
+      "ordinal": 2,
+      "bytes": 36860
+    },
+    {
+      "case": "campaign-eval-learn-experiment",
+      "ordinal": 3,
+      "bytes": 36879
+    },
+    {
+      "case": "campaign-eval-learn-experiment",
+      "ordinal": 4,
+      "bytes": 56033
+    },
+    {
+      "case": "campaign-eval-learn-experiment",
+      "ordinal": 5,
+      "bytes": 56051
+    },
+    {
+      "case": "campaign-eval-learn-experiment",
+      "ordinal": 6,
+      "bytes": 36860
+    },
+    {
+      "case": "campaign-eval-learn-experiment",
+      "ordinal": 7,
+      "bytes": 36879
+    },
+    {
+      "case": "campaign-eval-learn-measurement",
+      "ordinal": 0,
+      "bytes": 20337
+    },
+    {
+      "case": "campaign-eval-learn-measurement",
+      "ordinal": 1,
+      "bytes": 20355
+    },
+    {
+      "case": "campaign-eval-learn-measurement",
+      "ordinal": 2,
+      "bytes": 36959
+    },
+    {
+      "case": "campaign-eval-learn-measurement",
+      "ordinal": 3,
+      "bytes": 36978
+    },
+    {
+      "case": "campaign-eval-learn-measurement",
+      "ordinal": 4,
+      "bytes": 56168
+    },
+    {
+      "case": "campaign-eval-learn-measurement",
+      "ordinal": 5,
+      "bytes": 56186
+    },
+    {
+      "case": "campaign-eval-learn-measurement",
+      "ordinal": 6,
+      "bytes": 36959
+    },
+    {
+      "case": "campaign-eval-learn-measurement",
+      "ordinal": 7,
+      "bytes": 36978
+    },
+    {
+      "case": "campaign-eval-research-memory",
+      "ordinal": 0,
+      "bytes": 22820
+    },
+    {
+      "case": "campaign-eval-research-memory",
+      "ordinal": 1,
+      "bytes": 22838
+    },
+    {
+      "case": "campaign-eval-research-memory",
+      "ordinal": 2,
+      "bytes": 42763
+    },
+    {
+      "case": "campaign-eval-research-memory",
+      "ordinal": 3,
+      "bytes": 42782
+    },
+    {
+      "case": "campaign-eval-research-memory",
+      "ordinal": 4,
+      "bytes": 68217
+    },
+    {
+      "case": "campaign-eval-research-memory",
+      "ordinal": 5,
+      "bytes": 68235
+    },
+    {
+      "case": "campaign-eval-research-memory",
+      "ordinal": 6,
+      "bytes": 42763
+    },
+    {
+      "case": "campaign-eval-research-memory",
+      "ordinal": 7,
+      "bytes": 42782
+    },
+    {
+      "case": "campaign-eval-research-retrieval",
+      "ordinal": 0,
+      "bytes": 26595
+    },
+    {
+      "case": "campaign-eval-research-retrieval",
+      "ordinal": 1,
+      "bytes": 26613
+    },
+    {
+      "case": "campaign-eval-research-retrieval",
+      "ordinal": 2,
+      "bytes": 47055
+    },
+    {
+      "case": "campaign-eval-research-retrieval",
+      "ordinal": 3,
+      "bytes": 47074
+    },
+    {
+      "case": "campaign-eval-research-retrieval",
+      "ordinal": 4,
+      "bytes": 75541
+    },
+    {
+      "case": "campaign-eval-research-retrieval",
+      "ordinal": 5,
+      "bytes": 75559
+    },
+    {
+      "case": "campaign-eval-research-retrieval",
+      "ordinal": 6,
+      "bytes": 47055
+    },
+    {
+      "case": "campaign-eval-research-retrieval",
+      "ordinal": 7,
+      "bytes": 47074
+    },
+    {
+      "case": "campaign-eval-research-verification",
+      "ordinal": 0,
+      "bytes": 23325
+    },
+    {
+      "case": "campaign-eval-research-verification",
+      "ordinal": 1,
+      "bytes": 23343
+    },
+    {
+      "case": "campaign-eval-research-verification",
+      "ordinal": 2,
+      "bytes": 46356
+    },
+    {
+      "case": "campaign-eval-research-verification",
+      "ordinal": 3,
+      "bytes": 46375
+    },
+    {
+      "case": "campaign-eval-research-verification",
+      "ordinal": 4,
+      "bytes": 71814
+    },
+    {
+      "case": "campaign-eval-research-verification",
+      "ordinal": 5,
+      "bytes": 71832
+    },
+    {
+      "case": "campaign-eval-research-verification",
+      "ordinal": 6,
+      "bytes": 46356
+    },
+    {
+      "case": "campaign-eval-research-verification",
+      "ordinal": 7,
+      "bytes": 46375
+    },
+    {
+      "case": "campaign-eval-research-insufficient",
+      "ordinal": 0,
+      "bytes": 15056
+    },
+    {
+      "case": "campaign-eval-research-insufficient",
+      "ordinal": 1,
+      "bytes": 15074
+    },
+    {
+      "case": "campaign-eval-research-insufficient",
+      "ordinal": 2,
+      "bytes": 19579
+    },
+    {
+      "case": "campaign-eval-research-insufficient",
+      "ordinal": 3,
+      "bytes": 19598
+    },
+    {
+      "case": "campaign-eval-research-insufficient",
+      "ordinal": 4,
+      "bytes": 21237
+    },
+    {
+      "case": "campaign-eval-research-insufficient",
+      "ordinal": 5,
+      "bytes": 21255
+    },
+    {
+      "case": "campaign-eval-research-insufficient",
+      "ordinal": 6,
+      "bytes": 19579
+    },
+    {
+      "case": "campaign-eval-research-insufficient",
+      "ordinal": 7,
+      "bytes": 19598
+    },
+    {
+      "case": "campaign-probe-1",
+      "ordinal": 0,
+      "bytes": 12782
+    },
+    {
+      "case": "campaign-probe-1",
+      "ordinal": 1,
+      "bytes": 12801
+    },
+    {
+      "case": "campaign-probe-2",
+      "ordinal": 0,
+      "bytes": 11642
+    },
+    {
+      "case": "campaign-probe-2",
+      "ordinal": 1,
+      "bytes": 11661
+    },
+    {
+      "case": "campaign-probe-3",
+      "ordinal": 0,
+      "bytes": 12759
+    },
+    {
+      "case": "campaign-probe-3",
+      "ordinal": 1,
+      "bytes": 12778
+    },
+    {
+      "case": "campaign-probe-4",
+      "ordinal": 0,
+      "bytes": 11622
+    },
+    {
+      "case": "campaign-probe-4",
+      "ordinal": 1,
+      "bytes": 11641
+    }
+  ],
+  "report_file_sha256": "d77c09f9485eadb5cbad6f155530b3761322fc5a71141258a0be4d038945fd81"
+}

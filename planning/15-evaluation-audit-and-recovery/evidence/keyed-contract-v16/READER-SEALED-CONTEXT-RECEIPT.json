@@ -1,0 +1,66 @@
+{
+  "commit": "ded322ff",
+  "scope": "QualificationResult.tsx and qualification-result.test.tsx only",
+  "offline_verification": {
+    "focused_tests": 26,
+    "typecheck": "pass",
+    "lint": "pass"
+  },
+  "before_fix": "actual Learn result list to unsaved research result rejected 422 return_context_identity_mismatch; preserved roundtrip-cross-context-list-v3",
+  "after_fix": {
+    "result": "PASS",
+    "job": "gen-1a77b87ec50d03ce2309f6b3bcf8612b5574e24c",
+    "work": "arxiv:2210.03629",
+    "version": "arxiv:2210.03629:v3",
+    "anchor": "material:mat-2b7a38f3cfa1449f7728f044688ca2c2:page:1:2443:3888",
+    "stored_mode": "research",
+    "stored_project": "project-ac99bd33fccebce448986c40f6567298",
+    "stored_origin_null": true,
+    "first_inspection": "Learn result list",
+    "second_inspection": "Research with different return path",
+    "first_save_http": 200,
+    "second_save_http": 200,
+    "entry_payloads_equal": true,
+    "entry_id": "qualification-gen-1a77b87ec50d03ce2309f6b3bcf8612b5574e24c",
+    "entry_context": {
+      "mode": "research",
+      "project_id": "project-ac99bd33fccebce448986c40f6567298",
+      "thread_id": null,
+      "return_to": "/workspace/today?mode=research&project=project-ac99bd33fccebce448986c40f6567298"
+    },
+    "source_exact": true,
+    "markdown_contains_entry_and_anchor": true,
+    "simulated": true,
+    "blocked": [],
+    "writes": [
+      "/api/workspace/context/entries",
+      "/api/workspace/context/threads",
+      "/api/workspace/context/entries",
+      "/api/workspace/context/threads"
+    ],
+    "boundary": "Isolated clone and explicit test-only auth; no existing note replaced."
+  },
+  "after_restart": {
+    "result": "PASS",
+    "api_restart_persistence": true,
+    "new_entry_id": "qualification-gen-1a77b87ec50d03ce2309f6b3bcf8612b5574e24c",
+    "new_context": {
+      "mode": "research",
+      "project_id": "project-ac99bd33fccebce448986c40f6567298",
+      "thread_id": null,
+      "return_to": "/workspace/today?mode=research&project=project-ac99bd33fccebce448986c40f6567298"
+    },
+    "new_source_version": "arxiv:2210.03629:v3",
+    "new_source_anchor": "material:mat-2b7a38f3cfa1449f7728f044688ca2c2:page:1:2443:3888",
+    "previous_entry_id": "qualification-gen-0aa9ad6cb891ae6f13735d6f3af13c7411d820d1",
+    "previous_entry_body_unchanged": true,
+    "export_identical_after_restart": true,
+    "protected_job_financial_table_fingerprints_unchanged": 7,
+    "boundary": "Cloned fixture, explicit test authentication, no provider or source refresh"
+  },
+  "clone_dump": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-evidence/d5-keyed-contract-20261114/reader/sealed-context-clone-v1.dump",
+  "clone_dump_sha256": "ec10a43843bdb894ae7c958f08546b22468a3eeab0f1aa37eb40b3c5c01d9387",
+  "clone_dump_toc_readable": true,
+  "services": "isolated test API and Reader stopped; clone retained",
+  "limitations": "Explicit test-only auth; synthetic fixture output and cloned database. No provider, token counts, source refresh or owner service. Existing notes and IDs preserved; changing old records was out of scope. Backend rules and APIs unchanged."
+}

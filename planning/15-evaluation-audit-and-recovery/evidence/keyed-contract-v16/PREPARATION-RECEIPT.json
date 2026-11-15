@@ -1,0 +1,13 @@
+{
+  "at": "2026-11-15T02:17:24.267030+00:00",
+  "runtime_application": "10f1dba181beb97d013761319cc1ba7e915872e0",
+  "test_only_checkout": "e59de9b4f17881be1aa6f163c4e104e603a7e1e3",
+  "packet_digest": "05debe2121e970b79e7e9b097ee28be54a265927c42f370c0bc8d871cab74929",
+  "source_stable": true,
+  "approvals_activated": false,
+  "provider_contacts": 0,
+  "token_contacts": 0,
+  "new_spend_usd": "0",
+  "runbook_v2_audit_note_resolved": "Moved existing disabled-environment/credential preconditions before future live sequence; no wire/authority changes.",
+  "predecessor_staging": "publication-package-v16r5-final retained unchanged"
+}

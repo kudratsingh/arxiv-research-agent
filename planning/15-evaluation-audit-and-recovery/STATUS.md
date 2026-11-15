@@ -1,4 +1,56 @@
-# Current prospective successor — v15r2
+# Current offline successor — v16 keyed coverage/checker contract
+
+Runtime application `10f1dba181beb97d013761319cc1ba7e915872e0`; packet
+`05debe2121e970b79e7e9b097ee28be54a265927c42f370c0bc8d871cab74929`.
+[One inactive consolidated approval](evidence/keyed-contract-v16/APPROVAL-REQUEST.md),
+[verification](evidence/keyed-contract-v16/VERIFICATION.md) and
+[commands](evidence/keyed-contract-v16/RUNBOOK.md).
+
+Required named parts preserve one disposition and multiple gaps. Claim/checker
+identities derive from required keys and the exact current response. Multiple
+independent findings survive at one prose location; count caps are removed only
+for v16, retaining sealed byte guards and all semantic checks. Learn8/Research12,
+full/comparison-only abstention, exact selected evidence, one quality repair and
+mandatory recheck remain. Invalid first drafts still stop; no speculative repair
+branch or missing judgments are manufactured. The compatibility audit documents
+wire enforcement, server derivation and necessary semantic rules.
+
+Original v15r2 remains stopped and failed;65original files rehash unchanged.
+Its converted three-gap fixture is explicitly synthetic and receives no provider
+or factual credit. The same three gaps survive production-shaped mock four-stage
+execution, new Postgres pool, bound reports, real local API/Reader, JSON/Markdown,
+reload and restart. The final Reader client repair preserves sealed origins or
+uses a stable stored-mode/project Today context, fixing the observed cross-mode
+save failure without weakening backend return or ownership guards.
+
+Local final gate:8,046passed/62conditional skips/53separate E2E deselected,
+94.467151%project,96%printed patch; all package floors pass on the same complete
+data. One later test-only multi-gap regression passes separately and is included
+in the remote selector. Frontend4,306pass, all unchanged coverage floors;
+strict types/lint/build/budgets pass, CSS24,868/25,600bytes and Reader
+164,306/169,984bytes. E2E53,simulation20/20USD0,registry260/0. Full exact-packet
+mock14jobs/44Messages/44counts verified88complete bodies and10final current-check
+bindings. Machine qualityHOLD,humanblank; these are software observations.
+Exact published-head CI is recorded separately in the permanent publication
+receipt and completion handoff, never inferred from local results.
+
+Final read-only census2026-11-15T02:14:23Z exactly matches the seal:
+37jobs/71Messages/96counts/USD2.138481known plus sameUSD0.875066overlapping holds
+counted once; no active job,new uncertainty or live021. Existing64/160/200/USD20,
+concurrency1,expiry2026-11-21T11:03:57Z remain unchanged. The one future request
+proposes only14sealed jobs/44Messages/44paired counts/USD14 and additive021;
+known+holds+newreservations+USD2buffer=USD19.013547. No live approval/migration,
+provider/count contact,key access,settlement,cap/expiry change or new spend.
+Owner3137/review3178 remain untouched. Human qualification outside scope;
+everyday generation,recurrence,notifications disabled; unmerged/undeployed.
+
+All raw evidence, interrupted/failed gates, predecessor candidates and database
+exports remain permanently under arxiv-evidence/d5-keyed-contract-20261114.
+The following sections are historical checkpoints, not current execution grants.
+
+---
+
+# Historical v15r2 preparation checkpoint
 
 Application `a0ad5c2ceb5ba1d69753f1bd398876e054e90792`; packet
 `25eec8f541dbe7f70bf2fadee59f51c0d8b456980856cd4f38fce20b139e8bde`.

@@ -1,0 +1,240 @@
+{
+  "application": "10f1dba181beb97d013761319cc1ba7e915872e0",
+  "packet_digest": "05debe2121e970b79e7e9b097ee28be54a265927c42f370c0bc8d871cab74929",
+  "actual_sdk_transformed": true,
+  "draft_schemas": [
+    {
+      "case_id": "campaign-dev-learn",
+      "mode": "learn",
+      "wire": {
+        "json_utf8_bytes": 10599,
+        "named_shared_definitions": 24,
+        "references": 43,
+        "anyOf_nodes": 15,
+        "sha256": "b4a43b408892fb2965913ff0b589dd2f57b30109d4904997288f586c29ea8e0a"
+      },
+      "previous_wire": {
+        "json_utf8_bytes": 7531,
+        "named_shared_definitions": 14,
+        "references": 26,
+        "anyOf_nodes": 1,
+        "sha256": "25ecf8dafc26b9c4a11a7490f774764f7ef9fd1c586af08f8cb09adfe0f77199"
+      },
+      "coverage_keys": [
+        "p1",
+        "p2",
+        "p3"
+      ]
+    },
+    {
+      "case_id": "campaign-dev-compare",
+      "mode": "research",
+      "wire": {
+        "json_utf8_bytes": 14713,
+        "named_shared_definitions": 27,
+        "references": 61,
+        "anyOf_nodes": 23,
+        "sha256": "a81dc825685ef64466bbd597301dd494b92362a4a2307f28fcaf203e3c0a9a4d"
+      },
+      "previous_wire": {
+        "json_utf8_bytes": 7910,
+        "named_shared_definitions": 14,
+        "references": 28,
+        "anyOf_nodes": 1,
+        "sha256": "cb23a4b909cf66143521d14d559605e736b40087018815e86a5d1ae1f15129c4"
+      },
+      "coverage_keys": [
+        "p1",
+        "p2",
+        "p3"
+      ]
+    },
+    {
+      "case_id": "campaign-eval-learn-mechanism",
+      "mode": "learn",
+      "wire": {
+        "json_utf8_bytes": 10599,
+        "named_shared_definitions": 24,
+        "references": 43,
+        "anyOf_nodes": 15,
+        "sha256": "69fedba1de7f1e76f2990c0f1a6aeeae22de36c1c8352204d55661a0e1b89aa4"
+      },
+      "previous_wire": {
+        "json_utf8_bytes": 7531,
+        "named_shared_definitions": 14,
+        "references": 26,
+        "anyOf_nodes": 1,
+        "sha256": "dcfe16815d844498a3cefc4a321668101cbb261fe4ece52fa0ef747ce6fe1255"
+      },
+      "coverage_keys": [
+        "p1",
+        "p2",
+        "p3"
+      ]
+    },
+    {
+      "case_id": "campaign-eval-learn-conditions",
+      "mode": "learn",
+      "wire": {
+        "json_utf8_bytes": 10599,
+        "named_shared_definitions": 24,
+        "references": 43,
+        "anyOf_nodes": 15,
+        "sha256": "d2b0406a0afb1a532dccbe5e148e81fab218f891ff653cf22955e1ad29e2912a"
+      },
+      "previous_wire": {
+        "json_utf8_bytes": 7531,
+        "named_shared_definitions": 14,
+        "references": 26,
+        "anyOf_nodes": 1,
+        "sha256": "43310659ca218b9bf2707ea923932f8b5b6a5d3fba08a5ca9a0b673c0f750740"
+      },
+      "coverage_keys": [
+        "p1",
+        "p2",
+        "p3"
+      ]
+    },
+    {
+      "case_id": "campaign-eval-learn-experiment",
+      "mode": "learn",
+      "wire": {
+        "json_utf8_bytes": 10599,
+        "named_shared_definitions": 24,
+        "references": 43,
+        "anyOf_nodes": 15,
+        "sha256": "b5a6842529dbc4f58f44a2a8f2d0b3517de5e441a69834e23cf62a9aaea73c6f"
+      },
+      "previous_wire": {
+        "json_utf8_bytes": 7531,
+        "named_shared_definitions": 14,
+        "references": 26,
+        "anyOf_nodes": 1,
+        "sha256": "580155382edffc03b83cf08f05a9a3bb56d5e8b163d7f1c5000fb53e7af5eea3"
+      },
+      "coverage_keys": [
+        "p1",
+        "p2",
+        "p3"
+      ]
+    },
+    {
+      "case_id": "campaign-eval-learn-measurement",
+      "mode": "learn",
+      "wire": {
+        "json_utf8_bytes": 10599,
+        "named_shared_definitions": 24,
+        "references": 43,
+        "anyOf_nodes": 15,
+        "sha256": "10276ffeb656d80c3ab7d24fbc43b80d95f83e285b5032943adbccdbe1d0b568"
+      },
+      "previous_wire": {
+        "json_utf8_bytes": 7531,
+        "named_shared_definitions": 14,
+        "references": 26,
+        "anyOf_nodes": 1,
+        "sha256": "04df2c0bfc5b37684fc11cab91c32f3f955549044a1dc20b29bd01290118df22"
+      },
+      "coverage_keys": [
+        "p1",
+        "p2",
+        "p3"
+      ]
+    },
+    {
+      "case_id": "campaign-eval-research-memory",
+      "mode": "research",
+      "wire": {
+        "json_utf8_bytes": 11632,
+        "named_shared_definitions": 24,
+        "references": 47,
+        "anyOf_nodes": 19,
+        "sha256": "185b4268d530e9fa3690173b4604e119e137f15de5ee12bcd945affa376ca41d"
+      },
+      "previous_wire": {
+        "json_utf8_bytes": 7886,
+        "named_shared_definitions": 14,
+        "references": 28,
+        "anyOf_nodes": 1,
+        "sha256": "3318c27f4ab754efae215b894890331eeec55d19ff57adf039810fb6d84ab146"
+      },
+      "coverage_keys": [
+        "p1",
+        "p2",
+        "p3"
+      ]
+    },
+    {
+      "case_id": "campaign-eval-research-retrieval",
+      "mode": "research",
+      "wire": {
+        "json_utf8_bytes": 14713,
+        "named_shared_definitions": 27,
+        "references": 61,
+        "anyOf_nodes": 23,
+        "sha256": "22c6d85559f80e44f63973bf4dbbf783bb11d136a96d71683ac454ac78fd52bb"
+      },
+      "previous_wire": {
+        "json_utf8_bytes": 7910,
+        "named_shared_definitions": 14,
+        "references": 28,
+        "anyOf_nodes": 1,
+        "sha256": "c245037b1739357241ae5846342ba558904da7bda208e5ebb725d296f1c80b50"
+      },
+      "coverage_keys": [
+        "p1",
+        "p2",
+        "p3"
+      ]
+    },
+    {
+      "case_id": "campaign-eval-research-verification",
+      "mode": "research",
+      "wire": {
+        "json_utf8_bytes": 11632,
+        "named_shared_definitions": 24,
+        "references": 47,
+        "anyOf_nodes": 19,
+        "sha256": "698d59de4e65787b8e8276313b8383d2b0c5d9c505d11ac4072938c64c445d27"
+      },
+      "previous_wire": {
+        "json_utf8_bytes": 7886,
+        "named_shared_definitions": 14,
+        "references": 28,
+        "anyOf_nodes": 1,
+        "sha256": "9c43c6012885de6fd66737e9ebf0c7259344df2b94bfc4741ac49b8e40428be8"
+      },
+      "coverage_keys": [
+        "p1",
+        "p2",
+        "p3"
+      ]
+    },
+    {
+      "case_id": "campaign-eval-research-insufficient",
+      "mode": "research",
+      "wire": {
+        "json_utf8_bytes": 2684,
+        "named_shared_definitions": 10,
+        "references": 15,
+        "anyOf_nodes": 0,
+        "sha256": "3d77c3890d0438f5045c55876c2f614e16562f3e35faa5726690e5acf47f7bf4"
+      },
+      "previous_wire": {
+        "json_utf8_bytes": 2136,
+        "named_shared_definitions": 5,
+        "references": 5,
+        "anyOf_nodes": 0,
+        "sha256": "022aaaa716ec93b9611609b8877689e5cf45e61c2e974ea2247c7d3037d85c8d"
+      },
+      "coverage_keys": [
+        "p1",
+        "p2",
+        "p3"
+      ]
+    }
+  ],
+  "dynamic_checker_schema": "Created only from exact current validated response under frozen template; no invented future checker response",
+  "warning": "Bytes/shared definitions/local or mocked schema validation do not establish remote grammar acceptance or measured token fit",
+  "provider_contacts": 0
+}

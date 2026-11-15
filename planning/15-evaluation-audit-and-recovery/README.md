@@ -1,4 +1,23 @@
-# Current offline campaign package
+# Current offline campaign package — v16
+
+The latest unapproved successor is [keyed-contract-v16](evidence/keyed-contract-v16/README.md),
+bound to application`10f1dba181beb97d013761319cc1ba7e915872e0` and packet
+`05debe2121e970b79e7e9b097ee28be54a265927c42f370c0bc8d871cab74929`.
+It repairs exactly-once coverage/checker identities and lossless multi-gap
+handling without changing retrieval, historical results or scoring thresholds.
+[One consolidated decision](evidence/keyed-contract-v16/APPROVAL-REQUEST.md),
+[actual commands](evidence/keyed-contract-v16/RUNBOOK.md),
+[verification](evidence/keyed-contract-v16/VERIFICATION.md) and [status](STATUS.md).
+
+All provider/count contacts and live mutations remain zero for this repair.
+Remote CI must match the exact published head recorded in the completion receipt.
+The predecessor proposals and snapshots below remain historical; v15r2 executed
+and stopped, and its original failed response, scores, receipts and both holds
+remain preserved. They are not renewed authority.
+
+---
+
+# Historical v15r2 preparation snapshot
 
 The current unapproved successor is [capacity-policy-v15r2](evidence/capacity-policy-v15r2/README.md),
 bound to applicationa0ad5c2c. It preserves all v15 scope/quality guards and fixes

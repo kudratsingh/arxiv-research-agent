@@ -1,0 +1,11 @@
+{
+  "artifact": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-evidence/d5-keyed-contract-20261114/reader/synthetic-preview-v1-390-dark-comparison.png",
+  "sha256": "f28860ae4a4afb6ef53142f2d59843320efd131932f020d7cb93180360ad9214",
+  "configuration": "WORKSPACE_LIVE=1 WORKSPACE_SYNTHETIC_PREVIEW=1, isolated webpack localhost:3197, 390px dark",
+  "visible_header": "Design preview \u00b7 synthetic sample papers",
+  "result": "Synthetic comparison fixture shown with three gaps, context-only claim, downloaded JSON and exact passage navigation",
+  "test_result": "PASS; fixture save response and downloaded result inspected",
+  "limitations": "All workspace API responses mocked; header mentions private server saves but fixture writes were intercepted, no backend persistence or source checks. Reading-position request mocked 404. No owner data or service used. Earlier screenshot with real-source heading remains preserved and is superseded for fixture presentation.",
+  "provider_contacts": 0,
+  "count_contacts": 0
+}

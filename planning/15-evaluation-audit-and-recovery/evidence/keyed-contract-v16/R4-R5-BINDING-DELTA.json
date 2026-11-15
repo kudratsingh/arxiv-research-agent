@@ -1,0 +1,12 @@
+{
+  "previous_unapproved_packet": "2877accc59bb7c9641bc2a6fa6be3d2d7875a67fa8e6e01d4859bf5070268a4a",
+  "final_packet": "05debe2121e970b79e7e9b097ee28be54a265927c42f370c0bc8d871cab74929",
+  "runtime_application": "10f1dba181beb97d013761319cc1ba7e915872e0",
+  "changed_producer_files": [
+    "web/components/workspace/QualificationResult.tsx"
+  ],
+  "initial_message_and_count_bodies_unchanged": 14,
+  "real_measurements_reused": 0,
+  "future_exact_paired_count_before_each_messages_required": true,
+  "note": "Reader save fix changes the UI producer seal; no provider body, schema, evidence, pricing, threshold, route or financial limit changes."
+}

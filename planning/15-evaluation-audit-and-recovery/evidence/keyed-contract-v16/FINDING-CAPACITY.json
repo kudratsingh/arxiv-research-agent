@@ -1,0 +1,7 @@
+{
+  "revision": "workspace-assistance-keyed-finding-capacity-v16",
+  "aggregate_findings_limit": null,
+  "per_location_findings_limit": null,
+  "compact_checker_utf8_bytes": 262144,
+  "normalized_checker_utf8_bytes": 1048576
+}

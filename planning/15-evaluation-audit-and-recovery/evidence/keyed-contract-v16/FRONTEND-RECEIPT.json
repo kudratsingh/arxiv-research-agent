@@ -1,0 +1,25 @@
+{
+  "application": "10f1dba181beb97d013761319cc1ba7e915872e0",
+  "frontend_tree": "b368b792b1928d915c74ca8a4f4fd328299db8c1",
+  "browser_tested_tree": "b368b792b1928d915c74ca8a4f4fd328299db8c1",
+  "unit_tests_passed": 4306,
+  "unit_tests_skipped": 0,
+  "test_files": 223,
+  "coverage_percent": {
+    "lines": 99.52,
+    "statements": 98.18,
+    "functions": 94.17,
+    "branches": 94.29,
+    "branchesTrue": 100
+  },
+  "css_bytes": 24868,
+  "css_ceiling_bytes": 25600,
+  "reader_first_load_js_bytes": 164306,
+  "reader_ceiling_bytes": 169984,
+  "production_qualification_chunk_bytes": 17554,
+  "production_qualification_chunk_gzip_bytes": 6051,
+  "chunk_measurement_limit": "Static emitted bytes; no claim total route-load union or browser timing",
+  "browser": "Matching new frontend with production workspace routes/test-auth override and cloned Postgres. Mode-crossing save, stable retry, exact anchors, export, reload/restart and protected-table hashes verified. Earlier four-theme fixture axe0violations retained; incomplete/manual items not certified.",
+  "new_runtime_dependencies": 0,
+  "provider_contacts": 0
+}

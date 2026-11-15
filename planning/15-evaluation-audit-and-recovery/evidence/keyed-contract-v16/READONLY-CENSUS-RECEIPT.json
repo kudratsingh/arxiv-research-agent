@@ -1,0 +1,22 @@
+{
+  "revision": "v16r5-final-read-only-census-v1",
+  "at": "2026-11-15T02:14:23.151557+00:00",
+  "packet_digest": "05debe2121e970b79e7e9b097ee28be54a265927c42f370c0bc8d871cab74929",
+  "application": "10f1dba181beb97d013761319cc1ba7e915872e0",
+  "snapshot_digest": "29533f8e7f4f6dee641c9a99f7d784617392320ea01ccb1377ec0900188b8bc5",
+  "exact_snapshot_unchanged": true,
+  "funded_programme_jobs": 37,
+  "messages": 71,
+  "counts": 96,
+  "known_estimated_usd": "2.138481",
+  "pending_usd": "0.875066",
+  "unknown_usd": "0.875066",
+  "overlap_counted_once": true,
+  "active_jobs": [],
+  "migration_021_absent": true,
+  "original_v15r2_files_rehashed": 65,
+  "historical_archive_unchanged": true,
+  "new_provider_contacts": 0,
+  "live_mutations": 0,
+  "helper_note": "Prior read-only attempt reached equality/hash assertions, then failed only formatting receipt due to an absent application_head metadata key; corrected constant source identity, no database mutation."
+}

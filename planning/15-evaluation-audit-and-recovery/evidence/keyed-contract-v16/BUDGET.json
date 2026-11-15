@@ -1,0 +1,47 @@
+{
+  "active_programme_caps": {
+    "concurrency": 1,
+    "counts": 200,
+    "messages": 160,
+    "programme_jobs": 64,
+    "usd": "20"
+  },
+  "basis": "USD standard global sealed rates; estimates, not invoice or measured fit",
+  "historical_hold_components": [
+    "0.425066 unknown upstream completion",
+    "0.45 received HTTP400 usage unvalidated"
+  ],
+  "known_estimated_usage": "2.138481",
+  "max_new_exact_paired_counts": 44,
+  "max_new_jobs": 14,
+  "max_new_messages": 44,
+  "max_new_usd": "14.00",
+  "maximum_cumulative_after_new_scope": {
+    "counts": 140,
+    "messages": 115,
+    "programme_jobs": 51
+  },
+  "opus_input_output_per_million": [
+    "4",
+    "20"
+  ],
+  "pending_unknown_overlap_not_additive": true,
+  "per_probe_reservation": "0.50",
+  "per_workflow_reservation": "1.20",
+  "preliminary_count_only_contacts": 0,
+  "price_document_verified_date": "2026-11-14",
+  "price_source": "https://platform.claude.com/docs/en/about-claude/pricing",
+  "priced_batch_bound_at_32k_fit": "11.712",
+  "priced_batch_bound_at_40k": "12.80",
+  "priced_bound_per_full_workflow_at_40k": "1.12",
+  "priced_bound_per_probe_at_40k": "0.40",
+  "programme_ceiling": "20",
+  "retained_holds_counted_once": "0.875066",
+  "sonnet_input_output_per_million": [
+    "2",
+    "10"
+  ],
+  "token_fit_and_actual_usage": "UNMEASURED for changed requests; exact paired real counts <=32000 required before each Messages. Mock counts give no fit evidence.",
+  "total_with_holds_new_reservations_and_two_dollar_buffer": "19.013547",
+  "unknown_completion": "No hold settlement or release; any NEW uncertainty stops."
+}

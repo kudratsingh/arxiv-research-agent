@@ -1,0 +1,22 @@
+{
+  "basis": "Production-emitted chunks containing qualification panel; static byte sizes, not browser timing or a complete route-load union",
+  "application": "10f1dba181beb97d013761319cc1ba7e915872e0",
+  "chunks": {
+    "previous": [
+      {
+        "file": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-evidence/d5-keyed-contract-20261114/frontend-build-first-archive/static/chunks/2733.9b4561e398829c05.js",
+        "bytes": 17506,
+        "gzip_bytes": 6022,
+        "sha256": "c05a0c63524078112af9e44335de1f17bd66f7856b36c3fd064455949623de7e"
+      }
+    ],
+    "final": [
+      {
+        "file": "web/.next/static/chunks/2733.4ce5e3b3e5393b50.js",
+        "bytes": 17554,
+        "gzip_bytes": 6051,
+        "sha256": "da7030db4f44f37dcb054ff786549753c3c4093f4226d5b2d2a28dd8228a9d21"
+      }
+    ]
+  }
+}

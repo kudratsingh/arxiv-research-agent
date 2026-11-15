@@ -1,0 +1,85 @@
+{
+  "test_commit": "03c56f28",
+  "runtime_commit": "10f1dba181beb97d013761319cc1ba7e915872e0",
+  "packet_digest": "05debe2121e970b79e7e9b097ee28be54a265927c42f370c0bc8d871cab74929",
+  "standalone_regression": "multigap-production-test-v4.log: passed, 1 test; first p1 checker omitted followed by repair/recheck and final answered, p3 three reasons retained, exact wire schemas checked each stage, new pool snapshot and bound report/Markdown, HOLD and human labels null",
+  "inline_browser": {
+    "result": "PASS",
+    "job": "gen-acf1bb2b7acab76e7f80c0609eea2d0264b37697",
+    "work": "arxiv:2210.03629",
+    "version": "arxiv:2210.03629:v3",
+    "anchor": "material:mat-2b7a38f3cfa1449f7728f044688ca2c2:page:6:2005:3379",
+    "part": "p3",
+    "gap_reasons": [
+      "methods",
+      "metric_definition",
+      "data_splits"
+    ],
+    "gap_texts": [
+      "Request the missing method specification and implementation details.",
+      "Request the metric definition and its denominator.",
+      "Request dataset access, splits and reproduction settings."
+    ],
+    "context_claim_ids": [
+      "c1",
+      "c2",
+      "c3",
+      "c4",
+      "c5",
+      "c6",
+      "c7",
+      "c8"
+    ],
+    "source_binding_intact": true,
+    "simulation": true,
+    "entry_id": "qualification-gen-acf1bb2b7acab76e7f80c0609eea2d0264b37697",
+    "download_exact": true,
+    "note_and_markdown_include_all_gaps": true,
+    "reload_persisted": true,
+    "blocked": [],
+    "writes": [
+      "/api/workspace/context/entries",
+      "/api/workspace/context/threads"
+    ],
+    "boundary": "R5 marked synthetic fixture, real local API and Postgres clone with explicit test authentication. No provider or source refresh."
+  },
+  "inline_after_restart": {
+    "result": "PASS",
+    "api_restart": true,
+    "part": "p3",
+    "all_three_reasons_and_texts_survive": true,
+    "saved_note_and_markdown_survive": true,
+    "source_identity_and_result_download_match": true,
+    "protected_tables_unchanged": 7,
+    "job": "gen-acf1bb2b7acab76e7f80c0609eea2d0264b37697",
+    "entry_id": "qualification-gen-acf1bb2b7acab76e7f80c0609eea2d0264b37697",
+    "anchor": "material:mat-2b7a38f3cfa1449f7728f044688ca2c2:page:6:2005:3379",
+    "boundary": "Synthetic short-claim mock output, marked fixture, real local API/Postgres, explicit test auth; no provider, source refresh or human judgment."
+  },
+  "reference_fallback_after_restart": {
+    "result": "PASS",
+    "branch": "reference-only note because full text exceeds limit",
+    "complete_download_equals_retained_result": true,
+    "all_three_gaps_remain_in_retained_result": true,
+    "note_and_markdown_link_exact_job_source_version_anchor": true,
+    "job": "gen-acf1bb2b7acab76e7f80c0609eea2d0264b37697",
+    "entry_id": "qualification-gen-acf1bb2b7acab76e7f80c0609eea2d0264b37697",
+    "anchor": "material:mat-2b7a38f3cfa1449f7728f044688ca2c2:page:6:2005:3379",
+    "api_restart": true,
+    "boundary": "Synthetic long-claim mock, distinct marked fixture, real API/Postgres with test-only auth; no provider or source refresh."
+  },
+  "database_exports": [
+    {
+      "sha256": "8f108fafcd6b5c5e7de8928ddf5db0332a98e58ba2515ea8c956718a7b307904",
+      "toc_readable": true,
+      "location": "Private permanent evidence; not included in public package"
+    },
+    {
+      "sha256": "c1b5d351b26b8937192d30607f9ef306aed3867104ef43b2487882e0fb0ad733",
+      "toc_readable": true,
+      "location": "Private permanent evidence; not included in public package"
+    }
+  ],
+  "evidence_boundary": "All outputs and judgments are freshly generated synthetic mocks in separately marked R5 fixtures. The short fixture modifies only synthetic claim text and has no scientific or human-quality authority. API uses explicit test authentication. No provider/count/source refresh/owner access. The first long fixture follows the intentional reference-only branch; its inline-note predicate failed and is retained, while exact retained-result link and JSON are verified.",
+  "service_state": "Own isolated frontend and API stopped; all three new fixture/test databases and prior evidence remain preserved."
+}
