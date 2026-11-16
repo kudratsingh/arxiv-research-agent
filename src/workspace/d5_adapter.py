@@ -107,8 +107,6 @@ def qualification_producer() -> dict[str, Any]:
     files = (
         "workspace/d5_adapter.py",
         "workspace/assistance_keyed_contract.py",
-        "workspace/assistance_consistency_contract.py",
-        "workspace/assistance_consistency_checks.py",
         "workspace/assistance_keyed_checks.py",
         "workspace/assistance_keyed_encoding.py",
         "workspace/provider_schema_compat.py",
@@ -193,7 +191,17 @@ def qualification_producer() -> dict[str, Any]:
     }
 
 
+def consistency_producer() -> dict[str, str]:
+    """Prospective-only hashes; do not expand legacy 32 KB input envelopes."""
+    root = Path(__file__).resolve().parent
+    return {
+        name: "sha256:" + hashlib.sha256((root / name).read_bytes()).hexdigest()
+        for name in ("assistance_consistency_contract.py", "assistance_consistency_checks.py")
+    }
+
+
 _QUALIFICATION_LOADED = qualification_producer()
+_CONSISTENCY_LOADED = consistency_producer()
 
 
 class D5StudyDraft(StudyDraft):
@@ -378,6 +386,9 @@ def prepare_input(
             model = selected["model"]
             settings["output_tokens"] = selected["output_tokens"]
             settings["price_estimate_usd_per_million"] = selected["prices"]
+    from src.workspace.assistance_consistency_contract import enabled as consistency_enabled
+    if consistency_enabled(sealed.get("task_policy")):
+        settings["consistency_producer"] = dict(_CONSISTENCY_LOADED)
     return GenerationInput("deep_dive", model, ADAPTER_REVISION, sources, settings)
 
 
@@ -677,6 +688,12 @@ class D5Adapter(QualificationAdapter):
         settings = self.inputs.settings
         sealed = settings.get("d5_request", {})
         operation = settings.get("d5_operation")
+        from src.workspace.assistance_consistency_contract import enabled as consistency_enabled
+        if consistency_enabled(sealed.get("task_policy")) and (
+            settings.get("consistency_producer") != _CONSISTENCY_LOADED
+            or consistency_producer() != _CONSISTENCY_LOADED
+        ):
+            raise AdmissionError("d5_consistency_producer_drift")
         routes = settings.get("operation_routes")
         prospective = capacity_enabled(dict(settings))
         if prospective and (sealed.get("schema_revision") not in {CAPACITY_REVISION, "workspace-assistance-keyed-v16"} or settings.get("operation_deadlines") != CAPACITY_DEADLINES or routes != CAPACITY_ROUTES):

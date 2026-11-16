@@ -201,6 +201,11 @@ class Transport:
             legacy = deepcopy(case)
             legacy["policy"][codec.KEY] = compact.REVISION
             value = samples.synthetic_upgrade(old.draft(legacy, self.packet))
+        if self.scenario == "archived_derivatives":
+            if name == "learn-compact":
+                value = samples.learn()[0]
+            elif name == "checker-small":
+                value = samples.synthetic_old_checker()[0]
         Draft202012Validator(case["schemas"]["wire"]).validate(value)
         if name == self.case and self.scenario == "invalid":
             value = {"response": {}}
@@ -324,3 +329,32 @@ async def test_blank_authority_and_packet_drift_stop_before_contact(store):
     bad["cases"].append(deepcopy(bad["cases"][0]))
     with pytest.raises(AdmissionError):
         previous.verify(bad)
+
+
+async def test_complete_original_derivatives_reach_remaining_production_validation(store):
+    packet = await setup(store)
+    handler = Transport(packet, "archived_derivatives")
+    try:
+        result = await ctl.run(store, packet, transport=httpx.MockTransport(handler))
+        assert result["stop"] is None and len(handler.contacts) == 8
+        rows = ctl.snapshots(store, packet)
+        learned = rows[0]["observation"]["observed"]
+        assert rows[0]["observation"]["local_semantic_validity"]
+        assert learned["reader_view"]["request_outcome"]["partial_parts"] == 3
+        assert len(learned["draft"]["claims"]) == 5
+        assert learned["provenance"]["support_ratio"] is None
+        checked = rows[2]["observation"]["observed"]
+        assert rows[2]["observation"]["local_semantic_validity"]
+        assert checked["normalized"]["claim_quality"][0]["atomicity"] == "bundled"
+        assert (
+            checked["normalized"]["claim_quality"][1]["qualifications"]["comparator"] == "uncertain"
+        )
+        assert checked["derived_machine_summary"]["quality_gate"] == "FAIL"
+        assert checked["derived_machine_summary"]["factual_prose_findings"] == 0
+        assert checked["derived_machine_summary"]["coverage_critique_count"] == 1
+        assert (
+            not rows[0]["observation"]["content_accepted"]
+            and not rows[2]["observation"]["content_accepted"]
+        )
+    finally:
+        export_rows(store, "v18-complete-original-synthetic-derivatives")

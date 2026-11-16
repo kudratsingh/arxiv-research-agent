@@ -193,3 +193,33 @@ async def test_actual_four_stage_pipeline_current_response_binding(
             assert len(handler.contacts) == 8
     finally:
         export_rows(store, "v18-pipeline-" + mode + "-" + scenario)
+
+
+async def test_successor_dependencies_are_bound_without_growing_legacy_producer_metadata(
+    store, monkeypatch
+):
+    from dataclasses import replace
+
+    inputs = setup(store, monkeypatch, "learn")
+    files = inputs.settings["qualification_producer"]["code"]
+    assert "workspace/assistance_consistency_contract.py" not in files
+    assert "workspace/assistance_consistency_checks.py" not in files
+    assert inputs.settings["consistency_producer"] == adapter_module.consistency_producer()
+    for fault in ["absent", "wrong"]:
+        settings = dict(inputs.settings)
+        if fault == "absent":
+            settings.pop("consistency_producer")
+        else:
+            settings["consistency_producer"] = {}
+        with pytest.raises(AdmissionError, match="consistency_producer_drift"):
+            adapter_module.D5Adapter(
+                store,
+                "d5-run",
+                replace(inputs, settings=settings),
+                transport=httpx.MockTransport(lambda _: None),
+            )
+    monkeypatch.setattr(adapter_module, "consistency_producer", lambda: {})
+    with pytest.raises(AdmissionError, match="consistency_producer_drift"):
+        adapter_module.D5Adapter(
+            store, "d5-run", inputs, transport=httpx.MockTransport(lambda _: None)
+        )
