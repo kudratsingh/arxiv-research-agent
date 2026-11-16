@@ -38,14 +38,16 @@ def offline(monkeypatch):
     monkeypatch.setenv("WORKSPACE_D5_OFFLINE", "1")
 
 
-def setup(store, monkeypatch, mode):
+def setup(store, monkeypatch, mode, intent="answer"):
     prepare = adapter_module.prepare_input
 
     def prospective(sealed, **kwargs):
         from src.workspace.assistance_policy import CoverageTaskContext
 
         sealed = deepcopy(sealed)
-        sealed["assistance"]["task_context"] = CoverageTaskContext().model_dump(mode="json")
+        sealed["assistance"]["task_context"] = CoverageTaskContext(intent=intent).model_dump(
+            mode="json"
+        )
         sealed = upgrade(sealed, union_safe=True)
         sealed["task_policy"][codec.KEY] = codec.REVISION
         sealed["response_schemas"] = codec.schemas(
@@ -85,7 +87,9 @@ class Transport:
             if self.scenario == "uncertain_recheck" and self.checks == 2:
                 raise httpx.ReadTimeout("Synthetic uncertain recheck", request=request)
             value = samples.synthetic_verdict(context)
-            if self.checks == 1 or self.scenario == "residual":
+            if (
+                self.checks == 1 and self.scenario not in {"clear", "comparison_notes"}
+            ) or self.scenario == "residual":
                 first = next(iter(value["coverage_checks"]))
                 value["coverage_checks"][first]["critiques"] = [
                     "Synthetic coverage-only criticism requiring the one bounded repair."
@@ -120,6 +124,16 @@ class Transport:
                 envelope, coverage, {**sealed["task_policy"], codec.KEY: compact.REVISION}
             )
             value = samples.synthetic_upgrade(prior)
+            if self.scenario == "comparison_notes":
+                generated = value["response"]
+                generated.update(comparison_claims=[], comparison_basis=[])
+                for row in generated["coverage"].values():
+                    row.update(
+                        status="lacks_evidence",
+                        gap_reasons=["common_evaluation"],
+                        answer_claim_ids=[],
+                        context_claim_ids=[f"c{i + 1}" for i in range(len(generated["claims"]))],
+                    )
         Draft202012Validator(body["output_config"]["format"]["schema"]).validate(value)
         return httpx.Response(
             200,
@@ -223,3 +237,47 @@ async def test_successor_dependencies_are_bound_without_growing_legacy_producer_
         adapter_module.D5Adapter(
             store, "d5-run", inputs, transport=httpx.MockTransport(lambda _: None)
         )
+
+
+@pytest.mark.parametrize(
+    "intent,scenario,disposition",
+    [
+        ("application_assessment", "clear", "full_abstention"),
+        ("comparison", "comparison_notes", "comparison_abstention"),
+    ],
+)
+async def test_both_abstention_forms_complete_mandatory_check_without_answer_credit(
+    store, monkeypatch, intent, scenario, disposition
+):
+    from src.workspace.d5_report_binding import current_check
+    from src.workspace.d5_results import QualificationResults
+
+    inputs = setup(store, monkeypatch, "research", intent=intent)
+    handler = Transport(scenario)
+    adapter = adapter_module.D5Adapter(
+        store, "d5-run", inputs, transport=httpx.MockTransport(handler)
+    )
+    try:
+        job = adapter.start(inputs.settings["d5_request_id"])
+        await adapter.advance(job["id"])
+        await adapter.advance(job["id"])
+        final = adapter.snapshot(job["id"])
+        assert final["state"] == "ready" and len(handler.contacts) == 4
+        assert [step["stage"] for step in final["steps"]] == ["draft", "check"]
+        _, materials = adapter._context()
+        bound = current_check(dict(inputs.settings["d5_request"]), final, materials, routes=ROUTES)
+        assert bound["binding"]["completed_checker_after_current_response"] is True
+        result = QualificationResults(store).snapshot("d5-run", job["id"])
+        output = result["assistance_output"]
+        assert output["response_disposition"] == disposition
+        assert (
+            not output["coverage_complete"] and not output["request_outcome"]["full_answer_credit"]
+        )
+        assert all(not part["answer_claim_ids"] for part in output["request_coverage"])
+        assert result["factual_acceptance"] is False and result["human_review"] is None
+        if disposition == "full_abstention":
+            assert not output["claims"] and len(output["context_requests"]) == 4
+        else:
+            assert output["claims"] and output["comparison_unanswered"]
+    finally:
+        export_rows(store, "v18-mandatory-check-" + disposition)

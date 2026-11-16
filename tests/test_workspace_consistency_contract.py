@@ -540,3 +540,28 @@ def test_version_selectors_leave_invalid_context_to_existing_validator(value):
     )
     with pytest.raises(ValueError, match=expected):
         oldchecks.schemas(value)
+
+
+def test_valid_citations_and_context_links_do_not_prove_answer_relevance_or_whole_support():
+    x, case, pol, p = learn()
+    context = context_for_learn(x, case, pol, p)
+    raw = synthetic_verdict(context)
+    # Explicit synthetic criticism: independently supported result c5 is not
+    # an answer to unspecified protocol details. Do not invent a prose error.
+    raw["coverage_checks"]["p3"].update(
+        decision="lacks_evidence",
+        critiques=[
+            "Synthetic: c5 reports a result, not the requested missing protocol; context cannot earn answer credit."
+        ],
+    )
+    verdict = checks.Checks.model_validate(checks.normalize(raw, context))
+    summary = checks.aggregate(verdict, context)
+    assert summary["quality_gate"] == "FAIL" and summary["coverage_disagreements"] == ["p3"]
+    assert summary["factual_prose_findings"] == 0 and summary["coverage_critique_count"] == 1
+    assert review_failed(verdict, {"request_coverage": context["declared_coverage"]})
+    raw = synthetic_verdict(context)
+    raw["claim_reviews"]["c1"]["decision"] = "unsupported"
+    verdict = checks.Checks.model_validate(checks.normalize(raw, context))
+    assert checks.aggregate(verdict, context)["quality_gate"] == "FAIL"
+    assert checks.aggregate(verdict, context)["coverage_disagreements"] == []
+    assert not checks.aggregate(verdict, context)["full_answer_credit"]

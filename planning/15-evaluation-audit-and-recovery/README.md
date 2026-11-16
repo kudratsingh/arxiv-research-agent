@@ -1,3 +1,12 @@
+> Current offline handoff: [v18 joint consistency repair](evidence/consistency-v18/README.md).
+> v17r2 is stopped; its complete responses, failed judgments, ledger and holds
+> remain unchanged. The successor proposes only four requests, USD1.40, and
+> requires separate exact owner approval after final verification. No provider
+> contact is authorized by this kit. Older current/pending headings below are
+> historical records and do not renew any scope.
+
+---
+
 > Current prospective handoff: [v17r2 grammar diagnostic](evidence/grammar-diagnostic-v17r2/README.md).
 > The stopped v16r2 run and original audit plan below are historical records.
 > No provider contacts are authorized by this kit; the six-request diagnostic

@@ -9,7 +9,9 @@ used after matching external authority.
 export VENV_PYTHON=/Users/kudratsingh/Machine-Learning-Projects/arxiv-venv-lock/bin/python
 export ANTHROPIC_API_KEY=local-preview-disabled
 export PYTHONPATH="$PWD:/Users/kudratsingh/Machine-Learning-Projects/arxiv-tooling/d5-test-deps"
-export WORKSPACE_TEST_POSTGRES_URL=postgresql://workspace:workspace-local-only@127.0.0.1:15488/workspace_d5_consistency_v18_tests
+export WORKSPACE_TEST_POSTGRES_URL=postgresql://workspace:workspace-local-only@127.0.0.1:15488/workspace_d5_tests
+unset WORKSPACE_D5_V15_PARENT_SNAPSHOT
+export WORKSPACE_D5_V15_ARCHIVED_PARENT_SNAPSHOT=/Users/kudratsingh/Machine-Learning-Projects/arxiv-evidence/campaign-live-v14-20261114T000552Z/POST-STOP-LEDGER.json.gz
 "$VENV_PYTHON" -c 'import src; print(src.__file__)'
 "$VENV_PYTHON" -m pytest tests/test_workspace_consistency_contract.py tests/test_workspace_consistency_pipeline.py tests/test_workspace_d5_consistency_integration.py -v
 make test-cov-diff VENV_PYTHON="$VENV_PYTHON"
@@ -19,6 +21,24 @@ The tests use isolated `ws_test_*` schemas, explicit synthetic authorization and
 MockTransport. They reconstruct recorded historical charges as fixture data;
 new mocked usage is zero spend. Test markers categorically forbid provider mode.
 No live financial row, scope, grant or source record is changed.
+
+The inherited storage guard requires the canonical local test database name
+`workspace_d5_tests`. Each test creates and drops only its unique `ws_test_*`
+schema; the public schema was verified empty. The active financial validation
+ledger is a different database and is never used for write-based tests.
+
+The two inherited parent consumers intentionally need different identities.
+Production controls rebuild their synthetic parent with the existing
+`prepare(..., authorize=False)` routine when the shared override is absent.
+The optional historical controls compare exact archived v14 identities; the new
+archive-specific test option supplies the preserved post-stop ledger only to
+those controls. The old shared override remains backward compatible. Neither
+fixture is an input to live authority, and neither changes the active 42/76/101
+ledger. No assertion, guard, floor or historical identity was relaxed.
+
+Initial local attempts mixed these inputs and failed the guard, layout or exact
+identity checks. All attempts and synthetic candidate snapshots remain in
+permanent evidence. Never edit or relabel a snapshot to satisfy an identity.
 
 Packet-only verification and an **unapproved** external template:
 

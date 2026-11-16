@@ -1,3 +1,61 @@
+# Current offline handoff — v18 consistency diagnostic
+
+Application `b125d0d84953b97d40de7463863c9f56cf2ee0af`; packet `fa06446ac6cb32e6a4bd0eca89d95b4198bf090d7e6fafdea82d5c434a988cd0`; proposal
+`ff59d2f50213d320df1e331d445cfe85f8a908a779c4d5b918934aa024a7a0e4`. Branch `codex/workspace-d5-consistency-v18`.
+
+[One inactive four-request approval](evidence/consistency-v18/APPROVAL-REQUEST.md),
+[contract audit](evidence/consistency-v18/CONTRACT-AUDIT.md),
+[remaining quality findings](evidence/consistency-v18/OFFLINE-QUALITY-REPORT.md),
+[runbook](evidence/consistency-v18/RUNBOOK.md),
+[exact requests](evidence/consistency-v18/REQUEST-INDEX.json),
+[verification](evidence/consistency-v18/VERIFICATION.md).
+
+The prospective format distinguishes question context from factual premises,
+preserves partial answers and every genuine gap, and separates part coverage
+critiques from unsupported or uncertain factual prose. Aggregates use complete
+supplied current-response judgments. Full-answer credit is unavailable for
+partial work. All provenance, whole-support, atomicity, qualification, priority,
+abstention and bounded repair/recheck checks remain. Reader now labels partial
+coverage explicitly. Legacy wire models and historical failures remain unchanged.
+
+Complete original responses are checksum-pinned regressions. Every modified
+example is synthetic. The remaining bundled c1, uncertain comparator c2 and
+coverage disagreements are still negative machine findings, not human gold or
+new provider successes. The two completed schema controls are not repeated.
+
+Read-only actual ledger: **42 programme jobs / 76 Messages / 101 counts /
+USD2.252281 known estimate plus USD2.275066 overlapping liability counted once /
+no active jobs**. Four exact historical holds remain; v17r2 remains stopped.
+All captured public/financial tables and 1,154 predecessor evidence members match.
+Owner3137/review3178 listeners and data remain unchanged. No provider/count/key
+access, real grant, amendment, migration, settlement, cap/expiry change, merge or
+deployment. Everyday generation, recurrence and notifications stay disabled.
+
+Proposed new scope is exactly **4 jobs / 4 Messages / 4 immediate exact paired
+counts / USD1.40**, under the existing 64/160/200/USD20 limits and
+2026-11-21T11:03:57Z programme expiry. No capacity or expiry change. No new
+received-grammar-rejection continuation exception. Future Research depends on
+valid Compact Learn; maximum checker depends on valid small checker. Fixed
+checker cases are shape controls, not checks of newly generated drafts.
+
+Source commits 6b303996, 94bd4b83, b125d0d8 include two inherited-path corrections:
+keep legacy 32 KB envelopes intact through prospective-only dependency hashes,
+and leave malformed contexts to their original validators. Focused contracts,
+real isolated Postgres/MockTransport four-stage and four-request replays,
+fresh read-only persistence, frontend gates and preservation pass. Final local
+coverage passes: 8284 passed, 54 skipped, 53 deselected in 3253.31s (0:54:13).
+Patch coverage 96%; unchanged package floors pass. Exact-publication CI is
+reported separately in verification;
+no pending result is called green. The final publication receipt and complete
+raw evidence live in `arxiv-evidence/d5-consistency-v18-20261116/`.
+
+Original-agent LangGraph metric/source-ID/completion repairs remain separate;
+zero-spend simulations and this diagnostic do not validate those live results.
+
+All sections below are historical checkpoints, not current dispatch authority.
+
+---
+
 # Current offline handoff: bounded grammar diagnostic v17r2
 
 Application: `5e7a32581064e6509fb5af620726593dcf09b173`.

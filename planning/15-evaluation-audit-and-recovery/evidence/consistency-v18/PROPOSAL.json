@@ -1,0 +1,111 @@
+{
+  "revision": "d5-consistency-proposal-v18",
+  "approved": false,
+  "application": "b125d0d84953b97d40de7463863c9f56cf2ee0af",
+  "packet_digest": "fa06446ac6cb32e6a4bd0eca89d95b4198bf090d7e6fafdea82d5c434a988cd0",
+  "scope_id": "compat-fa06446ac6cb32e6a4bd0eca",
+  "predecessor_stopped_packet": "002529632b338a7982bb59b5eebd00cabc4b796516d92476912bf95944a599bf",
+  "predecessor_stopped_scope_digest": "78d4352f44f1f58ddcf4f7fb941ca943e3b92a32fae508427b3dbfc94bdb590e",
+  "program_id": "research-evaluation-20261105-v1",
+  "baseline": {
+    "funded_jobs": 42,
+    "messages": 76,
+    "counts": 101,
+    "known_estimate_USD": "2.252281",
+    "overlapping_retained_liability_USD": "2.275066",
+    "active_jobs": [],
+    "history_digest": "96619c8b37749b3a98aee5c9827dead2d68c207cace18443e7b1611061e7dd6b"
+  },
+  "historical_quarantine_records": [
+    {
+      "job_id": "gen-36b50e6a28f054220916d70528863957092c3a83",
+      "owner": "d5-campaign-35292dcc485d8d7f-run",
+      "state": "uncertain",
+      "amount": "1.20",
+      "unknown": "1.20",
+      "data_digest": "f083ccf417e34f35909cc34f9afa768638af3253e37e025301b94f9004c28f24"
+    },
+    {
+      "job_id": "gen-a6e23d9f41c98fbf0327d33f1658a207a7f7d860",
+      "owner": "d5-campaign-97d24567bc987531-run",
+      "state": "uncertain",
+      "amount": "0.45",
+      "unknown": "0.45",
+      "data_digest": "e6a7fcbe5a08fa304396186641e807ef74af276771c7309a9fd4a7d525507432"
+    },
+    {
+      "job_id": "gen-ba942321c16d5ed10cc41cff7f6c1ac9f5a98877",
+      "owner": "d5-coverage-880e4794cd08d26a-run",
+      "state": "uncertain",
+      "amount": "0.45",
+      "unknown": "0.425066",
+      "data_digest": "837cc21135984105b05fed9a863dedc2646909cc519784f070618ba363915894"
+    },
+    {
+      "job_id": "gen-fb99e43f6f2d2715a5ecd01111dfdb7c2e1cd781",
+      "owner": "compat-002529632b33-learn-list-control",
+      "state": "uncertain",
+      "amount": "0.20",
+      "unknown": "0.20",
+      "data_digest": "f67acd57a80bba7e1484e5b739ee1d506ddd89417113e63988c32ae94a9d8041"
+    }
+  ],
+  "limits": {
+    "jobs": 4,
+    "messages": 4,
+    "counts": 4,
+    "new_USD": "1.40",
+    "concurrency": 1
+  },
+  "per_call_USD": {
+    "learn-compact": "0.20",
+    "research-compact": "0.20",
+    "checker-small": "0.50",
+    "checker-maximum": "0.50"
+  },
+  "financial_envelope": {
+    "sealed_standard_rate_usage_bound_USD": "1.12",
+    "reserved_new_scope_USD": "1.40",
+    "known_plus_holds_plus_new_reservation_USD": "5.927347",
+    "existing_extra_headroom_USD": "2.00",
+    "with_headroom_USD": "7.927347",
+    "cumulative_ceiling_USD": "20",
+    "prices_basis": "Unchanged sealed estimates from predecessor routes; no new price or measured token claim."
+  },
+  "programme_limits": {
+    "jobs": 64,
+    "messages": 160,
+    "counts": 200,
+    "USD": "20",
+    "concurrency": 1
+  },
+  "programme_expiry": "2026-11-21T11:03:57+00:00",
+  "future_expiry_rule": "earlier of 24 hours after observed future owner approval and existing programme expiry",
+  "capacity_or_expiry_change": false,
+  "case_order": [
+    "learn-compact",
+    "research-compact",
+    "checker-small",
+    "checker-maximum"
+  ],
+  "request_index_digest": "862c618ba744236696d834fa8c701eb8d4e7992f70392003f0c885f24dc97b30",
+  "progression": {
+    "first_provider_error": "stop and retain full reservation",
+    "research": "only after complete locally valid Compact Learn",
+    "maximum": "only after complete locally valid small checker",
+    "local_content_rejection": "preserve, skip dependent case; independent fixed checker may proceed",
+    "new_uncertainty_drift_accounting_budget_expiry_revocation_cancellation": "stop",
+    "max_tokens_or_incomplete_output": "unavailable, no salvage",
+    "repairs": 0,
+    "automatic_retries": 0
+  },
+  "new_received_rejection_continuation_exception": false,
+  "new_grant": false,
+  "provider_contacts": 0,
+  "funded_jobs": 0,
+  "new_spend_USD": "0",
+  "human_qualification": false,
+  "everyday_generation": false,
+  "full_campaign_authorized": false,
+  "proposal_digest": "ff59d2f50213d320df1e331d445cfe85f8a908a779c4d5b918934aa024a7a0e4"
+}

@@ -1,0 +1,10 @@
+{
+  "application": "b125d0d84953b97d40de7463863c9f56cf2ee0af",
+  "packet": "fa06446ac6cb32e6a4bd0eca89d95b4198bf090d7e6fafdea82d5c434a988cd0",
+  "proposal": "ff59d2f50213d320df1e331d445cfe85f8a908a779c4d5b918934aa024a7a0e4",
+  "scope": "compat-fa06446ac6cb32e6a4bd0eca",
+  "approved": false,
+  "provider_contacts": 0,
+  "compile_inputs_digest": "ad3fc4cd39dbc7a58711574320bac6f172127dd9cedba1183fe6af47c1ee57ff",
+  "frozen_code_digest": "2c95e0e875b143e16c490dc5d901f29f06776405899ce7bc6fa8dae42247578a"
+}

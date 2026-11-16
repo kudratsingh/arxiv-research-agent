@@ -62,6 +62,9 @@ Original HTTP responses, private journals and accounting remain in permanent
    detail criticism under p3 coverage. Remaining validation exposes the original
    bundled c1, uncertain comparator on c2, and p2/p3 coverage disagreements.
    Those negative machine judgments remain negative; they are not human gold.
+   The critique placement under p3 is an explicitly synthetic development choice;
+   the original finding supplied no part-specific critique identity. It is not
+   a recovered historical part judgment or an independent label.
 3. The completed accepted-schema control remains historical and unqualified; it
    is not repeated in the successor diagnostic.
 
@@ -75,7 +78,8 @@ checker abstentions and uncertain support/quality/coverage/prose/priority produc
 `PASS`; scientific quality and human qualification remain `UNMEASURED`.
 
 Coverage is reported independently as full, partial, insufficient, omitted and
-uncertain part counts. Full-answer credit requires every part answered, no
+uncertain part counts. Checker counts reflect its supplied opinions; a disagreement
+never rewrites the draft declaration or earns answer credit. Full-answer credit requires every part answered, no
 coverage disagreement or critique, and a passing machine quality gate. No absent
 judgment or empty evidence denominator becomes a positive label.
 

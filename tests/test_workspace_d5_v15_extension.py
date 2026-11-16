@@ -318,7 +318,12 @@ def copied_parent(request):
     from src.workspace.d5_fixture import FINANCIAL_TABLES, PUBLIC_TABLES
     from tests.d5_campaign_gate import storage
 
-    path = os.environ.get("WORKSPACE_D5_V15_PARENT_SNAPSHOT")
+    # Exact archived-parent controls and regenerated synthetic production seeds
+    # have different identities. Preserve the shared historical option, but let
+    # full-suite runs bind the archive independently without relabeling either.
+    path = os.environ.get("WORKSPACE_D5_V15_ARCHIVED_PARENT_SNAPSHOT") or os.environ.get(
+        "WORKSPACE_D5_V15_PARENT_SNAPSHOT"
+    )
     if not path:
         pytest.skip("explicit preserved v15 parent snapshot required")
     captured = json.loads(gzip.decompress(Path(path).read_bytes()))

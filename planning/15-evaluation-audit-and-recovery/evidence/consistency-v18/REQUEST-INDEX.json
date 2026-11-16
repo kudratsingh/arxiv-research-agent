@@ -1,0 +1,179 @@
+{
+  "packet_digest": "fa06446ac6cb32e6a4bd0eca89d95b4198bf090d7e6fafdea82d5c434a988cd0",
+  "new_provider_contacts": 0,
+  "old_measurements_reusable": false,
+  "requests": [
+    {
+      "id": "learn-compact",
+      "family": "learn",
+      "request_digest": "b515c24d6293feeb8a6472bf05dc13ffec25950499e19de96ea0e8fea1b18873",
+      "count_digest": "f743f8d873b1874defeb27bae4af41d0221d8979531d57f0cec0a3f2d717fe74",
+      "wire_schema_digest": "5efabef98447a0b1141e837f094a37510de206067694b009e58114ea24450c06",
+      "local_schema_digest": "02137a837a5ffb0ecd739350de6ab4c5af328d81a11adae6c4343674db0acbe4",
+      "public_context_digest": "33fa59eda0e28edb19fe67e6b6d6c57cfb77dec74e525a4b376aa3a144de0669",
+      "model": "claude-sonnet-5-5",
+      "thinking": {
+        "type": "between_tools"
+      },
+      "output_config_effort": "medium",
+      "output_tokens": 8000,
+      "reservation_USD": "0.20",
+      "schema_metrics": {
+        "revision": "anthropic-structured-schema-compat-v1",
+        "request_digest": "b515c24d6293feeb8a6472bf05dc13ffec25950499e19de96ea0e8fea1b18873",
+        "schemas": [
+          {
+            "location": "output",
+            "schema_digest": "5efabef98447a0b1141e837f094a37510de206067694b009e58114ea24450c06",
+            "direct_union_properties": 1,
+            "resolved_union_properties": 1,
+            "anyof_nodes": 1,
+            "type_array_nodes": 0,
+            "optional_properties": 0,
+            "expanded_union_properties": 1,
+            "expanded_union_nodes": 1,
+            "expanded_optional_properties": 0,
+            "reference_uses": 20
+          }
+        ],
+        "union_parameters_conservative": 1,
+        "optional_parameters_conservative": 0,
+        "expanded_union_nodes": 1,
+        "strict_tools": 0,
+        "documented_limits_pass": true,
+        "planning_headroom_pass": true,
+        "remote_compiler_acceptance": "UNMEASURED"
+      },
+      "conditional": null
+    },
+    {
+      "id": "research-compact",
+      "family": "research",
+      "request_digest": "2185cf29aff962430ef0b2bd758e535efa739eb3df7681bf1cab9782c1f7c387",
+      "count_digest": "837f6e689e7279d6bc460133fc91ed5c6aca792e2a96e9f97f499844de4c126a",
+      "wire_schema_digest": "efeabf2948b74add780ed7fc2b68ab763e93be43b891101e177d85f7302c87ba",
+      "local_schema_digest": "74dc10ddc0e1b23634d9296a60e2330ca87b7e2caedb55ee0999ca94dd889267",
+      "public_context_digest": "303a5d13829d18d14f32d0b36551ec772083678862d2b60db5c6a7c219f11cbf",
+      "model": "claude-sonnet-5-5",
+      "thinking": {
+        "type": "between_tools"
+      },
+      "output_config_effort": "medium",
+      "output_tokens": 8000,
+      "reservation_USD": "0.20",
+      "schema_metrics": {
+        "revision": "anthropic-structured-schema-compat-v1",
+        "request_digest": "2185cf29aff962430ef0b2bd758e535efa739eb3df7681bf1cab9782c1f7c387",
+        "schemas": [
+          {
+            "location": "output",
+            "schema_digest": "efeabf2948b74add780ed7fc2b68ab763e93be43b891101e177d85f7302c87ba",
+            "direct_union_properties": 1,
+            "resolved_union_properties": 1,
+            "anyof_nodes": 1,
+            "type_array_nodes": 0,
+            "optional_properties": 0,
+            "expanded_union_properties": 1,
+            "expanded_union_nodes": 1,
+            "expanded_optional_properties": 0,
+            "reference_uses": 20
+          }
+        ],
+        "union_parameters_conservative": 1,
+        "optional_parameters_conservative": 0,
+        "expanded_union_nodes": 1,
+        "strict_tools": 0,
+        "documented_limits_pass": true,
+        "planning_headroom_pass": true,
+        "remote_compiler_acceptance": "UNMEASURED"
+      },
+      "conditional": "learn-compact complete and locally valid"
+    },
+    {
+      "id": "checker-small",
+      "family": "checker",
+      "request_digest": "edf7dea0e8a6fa0ca35bf66324a57904bab441145995dc0012e30ad805888e53",
+      "count_digest": "e89bf7e0424e95e12cc59eabd246aa3bfd1d1051acb5d5c4958ed71d2ee5c777",
+      "wire_schema_digest": "f926db9ea3f2b02797db726154e300135d8474437137bb3bd09e6af81e40cc7c",
+      "local_schema_digest": "406edb448c350c7f87205c784c6b9462fee8cab5c61193257c5667e8b33739e5",
+      "public_context_digest": "dc92e4f6be747d7eae05a773b65af17e2ed4ce477392314b254cfb15369baa39",
+      "model": "claude-opus-5-5",
+      "thinking": {
+        "type": "adaptive"
+      },
+      "output_config_effort": "high",
+      "output_tokens": 12000,
+      "reservation_USD": "0.50",
+      "schema_metrics": {
+        "revision": "anthropic-structured-schema-compat-v1",
+        "request_digest": "edf7dea0e8a6fa0ca35bf66324a57904bab441145995dc0012e30ad805888e53",
+        "schemas": [
+          {
+            "location": "output",
+            "schema_digest": "f926db9ea3f2b02797db726154e300135d8474437137bb3bd09e6af81e40cc7c",
+            "direct_union_properties": 0,
+            "resolved_union_properties": 0,
+            "anyof_nodes": 0,
+            "type_array_nodes": 0,
+            "optional_properties": 0,
+            "expanded_union_properties": 0,
+            "expanded_union_nodes": 0,
+            "expanded_optional_properties": 0,
+            "reference_uses": 14
+          }
+        ],
+        "union_parameters_conservative": 0,
+        "optional_parameters_conservative": 0,
+        "expanded_union_nodes": 0,
+        "strict_tools": 0,
+        "documented_limits_pass": true,
+        "planning_headroom_pass": true,
+        "remote_compiler_acceptance": "UNMEASURED"
+      },
+      "conditional": null
+    },
+    {
+      "id": "checker-maximum",
+      "family": "checker",
+      "request_digest": "5409d039fe31fe228f1e8a0ca15d9d3ebd0e7d57bedd92d2b4d9959b171f09ab",
+      "count_digest": "c0d03e37f4fe4b867ecef6c4205ad6ea1cc253ba06919e9026bdee5de7e7d112",
+      "wire_schema_digest": "95c837c78badd09887c96f079cd6070f8fb7f44da953b7652da158a6d4b7983a",
+      "local_schema_digest": "693bd2e9345db18c0f94a018b8164fba1e492746389f3290286379fb5f5ec80f",
+      "public_context_digest": "29f126b36f2184892813e7c7dcc7f98f46f647065fcbc124d19cc630a12fae58",
+      "model": "claude-opus-5-5",
+      "thinking": {
+        "type": "adaptive"
+      },
+      "output_config_effort": "high",
+      "output_tokens": 12000,
+      "reservation_USD": "0.50",
+      "schema_metrics": {
+        "revision": "anthropic-structured-schema-compat-v1",
+        "request_digest": "5409d039fe31fe228f1e8a0ca15d9d3ebd0e7d57bedd92d2b4d9959b171f09ab",
+        "schemas": [
+          {
+            "location": "output",
+            "schema_digest": "95c837c78badd09887c96f079cd6070f8fb7f44da953b7652da158a6d4b7983a",
+            "direct_union_properties": 0,
+            "resolved_union_properties": 0,
+            "anyof_nodes": 0,
+            "type_array_nodes": 0,
+            "optional_properties": 0,
+            "expanded_union_properties": 0,
+            "expanded_union_nodes": 0,
+            "expanded_optional_properties": 0,
+            "reference_uses": 49
+          }
+        ],
+        "union_parameters_conservative": 0,
+        "optional_parameters_conservative": 0,
+        "expanded_union_nodes": 0,
+        "strict_tools": 0,
+        "documented_limits_pass": true,
+        "planning_headroom_pass": true,
+        "remote_compiler_acceptance": "UNMEASURED"
+      },
+      "conditional": "checker-small complete and locally valid"
+    }
+  ]
+}
