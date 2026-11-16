@@ -23,6 +23,17 @@ BASE = "25eec8f541dbe7f70bf2fadee59f51c0d8b456980856cd4f38fce20b139e8bde"
 ROOT = Path(__file__).resolve().parents[2]
 
 
+def public_programme_authority(row: dict[str, Any]) -> dict[str, Any]:
+    """Publish an authority commitment, never the private historical approval."""
+    return {
+        **{
+            k: row[k]
+            for k in ("extension_id", "authorization_digest", "programme_expires_at", "expires_at")
+        },
+        "row_digest": _digest(row),
+    }
+
+
 def predecessor() -> dict[str, Any]:
     from src.workspace.d5_benchmark import read
 
@@ -290,7 +301,7 @@ def freeze(store: Any, snapshot: dict[str, Any], *, union_safe: bool = True) -> 
         "program_id": snapshot["program_id"],
         "history": snapshot["history"],
         "snapshot_digest": _digest(snapshot),
-        "programme": snapshot["programme"],
+        "programme": public_programme_authority(snapshot["programme"]),
         "limits": LIMITS,
         "operation_routes": ROUTES,
         "operation_deadlines": DEADLINES,
@@ -523,7 +534,16 @@ def verify_packet(value: dict[str, Any]) -> None:
             "authorization_digest": value["programme"]["authorization_digest"],
             "row_digest": extension.PARENT_DIGEST,
         }
-        or _digest(value["programme"]) != extension.PARENT_DIGEST
+        or set(value["programme"])
+        != {
+            "extension_id",
+            "authorization_digest",
+            "programme_expires_at",
+            "expires_at",
+            "row_digest",
+        }
+        or value["programme"].get("row_digest") != extension.PARENT_DIGEST
+        or value["programme"].get("programme_expires_at") != extension.PROGRAMME_EXPIRY
         or _digest(value["history"]) != extension.HISTORY_DIGEST
         or core.get("stopped_v18_scope")
         != {

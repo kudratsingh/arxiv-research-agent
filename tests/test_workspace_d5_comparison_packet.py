@@ -235,3 +235,34 @@ def test_actual_discovery_rejects_mutated_rank_or_read_code(monkeypatch, control
     with pytest.raises(AdmissionError, match="actual_discovery_replay_drift"):
         verify_discovery(predecessor())
     assert called
+
+
+def test_public_authority_is_digest_bound_without_private_approval_record():
+    from src.workspace.d5_campaign_v19_packet import public_programme_authority
+
+    private = {
+        "extension_id": "synthetic-parent",
+        "authorization_digest": "a" * 64,
+        "programme_expires_at": "2026-11-21T11:03:57+00:00",
+        "expires_at": "2026-11-15T11:03:57+00:00",
+        "record": {
+            "approved_by": "Synthetic private identity",
+            "approval_source": "/private/synthetic-owner-record",
+        },
+        "extra_private_field": "Not public",
+    }
+    public = public_programme_authority(private)
+    assert public["row_digest"] == _digest(private)
+    assert set(public) == {
+        "extension_id",
+        "authorization_digest",
+        "programme_expires_at",
+        "expires_at",
+        "row_digest",
+    }
+    assert "Synthetic private identity" not in json.dumps(public)
+    assert "approval_source" not in json.dumps(public)
+    assert private["record"]["approved_by"] == "Synthetic private identity"
+    changed = deepcopy(private)
+    changed["record"]["approval_source"] += "-changed"
+    assert public_programme_authority(changed)["row_digest"] != public["row_digest"]
