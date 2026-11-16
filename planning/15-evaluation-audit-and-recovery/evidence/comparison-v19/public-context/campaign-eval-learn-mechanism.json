@@ -1,0 +1,254 @@
+{
+  "case_id": "campaign-eval-learn-mechanism",
+  "cohort": "evaluation_exposed_corpus",
+  "question": "What sequence of operations does the selected source describe? Separate established steps from prerequisites unavailable in the retained text.",
+  "mode": "learn",
+  "selected_units": {
+    "u0309644ac6e9b03471f1": {
+      "material_id": "mat-e4adcf0135fbaa3982584da87b0040b2",
+      "span_id": "span-07767192aeb610b6e7b7d2275d6363ae",
+      "work_id": "arxiv:2610.40927",
+      "version_id": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+      "source_hash": "sha256:6fdc056b308bdc6e3849f19ff0e173a15b4898ca6f86670bc02403c17bf5fbf0",
+      "scope": "abstract",
+      "parser_revision": "workspace-plain-text-v1",
+      "page": null,
+      "start": 0,
+      "end": 1532,
+      "quote": "Test-time scaling (TTS) improves large language model agents by sampling and selecting among multiple candidate trajectories, but common realizations assume that these trajectories can be executed in parallel. This assumption breaks in realistic deployments, where enterprise workspaces and cloud services are shared and persistent, costly or infeasible to replicate, and actions may introduce irreversible side effects or cross-trajectory interference. Existing generative world models avoid direct execution, but typically compress environment state into a single prompt, limiting their ability to reliably simulate transitions under partial observability. Instead, we introduce Agentic World Modeling (AWM), which reformulates next-observation prediction as a multi-turn evidence-acquisition task. For each hypothetical action, an agentic simulator adaptively queries the real environment through safe read-only interfaces, reasons over the returned evidence, and uses executable computation to construct the resulting observation without mutating shared state. Integrated with trajectory-level TTS, AWM enables parallel exploration over a single shared environment. Across $\\tau$-bench, AppWorld, and OfficeBench, AWM outperforms a single-shot simulation baseline by 40.07% on average, and surpasses a trained world-model baseline by 12.36% on average. These results establish interactive, read-grounded simulation as a practical foundation for safe and scalable agentic test-time scaling in shared, non-resettable environments."
+    }
+  },
+  "selected_sources": [
+    {
+      "material_id": "mat-e4adcf0135fbaa3982584da87b0040b2",
+      "work_id": "arxiv:2610.40927",
+      "version_id": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+      "content_hash": "sha256:ddfd0d20c492543731ef25078ad89ed24cfc3ac719d149c396fe28a339f5d508",
+      "source_hash": "sha256:6fdc056b308bdc6e3849f19ff0e173a15b4898ca6f86670bc02403c17bf5fbf0",
+      "scope": "abstract",
+      "parser_revision": "workspace-plain-text-v1",
+      "complete": true,
+      "quality": "text_extracted",
+      "offset_basis": "page-local Unicode code points; end exclusive",
+      "page_count": null,
+      "page_numbers": null,
+      "warnings": [],
+      "spans": [
+        {
+          "span_id": "span-07767192aeb610b6e7b7d2275d6363ae",
+          "work_id": "arxiv:2610.40927",
+          "version_id": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+          "material_id": "mat-e4adcf0135fbaa3982584da87b0040b2",
+          "source_hash": "sha256:6fdc056b308bdc6e3849f19ff0e173a15b4898ca6f86670bc02403c17bf5fbf0",
+          "scope": "abstract",
+          "parser_revision": "workspace-plain-text-v1",
+          "page": null,
+          "section": "abstract",
+          "start": 0,
+          "end": 1532,
+          "text": "Test-time scaling (TTS) improves large language model agents by sampling and selecting among multiple candidate trajectories, but common realizations assume that these trajectories can be executed in parallel. This assumption breaks in realistic deployments, where enterprise workspaces and cloud services are shared and persistent, costly or infeasible to replicate, and actions may introduce irreversible side effects or cross-trajectory interference. Existing generative world models avoid direct execution, but typically compress environment state into a single prompt, limiting their ability to reliably simulate transitions under partial observability. Instead, we introduce Agentic World Modeling (AWM), which reformulates next-observation prediction as a multi-turn evidence-acquisition task. For each hypothetical action, an agentic simulator adaptively queries the real environment through safe read-only interfaces, reasons over the returned evidence, and uses executable computation to construct the resulting observation without mutating shared state. Integrated with trajectory-level TTS, AWM enables parallel exploration over a single shared environment. Across $\\tau$-bench, AppWorld, and OfficeBench, AWM outperforms a single-shot simulation baseline by 40.07% on average, and surpasses a trained world-model baseline by 12.36% on average. These results establish interactive, read-grounded simulation as a practical foundation for safe and scalable agentic test-time scaling in shared, non-resettable environments."
+        }
+      ]
+    }
+  ],
+  "exact_initial_request_context": {
+    "capacity_policy": {
+      "assistance_revision": "workspace-assistance-keyed-v16",
+      "checker_revision": "workspace-assistance-consistency-checks-v18",
+      "citations_by_mode": {
+        "learn": 3,
+        "research": 6
+      },
+      "claims_by_mode": {
+        "learn": 8,
+        "research": 12
+      },
+      "compact_checker_utf8_bytes": 262144,
+      "deadlines": {
+        "check_seconds": 240,
+        "count_seconds": 60,
+        "draft_seconds": 120,
+        "origin": "durable_reservation_created_at",
+        "recheck_seconds": 240,
+        "repair_seconds": 120,
+        "revision": "d5-operation-deadlines-v2-capacity",
+        "workflow_seconds": 1200
+      },
+      "http_body_bytes": 4194304,
+      "internal_json_bytes": 8388608,
+      "keyed_prose_finding_capacity": {
+        "aggregate_findings_limit": null,
+        "compact_checker_utf8_bytes": 262144,
+        "normalized_checker_utf8_bytes": 1048576,
+        "per_location_findings_limit": null,
+        "revision": "workspace-assistance-keyed-finding-capacity-v16"
+      },
+      "max_citations_per_claim": 6,
+      "max_claim_characters": 10000,
+      "max_follow_up_intents": 3,
+      "max_materials": 3,
+      "max_messages_per_workflow": 4,
+      "max_procedural_gaps": 3,
+      "max_repairs": 1,
+      "max_requested_parts": 8,
+      "max_selected_evidence_utf8_bytes": 131072,
+      "max_selected_units": 12,
+      "max_unit_characters": 1600,
+      "normalization_revision": "workspace-assistance-consistency-normalization-v18",
+      "normalized_checker_utf8_bytes": 1048576,
+      "operation_routes": {
+        "check_recheck_probe": {
+          "effort": "high",
+          "input_tokens": 40000,
+          "model": "claude-opus-5-5",
+          "output_tokens": 12000,
+          "prices": {
+            "input": "4",
+            "output": "20",
+            "verified_at": "2026-11-14"
+          },
+          "thinking": {
+            "type": "adaptive"
+          }
+        },
+        "draft_repair": {
+          "effort": "medium",
+          "input_tokens": 40000,
+          "model": "claude-sonnet-5-5",
+          "output_tokens": 8000,
+          "prices": {
+            "input": "2",
+            "output": "10",
+            "verified_at": "2026-11-14"
+          },
+          "thinking": {
+            "type": "between_tools"
+          }
+        },
+        "revision": "d5-sonnet-opus-high-capacity-v3"
+      },
+      "paired_input_tokens_fit": 32000,
+      "raw_draft_utf8_bytes": 131072,
+      "reservation_input_tokens": 40000,
+      "revision": "d5-comprehensive-capacity-v15",
+      "sealed_input_json_bytes": 8388608,
+      "soft_claim_characters": 500,
+      "soft_reason_characters": 240
+    },
+    "comparison_contract": "Coverage is the single authoritative mapping. Do not emit comparison_claims or comparison_basis. An answer reference for a comparison must be an actual comparative finding with separately cited evidence handles from all necessary sources. Qualitative method contrasts require supported method descriptions, not necessarily common benchmarks. Empirical performance conclusions require compatible evaluation tasks, comparators, metric definitions and conditions. Source notes stay context if the requested comparison is unanswered; partial retains every gap and earns no full answer credit. Support, atomicity, qualifications and actual request relevance are checked independently.",
+    "coverage_wire_rule": "Coverage alone maps sealed requested parts to emitted answer/context claim IDs. No claims.part_ids, missing/orphan/duplicate/overlapping references. Full abstention omits claims and ALL claim references. A comparison answer needs independently cited source bases; comparison-only notes leave the requested comparison unanswered.",
+    "identity_contract": "Emit only actual claims in order. Server assigns c1,c2 and later positions. Coverage is the only answer/context mapping: exactly each required named part, all genuine gap reasons. Questions distinguish context_claim_ids (topic links, no factual premise) from premise_claim_ids (investigate_claim only, independently checked). The structural answer tag grants no full-answer credit.",
+    "phase": "draft",
+    "procedural_rendering": {
+      "abstention": {
+        "application_context_required": "I cannot assess the requested application without further context and evidence.",
+        "comparison_evidence_required": "I cannot establish the requested comparison from the selected evidence.",
+        "insufficient_selected_evidence": "I cannot establish the requested conclusion from the selected evidence."
+      },
+      "actions": {
+        "inspect_evaluation": "Inspect evaluation methods, baselines and uncertainty before drawing conclusions.",
+        "inspect_methods": "Inspect the original methods and implementation details.",
+        "inspect_scope": "Check source scope and applicability before proposing an experiment.",
+        "request_context": "Request the missing source material or application context.",
+        "seek_counterevidence": "Seek evidence that could challenge the cited claims."
+      },
+      "questions": {
+        "application_scope": "Does the selected evidence establish applicability to the proposed setting?",
+        "counterevidence": "What evidence could challenge the cited claims?",
+        "implementation": "What further evidence would be needed to implement or reproduce the method?",
+        "investigate_claim": "What evidence supports or limits the referenced claim?",
+        "measured_and_proposed": "Which claims report measured results, and what applications, if any, does the excerpt propose?",
+        "methods": "What methods, if any, does the selected evidence describe?",
+        "qualifications": "What assumptions or qualifications, if any, apply to the cited claims?"
+      },
+      "rule": "Neutral intents may have context_claim_ids but no premise_claim_ids. investigate_claim requires nonempty premise_claim_ids; never introduce an assertion outside the scored claims."
+    },
+    "request_quality_rule": "At most 8 atomic claims in learn mode; about 500 characters per claim and 240 per explanation are SOFT targets only. Preserve qualifications rather than shortening into misleading claims. Record every requested part exactly once as answered, partial, lacks_evidence or omitted. Available but unreported information is omitted. Context notes do not answer a comparison. All semantic quality and factual prose remain reviewed. Partial requires useful answer refs AND genuine remaining gaps; answered requires no remaining gap. Context alone never earns answer credit.",
+    "role": "workflow",
+    "sealed_request": {
+      "assistance": {
+        "background": "",
+        "depth": "overview",
+        "direction": "overview",
+        "follow_up": "What sequence of operations does the selected source describe? Separate established steps from prerequisites unavailable in the retained text.",
+        "mode": "learn"
+      },
+      "kind": "deep_dive",
+      "private_context": {
+        "notes": false,
+        "profile": false,
+        "reading_history": false
+      },
+      "project_context": null,
+      "provider_schema_compatibility_revision": "anthropic-structured-schema-compat-v1",
+      "schema_revision": "workspace-assistance-keyed-v16",
+      "settings": {
+        "effort": "medium",
+        "max_repairs": 1,
+        "structured_outputs": true,
+        "temperature": null,
+        "thinking": {
+          "type": "between_tools"
+        }
+      },
+      "task_policy": {
+        "allowed_dispositions": [
+          "full_abstention",
+          "answer"
+        ],
+        "application_context": {
+          "operating_envelope": "",
+          "safety_objectives": "",
+          "validation_evidence": "",
+          "vehicle_configuration": ""
+        },
+        "context_basis": "Explicitly supplied context, not verified source evidence",
+        "missing_context": [],
+        "mode": "learn",
+        "parts_basis": "Explicit application/user parts, in priority order",
+        "requested_parts": [
+          {
+            "id": "p1",
+            "kind": "answer",
+            "request": "What sequence of operations does the selected source describe? Separate established steps from prerequisites unavailable in the retained text."
+          },
+          {
+            "id": "p2",
+            "kind": "source_note",
+            "request": "State separately cited source facts and retain study scope, comparator, metric definition and conditions."
+          },
+          {
+            "id": "p3",
+            "kind": "answer",
+            "request": "Identify missing evidence or required details without inventing findings."
+          }
+        ],
+        "required_context": [],
+        "revision": "workspace-assistance-keyed-v16",
+        "selected_work_count": 1,
+        "task_intent": "answer",
+        "wire_encoding_revision": "workspace-assistance-comparison-wire-v19"
+      },
+      "units": {
+        "u0309644ac6e9b03471f1": {
+          "end": 1532,
+          "material_id": "mat-e4adcf0135fbaa3982584da87b0040b2",
+          "page": null,
+          "parser_revision": "workspace-plain-text-v1",
+          "quote": "Test-time scaling (TTS) improves large language model agents by sampling and selecting among multiple candidate trajectories, but common realizations assume that these trajectories can be executed in parallel. This assumption breaks in realistic deployments, where enterprise workspaces and cloud services are shared and persistent, costly or infeasible to replicate, and actions may introduce irreversible side effects or cross-trajectory interference. Existing generative world models avoid direct execution, but typically compress environment state into a single prompt, limiting their ability to reliably simulate transitions under partial observability. Instead, we introduce Agentic World Modeling (AWM), which reformulates next-observation prediction as a multi-turn evidence-acquisition task. For each hypothetical action, an agentic simulator adaptively queries the real environment through safe read-only interfaces, reasons over the returned evidence, and uses executable computation to construct the resulting observation without mutating shared state. Integrated with trajectory-level TTS, AWM enables parallel exploration over a single shared environment. Across $\\tau$-bench, AppWorld, and OfficeBench, AWM outperforms a single-shot simulation baseline by 40.07% on average, and surpasses a trained world-model baseline by 12.36% on average. These results establish interactive, read-grounded simulation as a practical foundation for safe and scalable agentic test-time scaling in shared, non-resettable environments.",
+          "scope": "abstract",
+          "source_hash": "sha256:6fdc056b308bdc6e3849f19ff0e173a15b4898ca6f86670bc02403c17bf5fbf0",
+          "span_id": "span-07767192aeb610b6e7b7d2275d6363ae",
+          "start": 0,
+          "version_id": "arxiv:2610.40927:v1:metadata-b09108e19893972e",
+          "work_id": "arxiv:2610.40927"
+        }
+      }
+    }
+  },
+  "private_notes": false,
+  "private_reading_history": false,
+  "owner_approval_data": false,
+  "context_identity_basis": "Frozen material/version/hash/offset equality; bibliographic provenance and fresh acquisition are separate and unmeasured here.",
+  "human_qualification": false
+}

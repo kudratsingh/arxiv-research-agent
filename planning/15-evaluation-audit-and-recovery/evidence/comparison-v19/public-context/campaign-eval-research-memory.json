@@ -1,0 +1,317 @@
+{
+  "case_id": "campaign-eval-research-memory",
+  "cohort": "evaluation_exposed_corpus",
+  "question": "Which selected evidence explains how agent memory is updated and how incorrect information can persist? Separate mechanisms from measurements.",
+  "mode": "research",
+  "selected_units": {
+    "ucbe894d1356a18e9f328": {
+      "material_id": "mat-54f2f6e0645f499458d5030d06e35a59",
+      "span_id": "span-3fd278aadaa92873179ed21c075ab368",
+      "work_id": "arxiv:2610.41482",
+      "version_id": "arxiv:2610.41482:v1:metadata-e5c832a06d88973f",
+      "source_hash": "sha256:2b307ec864315d90d5e828786c2505fff1feda8837559b7e8601961ea9717759",
+      "scope": "abstract",
+      "parser_revision": "workspace-plain-text-v1",
+      "page": null,
+      "start": 0,
+      "end": 875,
+      "quote": "Recursive textual memory can carry earlier errors into later updates, yet task performance alone does not establish memory reliability. We define self-consistency bias as the persistence of incorrect claims already present in the incoming memory. We present KEEPER, a comparative analysis of four auxiliary objectives along information-content and update-sensitivity axes within a shared recursive interface, examining how supervision targets relate to agent performance. Among evaluated conditions, reward-related prediction achieve the highest task performance before and after offline reinforcement learning, outperforming joint supervision. A claim-level analysis of one baseline trajectory documents error persistence despite corrective observations. Together, these analyses motivate evaluating error persistence and valid-information retention alongside task outcomes."
+    },
+    "u0b8e339ef860923aa8e9": {
+      "material_id": "mat-6fd91ac7a4d590f9500cc5b123d0d91a",
+      "span_id": "span-2db7b5ad8d32797f3b9ce8b2a8d78628",
+      "work_id": "arxiv:2610.40917",
+      "version_id": "arxiv:2610.40917:v1:metadata-ed88c851cf4b1810",
+      "source_hash": "sha256:f44613f0fd3d548ea98353f5dc0bc44f943b80169023a6bdd2fe90aa1d2e65e2",
+      "scope": "abstract",
+      "parser_revision": "workspace-plain-text-v1",
+      "page": null,
+      "start": 0,
+      "end": 1216,
+      "quote": "Large language models act only through the infrastructure that surrounds them. That infrastructure, the harness, determines what a model can accomplish and how it fails, yet it has no settled definition. To address this gap, we decompose the harness into eight functional components that can be specified and compared across systems, and we propose a portable specification framework that records which model ran in which harness. The record is needed because different harness configurations can yield several-fold differences in reported scores for the same model, and because much of an agent's attack surface lies in its harness. Existing model cards and agent cards provide release and operational information, but do not establish the sequence of effective configurations within a run. Harnesses can change between releases and between runs, and, where agents edit their own tools and configuration, within a run. Enacted AI laws contain documentation duties relevant to covered systems, subject to their respective scopes and application dates, but do not prescribe the common harness record proposed here. Therefore, the harness has to be explicitly described and specified as a versioned part of the system."
+    }
+  },
+  "selected_sources": [
+    {
+      "material_id": "mat-54f2f6e0645f499458d5030d06e35a59",
+      "work_id": "arxiv:2610.41482",
+      "version_id": "arxiv:2610.41482:v1:metadata-e5c832a06d88973f",
+      "content_hash": "sha256:a1e2d03e8e9d1c84b615b075c16a309c69499e3fa466b8502a8ae63cc36aca32",
+      "source_hash": "sha256:2b307ec864315d90d5e828786c2505fff1feda8837559b7e8601961ea9717759",
+      "scope": "abstract",
+      "parser_revision": "workspace-plain-text-v1",
+      "complete": true,
+      "quality": "text_extracted",
+      "offset_basis": "page-local Unicode code points; end exclusive",
+      "page_count": null,
+      "page_numbers": null,
+      "warnings": [],
+      "spans": [
+        {
+          "span_id": "span-3fd278aadaa92873179ed21c075ab368",
+          "work_id": "arxiv:2610.41482",
+          "version_id": "arxiv:2610.41482:v1:metadata-e5c832a06d88973f",
+          "material_id": "mat-54f2f6e0645f499458d5030d06e35a59",
+          "source_hash": "sha256:2b307ec864315d90d5e828786c2505fff1feda8837559b7e8601961ea9717759",
+          "scope": "abstract",
+          "parser_revision": "workspace-plain-text-v1",
+          "page": null,
+          "section": "abstract",
+          "start": 0,
+          "end": 875,
+          "text": "Recursive textual memory can carry earlier errors into later updates, yet task performance alone does not establish memory reliability. We define self-consistency bias as the persistence of incorrect claims already present in the incoming memory. We present KEEPER, a comparative analysis of four auxiliary objectives along information-content and update-sensitivity axes within a shared recursive interface, examining how supervision targets relate to agent performance. Among evaluated conditions, reward-related prediction achieve the highest task performance before and after offline reinforcement learning, outperforming joint supervision. A claim-level analysis of one baseline trajectory documents error persistence despite corrective observations. Together, these analyses motivate evaluating error persistence and valid-information retention alongside task outcomes."
+        }
+      ]
+    },
+    {
+      "material_id": "mat-6fd91ac7a4d590f9500cc5b123d0d91a",
+      "work_id": "arxiv:2610.40917",
+      "version_id": "arxiv:2610.40917:v1:metadata-ed88c851cf4b1810",
+      "content_hash": "sha256:84f497e5f00e5ea390a91cc90269aaeaf5dc3b2032c27add017bb50e75193078",
+      "source_hash": "sha256:f44613f0fd3d548ea98353f5dc0bc44f943b80169023a6bdd2fe90aa1d2e65e2",
+      "scope": "abstract",
+      "parser_revision": "workspace-plain-text-v1",
+      "complete": true,
+      "quality": "text_extracted",
+      "offset_basis": "page-local Unicode code points; end exclusive",
+      "page_count": null,
+      "page_numbers": null,
+      "warnings": [],
+      "spans": [
+        {
+          "span_id": "span-2db7b5ad8d32797f3b9ce8b2a8d78628",
+          "work_id": "arxiv:2610.40917",
+          "version_id": "arxiv:2610.40917:v1:metadata-ed88c851cf4b1810",
+          "material_id": "mat-6fd91ac7a4d590f9500cc5b123d0d91a",
+          "source_hash": "sha256:f44613f0fd3d548ea98353f5dc0bc44f943b80169023a6bdd2fe90aa1d2e65e2",
+          "scope": "abstract",
+          "parser_revision": "workspace-plain-text-v1",
+          "page": null,
+          "section": "abstract",
+          "start": 0,
+          "end": 1216,
+          "text": "Large language models act only through the infrastructure that surrounds them. That infrastructure, the harness, determines what a model can accomplish and how it fails, yet it has no settled definition. To address this gap, we decompose the harness into eight functional components that can be specified and compared across systems, and we propose a portable specification framework that records which model ran in which harness. The record is needed because different harness configurations can yield several-fold differences in reported scores for the same model, and because much of an agent's attack surface lies in its harness. Existing model cards and agent cards provide release and operational information, but do not establish the sequence of effective configurations within a run. Harnesses can change between releases and between runs, and, where agents edit their own tools and configuration, within a run. Enacted AI laws contain documentation duties relevant to covered systems, subject to their respective scopes and application dates, but do not prescribe the common harness record proposed here. Therefore, the harness has to be explicitly described and specified as a versioned part of the system."
+        }
+      ]
+    }
+  ],
+  "exact_initial_request_context": {
+    "capacity_policy": {
+      "assistance_revision": "workspace-assistance-keyed-v16",
+      "checker_revision": "workspace-assistance-consistency-checks-v18",
+      "citations_by_mode": {
+        "learn": 3,
+        "research": 6
+      },
+      "claims_by_mode": {
+        "learn": 8,
+        "research": 12
+      },
+      "compact_checker_utf8_bytes": 262144,
+      "deadlines": {
+        "check_seconds": 240,
+        "count_seconds": 60,
+        "draft_seconds": 120,
+        "origin": "durable_reservation_created_at",
+        "recheck_seconds": 240,
+        "repair_seconds": 120,
+        "revision": "d5-operation-deadlines-v2-capacity",
+        "workflow_seconds": 1200
+      },
+      "http_body_bytes": 4194304,
+      "internal_json_bytes": 8388608,
+      "keyed_prose_finding_capacity": {
+        "aggregate_findings_limit": null,
+        "compact_checker_utf8_bytes": 262144,
+        "normalized_checker_utf8_bytes": 1048576,
+        "per_location_findings_limit": null,
+        "revision": "workspace-assistance-keyed-finding-capacity-v16"
+      },
+      "max_citations_per_claim": 6,
+      "max_claim_characters": 10000,
+      "max_follow_up_intents": 3,
+      "max_materials": 3,
+      "max_messages_per_workflow": 4,
+      "max_procedural_gaps": 3,
+      "max_repairs": 1,
+      "max_requested_parts": 8,
+      "max_selected_evidence_utf8_bytes": 131072,
+      "max_selected_units": 12,
+      "max_unit_characters": 1600,
+      "normalization_revision": "workspace-assistance-consistency-normalization-v18",
+      "normalized_checker_utf8_bytes": 1048576,
+      "operation_routes": {
+        "check_recheck_probe": {
+          "effort": "high",
+          "input_tokens": 40000,
+          "model": "claude-opus-5-5",
+          "output_tokens": 12000,
+          "prices": {
+            "input": "4",
+            "output": "20",
+            "verified_at": "2026-11-14"
+          },
+          "thinking": {
+            "type": "adaptive"
+          }
+        },
+        "draft_repair": {
+          "effort": "medium",
+          "input_tokens": 40000,
+          "model": "claude-sonnet-5-5",
+          "output_tokens": 8000,
+          "prices": {
+            "input": "2",
+            "output": "10",
+            "verified_at": "2026-11-14"
+          },
+          "thinking": {
+            "type": "between_tools"
+          }
+        },
+        "revision": "d5-sonnet-opus-high-capacity-v3"
+      },
+      "paired_input_tokens_fit": 32000,
+      "raw_draft_utf8_bytes": 131072,
+      "reservation_input_tokens": 40000,
+      "revision": "d5-comprehensive-capacity-v15",
+      "sealed_input_json_bytes": 8388608,
+      "soft_claim_characters": 500,
+      "soft_reason_characters": 240
+    },
+    "comparison_contract": "Coverage is the single authoritative mapping. Do not emit comparison_claims or comparison_basis. An answer reference for a comparison must be an actual comparative finding with separately cited evidence handles from all necessary sources. Qualitative method contrasts require supported method descriptions, not necessarily common benchmarks. Empirical performance conclusions require compatible evaluation tasks, comparators, metric definitions and conditions. Source notes stay context if the requested comparison is unanswered; partial retains every gap and earns no full answer credit. Support, atomicity, qualifications and actual request relevance are checked independently.",
+    "coverage_wire_rule": "Coverage alone maps sealed requested parts to emitted answer/context claim IDs. No claims.part_ids, missing/orphan/duplicate/overlapping references. Full abstention omits claims and ALL claim references. A comparison answer needs independently cited source bases; comparison-only notes leave the requested comparison unanswered.",
+    "identity_contract": "Emit only actual claims in order. Server assigns c1,c2 and later positions. Coverage is the only answer/context mapping: exactly each required named part, all genuine gap reasons. Questions distinguish context_claim_ids (topic links, no factual premise) from premise_claim_ids (investigate_claim only, independently checked). The structural answer tag grants no full-answer credit.",
+    "phase": "draft",
+    "procedural_rendering": {
+      "abstention": {
+        "application_context_required": "I cannot assess the requested application without further context and evidence.",
+        "comparison_evidence_required": "I cannot establish the requested comparison from the selected evidence.",
+        "insufficient_selected_evidence": "I cannot establish the requested conclusion from the selected evidence."
+      },
+      "actions": {
+        "inspect_evaluation": "Inspect evaluation methods, baselines and uncertainty before drawing conclusions.",
+        "inspect_methods": "Inspect the original methods and implementation details.",
+        "inspect_scope": "Check source scope and applicability before proposing an experiment.",
+        "request_context": "Request the missing source material or application context.",
+        "seek_counterevidence": "Seek evidence that could challenge the cited claims."
+      },
+      "questions": {
+        "application_scope": "Does the selected evidence establish applicability to the proposed setting?",
+        "counterevidence": "What evidence could challenge the cited claims?",
+        "implementation": "What further evidence would be needed to implement or reproduce the method?",
+        "investigate_claim": "What evidence supports or limits the referenced claim?",
+        "measured_and_proposed": "Which claims report measured results, and what applications, if any, does the excerpt propose?",
+        "methods": "What methods, if any, does the selected evidence describe?",
+        "qualifications": "What assumptions or qualifications, if any, apply to the cited claims?"
+      },
+      "rule": "Neutral intents may have context_claim_ids but no premise_claim_ids. investigate_claim requires nonempty premise_claim_ids; never introduce an assertion outside the scored claims."
+    },
+    "request_quality_rule": "At most 12 atomic claims in research mode; about 500 characters per claim and 240 per explanation are SOFT targets only. Preserve qualifications rather than shortening into misleading claims. Record every requested part exactly once as answered, partial, lacks_evidence or omitted. Available but unreported information is omitted. Context notes do not answer a comparison. All semantic quality and factual prose remain reviewed. Partial requires useful answer refs AND genuine remaining gaps; answered requires no remaining gap. Context alone never earns answer credit.",
+    "role": "workflow",
+    "sealed_request": {
+      "assistance": {
+        "background": "",
+        "depth": "overview",
+        "direction": "overview",
+        "follow_up": "Which selected evidence explains how agent memory is updated and how incorrect information can persist? Separate mechanisms from measurements.",
+        "mode": "research"
+      },
+      "kind": "deep_dive",
+      "private_context": {
+        "notes": false,
+        "profile": false,
+        "reading_history": false
+      },
+      "project_context": {
+        "constraints": "No private notes/history, source expansion or everyday generation",
+        "id": "project-06e77d9c3d6ff87567c523fed420c178",
+        "question": "Which selected evidence explains how agent memory is updated and how incorrect information can persist? Separate mechanisms from measurements.",
+        "revision": 1,
+        "scope": "Frozen retained public sources only"
+      },
+      "provider_schema_compatibility_revision": "anthropic-structured-schema-compat-v1",
+      "schema_revision": "workspace-assistance-keyed-v16",
+      "settings": {
+        "effort": "medium",
+        "max_repairs": 1,
+        "structured_outputs": true,
+        "temperature": null,
+        "thinking": {
+          "type": "between_tools"
+        }
+      },
+      "task_policy": {
+        "allowed_dispositions": [
+          "full_abstention",
+          "answer"
+        ],
+        "application_context": {
+          "operating_envelope": "",
+          "safety_objectives": "",
+          "validation_evidence": "",
+          "vehicle_configuration": ""
+        },
+        "context_basis": "Explicitly supplied context, not verified source evidence",
+        "missing_context": [],
+        "mode": "research",
+        "parts_basis": "Explicit application/user parts, in priority order",
+        "requested_parts": [
+          {
+            "id": "p1",
+            "kind": "answer",
+            "request": "Which selected evidence explains how agent memory is updated and how incorrect information can persist? Separate mechanisms from measurements."
+          },
+          {
+            "id": "p2",
+            "kind": "source_note",
+            "request": "State separately cited source facts and retain study scope, comparator, metric definition and conditions."
+          },
+          {
+            "id": "p3",
+            "kind": "answer",
+            "request": "Identify missing evidence or required details without inventing findings."
+          }
+        ],
+        "required_context": [],
+        "revision": "workspace-assistance-keyed-v16",
+        "selected_work_count": 2,
+        "task_intent": "answer",
+        "wire_encoding_revision": "workspace-assistance-comparison-wire-v19"
+      },
+      "units": {
+        "u0b8e339ef860923aa8e9": {
+          "end": 1216,
+          "material_id": "mat-6fd91ac7a4d590f9500cc5b123d0d91a",
+          "page": null,
+          "parser_revision": "workspace-plain-text-v1",
+          "quote": "Large language models act only through the infrastructure that surrounds them. That infrastructure, the harness, determines what a model can accomplish and how it fails, yet it has no settled definition. To address this gap, we decompose the harness into eight functional components that can be specified and compared across systems, and we propose a portable specification framework that records which model ran in which harness. The record is needed because different harness configurations can yield several-fold differences in reported scores for the same model, and because much of an agent's attack surface lies in its harness. Existing model cards and agent cards provide release and operational information, but do not establish the sequence of effective configurations within a run. Harnesses can change between releases and between runs, and, where agents edit their own tools and configuration, within a run. Enacted AI laws contain documentation duties relevant to covered systems, subject to their respective scopes and application dates, but do not prescribe the common harness record proposed here. Therefore, the harness has to be explicitly described and specified as a versioned part of the system.",
+          "scope": "abstract",
+          "source_hash": "sha256:f44613f0fd3d548ea98353f5dc0bc44f943b80169023a6bdd2fe90aa1d2e65e2",
+          "span_id": "span-2db7b5ad8d32797f3b9ce8b2a8d78628",
+          "start": 0,
+          "version_id": "arxiv:2610.40917:v1:metadata-ed88c851cf4b1810",
+          "work_id": "arxiv:2610.40917"
+        },
+        "ucbe894d1356a18e9f328": {
+          "end": 875,
+          "material_id": "mat-54f2f6e0645f499458d5030d06e35a59",
+          "page": null,
+          "parser_revision": "workspace-plain-text-v1",
+          "quote": "Recursive textual memory can carry earlier errors into later updates, yet task performance alone does not establish memory reliability. We define self-consistency bias as the persistence of incorrect claims already present in the incoming memory. We present KEEPER, a comparative analysis of four auxiliary objectives along information-content and update-sensitivity axes within a shared recursive interface, examining how supervision targets relate to agent performance. Among evaluated conditions, reward-related prediction achieve the highest task performance before and after offline reinforcement learning, outperforming joint supervision. A claim-level analysis of one baseline trajectory documents error persistence despite corrective observations. Together, these analyses motivate evaluating error persistence and valid-information retention alongside task outcomes.",
+          "scope": "abstract",
+          "source_hash": "sha256:2b307ec864315d90d5e828786c2505fff1feda8837559b7e8601961ea9717759",
+          "span_id": "span-3fd278aadaa92873179ed21c075ab368",
+          "start": 0,
+          "version_id": "arxiv:2610.41482:v1:metadata-e5c832a06d88973f",
+          "work_id": "arxiv:2610.41482"
+        }
+      }
+    }
+  },
+  "private_notes": false,
+  "private_reading_history": false,
+  "owner_approval_data": false,
+  "context_identity_basis": "Frozen material/version/hash/offset equality; bibliographic provenance and fresh acquisition are separate and unmeasured here.",
+  "human_qualification": false
+}

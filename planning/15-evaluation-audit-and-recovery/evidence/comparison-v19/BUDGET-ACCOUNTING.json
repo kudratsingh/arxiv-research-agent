@@ -1,0 +1,40 @@
+{
+  "application_commit": "b1bad909b112c246b678c0194325ae974e4284bf",
+  "packet_digest": "00cc2c78e66fcc58c16a5afcf24db3c5177b6a8940ef2638c07a841edeacf48d",
+  "basis": "Sanitized channel totals from matching preserved-snapshot members; ledger-known estimates, not invoice settlement.",
+  "private_preparation_receipt_sha256": "8767455ba53f88ee06eb0399c93cb8ae1c70aa4afef97e4d126a1d011c05c4af",
+  "historical_workflow_known_estimated_usd": "0.740467",
+  "historical_checker_known_estimated_usd": "1.793376",
+  "historical_total_known_estimated_usd": "2.533843",
+  "retained_overlapping_pending_unknown_usd_count_once": "2.275066",
+  "combined_historical_known_and_retained_usd": "4.808909",
+  "retained_components_usd": [
+    "0.425066",
+    "0.45",
+    "1.20",
+    "0.20"
+  ],
+  "original_v10_reservation": {
+    "reserved_amount_usd": "0.45",
+    "already_known_within_reservation_usd": "0.024934",
+    "unresolved_remaining_hold_usd": "0.425066",
+    "rule": "0.45 = 0.024934 known + 0.425066 unresolved; never add the full reservation and its known part as independent costs."
+  },
+  "proposed_new_campaign_reservation_usd": "14.00",
+  "proposed_known_plus_retained_plus_new_usd": "18.808909",
+  "unchanged_extra_headroom_usd": "2.00",
+  "proposed_total_with_headroom_usd": "20.808909",
+  "proposed_programme_day_month_usd": "22",
+  "prior_programme_day_month_usd": "20",
+  "unchanged_funded_caps": {
+    "jobs": 64,
+    "messages": 160,
+    "counts": 200
+  },
+  "programme_expiry": "2026-11-21T11:03:57+00:00",
+  "historical_holds_settled": false,
+  "new_approval_created": false,
+  "actual_new_provider_spend_usd": "0",
+  "actual_new_provider_contacts": 0,
+  "actual_new_count_contacts": 0
+}

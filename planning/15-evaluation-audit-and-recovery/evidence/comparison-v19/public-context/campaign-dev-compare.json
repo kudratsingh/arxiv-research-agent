@@ -1,0 +1,358 @@
+{
+  "case_id": "campaign-dev-compare",
+  "cohort": "development",
+  "question": "Compare ReAct and Self-RAG evidence and evaluation limitations.",
+  "mode": "research",
+  "selected_units": {
+    "uf800ed16cb52eb251690": {
+      "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+      "span_id": "span-55b2971cd5f40c431b738813c7ef10cd",
+      "work_id": "arxiv:2210.03629",
+      "version_id": "arxiv:2210.03629:v3",
+      "source_hash": "sha256:f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69",
+      "scope": "excerpt",
+      "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+      "page": 1,
+      "start": 2443,
+      "end": 3888,
+      "quote": "Furthermore, on two interactive decision making benchmarks (ALFWorld and\n                           WebShop), ReAct outperforms imitation and reinforcement learning methods by\n                            an absolute success rate of 34% and 10% respectively, while being prompted with\n                              only one or two in-context examples.\n\n\n                1  INTRODUCTION\n\n              A unique feature of human intelligence is the ability to seamlessly combine task-oriented actions with\n                        verbal reasoning (or inner speech, Alderson-Day & Fernyhough, 2015), which has been theorized toarXiv:2210.03629v3                      play an important role in human cognition for enabling self-regulation or strategization (Vygotsky,\n                     1987; Luria, 1965; Fernyhough, 2010) and maintaining a working memory (Baddeley, 1992). Con-\n                         sider the example of cooking up a dish in the kitchen. Between any two speciﬁc actions, we may\n                       reason in language in order to track progress (“now that everything is cut, I should heat up the pot of\n                        water”), to handle exceptions or adjust the plan according to the situation (“I don’t have salt, so let\n                me use soy sauce and pepper instead”), and to realize when external information is needed (“how do\n                             I prepare dough? Let me search on the Internet”)."
+    },
+    "u423a5ed5c10153d66367": {
+      "material_id": "mat-f98fbd73f423776117f60cac36edc90a",
+      "span_id": "span-f021c711415ab7488317517d7cbe41d5",
+      "work_id": "arxiv:2310.11511",
+      "version_id": "arxiv:2310.11511:v1",
+      "source_hash": "sha256:d9eaa1398abac0df67a9d0933a5bf8b6d9d83d2e72da2a486073cd842dd52978",
+      "scope": "excerpt",
+      "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+      "page": 3,
+      "start": 2058,
+      "end": 3616,
+      "quote": "While their value function\nsimply indicates an overall score of each generation, SELF-RAG trains to an arbitrary LM to learn to\ngenerate fine-grained self-reflection and customizable inference.\n\nTraining and generating with critics. Training LLMs with reinforcement learning (e.g., Proximal\nPolicy Optimization or PPO; Schulman et al. 2017) from human feedback (RLHF) has proven\neffective in aligning LLMs with human preferences (Ouyang et al., 2022). Wu et al. (2023) introduce\nfine-grained RLHF with multiple reward models. Though our work also studies fine-grained critique\non retrieval and generation, we train our target LM on task examples augmented with reflection\ntokens from a critic model offline, with a far lower training cost compared to RLHF. In addition,\nreflection tokens in SELF-RAG enable controllable generation at inference, while RLHF focuses on\nhuman preference alignment during training. Other works use general control tokens to guide LM\ngeneration (Lu et al., 2022; Korbak et al., 2023), while SELF-RAG uses reflection tokens to decide the\nneed for retrieval and to self-evaluate generation quality. Xie et al. (2023) propose a self-evaluation-\nguided decoding framework, but they focus only on reasoning tasks with one evaluation dimension\n(reasoning path consistency) and without retrieval. Recent work on LLM refinement (Dhuliawala\net al., 2023; Madaan et al., 2023; Paul et al., 2023) prompts a model to generate task output, natural\nlanguage feedback and refined task output iteratively, but at the cost of inference efficiency."
+    }
+  },
+  "selected_sources": [
+    {
+      "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+      "work_id": "arxiv:2210.03629",
+      "version_id": "arxiv:2210.03629:v3",
+      "content_hash": "sha256:196be15c138fb6e551d2641473fee7b175fca7f4dcb0d0f5a171ee103ba57e16",
+      "source_hash": "sha256:f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69",
+      "scope": "excerpt",
+      "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+      "complete": false,
+      "quality": "partial",
+      "offset_basis": "page-local Unicode code points; end exclusive",
+      "page_count": 33,
+      "page_numbers": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        8,
+        12,
+        18,
+        24,
+        30,
+        33
+      ],
+      "warnings": [
+        "PDF reading order, equations and tables require source review; no OCR was performed.",
+        "Selected original PDF pages only; unretained pages and sections were not read.",
+        "Page/character limit reached; retained material is an excerpt.",
+        "Mathematical or replacement glyphs detected; check equations against the original PDF.",
+        "Observed corrupted figure labels on originalpage2; extracted figure text is unreliable.",
+        "Observed table/chart reading-order interleaving on originalpage5; table-cell structure is unqualified."
+      ],
+      "spans": [
+        {
+          "span_id": "span-55b2971cd5f40c431b738813c7ef10cd",
+          "work_id": "arxiv:2210.03629",
+          "version_id": "arxiv:2210.03629:v3",
+          "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+          "source_hash": "sha256:f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69",
+          "scope": "excerpt",
+          "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+          "page": 1,
+          "section": null,
+          "start": 2000,
+          "end": 4000,
+          "text": "ng (HotpotQA) and fact veriﬁcation (Fever), ReAct overcomes prevalent\n                                 issues of hallucination and error propagation in chain-of-thought reasoning by\n                                  interacting with a simple Wikipedia API, and generating human-like task-solving\n                                   trajectories that are more interpretable than baselines without reasoning traces.\n                              Furthermore, on two interactive decision making benchmarks (ALFWorld and\n                           WebShop), ReAct outperforms imitation and reinforcement learning methods by\n                            an absolute success rate of 34% and 10% respectively, while being prompted with\n                              only one or two in-context examples.\n\n\n                1  INTRODUCTION\n\n              A unique feature of human intelligence is the ability to seamlessly combine task-oriented actions with\n                        verbal reasoning (or inner speech, Alderson-Day & Fernyhough, 2015), which has been theorized toarXiv:2210.03629v3                      play an important role in human cognition for enabling self-regulation or strategization (Vygotsky,\n                     1987; Luria, 1965; Fernyhough, 2010) and maintaining a working memory (Baddeley, 1992). Con-\n                         sider the example of cooking up a dish in the kitchen. Between any two speciﬁc actions, we may\n                       reason in language in order to track progress (“now that everything is cut, I should heat up the pot of\n                        water”), to handle exceptions or adjust the plan according to the situation (“I don’t have salt, so let\n                me use soy sauce and pepper instead”), and to realize when external information is needed (“how do\n                             I prepare dough? Let me search on the Internet”). We may also act (open a cookbook to read the\n                         recipe, open the fridge, check ingredient"
+        }
+      ]
+    },
+    {
+      "material_id": "mat-f98fbd73f423776117f60cac36edc90a",
+      "work_id": "arxiv:2310.11511",
+      "version_id": "arxiv:2310.11511:v1",
+      "content_hash": "sha256:99202ba231c19f02bb313bccfd65015534e23b9202611b09a16ba6b2b0590310",
+      "source_hash": "sha256:d9eaa1398abac0df67a9d0933a5bf8b6d9d83d2e72da2a486073cd842dd52978",
+      "scope": "excerpt",
+      "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+      "complete": false,
+      "quality": "partial",
+      "offset_basis": "page-local Unicode code points; end exclusive",
+      "page_count": 30,
+      "page_numbers": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        14,
+        18,
+        24,
+        30
+      ],
+      "warnings": [
+        "PDF reading order, equations and tables require source review; no OCR was performed.",
+        "Selected original PDF pages only; unretained pages and sections were not read.",
+        "Page/character limit reached; retained material is an excerpt.",
+        "Mathematical or replacement glyphs detected; check equations against the original PDF.",
+        "Observed flattened sums, fractions and superscripts on originalpage6; equation semantics are unreliable.",
+        "Multi-level table headers and numeric row/column associations remain unqualified on originalpages4,8,18,30."
+      ],
+      "spans": [
+        {
+          "span_id": "span-f021c711415ab7488317517d7cbe41d5",
+          "work_id": "arxiv:2310.11511",
+          "version_id": "arxiv:2310.11511:v1",
+          "material_id": "mat-f98fbd73f423776117f60cac36edc90a",
+          "source_hash": "sha256:d9eaa1398abac0df67a9d0933a5bf8b6d9d83d2e72da2a486073cd842dd52978",
+          "scope": "excerpt",
+          "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+          "page": 3,
+          "section": null,
+          "start": 2000,
+          "end": 4000,
+          "text": "te with tree search, guided by LM-generated value scores. While their value function\nsimply indicates an overall score of each generation, SELF-RAG trains to an arbitrary LM to learn to\ngenerate fine-grained self-reflection and customizable inference.\n\nTraining and generating with critics. Training LLMs with reinforcement learning (e.g., Proximal\nPolicy Optimization or PPO; Schulman et al. 2017) from human feedback (RLHF) has proven\neffective in aligning LLMs with human preferences (Ouyang et al., 2022). Wu et al. (2023) introduce\nfine-grained RLHF with multiple reward models. Though our work also studies fine-grained critique\non retrieval and generation, we train our target LM on task examples augmented with reflection\ntokens from a critic model offline, with a far lower training cost compared to RLHF. In addition,\nreflection tokens in SELF-RAG enable controllable generation at inference, while RLHF focuses on\nhuman preference alignment during training. Other works use general control tokens to guide LM\ngeneration (Lu et al., 2022; Korbak et al., 2023), while SELF-RAG uses reflection tokens to decide the\nneed for retrieval and to self-evaluate generation quality. Xie et al. (2023) propose a self-evaluation-\nguided decoding framework, but they focus only on reasoning tasks with one evaluation dimension\n(reasoning path consistency) and without retrieval. Recent work on LLM refinement (Dhuliawala\net al., 2023; Madaan et al., 2023; Paul et al., 2023) prompts a model to generate task output, natural\nlanguage feedback and refined task output iteratively, but at the cost of inference efficiency.\n\n\n3  SELF-RAG: LEARNING TO RETRIEVE, GENERATE AND CRITIQUE\n\nWe introduce Self-Reflective Retrieval-Augmented Generation (SELF-RAG), shown in Figure 1.\nSELF-RAG is a framework that enhances the quality and factuality of an LLM through retrieval and\nself-reflection, without sacrificing LLM’s original creativity and versatility. Our end-to-end training\nlets an LM M generate text info"
+        }
+      ]
+    }
+  ],
+  "exact_initial_request_context": {
+    "capacity_policy": {
+      "assistance_revision": "workspace-assistance-keyed-v16",
+      "checker_revision": "workspace-assistance-consistency-checks-v18",
+      "citations_by_mode": {
+        "learn": 3,
+        "research": 6
+      },
+      "claims_by_mode": {
+        "learn": 8,
+        "research": 12
+      },
+      "compact_checker_utf8_bytes": 262144,
+      "deadlines": {
+        "check_seconds": 240,
+        "count_seconds": 60,
+        "draft_seconds": 120,
+        "origin": "durable_reservation_created_at",
+        "recheck_seconds": 240,
+        "repair_seconds": 120,
+        "revision": "d5-operation-deadlines-v2-capacity",
+        "workflow_seconds": 1200
+      },
+      "http_body_bytes": 4194304,
+      "internal_json_bytes": 8388608,
+      "keyed_prose_finding_capacity": {
+        "aggregate_findings_limit": null,
+        "compact_checker_utf8_bytes": 262144,
+        "normalized_checker_utf8_bytes": 1048576,
+        "per_location_findings_limit": null,
+        "revision": "workspace-assistance-keyed-finding-capacity-v16"
+      },
+      "max_citations_per_claim": 6,
+      "max_claim_characters": 10000,
+      "max_follow_up_intents": 3,
+      "max_materials": 3,
+      "max_messages_per_workflow": 4,
+      "max_procedural_gaps": 3,
+      "max_repairs": 1,
+      "max_requested_parts": 8,
+      "max_selected_evidence_utf8_bytes": 131072,
+      "max_selected_units": 12,
+      "max_unit_characters": 1600,
+      "normalization_revision": "workspace-assistance-consistency-normalization-v18",
+      "normalized_checker_utf8_bytes": 1048576,
+      "operation_routes": {
+        "check_recheck_probe": {
+          "effort": "high",
+          "input_tokens": 40000,
+          "model": "claude-opus-5-5",
+          "output_tokens": 12000,
+          "prices": {
+            "input": "4",
+            "output": "20",
+            "verified_at": "2026-11-14"
+          },
+          "thinking": {
+            "type": "adaptive"
+          }
+        },
+        "draft_repair": {
+          "effort": "medium",
+          "input_tokens": 40000,
+          "model": "claude-sonnet-5-5",
+          "output_tokens": 8000,
+          "prices": {
+            "input": "2",
+            "output": "10",
+            "verified_at": "2026-11-14"
+          },
+          "thinking": {
+            "type": "between_tools"
+          }
+        },
+        "revision": "d5-sonnet-opus-high-capacity-v3"
+      },
+      "paired_input_tokens_fit": 32000,
+      "raw_draft_utf8_bytes": 131072,
+      "reservation_input_tokens": 40000,
+      "revision": "d5-comprehensive-capacity-v15",
+      "sealed_input_json_bytes": 8388608,
+      "soft_claim_characters": 500,
+      "soft_reason_characters": 240
+    },
+    "comparison_contract": "Coverage is the single authoritative mapping. Do not emit comparison_claims or comparison_basis. An answer reference for a comparison must be an actual comparative finding with separately cited evidence handles from all necessary sources. Qualitative method contrasts require supported method descriptions, not necessarily common benchmarks. Empirical performance conclusions require compatible evaluation tasks, comparators, metric definitions and conditions. Source notes stay context if the requested comparison is unanswered; partial retains every gap and earns no full answer credit. Support, atomicity, qualifications and actual request relevance are checked independently.",
+    "coverage_wire_rule": "Coverage alone maps sealed requested parts to emitted answer/context claim IDs. No claims.part_ids, missing/orphan/duplicate/overlapping references. Full abstention omits claims and ALL claim references. A comparison answer needs independently cited source bases; comparison-only notes leave the requested comparison unanswered.",
+    "identity_contract": "Emit only actual claims in order. Server assigns c1,c2 and later positions. Coverage is the only answer/context mapping: exactly each required named part, all genuine gap reasons. Questions distinguish context_claim_ids (topic links, no factual premise) from premise_claim_ids (investigate_claim only, independently checked). The structural answer tag grants no full-answer credit.",
+    "phase": "draft",
+    "procedural_rendering": {
+      "abstention": {
+        "application_context_required": "I cannot assess the requested application without further context and evidence.",
+        "comparison_evidence_required": "I cannot establish the requested comparison from the selected evidence.",
+        "insufficient_selected_evidence": "I cannot establish the requested conclusion from the selected evidence."
+      },
+      "actions": {
+        "inspect_evaluation": "Inspect evaluation methods, baselines and uncertainty before drawing conclusions.",
+        "inspect_methods": "Inspect the original methods and implementation details.",
+        "inspect_scope": "Check source scope and applicability before proposing an experiment.",
+        "request_context": "Request the missing source material or application context.",
+        "seek_counterevidence": "Seek evidence that could challenge the cited claims."
+      },
+      "questions": {
+        "application_scope": "Does the selected evidence establish applicability to the proposed setting?",
+        "counterevidence": "What evidence could challenge the cited claims?",
+        "implementation": "What further evidence would be needed to implement or reproduce the method?",
+        "investigate_claim": "What evidence supports or limits the referenced claim?",
+        "measured_and_proposed": "Which claims report measured results, and what applications, if any, does the excerpt propose?",
+        "methods": "What methods, if any, does the selected evidence describe?",
+        "qualifications": "What assumptions or qualifications, if any, apply to the cited claims?"
+      },
+      "rule": "Neutral intents may have context_claim_ids but no premise_claim_ids. investigate_claim requires nonempty premise_claim_ids; never introduce an assertion outside the scored claims."
+    },
+    "request_quality_rule": "At most 12 atomic claims in research mode; about 500 characters per claim and 240 per explanation are SOFT targets only. Preserve qualifications rather than shortening into misleading claims. Record every requested part exactly once as answered, partial, lacks_evidence or omitted. Available but unreported information is omitted. Context notes do not answer a comparison. All semantic quality and factual prose remain reviewed. Partial requires useful answer refs AND genuine remaining gaps; answered requires no remaining gap. Context alone never earns answer credit.",
+    "role": "workflow",
+    "sealed_request": {
+      "assistance": {
+        "background": "",
+        "depth": "overview",
+        "direction": "overview",
+        "follow_up": "Compare ReAct and Self-RAG evidence and evaluation limitations.",
+        "mode": "research"
+      },
+      "kind": "deep_dive",
+      "private_context": {
+        "notes": false,
+        "profile": false,
+        "reading_history": false
+      },
+      "project_context": {
+        "constraints": "No private notes/history, source expansion or everyday generation",
+        "id": "project-ac99bd33fccebce448986c40f6567298",
+        "question": "Compare ReAct and Self-RAG evidence and evaluation limitations.",
+        "revision": 1,
+        "scope": "Frozen retained public sources only"
+      },
+      "provider_schema_compatibility_revision": "anthropic-structured-schema-compat-v1",
+      "schema_revision": "workspace-assistance-keyed-v16",
+      "settings": {
+        "effort": "medium",
+        "max_repairs": 1,
+        "structured_outputs": true,
+        "temperature": null,
+        "thinking": {
+          "type": "between_tools"
+        }
+      },
+      "task_policy": {
+        "allowed_dispositions": [
+          "full_abstention",
+          "answer",
+          "comparison_abstention"
+        ],
+        "application_context": {
+          "operating_envelope": "",
+          "safety_objectives": "",
+          "validation_evidence": "",
+          "vehicle_configuration": ""
+        },
+        "context_basis": "Explicitly supplied context, not verified source evidence",
+        "missing_context": [],
+        "mode": "research",
+        "parts_basis": "Explicit application/user parts, in priority order",
+        "requested_parts": [
+          {
+            "id": "p1",
+            "kind": "comparison",
+            "request": "Compare ReAct and Self-RAG evidence and evaluation limitations."
+          },
+          {
+            "id": "p2",
+            "kind": "source_note",
+            "request": "State separately cited source facts and retain study scope, comparator, metric definition and conditions."
+          },
+          {
+            "id": "p3",
+            "kind": "answer",
+            "request": "Identify missing evidence or required details without inventing findings."
+          }
+        ],
+        "required_context": [],
+        "revision": "workspace-assistance-keyed-v16",
+        "selected_work_count": 2,
+        "task_intent": "comparison",
+        "wire_encoding_revision": "workspace-assistance-comparison-wire-v19"
+      },
+      "units": {
+        "u423a5ed5c10153d66367": {
+          "end": 3616,
+          "material_id": "mat-f98fbd73f423776117f60cac36edc90a",
+          "page": 3,
+          "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+          "quote": "While their value function\nsimply indicates an overall score of each generation, SELF-RAG trains to an arbitrary LM to learn to\ngenerate fine-grained self-reflection and customizable inference.\n\nTraining and generating with critics. Training LLMs with reinforcement learning (e.g., Proximal\nPolicy Optimization or PPO; Schulman et al. 2017) from human feedback (RLHF) has proven\neffective in aligning LLMs with human preferences (Ouyang et al., 2022). Wu et al. (2023) introduce\nfine-grained RLHF with multiple reward models. Though our work also studies fine-grained critique\non retrieval and generation, we train our target LM on task examples augmented with reflection\ntokens from a critic model offline, with a far lower training cost compared to RLHF. In addition,\nreflection tokens in SELF-RAG enable controllable generation at inference, while RLHF focuses on\nhuman preference alignment during training. Other works use general control tokens to guide LM\ngeneration (Lu et al., 2022; Korbak et al., 2023), while SELF-RAG uses reflection tokens to decide the\nneed for retrieval and to self-evaluate generation quality. Xie et al. (2023) propose a self-evaluation-\nguided decoding framework, but they focus only on reasoning tasks with one evaluation dimension\n(reasoning path consistency) and without retrieval. Recent work on LLM refinement (Dhuliawala\net al., 2023; Madaan et al., 2023; Paul et al., 2023) prompts a model to generate task output, natural\nlanguage feedback and refined task output iteratively, but at the cost of inference efficiency.",
+          "scope": "excerpt",
+          "source_hash": "sha256:d9eaa1398abac0df67a9d0933a5bf8b6d9d83d2e72da2a486073cd842dd52978",
+          "span_id": "span-f021c711415ab7488317517d7cbe41d5",
+          "start": 2058,
+          "version_id": "arxiv:2310.11511:v1",
+          "work_id": "arxiv:2310.11511"
+        },
+        "uf800ed16cb52eb251690": {
+          "end": 3888,
+          "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+          "page": 1,
+          "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+          "quote": "Furthermore, on two interactive decision making benchmarks (ALFWorld and\n                           WebShop), ReAct outperforms imitation and reinforcement learning methods by\n                            an absolute success rate of 34% and 10% respectively, while being prompted with\n                              only one or two in-context examples.\n\n\n                1  INTRODUCTION\n\n              A unique feature of human intelligence is the ability to seamlessly combine task-oriented actions with\n                        verbal reasoning (or inner speech, Alderson-Day & Fernyhough, 2015), which has been theorized toarXiv:2210.03629v3                      play an important role in human cognition for enabling self-regulation or strategization (Vygotsky,\n                     1987; Luria, 1965; Fernyhough, 2010) and maintaining a working memory (Baddeley, 1992). Con-\n                         sider the example of cooking up a dish in the kitchen. Between any two speciﬁc actions, we may\n                       reason in language in order to track progress (“now that everything is cut, I should heat up the pot of\n                        water”), to handle exceptions or adjust the plan according to the situation (“I don’t have salt, so let\n                me use soy sauce and pepper instead”), and to realize when external information is needed (“how do\n                             I prepare dough? Let me search on the Internet”).",
+          "scope": "excerpt",
+          "source_hash": "sha256:f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69",
+          "span_id": "span-55b2971cd5f40c431b738813c7ef10cd",
+          "start": 2443,
+          "version_id": "arxiv:2210.03629:v3",
+          "work_id": "arxiv:2210.03629"
+        }
+      }
+    }
+  },
+  "private_notes": false,
+  "private_reading_history": false,
+  "owner_approval_data": false,
+  "context_identity_basis": "Frozen material/version/hash/offset equality; bibliographic provenance and fresh acquisition are separate and unmeasured here.",
+  "human_qualification": false
+}

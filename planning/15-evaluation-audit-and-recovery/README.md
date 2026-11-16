@@ -1,3 +1,11 @@
+> Current prospective handoff: [v19 comparison and full-pipeline campaign](evidence/comparison-v19/HANDOFF-v2.md).
+> The frozen packet is unapproved. Required local gates are complete; exact-head publication CI
+> is recorded separately after push; no live authority, provider contact or financial mutation
+> is authorized by this kit. The stopped v18 diagnostic and all earlier records
+> below remain immutable historical evidence. [Current status](STATUS.md).
+
+---
+
 > Current offline handoff: [v18 joint consistency repair](evidence/consistency-v18/README.md).
 > v17r2 is stopped; its complete responses, failed judgments, ledger and holds
 > remain unchanged. The successor proposes only four requests, USD1.40, and

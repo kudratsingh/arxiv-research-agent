@@ -1,0 +1,155 @@
+{
+  "$defs": {
+    "ComparisonCompactUnionSafeFull_6eb02fe052f0045b": {
+      "type": "object",
+      "title": "ComparisonCompactUnionSafeFull_6eb02fe052f0045b",
+      "properties": {
+        "disposition": {
+          "$ref": "#/$defs/KeyedFixed_full_abstention"
+        },
+        "reason": {
+          "$ref": "#/$defs/KeyedFixed_application_context_required"
+        },
+        "next_action": {
+          "$ref": "#/$defs/KeyedFixed_request_context"
+        },
+        "coverage": {
+          "$ref": "#/$defs/UnionSafeFullCoverage_6eb02fe052f0045b"
+        },
+        "context_requests": {
+          "$ref": "#/$defs/KeyedContext_adde2c13a7021c4a"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "disposition",
+        "reason",
+        "next_action",
+        "coverage",
+        "context_requests"
+      ]
+    },
+    "KeyedContext_adde2c13a7021c4a": {
+      "type": "object",
+      "title": "KeyedContext_adde2c13a7021c4a",
+      "properties": {
+        "vehicle_configuration": {
+          "$ref": "#/$defs/KeyedFixed_required"
+        },
+        "operating_envelope": {
+          "$ref": "#/$defs/KeyedFixed_required"
+        },
+        "safety_objectives": {
+          "$ref": "#/$defs/KeyedFixed_required"
+        },
+        "validation_evidence": {
+          "$ref": "#/$defs/KeyedFixed_required"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "vehicle_configuration",
+        "operating_envelope",
+        "safety_objectives",
+        "validation_evidence"
+      ]
+    },
+    "KeyedEvidenceGap_adde2c13a7021c4aTrue": {
+      "type": "object",
+      "title": "KeyedEvidenceGap_adde2c13a7021c4aTrue",
+      "properties": {
+        "status": {
+          "$ref": "#/$defs/KeyedFixed_lacks_evidence"
+        },
+        "gap_reasons": {
+          "type": "array",
+          "title": "Gap Reasons",
+          "items": {
+            "$ref": "#/$defs/KeyedFixed_application_context"
+          },
+          "minItems": 1,
+          "description": "{maxItems: 10}"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "gap_reasons"
+      ]
+    },
+    "KeyedFixed_application_context": {
+      "type": "string",
+      "enum": [
+        "application_context"
+      ],
+      "title": "KeyedFixed_application_context"
+    },
+    "KeyedFixed_application_context_required": {
+      "type": "string",
+      "enum": [
+        "application_context_required"
+      ],
+      "title": "KeyedFixed_application_context_required"
+    },
+    "KeyedFixed_full_abstention": {
+      "type": "string",
+      "enum": [
+        "full_abstention"
+      ],
+      "title": "KeyedFixed_full_abstention"
+    },
+    "KeyedFixed_lacks_evidence": {
+      "type": "string",
+      "enum": [
+        "lacks_evidence"
+      ],
+      "title": "KeyedFixed_lacks_evidence"
+    },
+    "KeyedFixed_request_context": {
+      "type": "string",
+      "enum": [
+        "request_context"
+      ],
+      "title": "KeyedFixed_request_context"
+    },
+    "KeyedFixed_required": {
+      "type": "string",
+      "enum": [
+        "required"
+      ],
+      "title": "KeyedFixed_required"
+    },
+    "UnionSafeFullCoverage_6eb02fe052f0045b": {
+      "type": "object",
+      "title": "UnionSafeFullCoverage_6eb02fe052f0045b",
+      "properties": {
+        "p1": {
+          "$ref": "#/$defs/KeyedEvidenceGap_adde2c13a7021c4aTrue"
+        },
+        "p2": {
+          "$ref": "#/$defs/KeyedEvidenceGap_adde2c13a7021c4aTrue"
+        },
+        "p3": {
+          "$ref": "#/$defs/KeyedEvidenceGap_adde2c13a7021c4aTrue"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "p1",
+        "p2",
+        "p3"
+      ]
+    }
+  },
+  "type": "object",
+  "title": "ComparisonResponse_5d66f40bca150063",
+  "properties": {
+    "response": {
+      "$ref": "#/$defs/ComparisonCompactUnionSafeFull_6eb02fe052f0045b"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "response"
+  ]
+}

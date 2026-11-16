@@ -1,0 +1,14 @@
+{
+  "development_paper_ids": [
+    "2210.03629v3",
+    "2310.11511v1"
+  ],
+  "evaluation_snapshot_kind": "inherited_exposed_benchmark_abstracts",
+  "development": "Retained ReAct 2210.03629v3 and SelfRAG 2310.11511v1 real PDF excerpts; no new acquisition performed.",
+  "evaluation": "Eight exposed controls retain inherited 2610.* benchmark-source/abstract snapshot records. Their bibliographic metadata and public-paper acquisition provenance were not newly verified.",
+  "identity_verification": "Selected material hashes, versions, quotes and offsets are checked separately from bibliographic provenance and semantic support.",
+  "new_intake": false,
+  "bibliographic_provenance_newly_verified": false,
+  "held_out_evidence": false,
+  "human_qualification": false
+}

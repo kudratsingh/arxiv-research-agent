@@ -1,0 +1,481 @@
+{
+  "$defs": {
+    "CapacityHandle_3a9ae9f0f08cfe24": {
+      "enum": [
+        "u6494dfd09e443b85a647"
+      ],
+      "title": "CapacityHandle_3a9ae9f0f08cfe24",
+      "type": "string"
+    },
+    "ComparisonCompactUnionSafeFull_306a7290a444e91a": {
+      "additionalProperties": false,
+      "properties": {
+        "disposition": {
+          "$ref": "#/$defs/KeyedFixed_full_abstention"
+        },
+        "reason": {
+          "$ref": "#/$defs/KeyedFixed_insufficient_selected_evidence"
+        },
+        "next_action": {
+          "$ref": "#/$defs/KeyedFixed_request_context"
+        },
+        "coverage": {
+          "$ref": "#/$defs/UnionSafeFullCoverage_306a7290a444e91a"
+        }
+      },
+      "required": [
+        "disposition",
+        "reason",
+        "next_action",
+        "coverage"
+      ],
+      "title": "ComparisonCompactUnionSafeFull_306a7290a444e91a",
+      "type": "object"
+    },
+    "ComparisonCompactUnionSafeNormal_306a7290a444e91a": {
+      "additionalProperties": false,
+      "properties": {
+        "claims": {
+          "description": "Emit only actual atomic qualified claims, between1and8. Do not emit unused placeholders or IDs. The server names the first claim c1, the second c2, etc. Coverage alone maps parts to these positions. Claims may not carry claim_id or part_ids.",
+          "items": {
+            "$ref": "#/$defs/KeyedClaim_a8455c1802c42b69"
+          },
+          "maxItems": 8,
+          "minItems": 1,
+          "title": "Claims",
+          "type": "array"
+        },
+        "background_claims": {
+          "items": {
+            "enum": [
+              "c1",
+              "c2",
+              "c3",
+              "c4",
+              "c5",
+              "c6",
+              "c7",
+              "c8"
+            ],
+            "type": "string"
+          },
+          "maxItems": 8,
+          "minItems": 0,
+          "title": "Background Claims",
+          "type": "array"
+        },
+        "assumption_claims": {
+          "items": {
+            "enum": [
+              "c1",
+              "c2",
+              "c3",
+              "c4",
+              "c5",
+              "c6",
+              "c7",
+              "c8"
+            ],
+            "type": "string"
+          },
+          "maxItems": 8,
+          "minItems": 0,
+          "title": "Assumption Claims",
+          "type": "array"
+        },
+        "limitation_claims": {
+          "items": {
+            "enum": [
+              "c1",
+              "c2",
+              "c3",
+              "c4",
+              "c5",
+              "c6",
+              "c7",
+              "c8"
+            ],
+            "type": "string"
+          },
+          "maxItems": 8,
+          "minItems": 0,
+          "title": "Limitation Claims",
+          "type": "array"
+        },
+        "gaps": {
+          "items": {
+            "enum": [
+              "methods",
+              "evaluation",
+              "ablations",
+              "full_text",
+              "counterevidence",
+              "source_scope"
+            ],
+            "type": "string"
+          },
+          "maxItems": 3,
+          "minItems": 1,
+          "title": "Gaps",
+          "type": "array"
+        },
+        "questions": {
+          "items": {
+            "$ref": "#/$defs/ComparisonQuestion_417dacb5a34195ef"
+          },
+          "maxItems": 3,
+          "minItems": 1,
+          "title": "Questions",
+          "type": "array"
+        },
+        "proposal": {
+          "enum": [
+            "inspect_methods",
+            "inspect_evaluation",
+            "seek_counterevidence",
+            "inspect_scope",
+            "request_context"
+          ],
+          "title": "Proposal",
+          "type": "string"
+        },
+        "disposition": {
+          "$ref": "#/$defs/KeyedFixed_answer",
+          "description": "Claim-bearing body marker only. Full/partial/insufficient request coverage is derived from the required part records; this marker grants no full-answer credit."
+        },
+        "coverage": {
+          "$ref": "#/$defs/ComparisonCoverage_417dacb5a34195ef"
+        }
+      },
+      "required": [
+        "claims",
+        "background_claims",
+        "assumption_claims",
+        "limitation_claims",
+        "gaps",
+        "questions",
+        "proposal",
+        "disposition",
+        "coverage"
+      ],
+      "title": "ComparisonCompactUnionSafeNormal_306a7290a444e91a",
+      "type": "object"
+    },
+    "ComparisonCoverage_417dacb5a34195ef": {
+      "additionalProperties": false,
+      "properties": {
+        "p1": {
+          "$ref": "#/$defs/ComparisonPart_417dacb5a34195ef",
+          "description": "Exactly this sealed requested part; preserve every remaining gap."
+        },
+        "p2": {
+          "$ref": "#/$defs/ComparisonPart_417dacb5a34195ef",
+          "description": "Exactly this sealed requested part; preserve every remaining gap."
+        },
+        "p3": {
+          "$ref": "#/$defs/ComparisonPart_417dacb5a34195ef",
+          "description": "Exactly this sealed requested part; preserve every remaining gap."
+        }
+      },
+      "required": [
+        "p1",
+        "p2",
+        "p3"
+      ],
+      "title": "ComparisonCoverage_417dacb5a34195ef",
+      "type": "object"
+    },
+    "ComparisonPart_417dacb5a34195ef": {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "description": "answered: nonempty answer refs, [none]. partial: nonempty answer refs and genuine remaining gaps. lacks_evidence: no answer refs, evidence reasons. omitted: no answer refs, omission reasons. Context is never answer credit. For a comparison, answer IDs must name actual comparative findings citing each necessary selected source. Qualitative method contrasts do not need shared benchmarks; performance conclusions require compatible evaluation evidence. A source summary remains context when the comparison cannot be answered.",
+          "enum": [
+            "answered",
+            "partial",
+            "lacks_evidence",
+            "omitted"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "gap_reasons": {
+          "items": {
+            "enum": [
+              "none",
+              "application_context",
+              "source_scope",
+              "common_evaluation",
+              "methods",
+              "protocol",
+              "data_splits",
+              "metric_definition",
+              "uncertainty_calibration",
+              "memory_error_persistence",
+              "claim_budget",
+              "not_prioritized"
+            ],
+            "type": "string"
+          },
+          "maxItems": 10,
+          "minItems": 1,
+          "title": "Gap Reasons",
+          "type": "array"
+        },
+        "answer_claim_ids": {
+          "items": {
+            "enum": [
+              "c1",
+              "c2",
+              "c3",
+              "c4",
+              "c5",
+              "c6",
+              "c7",
+              "c8"
+            ],
+            "type": "string"
+          },
+          "maxItems": 8,
+          "title": "Answer Claim Ids",
+          "type": "array"
+        },
+        "context_claim_ids": {
+          "items": {
+            "enum": [
+              "c1",
+              "c2",
+              "c3",
+              "c4",
+              "c5",
+              "c6",
+              "c7",
+              "c8"
+            ],
+            "type": "string"
+          },
+          "maxItems": 8,
+          "title": "Context Claim Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "status",
+        "gap_reasons",
+        "answer_claim_ids",
+        "context_claim_ids"
+      ],
+      "title": "ComparisonPart_417dacb5a34195ef",
+      "type": "object"
+    },
+    "ComparisonQuestion_417dacb5a34195ef": {
+      "additionalProperties": false,
+      "properties": {
+        "intent": {
+          "enum": [
+            "measured_and_proposed",
+            "methods",
+            "qualifications",
+            "implementation",
+            "counterevidence",
+            "application_scope",
+            "investigate_claim"
+          ],
+          "title": "Intent",
+          "type": "string"
+        },
+        "context_claim_ids": {
+          "description": "Related claim positions for navigation/topic context. These links assert no factual premise. Neutral intents may link context.",
+          "items": {
+            "enum": [
+              "c1",
+              "c2",
+              "c3",
+              "c4",
+              "c5",
+              "c6",
+              "c7",
+              "c8"
+            ],
+            "type": "string"
+          },
+          "maxItems": 8,
+          "title": "Context Claim Ids",
+          "type": "array"
+        },
+        "premise_claim_ids": {
+          "description": "Factual premises, only for investigate_claim. Each must refer to an emitted cited claim, whose whole support is checked. Empty for neutral intents. No new assertion may be introduced by a question.",
+          "items": {
+            "enum": [
+              "c1",
+              "c2",
+              "c3",
+              "c4",
+              "c5",
+              "c6",
+              "c7",
+              "c8"
+            ],
+            "type": "string"
+          },
+          "maxItems": 8,
+          "title": "Premise Claim Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "intent",
+        "context_claim_ids",
+        "premise_claim_ids"
+      ],
+      "title": "ComparisonQuestion_417dacb5a34195ef",
+      "type": "object"
+    },
+    "KeyedClaim_a8455c1802c42b69": {
+      "additionalProperties": false,
+      "properties": {
+        "text": {
+          "description": "One atomic finding with every material qualification; 500 characters is a soft target; 10,000 characters is a generous payload safety guard, not an atomicity or support threshold.",
+          "maxLength": 10000,
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        },
+        "handles": {
+          "items": {
+            "$ref": "#/$defs/CapacityHandle_3a9ae9f0f08cfe24"
+          },
+          "maxItems": 3,
+          "minItems": 1,
+          "title": "Handles",
+          "type": "array"
+        },
+        "required_scope": {
+          "enum": [
+            "abstract",
+            "excerpt",
+            "full_text"
+          ],
+          "title": "Required Scope",
+          "type": "string"
+        }
+      },
+      "required": [
+        "text",
+        "handles",
+        "required_scope"
+      ],
+      "title": "KeyedClaim_a8455c1802c42b69",
+      "type": "object"
+    },
+    "KeyedEvidenceGap_a8455c1802c42b69True": {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "$ref": "#/$defs/KeyedFixed_lacks_evidence"
+        },
+        "gap_reasons": {
+          "items": {
+            "enum": [
+              "application_context",
+              "source_scope",
+              "common_evaluation",
+              "methods",
+              "protocol",
+              "data_splits",
+              "metric_definition",
+              "uncertainty_calibration",
+              "memory_error_persistence"
+            ],
+            "type": "string"
+          },
+          "maxItems": 10,
+          "minItems": 1,
+          "title": "Gap Reasons",
+          "type": "array"
+        }
+      },
+      "required": [
+        "status",
+        "gap_reasons"
+      ],
+      "title": "KeyedEvidenceGap_a8455c1802c42b69True",
+      "type": "object"
+    },
+    "KeyedFixed_answer": {
+      "enum": [
+        "answer"
+      ],
+      "title": "KeyedFixed_answer",
+      "type": "string"
+    },
+    "KeyedFixed_full_abstention": {
+      "enum": [
+        "full_abstention"
+      ],
+      "title": "KeyedFixed_full_abstention",
+      "type": "string"
+    },
+    "KeyedFixed_insufficient_selected_evidence": {
+      "enum": [
+        "insufficient_selected_evidence"
+      ],
+      "title": "KeyedFixed_insufficient_selected_evidence",
+      "type": "string"
+    },
+    "KeyedFixed_lacks_evidence": {
+      "enum": [
+        "lacks_evidence"
+      ],
+      "title": "KeyedFixed_lacks_evidence",
+      "type": "string"
+    },
+    "KeyedFixed_request_context": {
+      "enum": [
+        "request_context"
+      ],
+      "title": "KeyedFixed_request_context",
+      "type": "string"
+    },
+    "UnionSafeFullCoverage_306a7290a444e91a": {
+      "additionalProperties": false,
+      "properties": {
+        "p1": {
+          "$ref": "#/$defs/KeyedEvidenceGap_a8455c1802c42b69True"
+        },
+        "p2": {
+          "$ref": "#/$defs/KeyedEvidenceGap_a8455c1802c42b69True"
+        },
+        "p3": {
+          "$ref": "#/$defs/KeyedEvidenceGap_a8455c1802c42b69True"
+        }
+      },
+      "required": [
+        "p1",
+        "p2",
+        "p3"
+      ],
+      "title": "UnionSafeFullCoverage_306a7290a444e91a",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "response": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ComparisonCompactUnionSafeNormal_306a7290a444e91a"
+        },
+        {
+          "$ref": "#/$defs/ComparisonCompactUnionSafeFull_306a7290a444e91a"
+        }
+      ],
+      "title": "Response"
+    }
+  },
+  "required": [
+    "response"
+  ],
+  "title": "ComparisonResponse_417dacb5a34195ef",
+  "type": "object"
+}

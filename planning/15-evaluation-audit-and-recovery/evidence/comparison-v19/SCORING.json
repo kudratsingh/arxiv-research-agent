@@ -1,0 +1,11 @@
+{
+  "revision": "workspace-campaign-scoring-v13",
+  "evaluation_denominator": 8,
+  "generated_claims_min": 20,
+  "probe_records_min": 20,
+  "machine_false_pass_max": 0,
+  "machine_false_reject_max": 0,
+  "missing": "UNSCORED/HOLD",
+  "human_qualification": false,
+  "correlation": "Claims and matched probes share cases/passages; not independent samples"
+}

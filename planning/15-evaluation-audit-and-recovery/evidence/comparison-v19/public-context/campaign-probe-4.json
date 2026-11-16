@@ -1,0 +1,384 @@
+{
+  "case_id": "campaign-probe-4",
+  "cohort": "machine_reference_checker_diagnostic",
+  "question": null,
+  "mode": "research",
+  "selected_units": {
+    "uf3d98db2c5a285f07e68": {
+      "material_id": "mat-c35118081c1369f460cb4c41adbc185a",
+      "span_id": "span-163cc35fb95515cc133e7405c86ba94a",
+      "work_id": "arxiv:2610.40893",
+      "version_id": "arxiv:2610.40893:v1:metadata-018e69b4ec3841a0",
+      "source_hash": "sha256:1122e718e19513fe95c3c094c5f12f18ff207bac442405d2fcc7098cfe8b54e2",
+      "scope": "abstract",
+      "parser_revision": "workspace-plain-text-v1",
+      "page": null,
+      "start": 1404,
+      "end": 1910,
+      "quote": "The defect patterns it exposed (evaluation criteria leaking into prompts, token-level swaps that break Arabic agreement, epistemically unbalanced pairs, single-theme refusal probes, unwritten dialect twins counted as coverage) are, we argue, general hazards of counterfactual fairness benchmarks. This is a protocol paper, not a results paper: no model has been evaluated, and the accompanying pre-registration commits the hypotheses, metrics, exclusion rules, and analysis plan that the pilot will follow."
+    },
+    "ud9a2a9dc8b369bebaa4c": {
+      "material_id": "mat-f215cad7235629deacb40965a6cc68c5",
+      "span_id": "span-3796f5b460ad2a613da39b1c12a2630d",
+      "work_id": "arxiv:2610.40758",
+      "version_id": "arxiv:2610.40758:v1:metadata-96148d2d4e4a4093",
+      "source_hash": "sha256:cd9e14f99e31776e9ccf7e02900f0e8ef3f79b98abff32889ab815dc1254c5d8",
+      "scope": "abstract",
+      "parser_revision": "workspace-plain-text-v1",
+      "page": null,
+      "start": 1544,
+      "end": 1863,
+      "quote": "With the stronger GPT-6-Sol, ACE and Dynamic Cheatsheet learn from feedback alone. They reach 78% accuracy and solve 59-60% of the single cells, against 53% and 8% with the certifying model, and they surpass the raw history. CLR-Bench therefore measures how well an agent learns, and this ability differs across models."
+    },
+    "uc983ca9c897cb6079772": {
+      "material_id": "mat-48780ffb91b68f22cf607c5650336baf",
+      "span_id": "span-19ad83096299f09c1ada7a49ddd9bce9",
+      "work_id": "arxiv:2610.40871",
+      "version_id": "arxiv:2610.40871:v1:metadata-0be4ee69b6741057",
+      "source_hash": "sha256:0a0d6c2b721f9e82465d91ea96cec77e8245c6cccbe44e194b19a14db5f36be0",
+      "scope": "abstract",
+      "parser_revision": "workspace-plain-text-v1",
+      "page": null,
+      "start": 1429,
+      "end": 1866,
+      "quote": "This design effectively integrates spatial information into the state space and the tensor core, substantially advancing the state adaptability and enhancing the expressiveness of the data compression. Extensive experiments demonstrate that TensorSSM achieves significantly high reconstruction accuracy and storage efficiency, exhibiting robust expressiveness across diverse tensor datasets without relying on strict spatial assumptions."
+    }
+  },
+  "selected_sources": [
+    {
+      "material_id": "mat-48780ffb91b68f22cf607c5650336baf",
+      "work_id": "arxiv:2610.40871",
+      "version_id": "arxiv:2610.40871:v1:metadata-0be4ee69b6741057",
+      "content_hash": "sha256:c5a41c51f77012f7ac47414e46fab3ce3f9d5cd11da9149ebe0a73d869191891",
+      "source_hash": "sha256:0a0d6c2b721f9e82465d91ea96cec77e8245c6cccbe44e194b19a14db5f36be0",
+      "scope": "abstract",
+      "parser_revision": "workspace-plain-text-v1",
+      "complete": true,
+      "quality": "text_extracted",
+      "offset_basis": "page-local Unicode code points; end exclusive",
+      "page_count": null,
+      "page_numbers": null,
+      "warnings": [],
+      "spans": [
+        {
+          "span_id": "span-19ad83096299f09c1ada7a49ddd9bce9",
+          "work_id": "arxiv:2610.40871",
+          "version_id": "arxiv:2610.40871:v1:metadata-0be4ee69b6741057",
+          "material_id": "mat-48780ffb91b68f22cf607c5650336baf",
+          "source_hash": "sha256:0a0d6c2b721f9e82465d91ea96cec77e8245c6cccbe44e194b19a14db5f36be0",
+          "scope": "abstract",
+          "parser_revision": "workspace-plain-text-v1",
+          "page": null,
+          "section": "abstract",
+          "start": 0,
+          "end": 1866,
+          "text": "High-dimensional tensors are ubiquitous in real-world applications but lead to massive storage overhead. Functional tensor decomposition addresses this by employing neural networks to map element coordinates to tensor cores, significantly reducing the parameters for data compression. However, existing functional methods typically flatten high-order tensors into 1D sequences. This folding operation causes highly overlapping local coordinate sequences and struggles to capture complex cross-mode spatial dependencies, severely limiting their expressiveness on diverse datasets. To tackle these challenges, we propose TensorSSM, a novel Implicit Neural Representation (INR) for functional decomposition method that memorizes spatial positions within a dynamic State Space Model (SSM). Specifically, TensorSSM first decomposes mode-wise coordinates into sequences spit by K-ary rule, encoding spatial tokens from coarse to fine, which effectively captures spatial variations. Furthermore, we extend the SSM's state space to explicitly map cross-mode spatial dependencies, allowing inter-mode interactions to enhance the updates of each mode. By integrating cross-mode information from previous hidden states into the current state transitions, TensorSSM effectively expands tensor representation along two dimensions: the sequence dimension for coarse-to-fine spatial tokens, and the state dimension for cross-mode memorization. This design effectively integrates spatial information into the state space and the tensor core, substantially advancing the state adaptability and enhancing the expressiveness of the data compression. Extensive experiments demonstrate that TensorSSM achieves significantly high reconstruction accuracy and storage efficiency, exhibiting robust expressiveness across diverse tensor datasets without relying on strict spatial assumptions."
+        }
+      ]
+    },
+    {
+      "material_id": "mat-c35118081c1369f460cb4c41adbc185a",
+      "work_id": "arxiv:2610.40893",
+      "version_id": "arxiv:2610.40893:v1:metadata-018e69b4ec3841a0",
+      "content_hash": "sha256:414ac88806e4b45570d09c15a7ee140b1686b4ee8e72445d2b041c21d6787fc3",
+      "source_hash": "sha256:1122e718e19513fe95c3c094c5f12f18ff207bac442405d2fcc7098cfe8b54e2",
+      "scope": "abstract",
+      "parser_revision": "workspace-plain-text-v1",
+      "complete": true,
+      "quality": "text_extracted",
+      "offset_basis": "page-local Unicode code points; end exclusive",
+      "page_count": null,
+      "page_numbers": null,
+      "warnings": [],
+      "spans": [
+        {
+          "span_id": "span-163cc35fb95515cc133e7405c86ba94a",
+          "work_id": "arxiv:2610.40893",
+          "version_id": "arxiv:2610.40893:v1:metadata-018e69b4ec3841a0",
+          "material_id": "mat-c35118081c1369f460cb4c41adbc185a",
+          "source_hash": "sha256:1122e718e19513fe95c3c094c5f12f18ff207bac442405d2fcc7098cfe8b54e2",
+          "scope": "abstract",
+          "parser_revision": "workspace-plain-text-v1",
+          "page": null,
+          "section": "abstract",
+          "start": 0,
+          "end": 1910,
+          "text": "Fairness benchmarks for large language models (LLMs) are overwhelmingly English-born and American in their social categories; translated versions carry those categories into societies where they do not apply, and almost none fix their hypotheses before the models are run. We present Qistas (Arabic qistas, \"the just balance\"), a protocol for evaluating how LLMs treat the social, confessional, and regional constituencies of a society, portable across countries and instantiated first for Iraq. In its pilot form it measures only what needs no verdict on contested truth: procedural symmetry across matched counterfactual pairs, differential refusal, stereotype reliance under ambiguity, and terminological framing of documented events. Every measurement is paired by construction and analysed with paired machinery (sign-flip permutation tests, exact McNemar tests, template-clustered bootstrap intervals, Holm-corrected families), with a power analysis that states, before any data exist, the smallest effect each axis can detect after the design effect of template clustering. We release the authoring apparatus (a pruned 3x5 taxonomy with four cells closed by design, per-type checklists, a cumulative rulings log, a structural audit, and a human review notebook) and report its first field test: a semantic review of a 58-item seed bank in which 24 of 25 template groups failed at least one check. The defect patterns it exposed (evaluation criteria leaking into prompts, token-level swaps that break Arabic agreement, epistemically unbalanced pairs, single-theme refusal probes, unwritten dialect twins counted as coverage) are, we argue, general hazards of counterfactual fairness benchmarks. This is a protocol paper, not a results paper: no model has been evaluated, and the accompanying pre-registration commits the hypotheses, metrics, exclusion rules, and analysis plan that the pilot will follow."
+        }
+      ]
+    },
+    {
+      "material_id": "mat-f215cad7235629deacb40965a6cc68c5",
+      "work_id": "arxiv:2610.40758",
+      "version_id": "arxiv:2610.40758:v1:metadata-96148d2d4e4a4093",
+      "content_hash": "sha256:e3b6a9577f0b9013abd4611be8207f78b6d1e1175dc6ed7e7cef2c82e1aca481",
+      "source_hash": "sha256:cd9e14f99e31776e9ccf7e02900f0e8ef3f79b98abff32889ab815dc1254c5d8",
+      "scope": "abstract",
+      "parser_revision": "workspace-plain-text-v1",
+      "complete": true,
+      "quality": "text_extracted",
+      "offset_basis": "page-local Unicode code points; end exclusive",
+      "page_count": null,
+      "page_numbers": null,
+      "warnings": [],
+      "spans": [
+        {
+          "span_id": "span-3796f5b460ad2a613da39b1c12a2630d",
+          "work_id": "arxiv:2610.40758",
+          "version_id": "arxiv:2610.40758:v1:metadata-96148d2d4e4a4093",
+          "material_id": "mat-f215cad7235629deacb40965a6cc68c5",
+          "source_hash": "sha256:cd9e14f99e31776e9ccf7e02900f0e8ef3f79b98abff32889ab815dc1254c5d8",
+          "scope": "abstract",
+          "parser_revision": "workspace-plain-text-v1",
+          "page": null,
+          "section": "abstract",
+          "start": 0,
+          "end": 1863,
+          "text": "Self-evolving agents rewrite a persistent state from feedback, but it is largely untested whether this lets them learn a rule nobody told them. An agent can also pass by writing down each correction as an exception, and its list then grows with every new rule. We introduce CLR-Bench, a Curriculum of Latent Rules benchmark. Each chain adds one hidden rule per level on top of the earlier ones. A rule acts on an opaque label that stands for a named grouping published on the Web, such as the founding members of an airline alliance. The task gives one example value, practice feedback reveals one more member and one non-member, and the test checks unseen members and similar non-members. Probes certify that the base model knows the members of each grouping and does not guess it without feedback, and that the evidence identifies the grouping once labels are read as named groupings. An automated pipeline builds chains from a new data domain, and we release 20 chains over 10 domains. We evaluate six recent self-evolution methods. With the certifying model they barely learn. The best gain at most 5 points over a frozen agent and exclude only 6-12% of the unseen members from the count, fewer than the 20% reached by simply keeping the raw practice history. A fixed lesson that states the named-grouping convention lifts the same methods by 14.5 to 16.5 points. Their states hold the revealed member in 75-98% of cases and almost never the class name, and when practice exposes a member the list misses, they add that member to the list. With the stronger GPT-6-Sol, ACE and Dynamic Cheatsheet learn from feedback alone. They reach 78% accuracy and solve 59-60% of the single cells, against 53% and 8% with the certifying model, and they surpass the raw history. CLR-Bench therefore measures how well an agent learns, and this ability differs across models."
+        }
+      ]
+    }
+  ],
+  "exact_initial_request_context": {
+    "capacity_policy": {
+      "assistance_revision": "workspace-assistance-keyed-v16",
+      "checker_revision": "workspace-assistance-keyed-checks-v16",
+      "citations_by_mode": {
+        "learn": 3,
+        "research": 6
+      },
+      "claims_by_mode": {
+        "learn": 8,
+        "research": 12
+      },
+      "compact_checker_utf8_bytes": 262144,
+      "deadlines": {
+        "check_seconds": 240,
+        "count_seconds": 60,
+        "draft_seconds": 120,
+        "origin": "durable_reservation_created_at",
+        "recheck_seconds": 240,
+        "repair_seconds": 120,
+        "revision": "d5-operation-deadlines-v2-capacity",
+        "workflow_seconds": 1200
+      },
+      "http_body_bytes": 4194304,
+      "internal_json_bytes": 8388608,
+      "keyed_prose_finding_capacity": {
+        "aggregate_findings_limit": null,
+        "compact_checker_utf8_bytes": 262144,
+        "normalized_checker_utf8_bytes": 1048576,
+        "per_location_findings_limit": null,
+        "revision": "workspace-assistance-keyed-finding-capacity-v16"
+      },
+      "max_citations_per_claim": 6,
+      "max_claim_characters": 10000,
+      "max_follow_up_intents": 3,
+      "max_materials": 3,
+      "max_messages_per_workflow": 4,
+      "max_procedural_gaps": 3,
+      "max_repairs": 1,
+      "max_requested_parts": 8,
+      "max_selected_evidence_utf8_bytes": 131072,
+      "max_selected_units": 12,
+      "max_unit_characters": 1600,
+      "normalization_revision": "workspace-assistance-keyed-normalization-v16",
+      "normalized_checker_utf8_bytes": 1048576,
+      "operation_routes": {
+        "check_recheck_probe": {
+          "effort": "high",
+          "input_tokens": 40000,
+          "model": "claude-opus-5-5",
+          "output_tokens": 12000,
+          "prices": {
+            "input": "4",
+            "output": "20",
+            "verified_at": "2026-11-14"
+          },
+          "thinking": {
+            "type": "adaptive"
+          }
+        },
+        "draft_repair": {
+          "effort": "medium",
+          "input_tokens": 40000,
+          "model": "claude-sonnet-5-5",
+          "output_tokens": 8000,
+          "prices": {
+            "input": "2",
+            "output": "10",
+            "verified_at": "2026-11-14"
+          },
+          "thinking": {
+            "type": "between_tools"
+          }
+        },
+        "revision": "d5-sonnet-opus-high-capacity-v3"
+      },
+      "paired_input_tokens_fit": 32000,
+      "raw_draft_utf8_bytes": 131072,
+      "reservation_input_tokens": 40000,
+      "revision": "d5-comprehensive-capacity-v15",
+      "sealed_input_json_bytes": 8388608,
+      "soft_claim_characters": 500,
+      "soft_reason_characters": 240
+    },
+    "checker_wire_rule": "Support-only blinded diagnostic. Return the fixed revision, checks for every exact opaque probe key, prose_review and every required prose_findings location key. Each check has a support decision and reason. No workflow atomicity, qualification, coverage or priority fields exist here. IDs, input digests and prose field/index values are server-derived and must not be echoed. Do not answer the task or invent evidence.",
+    "claim_inputs": [
+      {
+        "claim_id": "pcb0546905ad1274ae4",
+        "input_digest": "sha256:93cba91c1a33fa841da6e5b3fa185eaeb96d98bd4609a491077c09e1d924ee78"
+      },
+      {
+        "claim_id": "p6abefc7e97d62b7bb2",
+        "input_digest": "sha256:c8f4a453fd014aaa601d072ab9d83236707b5e45e28cf9fb39d002d845692f1f"
+      },
+      {
+        "claim_id": "pec3f5d4a92bbb1dd1d",
+        "input_digest": "sha256:a5740893cd4d3d8049f756a3f0df3a240ca7b640254cdbac69b85e4a37abda0e"
+      },
+      {
+        "claim_id": "p535b831e7b236ed6c4",
+        "input_digest": "sha256:d7158849520572783b24390b20a8963284a5b00e61ff60613b65a3d986f8b382"
+      },
+      {
+        "claim_id": "pa52f0600f0944ce3d6",
+        "input_digest": "sha256:bd404ab0d9e83b3dc40d7553d38faf1df1c3cc914e40360d390f096561a57a1c"
+      }
+    ],
+    "draft": {
+      "claims": [
+        {
+          "claim_id": "pcb0546905ad1274ae4",
+          "evidence": [
+            {
+              "end": 1910,
+              "material_id": "mat-c35118081c1369f460cb4c41adbc185a",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "The defect patterns it exposed (evaluation criteria leaking into prompts, token-level swaps that break Arabic agreement, epistemically unbalanced pairs, single-theme refusal probes, unwritten dialect twins counted as coverage) are, we argue, general hazards of counterfactual fairness benchmarks. This is a protocol paper, not a results paper: no model has been evaluated, and the accompanying pre-registration commits the hypotheses, metrics, exclusion rules, and analysis plan that the pilot will follow.",
+              "scope": "abstract",
+              "source_hash": "sha256:1122e718e19513fe95c3c094c5f12f18ff207bac442405d2fcc7098cfe8b54e2",
+              "span_id": "span-163cc35fb95515cc133e7405c86ba94a",
+              "start": 1404,
+              "version_id": "arxiv:2610.40893:v1:metadata-018e69b4ec3841a0",
+              "work_id": "arxiv:2610.40893"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "The selected fairness protocol abstract says its pre-registration commits the hypotheses, metrics, exclusion rules and analysis plan for a subsequent pilot."
+        },
+        {
+          "claim_id": "p6abefc7e97d62b7bb2",
+          "evidence": [
+            {
+              "end": 1863,
+              "material_id": "mat-f215cad7235629deacb40965a6cc68c5",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "With the stronger GPT-6-Sol, ACE and Dynamic Cheatsheet learn from feedback alone. They reach 78% accuracy and solve 59-60% of the single cells, against 53% and 8% with the certifying model, and they surpass the raw history. CLR-Bench therefore measures how well an agent learns, and this ability differs across models.",
+              "scope": "abstract",
+              "source_hash": "sha256:cd9e14f99e31776e9ccf7e02900f0e8ef3f79b98abff32889ab815dc1254c5d8",
+              "span_id": "span-3796f5b460ad2a613da39b1c12a2630d",
+              "start": 1544,
+              "version_id": "arxiv:2610.40758:v1:metadata-96148d2d4e4a4093",
+              "work_id": "arxiv:2610.40758"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "For the stronger GPT-6-Sol comparison, the selected CLR-Bench excerpt reports 53% accuracy against 78% with the certifying model."
+        },
+        {
+          "claim_id": "pec3f5d4a92bbb1dd1d",
+          "evidence": [
+            {
+              "end": 1910,
+              "material_id": "mat-c35118081c1369f460cb4c41adbc185a",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "The defect patterns it exposed (evaluation criteria leaking into prompts, token-level swaps that break Arabic agreement, epistemically unbalanced pairs, single-theme refusal probes, unwritten dialect twins counted as coverage) are, we argue, general hazards of counterfactual fairness benchmarks. This is a protocol paper, not a results paper: no model has been evaluated, and the accompanying pre-registration commits the hypotheses, metrics, exclusion rules, and analysis plan that the pilot will follow.",
+              "scope": "abstract",
+              "source_hash": "sha256:1122e718e19513fe95c3c094c5f12f18ff207bac442405d2fcc7098cfe8b54e2",
+              "span_id": "span-163cc35fb95515cc133e7405c86ba94a",
+              "start": 1404,
+              "version_id": "arxiv:2610.40893:v1:metadata-018e69b4ec3841a0",
+              "work_id": "arxiv:2610.40893"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "The selected fairness-benchmark abstract reports completed model evaluations and measured fairness results."
+        },
+        {
+          "claim_id": "p535b831e7b236ed6c4",
+          "evidence": [
+            {
+              "end": 1866,
+              "material_id": "mat-48780ffb91b68f22cf607c5650336baf",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "This design effectively integrates spatial information into the state space and the tensor core, substantially advancing the state adaptability and enhancing the expressiveness of the data compression. Extensive experiments demonstrate that TensorSSM achieves significantly high reconstruction accuracy and storage efficiency, exhibiting robust expressiveness across diverse tensor datasets without relying on strict spatial assumptions.",
+              "scope": "abstract",
+              "source_hash": "sha256:0a0d6c2b721f9e82465d91ea96cec77e8245c6cccbe44e194b19a14db5f36be0",
+              "span_id": "span-19ad83096299f09c1ada7a49ddd9bce9",
+              "start": 1429,
+              "version_id": "arxiv:2610.40871:v1:metadata-0be4ee69b6741057",
+              "work_id": "arxiv:2610.40871"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "The selected TensorSSM abstract says its experiments require strict spatial assumptions."
+        },
+        {
+          "claim_id": "pa52f0600f0944ce3d6",
+          "evidence": [
+            {
+              "end": 1863,
+              "material_id": "mat-f215cad7235629deacb40965a6cc68c5",
+              "page": null,
+              "parser_revision": "workspace-plain-text-v1",
+              "quote": "With the stronger GPT-6-Sol, ACE and Dynamic Cheatsheet learn from feedback alone. They reach 78% accuracy and solve 59-60% of the single cells, against 53% and 8% with the certifying model, and they surpass the raw history. CLR-Bench therefore measures how well an agent learns, and this ability differs across models.",
+              "scope": "abstract",
+              "source_hash": "sha256:cd9e14f99e31776e9ccf7e02900f0e8ef3f79b98abff32889ab815dc1254c5d8",
+              "span_id": "span-3796f5b460ad2a613da39b1c12a2630d",
+              "start": 1544,
+              "version_id": "arxiv:2610.40758:v1:metadata-96148d2d4e4a4093",
+              "work_id": "arxiv:2610.40758"
+            }
+          ],
+          "inference_label": null,
+          "kind": "factual",
+          "required_scope": "abstract",
+          "required_section": null,
+          "text": "In the selected CLR-Bench excerpt, ACE and Dynamic Cheatsheet learn from feedback alone with the stronger GPT-6-Sol model."
+        }
+      ]
+    },
+    "identity_contract": "Return every exact named verdict key and the fixed revision from output_schema. Identities and digests are derived server-side from this exact current request. Never emit claim_id, part_id, input_digest, field or index inside verdict values.",
+    "operation": "probe",
+    "phase": "check",
+    "role": "checker",
+    "sealed_request": {
+      "private_context": false,
+      "provider_schema_compatibility_revision": "anthropic-structured-schema-compat-v1",
+      "schema_revision": "workspace-assistance-keyed-v16"
+    },
+    "unscored_prose": {}
+  },
+  "private_notes": false,
+  "private_reading_history": false,
+  "owner_approval_data": false,
+  "context_identity_basis": "Frozen material/version/hash/offset equality; bibliographic provenance and fresh acquisition are separate and unmeasured here.",
+  "human_qualification": false
+}

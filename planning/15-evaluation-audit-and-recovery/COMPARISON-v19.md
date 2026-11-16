@@ -121,3 +121,17 @@ all four original holds. A quarantine exception permits operational admission;
 it does not establish completion, billing, zero usage, cancellation or settlement.
 New uncertainty still stops dispatch. Everyday generation, recurrence and
 notifications remain disabled. No merge or deployment is part of this batch.
+
+## Frozen successor identity
+
+Application `b1bad909b112c246b678c0194325ae974e4284bf`;
+packet `00cc2c78e66fcc58c16a5afcf24db3c5177b6a8940ef2638c07a841edeacf48d`;
+proposal `7fa75947efdb091bc1038f95d7a3e37d7ebcc48eb37137e1a40a543e8aa318b9`.
+See the [prospective package](evidence/comparison-v19/HANDOFF-v2.md) for the same
+frozen packet, executable offline replay, request index and one approval.
+
+The two development contexts contain retained ReAct v3/Self-RAG v1 PDF excerpts.
+The eight exposed controls retain the inherited 2610.* benchmark abstract
+snapshot and unchanged selections. Their bibliographic acquisition provenance
+was not newly verified. Hash/quote/version integrity, source acquisition quality,
+semantic support and human qualification are separate claims.

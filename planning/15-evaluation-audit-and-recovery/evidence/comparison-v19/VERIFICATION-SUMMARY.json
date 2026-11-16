@@ -1,0 +1,47 @@
+{
+  "application_commit": "b1bad909b112c246b678c0194325ae974e4284bf",
+  "packet_digest": "00cc2c78e66fcc58c16a5afcf24db3c5177b6a8940ef2638c07a841edeacf48d",
+  "pipeline": {
+    "tests": 24,
+    "mock_message_attempts": 58,
+    "mock_count_attempts": 58,
+    "completed_mock_messages": 54,
+    "uncertain_mock_messages": 4,
+    "states": {
+      "cancelled": 4,
+      "failed": 10,
+      "ready": 6,
+      "uncertain": 4
+    },
+    "source_receipt_sha256": "67499e375738d6f587dbef0322e0f4044df394695c2a4c27f3bcab6078a904e3",
+    "scope": "Production adapter/journal mechanics in isolated schemas with synthetic counts, usage and judgments; not model-quality or provider acceptance."
+  },
+  "full_frozen_campaign": {
+    "jobs": 14,
+    "mock_messages": 44,
+    "mock_paired_counts": 44,
+    "same_frozen_packet": true,
+    "repeat_dispatches": 0,
+    "proof_reference": "PROTECTED-REPLAY.json"
+  },
+  "reader": {
+    "warm_journeys_passed": 8,
+    "warm_journeys_total": 8,
+    "retained_cold_passed": 7,
+    "retained_cold_failed": 1,
+    "cold_failure": "30-second learning-thread wait during cold Next.js Fast Refresh navigation; preserved, not hidden by warm rerun.",
+    "broad_browser_history_gate_closed": false,
+    "warm_receipt_sha256": "d11be9620a4f4266c8515617129441142c0a1a38e049f7639c43921b539e6df8",
+    "cold_receipt_sha256": "6778d1f3ed5ab3117e742caefb7694f6235d9e4b67121528b5835ae7b8cb32f2",
+    "source_identity_receipt_sha256": "330541c30b63b6c5f78beb756e8a45a51f6f57a5987be65750a2096390a8d8f5",
+    "final_read_only_receipt_sha256": "83ec8ec508a51e03b1f2928e8b2ca6c47676760515f2a33c8c48193db671fadc",
+    "restart_receipt_sha256": "4e49933fd376538dd582aeaaa02e18501a467c72bed69a1cd843206ac75712dd",
+    "sources": "Retained ReAct/SelfRAG PDF copies; UI outputs and judgments synthetic."
+  },
+  "human_labels": null,
+  "human_qualification": false,
+  "real_provider_contacts": 0,
+  "real_count_contacts": 0,
+  "actual_new_provider_spend_usd": "0",
+  "ci_conclusion": "Pending separate final application/publication verification; no exact-head green claim."
+}

@@ -1,0 +1,318 @@
+{
+  "case_id": "campaign-eval-research-retrieval",
+  "cohort": "evaluation_exposed_corpus",
+  "question": "Compare selected retrieval and RAG methods only on compatible evaluation evidence. State unavailable common tasks, baselines, relevance judgments and counterevidence.",
+  "mode": "research",
+  "selected_units": {
+    "u1aab0740f44dab2c5010": {
+      "material_id": "mat-a722330404855072b6b7fb9b13004998",
+      "span_id": "span-6e05d19768ccb5f09cbbbbd979e4bd9e",
+      "work_id": "arxiv:2610.40966",
+      "version_id": "arxiv:2610.40966:v1:metadata-55c0a56c8750035c",
+      "source_hash": "sha256:001a0cb486d1e1a1081cc92155eb757b894e9d7b1633615d5b311dff7ce64cc3",
+      "scope": "abstract",
+      "parser_revision": "workspace-plain-text-v1",
+      "page": null,
+      "start": 0,
+      "end": 1545,
+      "quote": "Conversational RAG benchmarks such as MTRAG and RETECO evaluate retrieval and generation end to end: each system answers from its own retrieval, so abstention must be scored against whether each retrieved context is sufficient. A convenient shortcut reads sufficiency off the relevance judgments and treats a context without gold documents as unanswerable. We re-run the official baselines exactly and test this shortcut on RECOR (RETECO track~2) with four retrievers (nDCG@10 from .18 to .59) and three Qwen3 readers. Two open LLM judges and a panel of four small open models label each context by content, and a model of another family audits 250 contexts blind, with adjudication. The stronger the retriever, the larger the share of no-gold contexts that still contain the answer (28\\% to 72\\%) and the lower the shortcut's precision (.68 to .10; .70 to .21 under the audit). A reader agrees: Qwen3-4B answers 62--67\\% of these false misses correctly, against 23--30\\% of no-gold contexts judged insufficient and 1\\% with no documents. In most false misses, the answer comes from a hard negative mined for the same question, another turn's gold or a neighbouring chunk of the gold page. On MTRAG, whose judgments come from annotators, precision drops from .72 to .50. Under the shortcut, answerability AUROC is up to .19 too low, and the best sufficiency detector appears to be a retrieval score that never reads the documents. We release code, runs and labels, and recommend scoring refusals against content labels, not the presence of gold."
+    },
+    "u51eb3c267dcf8b28d986": {
+      "material_id": "mat-87a598790424ed922764c982f309a43e",
+      "span_id": "span-a723f9817c67d15fe33feda2cb02ed38",
+      "work_id": "arxiv:2610.41012",
+      "version_id": "arxiv:2610.41012:v1:metadata-f20dbad8ce03c4ef",
+      "source_hash": "sha256:76a7c11f2545f3f8f1417e82969b14825103c6058d7d730c1e4dda44ebd82e8e",
+      "scope": "abstract",
+      "parser_revision": "workspace-plain-text-v1",
+      "page": null,
+      "start": 0,
+      "end": 1118,
+      "quote": "Retrieval-augmented generation (RAG) can expose language models to misleading evidence in retrieved documents. We investigate whether increasing the number of mutually agreeing poisoned documents affects a model's ability to detect misinformation. We evaluate 200 randomly selected questions from SciFact (random seed 38), comparing contexts with one poisoned and six healthy documents against contexts with six mutually agreeing poisoned documents and one healthy document. For Gemma-3-12b, poison-detection rates decrease from 25% (50/200) in the minority condition to 10% (20/200) in the majority condition. Among the 38 questions with different outcomes across conditions, 34 change from detected to undetected, while only four change in the opposite direction (exact McNemar test, p = 6.04e-7). This pattern is consistent with a conformity-like response to a majority of mutually agreeing poisoned documents. Our results provide initial evidence of conformity bias in RAG-based misinformation detection: Gemma-3-12b is substantially less likely to detect poisoned claims when they dominate the retrieved evidence."
+    }
+  },
+  "selected_sources": [
+    {
+      "material_id": "mat-87a598790424ed922764c982f309a43e",
+      "work_id": "arxiv:2610.41012",
+      "version_id": "arxiv:2610.41012:v1:metadata-f20dbad8ce03c4ef",
+      "content_hash": "sha256:7f85a61591d177e7699d850ba947e51caf4cdd0faa9d37a4d237d692d040c112",
+      "source_hash": "sha256:76a7c11f2545f3f8f1417e82969b14825103c6058d7d730c1e4dda44ebd82e8e",
+      "scope": "abstract",
+      "parser_revision": "workspace-plain-text-v1",
+      "complete": true,
+      "quality": "text_extracted",
+      "offset_basis": "page-local Unicode code points; end exclusive",
+      "page_count": null,
+      "page_numbers": null,
+      "warnings": [],
+      "spans": [
+        {
+          "span_id": "span-a723f9817c67d15fe33feda2cb02ed38",
+          "work_id": "arxiv:2610.41012",
+          "version_id": "arxiv:2610.41012:v1:metadata-f20dbad8ce03c4ef",
+          "material_id": "mat-87a598790424ed922764c982f309a43e",
+          "source_hash": "sha256:76a7c11f2545f3f8f1417e82969b14825103c6058d7d730c1e4dda44ebd82e8e",
+          "scope": "abstract",
+          "parser_revision": "workspace-plain-text-v1",
+          "page": null,
+          "section": "abstract",
+          "start": 0,
+          "end": 1118,
+          "text": "Retrieval-augmented generation (RAG) can expose language models to misleading evidence in retrieved documents. We investigate whether increasing the number of mutually agreeing poisoned documents affects a model's ability to detect misinformation. We evaluate 200 randomly selected questions from SciFact (random seed 38), comparing contexts with one poisoned and six healthy documents against contexts with six mutually agreeing poisoned documents and one healthy document. For Gemma-3-12b, poison-detection rates decrease from 25% (50/200) in the minority condition to 10% (20/200) in the majority condition. Among the 38 questions with different outcomes across conditions, 34 change from detected to undetected, while only four change in the opposite direction (exact McNemar test, p = 6.04e-7). This pattern is consistent with a conformity-like response to a majority of mutually agreeing poisoned documents. Our results provide initial evidence of conformity bias in RAG-based misinformation detection: Gemma-3-12b is substantially less likely to detect poisoned claims when they dominate the retrieved evidence."
+        }
+      ]
+    },
+    {
+      "material_id": "mat-a722330404855072b6b7fb9b13004998",
+      "work_id": "arxiv:2610.40966",
+      "version_id": "arxiv:2610.40966:v1:metadata-55c0a56c8750035c",
+      "content_hash": "sha256:b929d3b9734f6365c048fe572adf30c3c13dd66b61f742e2086cd6ca04ccad27",
+      "source_hash": "sha256:001a0cb486d1e1a1081cc92155eb757b894e9d7b1633615d5b311dff7ce64cc3",
+      "scope": "abstract",
+      "parser_revision": "workspace-plain-text-v1",
+      "complete": true,
+      "quality": "text_extracted",
+      "offset_basis": "page-local Unicode code points; end exclusive",
+      "page_count": null,
+      "page_numbers": null,
+      "warnings": [],
+      "spans": [
+        {
+          "span_id": "span-6e05d19768ccb5f09cbbbbd979e4bd9e",
+          "work_id": "arxiv:2610.40966",
+          "version_id": "arxiv:2610.40966:v1:metadata-55c0a56c8750035c",
+          "material_id": "mat-a722330404855072b6b7fb9b13004998",
+          "source_hash": "sha256:001a0cb486d1e1a1081cc92155eb757b894e9d7b1633615d5b311dff7ce64cc3",
+          "scope": "abstract",
+          "parser_revision": "workspace-plain-text-v1",
+          "page": null,
+          "section": "abstract",
+          "start": 0,
+          "end": 1545,
+          "text": "Conversational RAG benchmarks such as MTRAG and RETECO evaluate retrieval and generation end to end: each system answers from its own retrieval, so abstention must be scored against whether each retrieved context is sufficient. A convenient shortcut reads sufficiency off the relevance judgments and treats a context without gold documents as unanswerable. We re-run the official baselines exactly and test this shortcut on RECOR (RETECO track~2) with four retrievers (nDCG@10 from .18 to .59) and three Qwen3 readers. Two open LLM judges and a panel of four small open models label each context by content, and a model of another family audits 250 contexts blind, with adjudication. The stronger the retriever, the larger the share of no-gold contexts that still contain the answer (28\\% to 72\\%) and the lower the shortcut's precision (.68 to .10; .70 to .21 under the audit). A reader agrees: Qwen3-4B answers 62--67\\% of these false misses correctly, against 23--30\\% of no-gold contexts judged insufficient and 1\\% with no documents. In most false misses, the answer comes from a hard negative mined for the same question, another turn's gold or a neighbouring chunk of the gold page. On MTRAG, whose judgments come from annotators, precision drops from .72 to .50. Under the shortcut, answerability AUROC is up to .19 too low, and the best sufficiency detector appears to be a retrieval score that never reads the documents. We release code, runs and labels, and recommend scoring refusals against content labels, not the presence of gold."
+        }
+      ]
+    }
+  ],
+  "exact_initial_request_context": {
+    "capacity_policy": {
+      "assistance_revision": "workspace-assistance-keyed-v16",
+      "checker_revision": "workspace-assistance-consistency-checks-v18",
+      "citations_by_mode": {
+        "learn": 3,
+        "research": 6
+      },
+      "claims_by_mode": {
+        "learn": 8,
+        "research": 12
+      },
+      "compact_checker_utf8_bytes": 262144,
+      "deadlines": {
+        "check_seconds": 240,
+        "count_seconds": 60,
+        "draft_seconds": 120,
+        "origin": "durable_reservation_created_at",
+        "recheck_seconds": 240,
+        "repair_seconds": 120,
+        "revision": "d5-operation-deadlines-v2-capacity",
+        "workflow_seconds": 1200
+      },
+      "http_body_bytes": 4194304,
+      "internal_json_bytes": 8388608,
+      "keyed_prose_finding_capacity": {
+        "aggregate_findings_limit": null,
+        "compact_checker_utf8_bytes": 262144,
+        "normalized_checker_utf8_bytes": 1048576,
+        "per_location_findings_limit": null,
+        "revision": "workspace-assistance-keyed-finding-capacity-v16"
+      },
+      "max_citations_per_claim": 6,
+      "max_claim_characters": 10000,
+      "max_follow_up_intents": 3,
+      "max_materials": 3,
+      "max_messages_per_workflow": 4,
+      "max_procedural_gaps": 3,
+      "max_repairs": 1,
+      "max_requested_parts": 8,
+      "max_selected_evidence_utf8_bytes": 131072,
+      "max_selected_units": 12,
+      "max_unit_characters": 1600,
+      "normalization_revision": "workspace-assistance-consistency-normalization-v18",
+      "normalized_checker_utf8_bytes": 1048576,
+      "operation_routes": {
+        "check_recheck_probe": {
+          "effort": "high",
+          "input_tokens": 40000,
+          "model": "claude-opus-5-5",
+          "output_tokens": 12000,
+          "prices": {
+            "input": "4",
+            "output": "20",
+            "verified_at": "2026-11-14"
+          },
+          "thinking": {
+            "type": "adaptive"
+          }
+        },
+        "draft_repair": {
+          "effort": "medium",
+          "input_tokens": 40000,
+          "model": "claude-sonnet-5-5",
+          "output_tokens": 8000,
+          "prices": {
+            "input": "2",
+            "output": "10",
+            "verified_at": "2026-11-14"
+          },
+          "thinking": {
+            "type": "between_tools"
+          }
+        },
+        "revision": "d5-sonnet-opus-high-capacity-v3"
+      },
+      "paired_input_tokens_fit": 32000,
+      "raw_draft_utf8_bytes": 131072,
+      "reservation_input_tokens": 40000,
+      "revision": "d5-comprehensive-capacity-v15",
+      "sealed_input_json_bytes": 8388608,
+      "soft_claim_characters": 500,
+      "soft_reason_characters": 240
+    },
+    "comparison_contract": "Coverage is the single authoritative mapping. Do not emit comparison_claims or comparison_basis. An answer reference for a comparison must be an actual comparative finding with separately cited evidence handles from all necessary sources. Qualitative method contrasts require supported method descriptions, not necessarily common benchmarks. Empirical performance conclusions require compatible evaluation tasks, comparators, metric definitions and conditions. Source notes stay context if the requested comparison is unanswered; partial retains every gap and earns no full answer credit. Support, atomicity, qualifications and actual request relevance are checked independently.",
+    "coverage_wire_rule": "Coverage alone maps sealed requested parts to emitted answer/context claim IDs. No claims.part_ids, missing/orphan/duplicate/overlapping references. Full abstention omits claims and ALL claim references. A comparison answer needs independently cited source bases; comparison-only notes leave the requested comparison unanswered.",
+    "identity_contract": "Emit only actual claims in order. Server assigns c1,c2 and later positions. Coverage is the only answer/context mapping: exactly each required named part, all genuine gap reasons. Questions distinguish context_claim_ids (topic links, no factual premise) from premise_claim_ids (investigate_claim only, independently checked). The structural answer tag grants no full-answer credit.",
+    "phase": "draft",
+    "procedural_rendering": {
+      "abstention": {
+        "application_context_required": "I cannot assess the requested application without further context and evidence.",
+        "comparison_evidence_required": "I cannot establish the requested comparison from the selected evidence.",
+        "insufficient_selected_evidence": "I cannot establish the requested conclusion from the selected evidence."
+      },
+      "actions": {
+        "inspect_evaluation": "Inspect evaluation methods, baselines and uncertainty before drawing conclusions.",
+        "inspect_methods": "Inspect the original methods and implementation details.",
+        "inspect_scope": "Check source scope and applicability before proposing an experiment.",
+        "request_context": "Request the missing source material or application context.",
+        "seek_counterevidence": "Seek evidence that could challenge the cited claims."
+      },
+      "questions": {
+        "application_scope": "Does the selected evidence establish applicability to the proposed setting?",
+        "counterevidence": "What evidence could challenge the cited claims?",
+        "implementation": "What further evidence would be needed to implement or reproduce the method?",
+        "investigate_claim": "What evidence supports or limits the referenced claim?",
+        "measured_and_proposed": "Which claims report measured results, and what applications, if any, does the excerpt propose?",
+        "methods": "What methods, if any, does the selected evidence describe?",
+        "qualifications": "What assumptions or qualifications, if any, apply to the cited claims?"
+      },
+      "rule": "Neutral intents may have context_claim_ids but no premise_claim_ids. investigate_claim requires nonempty premise_claim_ids; never introduce an assertion outside the scored claims."
+    },
+    "request_quality_rule": "At most 12 atomic claims in research mode; about 500 characters per claim and 240 per explanation are SOFT targets only. Preserve qualifications rather than shortening into misleading claims. Record every requested part exactly once as answered, partial, lacks_evidence or omitted. Available but unreported information is omitted. Context notes do not answer a comparison. All semantic quality and factual prose remain reviewed. Partial requires useful answer refs AND genuine remaining gaps; answered requires no remaining gap. Context alone never earns answer credit.",
+    "role": "workflow",
+    "sealed_request": {
+      "assistance": {
+        "background": "",
+        "depth": "overview",
+        "direction": "overview",
+        "follow_up": "Compare selected retrieval and RAG methods only on compatible evaluation evidence. State unavailable common tasks, baselines, relevance judgments and counterevidence.",
+        "mode": "research"
+      },
+      "kind": "deep_dive",
+      "private_context": {
+        "notes": false,
+        "profile": false,
+        "reading_history": false
+      },
+      "project_context": {
+        "constraints": "No private notes/history, source expansion or everyday generation",
+        "id": "project-49cd1462b7ce3a5799886a55c3a0b9c0",
+        "question": "Compare selected retrieval and RAG methods only on compatible evaluation evidence. State unavailable common tasks, baselines, relevance judgments and counterevidence.",
+        "revision": 1,
+        "scope": "Frozen retained public sources only"
+      },
+      "provider_schema_compatibility_revision": "anthropic-structured-schema-compat-v1",
+      "schema_revision": "workspace-assistance-keyed-v16",
+      "settings": {
+        "effort": "medium",
+        "max_repairs": 1,
+        "structured_outputs": true,
+        "temperature": null,
+        "thinking": {
+          "type": "between_tools"
+        }
+      },
+      "task_policy": {
+        "allowed_dispositions": [
+          "full_abstention",
+          "answer",
+          "comparison_abstention"
+        ],
+        "application_context": {
+          "operating_envelope": "",
+          "safety_objectives": "",
+          "validation_evidence": "",
+          "vehicle_configuration": ""
+        },
+        "context_basis": "Explicitly supplied context, not verified source evidence",
+        "missing_context": [],
+        "mode": "research",
+        "parts_basis": "Explicit application/user parts, in priority order",
+        "requested_parts": [
+          {
+            "id": "p1",
+            "kind": "comparison",
+            "request": "Compare selected retrieval and RAG methods only on compatible evaluation evidence. State unavailable common tasks, baselines, relevance judgments and counterevidence."
+          },
+          {
+            "id": "p2",
+            "kind": "source_note",
+            "request": "State separately cited source facts and retain study scope, comparator, metric definition and conditions."
+          },
+          {
+            "id": "p3",
+            "kind": "answer",
+            "request": "Identify missing evidence or required details without inventing findings."
+          }
+        ],
+        "required_context": [],
+        "revision": "workspace-assistance-keyed-v16",
+        "selected_work_count": 2,
+        "task_intent": "comparison",
+        "wire_encoding_revision": "workspace-assistance-comparison-wire-v19"
+      },
+      "units": {
+        "u1aab0740f44dab2c5010": {
+          "end": 1545,
+          "material_id": "mat-a722330404855072b6b7fb9b13004998",
+          "page": null,
+          "parser_revision": "workspace-plain-text-v1",
+          "quote": "Conversational RAG benchmarks such as MTRAG and RETECO evaluate retrieval and generation end to end: each system answers from its own retrieval, so abstention must be scored against whether each retrieved context is sufficient. A convenient shortcut reads sufficiency off the relevance judgments and treats a context without gold documents as unanswerable. We re-run the official baselines exactly and test this shortcut on RECOR (RETECO track~2) with four retrievers (nDCG@10 from .18 to .59) and three Qwen3 readers. Two open LLM judges and a panel of four small open models label each context by content, and a model of another family audits 250 contexts blind, with adjudication. The stronger the retriever, the larger the share of no-gold contexts that still contain the answer (28\\% to 72\\%) and the lower the shortcut's precision (.68 to .10; .70 to .21 under the audit). A reader agrees: Qwen3-4B answers 62--67\\% of these false misses correctly, against 23--30\\% of no-gold contexts judged insufficient and 1\\% with no documents. In most false misses, the answer comes from a hard negative mined for the same question, another turn's gold or a neighbouring chunk of the gold page. On MTRAG, whose judgments come from annotators, precision drops from .72 to .50. Under the shortcut, answerability AUROC is up to .19 too low, and the best sufficiency detector appears to be a retrieval score that never reads the documents. We release code, runs and labels, and recommend scoring refusals against content labels, not the presence of gold.",
+          "scope": "abstract",
+          "source_hash": "sha256:001a0cb486d1e1a1081cc92155eb757b894e9d7b1633615d5b311dff7ce64cc3",
+          "span_id": "span-6e05d19768ccb5f09cbbbbd979e4bd9e",
+          "start": 0,
+          "version_id": "arxiv:2610.40966:v1:metadata-55c0a56c8750035c",
+          "work_id": "arxiv:2610.40966"
+        },
+        "u51eb3c267dcf8b28d986": {
+          "end": 1118,
+          "material_id": "mat-87a598790424ed922764c982f309a43e",
+          "page": null,
+          "parser_revision": "workspace-plain-text-v1",
+          "quote": "Retrieval-augmented generation (RAG) can expose language models to misleading evidence in retrieved documents. We investigate whether increasing the number of mutually agreeing poisoned documents affects a model's ability to detect misinformation. We evaluate 200 randomly selected questions from SciFact (random seed 38), comparing contexts with one poisoned and six healthy documents against contexts with six mutually agreeing poisoned documents and one healthy document. For Gemma-3-12b, poison-detection rates decrease from 25% (50/200) in the minority condition to 10% (20/200) in the majority condition. Among the 38 questions with different outcomes across conditions, 34 change from detected to undetected, while only four change in the opposite direction (exact McNemar test, p = 6.04e-7). This pattern is consistent with a conformity-like response to a majority of mutually agreeing poisoned documents. Our results provide initial evidence of conformity bias in RAG-based misinformation detection: Gemma-3-12b is substantially less likely to detect poisoned claims when they dominate the retrieved evidence.",
+          "scope": "abstract",
+          "source_hash": "sha256:76a7c11f2545f3f8f1417e82969b14825103c6058d7d730c1e4dda44ebd82e8e",
+          "span_id": "span-a723f9817c67d15fe33feda2cb02ed38",
+          "start": 0,
+          "version_id": "arxiv:2610.41012:v1:metadata-f20dbad8ce03c4ef",
+          "work_id": "arxiv:2610.41012"
+        }
+      }
+    }
+  },
+  "private_notes": false,
+  "private_reading_history": false,
+  "owner_approval_data": false,
+  "context_identity_basis": "Frozen material/version/hash/offset equality; bibliographic provenance and fresh acquisition are separate and unmeasured here.",
+  "human_qualification": false
+}

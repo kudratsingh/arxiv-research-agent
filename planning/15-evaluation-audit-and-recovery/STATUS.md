@@ -1,3 +1,82 @@
+# Current offline handoff — v19 comparison and complete-pipeline evaluation
+
+Application `b1bad909b112c246b678c0194325ae974e4284bf`; branch
+`codex/workspace-d5-comparison-v19`. Packet
+`00cc2c78e66fcc58c16a5afcf24db3c5177b6a8940ef2638c07a841edeacf48d`;
+proposal `7fa75947efdb091bc1038f95d7a3e37d7ebcc48eb37137e1a40a543e8aa318b9`;
+scope `d5-00cc2c78e66fcc58c16a5afc`.
+
+[One inactive consolidated approval](evidence/comparison-v19/APPROVAL-DECISION-v2.md),
+[exact requests and bindings](evidence/comparison-v19/IDENTITY.json),
+[runbook](evidence/comparison-v19/RUNBOOK.md) and
+[comparison design](COMPARISON-v19.md). No live authority is created by this kit.
+
+Coverage is the only model-authored comparison mapping. Source notes stay
+context when they do not answer the comparison. Actual comparative findings
+require their own separate selected source citations; identity is necessary,
+not semantic support. Qualitative method contrasts do not require common
+benchmarks. Performance conclusions require compatible evaluation evidence.
+Partial answers preserve all genuine gaps and receive no full-answer credit.
+Current-response checking, provenance, whole-claim support, atomicity,
+qualifications, question roles, prose and full application abstention remain.
+Invalid first drafts remain terminal; quality repair still requires a fresh
+complete recheck. Legacy schemas and original failures are unchanged.
+
+Prospective scope: **2 development workflows + 8 exposed evaluation controls +
+4 batches containing 20 balanced locked machine references**, at most
+14 jobs / 44 Messages / 44 exact paired counts / USD14 new protective caps.
+No standalone schema or maximum-checker diagnostic is repeated. Development
+contracts must complete before automatic evaluation/probe progression. A valid
+negative quality verdict remains failed content; it may permit unrelated cases
+to continue. Human qualification is out of scope and human labels stay blank.
+
+Read-only actual census: **46 jobs / 80 Messages / 105 counts / USD2.533843
+known estimate + USD2.275066 retained overlapping liability once / no active
+jobs**. All source, financial and authority rows match the original post-v18
+snapshot. The stopped v18 scope and all four historical holds remain intact.
+892 offline-v18 and 110 live-v18 evidence members were rehashed with no missing,
+changed, copied or deleted originals.
+
+The complete USD14 campaign + USD2 buffer + USD4.808909 prior exposure requires
+USD20.808909. The single proposal selects programme and qualification day/month
+ceilings of USD22; USD21 is a smaller whole-dollar alternative requiring a
+different sealed proposal. This adjustment is **not active**. Job/contact caps
+remain 64/160/200, concurrency one, expiry 2026-11-21T11:03:57Z. Campaign expiry
+would be at most 24 hours from the future observed approval and never beyond
+the programme expiry. No new migration is proposed.
+
+Required local verification is complete: 8378passed/54skipped/53E2Edeselected
+in3448.27s; 94.055266%project coverage,95%printed patch,all four
+package floors pass;10234contexts retained. Final133artifact/docs/hygiene,
+89contract/authority/harness,24pipeline,strict249-source mypy,Ruff,E2E53,
+simulation20/20USD0 and registry260/0 pass.
+[Exact local results and preserved failures](evidence/comparison-v19/FINAL-LOCAL-VERIFICATION.md).
+The first cancelled and second failed harness-marker gates remain archived;
+no assertion or floor was weakened. An optional formatter diagnostic is not
+green and is not an enforced repository gate. Hosted results are verified only
+on the exact publication head and recorded afterward in the permanent
+`arxiv-evidence/d5-comparison-v19-20261116/PUBLICATION.json` and final handoff.
+No hosted pass is inferred here from local results.
+
+Frontend source is unchanged. Local frontend coverage: 4298 passed, 9 skipped;
+typecheck/lint/build/budgets pass. Final-app Reader verification passed8/8 warmed
+desktop/mobile journeys plus exact API restart persistence; the original
+cold7/8FastRefresh failure, metadata/excerpt-label ambiguity and broader
+history limitation remain explicitly documented. Retained ReAct/Self-RAG PDF excerpts are distinct from simulated
+outputs and inherited 2610.* benchmark abstracts whose bibliographic
+acquisition provenance was not newly verified. These are exposed development
+controls, not fresh intake, human gold, or scientific qualification.
+
+No provider/count/key access, live grant, financial mutation, settlement,
+owner-database migration, cap/expiry activation, merge or deployment.
+Owner3137/review3178 and data remain untouched. Everyday generation,
+recurrence and notifications remain disabled. Original-agent LangGraph
+metric/source-ID/completion-status repairs remain a separate track.
+
+All checkpoints below are historical records, not dispatch authority.
+
+---
+
 # Current offline handoff — v18 consistency diagnostic
 
 Application `b125d0d84953b97d40de7463863c9f56cf2ee0af`; packet `fa06446ac6cb32e6a4bd0eca89d95b4198bf090d7e6fafdea82d5c434a988cd0`; proposal

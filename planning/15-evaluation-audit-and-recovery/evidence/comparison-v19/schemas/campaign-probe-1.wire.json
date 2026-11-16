@@ -1,0 +1,104 @@
+{
+  "$defs": {
+    "KeyedClaims_6bd686dd7400ed1c": {
+      "type": "object",
+      "title": "KeyedClaims_6bd686dd7400ed1c",
+      "properties": {
+        "p47e152c37928b63194": {
+          "$ref": "#/$defs/_SupportJudgment"
+        },
+        "pb21e6b9c746b3e9887": {
+          "$ref": "#/$defs/_SupportJudgment"
+        },
+        "p67993bf7fbbb3c13e3": {
+          "$ref": "#/$defs/_SupportJudgment"
+        },
+        "p65d23a5830d380eed8": {
+          "$ref": "#/$defs/_SupportJudgment"
+        },
+        "p516e97b12aba141558": {
+          "$ref": "#/$defs/_SupportJudgment"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "p47e152c37928b63194",
+        "pb21e6b9c746b3e9887",
+        "p67993bf7fbbb3c13e3",
+        "p65d23a5830d380eed8",
+        "p516e97b12aba141558"
+      ]
+    },
+    "KeyedProse_6bd686dd7400ed1c": {
+      "type": "object",
+      "title": "KeyedProse_6bd686dd7400ed1c",
+      "properties": {},
+      "additionalProperties": false
+    },
+    "SupportDecision": {
+      "type": "string",
+      "enum": [
+        "supported",
+        "unsupported",
+        "abstain"
+      ],
+      "title": "SupportDecision"
+    },
+    "_Revision": {
+      "type": "string",
+      "enum": [
+        "workspace-assistance-keyed-checks-v16"
+      ],
+      "title": "_Revision"
+    },
+    "_SupportJudgment": {
+      "type": "object",
+      "description": "Support judgment for this exact opaque probe; do not echo its binding.",
+      "title": "_SupportJudgment",
+      "properties": {
+        "reason": {
+          "type": "string",
+          "description": "Material evidence or unresolved issue; 240 characters is a soft target, not a hard limit. Never drop findings to fit.\n\n{minLength: 1}",
+          "title": "Reason"
+        },
+        "decision": {
+          "$ref": "#/$defs/SupportDecision"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "reason",
+        "decision"
+      ]
+    }
+  },
+  "type": "object",
+  "title": "KeyedChecks_6bd686dd7400ed1c",
+  "properties": {
+    "prose_review": {
+      "type": "string",
+      "enum": [
+        "procedural_only",
+        "unscored_factual_content",
+        "abstain"
+      ],
+      "title": "Prose Review"
+    },
+    "prose_findings": {
+      "$ref": "#/$defs/KeyedProse_6bd686dd7400ed1c"
+    },
+    "revision": {
+      "$ref": "#/$defs/_Revision"
+    },
+    "checks": {
+      "$ref": "#/$defs/KeyedClaims_6bd686dd7400ed1c"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "prose_review",
+    "prose_findings",
+    "revision",
+    "checks"
+  ]
+}

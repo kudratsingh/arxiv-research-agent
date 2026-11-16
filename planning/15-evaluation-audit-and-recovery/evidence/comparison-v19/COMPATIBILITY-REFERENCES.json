@@ -1,0 +1,13 @@
+{
+  "revision": "comparison-v19-historical-compatibility-references-v1",
+  "historical_v18_identity_reference": "../consistency-v18/IDENTITY.json",
+  "historical_v18_identity_file_sha256": "4d8b355958bc19ff4c66c8aaed279b210a075d65953627f4ae87f752c4af43ab",
+  "historical_v18_scope_binding": {
+    "scope_id": "compat-fa06446ac6cb32e6a4bd0eca",
+    "row_digest": "d484636d4c109efa582ee2d5546c497efe1348d82f4151f5a759d4b6cd03ab7b"
+  },
+  "role": "Historical v18 compatibility evidence only. It supplies no new v19 count, model-quality, token-fit or remote-compiler acceptance evidence.",
+  "new_count_reuse": false,
+  "new_provider_contacts": 0,
+  "new_count_contacts": 0
+}

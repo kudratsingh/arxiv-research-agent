@@ -1,0 +1,24 @@
+{
+  "application_commit": "b1bad909b112c246b678c0194325ae974e4284bf",
+  "basis": "Confirmed focused final-application Reader observations; not a frontend repair claim.",
+  "material_version_access_state": "metadata",
+  "api_reading_access_state": "excerpt",
+  "available_scopes": [
+    "excerpt"
+  ],
+  "retained_material_quality": "partial",
+  "retained_material_complete": false,
+  "exact_bound_excerpt_and_citations_verified": true,
+  "sidebar_scope_label_ambiguous": true,
+  "full_source_scope_ui_repair_claimed": false,
+  "frontend_changed": false,
+  "preview_badges": {
+    "persistent_result_content": true,
+    "sticky_while_scrolled": false,
+    "initial_result_captures_verify_badges": true,
+    "row_crop_alone_proves_badge_visibility": false
+  },
+  "broader_browser_history_limitation_closed": false,
+  "cold_fast_refresh_failure_retained": true,
+  "human_judgments": null
+}
