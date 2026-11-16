@@ -33,7 +33,10 @@ NORMALIZATION_REVISION = "workspace-assistance-consistency-normalization-v18"
 
 
 def enabled(context: dict[str, Any]) -> bool:
-    return context.get("checker_normalization_revision") == NORMALIZATION_REVISION
+    return (
+        isinstance(context, dict)
+        and context.get("checker_normalization_revision") == NORMALIZATION_REVISION
+    )
 
 
 class PartReview(_Reason):

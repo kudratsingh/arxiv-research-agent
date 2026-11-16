@@ -41,7 +41,7 @@ STATUS = ("answered", "partial", "lacks_evidence", "omitted")
 
 
 def enabled(policy: dict[str, Any] | None) -> bool:
-    return bool(policy and policy.get(KEY) == REVISION)
+    return isinstance(policy, dict) and policy.get(KEY) == REVISION
 
 
 def prior_policy(policy: dict[str, Any]) -> dict[str, Any]:

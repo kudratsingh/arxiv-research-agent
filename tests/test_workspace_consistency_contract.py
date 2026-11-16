@@ -529,3 +529,14 @@ def test_missing_current_bindings_and_unselected_or_wrong_version_evidence_remai
             codec.resolve_draft(
                 data, catalog, oldspec.materials(p), purpose=case["purpose"], policy=pol
             )
+
+
+@pytest.mark.parametrize("value", [None, [], 0, "not-a-context", {}])
+def test_version_selectors_leave_invalid_context_to_existing_validator(value):
+    assert checks.enabled(value) is False
+    assert codec.enabled(value) is False
+    expected = (
+        "keyed_context_inputs_required" if isinstance(value, dict) else "keyed_context_invalid"
+    )
+    with pytest.raises(ValueError, match=expected):
+        oldchecks.schemas(value)
