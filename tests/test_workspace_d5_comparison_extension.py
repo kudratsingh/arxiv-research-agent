@@ -9,6 +9,8 @@ import pytest
 from src.workspace import d5_campaign_v19_extension as extension
 from src.workspace.admission import AdmissionError, _digest
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.fixture
 def snapshot(monkeypatch):

@@ -202,3 +202,134 @@ def test_comparison_citations_keep_exact_material_version_quote_and_unicode_offs
     catalog[key] = replace(oldref, **changes[bad])
     with pytest.raises(ValueError):
         codec.resolve_draft(x, catalog, spec.materials(packet), purpose=case["purpose"], policy=pol)
+
+
+def test_explicitly_synthetic_matched_empirical_comparison_retains_all_conditions():
+    from dataclasses import asdict
+
+    from src.workspace.grounding import (
+        SupportCheck,
+        SupportDecision,
+        claim_input_digest,
+        evidence_ref,
+        validate_claims,
+    )
+    from src.workspace.material import extract_text
+
+    sources = tuple(
+        extract_text(
+            f"On synthetic task T, held-out split D has exactly 100 items. Under frozen settings C, method {name} correctly classifies {score} of the 100 items. Accuracy is correct items divided by 100.",
+            work_id=f"synthetic:matched-{name}",
+            version_id=f"synthetic:matched-{name}:v1",
+            scope="excerpt",
+        )
+        for name, score in [("A", 80), ("B", 75)]
+    )
+    refs = {f"synthetic-{i}": evidence_ref(m, m.spans[0]) for i, m in enumerate(sources)}
+    x, case, policy, _ = comparison()
+    body = x["response"]
+    body["claims"] = [
+        {
+            "text": "On synthetic task T and held-out split D of 100 items under settings C, method A correctly classifies 80/100 items (80% accuracy).",
+            "handles": ["synthetic-0"],
+            "required_scope": "excerpt",
+        },
+        {
+            "text": "On synthetic task T and held-out split D of 100 items under settings C, method B correctly classifies 75/100 items (75% accuracy).",
+            "handles": ["synthetic-1"],
+            "required_scope": "excerpt",
+        },
+        {
+            "text": "For synthetic task T, the same held-out split D of 100 items and settings C, the reported accuracy is 80% for method A versus 75% for method B.",
+            "handles": ["synthetic-0", "synthetic-1"],
+            "required_scope": "excerpt",
+        },
+    ]
+    body.update(background_claims=["c1", "c2"], assumption_claims=[], limitation_claims=[])
+    policy["requested_parts"] = [
+        {
+            "id": "p1",
+            "request": "Compare accuracy for the matched synthetic task, split, denominator and conditions.",
+            "kind": "comparison",
+        },
+        {
+            "id": "p2",
+            "request": "Give each separately cited synthetic source result.",
+            "kind": "source_note",
+        },
+        {
+            "id": "p3",
+            "request": "Retain the task, split, denominator and settings in the answer.",
+            "kind": "answer",
+        },
+    ]
+    body["coverage"] = {
+        "p1": {
+            "status": "answered",
+            "gap_reasons": ["none"],
+            "answer_claim_ids": ["c3"],
+            "context_claim_ids": ["c1", "c2"],
+        },
+        "p2": {
+            "status": "answered",
+            "gap_reasons": ["none"],
+            "answer_claim_ids": ["c1", "c2"],
+            "context_claim_ids": [],
+        },
+        "p3": {
+            "status": "answered",
+            "gap_reasons": ["none"],
+            "answer_claim_ids": ["c1", "c2"],
+            "context_claim_ids": ["c3"],
+        },
+    }
+    for schema in codec.schemas(list(refs), case["purpose"], policy).values():
+        Draft202012Validator(schema).validate(x)
+    draft, claims = codec.resolve_draft(x, refs, sources, purpose=case["purpose"], policy=policy)
+    assert list(draft.comparison_claims) == ["c3"]
+    assert all(len(c.evidence) == (2 if c.claim_id == "c3" else 1) for c in claims)
+    unjudged = validate_claims(claims, sources)
+    assert all(
+        not a.checked and a.decision == SupportDecision.ABSTAIN for a in unjudged.assessments
+    )
+    # Explicit test-oracle judgments exercise the gate; they are neither live
+    # checker observations nor independent human qualification.
+    judgments = tuple(
+        SupportCheck(
+            c.claim_id,
+            claim_input_digest(c, sources),
+            SupportDecision.SUPPORTED,
+            "synthetic-test-oracle",
+            "synthetic-v1",
+            "Synthetic matched-conditions control only",
+        )
+        for c in claims
+    )
+    assessed = validate_claims(claims, sources, judgments)
+    assert all(a.checked and a.decision == SupportDecision.SUPPORTED for a in assessed.assessments)
+    assert [r.quote for r in claims[2].evidence] == [s.spans[0].text for s in sources]
+    assert asdict(claims[2])["required_scope"] == "excerpt"
+
+
+def test_shared_evaluation_gap_is_specific_to_performance_and_keeps_qualitative_answers():
+    from src.workspace.assistance_coverage import GAP_TEXT
+
+    legacy_text = GAP_TEXT["common_evaluation"]
+    x, case, policy, _ = comparison("partial")
+    view = codec.render(x, list(case["units"]), case["purpose"], policy)
+    row = view["request_coverage"][0]
+    assert row["gap_reasons"] == ["common_evaluation", "protocol"]
+    assert row["gap_texts"] == [
+        "Request compatible evaluation tasks, comparators, metrics and conditions before drawing performance conclusions.",
+        GAP_TEXT["protocol"],
+    ]
+    assert row["answer_claim_ids"] == ["c5"]
+    assert view["request_outcome"]["full_answer_credit"] is False
+    assert GAP_TEXT["common_evaluation"] == legacy_text
+    # A supported qualitative contrast has no shared-benchmark requirement.
+    x, case, policy, packet = comparison()
+    draft, _ = resolve(x, case, policy, packet)
+    assert draft.comparison_claims == ("c5",)
+    assert codec.render(x, list(case["units"]), case["purpose"], policy)["request_coverage"][0][
+        "gap_reasons"
+    ] == ["none"]

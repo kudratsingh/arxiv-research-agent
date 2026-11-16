@@ -464,13 +464,17 @@ def render(
 ) -> dict[str, Any]:
     envelope, coverage = normalize(payload, handles, purpose, policy)
     draft = normalized_draft(envelope, purpose)
+    gap_text = {
+        **GAP_TEXT,
+        "common_evaluation": "Request compatible evaluation tasks, comparators, metrics and conditions before drawing performance conclusions.",
+    }
     rows = []
     for part in policy["requested_parts"]:
         row = coverage[part["id"]]
         texts = [
             f"Not answered within the {CLAIMS_BY_MODE[policy['mode']]}-claim budget."
             if g == "claim_budget"
-            else GAP_TEXT[g]
+            else gap_text[g]
             for g in row["gap_reasons"]
             if g != "none"
         ]
