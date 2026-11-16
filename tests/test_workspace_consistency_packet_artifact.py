@@ -1,7 +1,8 @@
-"""The published four-request packet is inactive and bound to exact current code."""
+"""Stopped v18 archive stays immutable; newer code must refuse its dispatch."""
 
 from __future__ import annotations
 
+import hashlib
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -10,7 +11,7 @@ import pytest
 from src.workspace import d5_compatibility as ctl
 from src.workspace import d5_compatibility_packet as previous
 from src.workspace import d5_consistency_packet as spec
-from src.workspace.admission import _digest
+from src.workspace.admission import AdmissionError, _digest
 from src.workspace.d5_benchmark import read
 
 pytestmark = [pytest.mark.unit, pytest.mark.contract]
@@ -20,8 +21,19 @@ ROOT = (
 )
 
 
-def test_frozen_four_request_artifacts_match_actual_code_schemas_and_operator():
+def test_stopped_four_request_artifacts_preserve_their_original_bindings(monkeypatch):
     packet = read(ROOT / "packet.json.gz")
+    # A successor cannot dispatch this historical packet on its new producer.
+    with pytest.raises(AdmissionError, match="consistency_code_SDK_or_limits_drift"):
+        spec.verify(packet)
+    manifest = read(ROOT / "PACKAGE-MANIFEST-v1.json")
+    for record in manifest["files"]:
+        path = ROOT / record["path"]
+        assert path.stat().st_size == record["bytes"]
+        assert hashlib.sha256(path.read_bytes()).hexdigest() == record["sha256"]
+    # Archive-only structural replay uses the recorded producer identity, not
+    # permission or a claim that the stopped packet matches today's runtime.
+    monkeypatch.setattr(previous, "producer", lambda: packet["code"])
     spec.verify(packet)
     identity = read(ROOT / "IDENTITY.json")
     proposal = read(ROOT / "PROPOSAL.json")

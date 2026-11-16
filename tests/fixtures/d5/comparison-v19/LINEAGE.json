@@ -1,0 +1,8 @@
+{
+  "kind": "Immutable original public-evidence response, historically rejected, never accepted or repaired",
+  "fixture_sha256": "2c66b2b9949028ea6498ec73aff3950b5fcf499f21f98279e4e95c4eaba52d8e",
+  "original_raw_response_sha256": "b62e28e37ec19c14833269f1195fa204055752fde5d8b190207a686d1d9d8f36",
+  "original_packet": "fa06446ac6cb32e6a4bd0eca89d95b4198bf090d7e6fafdea82d5c434a988cd0",
+  "original_application": "b125d0d84953b97d40de7463863c9f56cf2ee0af",
+  "synthetic_derivatives_get_provider_success_credit": false
+}

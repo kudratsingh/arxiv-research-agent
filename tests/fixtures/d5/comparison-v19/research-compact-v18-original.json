@@ -1,0 +1,123 @@
+{
+  "response": {
+    "gaps": [
+      "methods",
+      "evaluation",
+      "counterevidence"
+    ],
+    "claims": [
+      {
+        "text": "Self-RAG trains an arbitrary language model to generate fine-grained self-reflection and customizable inference, using reflection tokens from a critic model added to task examples offline, at far lower training cost than RLHF (per the excerpt of the Self-RAG related-work section).",
+        "handles": [
+          "u423a5ed5c10153d66367"
+        ],
+        "required_scope": "excerpt"
+      },
+      {
+        "text": "In Self-RAG, reflection tokens are used at inference to decide the need for retrieval and to self-evaluate generation quality, enabling controllable generation; this excerpt describes the method design and reports no benchmark results.",
+        "handles": [
+          "u423a5ed5c10153d66367"
+        ],
+        "required_scope": "excerpt"
+      },
+      {
+        "text": "The ReAct excerpt states that on two interactive decision making benchmarks (ALFWorld and WebShop), ReAct outperforms imitation and reinforcement learning methods by an absolute success rate of 34% and 10% respectively, while being prompted with only one or two in-context examples; the success-rate metric is as stated in the abstract excerpt and the full protocol is not shown.",
+        "handles": [
+          "uf800ed16cb52eb251690"
+        ],
+        "required_scope": "excerpt"
+      },
+      {
+        "text": "The ReAct excerpt motivates combining task-oriented actions with verbal reasoning by analogy to human cognition (e.g., tracking progress, handling exceptions, and recognizing when external information is needed); this is motivation, not evaluation evidence.",
+        "handles": [
+          "uf800ed16cb52eb251690"
+        ],
+        "required_scope": "excerpt"
+      }
+    ],
+    "coverage": {
+      "p1": {
+        "status": "partial",
+        "gap_reasons": [
+          "common_evaluation",
+          "protocol",
+          "metric_definition"
+        ],
+        "answer_claim_ids": [
+          "c1",
+          "c3"
+        ],
+        "context_claim_ids": [
+          "c2",
+          "c4"
+        ]
+      },
+      "p2": {
+        "status": "answered",
+        "gap_reasons": [
+          "none"
+        ],
+        "answer_claim_ids": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ],
+        "context_claim_ids": []
+      },
+      "p3": {
+        "status": "partial",
+        "gap_reasons": [
+          "common_evaluation",
+          "methods",
+          "data_splits",
+          "uncertainty_calibration"
+        ],
+        "answer_claim_ids": [
+          "c2",
+          "c3"
+        ],
+        "context_claim_ids": [
+          "c1",
+          "c4"
+        ]
+      }
+    },
+    "proposal": "inspect_evaluation",
+    "questions": [
+      {
+        "intent": "measured_and_proposed",
+        "context_claim_ids": [
+          "c1",
+          "c3"
+        ],
+        "premise_claim_ids": []
+      },
+      {
+        "intent": "methods",
+        "context_claim_ids": [
+          "c1",
+          "c2"
+        ],
+        "premise_claim_ids": []
+      },
+      {
+        "intent": "counterevidence",
+        "context_claim_ids": [
+          "c3"
+        ],
+        "premise_claim_ids": []
+      }
+    ],
+    "disposition": "answer",
+    "comparison_basis": [],
+    "assumption_claims": [],
+    "background_claims": [
+      "c4"
+    ],
+    "comparison_claims": [],
+    "limitation_claims": [
+      "c2"
+    ]
+  }
+}

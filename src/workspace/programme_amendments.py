@@ -219,6 +219,11 @@ def effective_limits(
     conn: Any, program_id: str, *, required_proposal_digest: str | None = None
 ) -> dict[str, Any]:
     """The default remains20, and all other programmes/caps stay unchanged."""
+    from src.workspace.d5_campaign_v19_extension import active as comparison_active
+
+    comparison = comparison_active(conn, program_id, required_proposal_digest)
+    if comparison is not None:
+        return dict(comparison[1]["limits"])
     from src.workspace.d5_campaign_v16_extension import active as keyed_active
 
     keyed = keyed_active(conn, program_id, required_proposal_digest)
@@ -226,6 +231,7 @@ def effective_limits(
         return dict(keyed[1]["limits"])
     from src.workspace.d5_campaign_v15_extension import active as capacity_active
     from src.workspace.qualification_budget import census
+
     prospective = capacity_active(conn, program_id, required_proposal_digest)
     if prospective is not None:
         return dict(prospective[1]["limits"])

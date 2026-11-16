@@ -49,11 +49,28 @@ def template(packet: dict[str, Any]) -> dict[str, Any]:
     if packet.get("revision") == "d5-complete-machine-campaign-v14":
         value["budget_adjustment_approved"] = False
     if packet.get("revision") == "d5-comprehensive-machine-campaign-v15":
-        value.update(budget_adjustment_approved=False, expiry_adjustment_approved=False,
-                     programme_expires_at=None, expires_at=None)
+        value.update(
+            budget_adjustment_approved=False,
+            expiry_adjustment_approved=False,
+            programme_expires_at=None,
+            expires_at=None,
+        )
     if packet.get("revision") == "d5-keyed-machine-campaign-v16":
         value.pop("capacity_amendment_approved")
-        value.update(programme_expires_at=packet["programme"]["programme_expires_at"], expires_at=None)
+        value.update(
+            programme_expires_at=packet["programme"]["programme_expires_at"], expires_at=None
+        )
+    if packet.get("revision") == "d5-comparison-machine-campaign-v19":
+        from src.workspace.d5_campaign_v19_extension import LIMITS, PERIOD_LIMITS
+
+        value.pop("capacity_amendment_approved")
+        value.update(
+            budget_adjustment_approved=False,
+            programme_limits=LIMITS,
+            period_limits=PERIOD_LIMITS,
+            programme_expires_at=packet["programme"]["programme_expires_at"],
+            expires_at=None,
+        )
     return value
 
 
@@ -88,14 +105,19 @@ def record(store: Any, packet: dict[str, Any], receipt: dict[str, Any]) -> dict[
         receipt.get("approved") is not True
         or not receipt.get("approved_by")
         or not receipt.get("approval_source")
-        or "capacity_amendment_approved" in expected and receipt.get("capacity_amendment_approved") is not True
+        or "capacity_amendment_approved" in expected
+        and receipt.get("capacity_amendment_approved") is not True
         or receipt.get("historical_uncertainty_exception_approved") is not True
         or "budget_adjustment_approved" in expected
         and receipt.get("budget_adjustment_approved") is not True
     ):
         raise AdmissionError("campaign_explicit_consolidated_owner_approval_required")
     check_storage(store, packet)
-    activated = activate(store, receipt)
+    activated = (
+        activate(store, receipt, packet=packet)
+        if packet.get("revision") == "d5-comparison-machine-campaign-v19"
+        else activate(store, receipt)
+    )
     # Capacity/quarantine alone grant no provider path. The existing exact-input
     # scope recorder below must also succeed. Repeating this exact receipt does
     # not renew it; partial activation remains fail-closed and inspectable.
@@ -134,7 +156,10 @@ def authorize_fixture(store: Any, packet: dict[str, Any]) -> dict[str, Any]:
         approved_at=now.isoformat(),
         approval_source="Offline fixture only",
         expires_at=min(
-            now + timedelta(hours=23), datetime.fromisoformat(packet["programme"]["expires_at"]) if packet.get("revision") != "d5-comprehensive-machine-campaign-v15" else now + timedelta(hours=23)
+            now + timedelta(hours=23),
+            datetime.fromisoformat(packet["programme"]["expires_at"])
+            if packet.get("revision") != "d5-comprehensive-machine-campaign-v15"
+            else now + timedelta(hours=23),
         ).isoformat(),
         authorization_kind="offline_fixture",
         transport_mode="mock",
@@ -144,10 +169,20 @@ def authorize_fixture(store: Any, packet: dict[str, Any]) -> dict[str, Any]:
     if "budget_adjustment_approved" in value:
         value["budget_adjustment_approved"] = True
     if packet.get("revision") == "d5-comprehensive-machine-campaign-v15":
-        value.update(expiry_adjustment_approved=True, programme_expires_at=(now + timedelta(days=7)).isoformat(), expires_at=(now + timedelta(hours=23)).isoformat())
-    if packet.get("revision") == "d5-keyed-machine-campaign-v16":
+        value.update(
+            expiry_adjustment_approved=True,
+            programme_expires_at=(now + timedelta(days=7)).isoformat(),
+            expires_at=(now + timedelta(hours=23)).isoformat(),
+        )
+    if packet.get("revision") in {
+        "d5-keyed-machine-campaign-v16",
+        "d5-comparison-machine-campaign-v19",
+    }:
         value.pop("capacity_amendment_approved", None)
-        value["expires_at"] = min(now + timedelta(hours=23), datetime.fromisoformat(packet["programme"]["programme_expires_at"])).isoformat()
+        value["expires_at"] = min(
+            now + timedelta(hours=23),
+            datetime.fromisoformat(packet["programme"]["programme_expires_at"]),
+        ).isoformat()
     return record(store, packet, value)
 
 
@@ -162,15 +197,20 @@ def revoke(store: Any, packet: dict[str, Any], authorization: dict[str, Any]) ->
     prospective = packet.get("revision") == "d5-complete-machine-campaign-v14"
     if prospective and authorization.get("scope_id") != "d5-" + packet["packet_digest"][:24]:
         raise AdmissionError("campaign_revocation_scope_binding_required")
-    capacity = packet.get("revision") in {"d5-comprehensive-machine-campaign-v15", "d5-keyed-machine-campaign-v16"}
+    capacity = packet.get("revision") in {
+        "d5-comprehensive-machine-campaign-v15",
+        "d5-keyed-machine-campaign-v16",
+        "d5-comparison-machine-campaign-v19",
+    }
     if capacity and authorization.get("scope_id") != "d5-" + packet["packet_digest"][:24]:
         raise AdmissionError("campaign_revocation_scope_binding_required")
     statement = (
         "INSERT INTO workspace_d5_keyed_continuation_revocations VALUES(%s,%s,clock_timestamp()) ON CONFLICT DO NOTHING"
-        if packet.get("revision") == "d5-keyed-machine-campaign-v16" else
-        "INSERT INTO workspace_d5_capacity_revision_revocations VALUES(%s,%s,clock_timestamp()) ON CONFLICT DO NOTHING"
-        if capacity else
-        "INSERT INTO workspace_d5_campaign_successor_revocations VALUES(%s,%s,clock_timestamp()) ON CONFLICT DO NOTHING"
+        if packet.get("revision")
+        in {"d5-keyed-machine-campaign-v16", "d5-comparison-machine-campaign-v19"}
+        else "INSERT INTO workspace_d5_capacity_revision_revocations VALUES(%s,%s,clock_timestamp()) ON CONFLICT DO NOTHING"
+        if capacity
+        else "INSERT INTO workspace_d5_campaign_successor_revocations VALUES(%s,%s,clock_timestamp()) ON CONFLICT DO NOTHING"
         if prospective
         else "INSERT INTO workspace_d5_campaign_revocations VALUES(%s,%s,clock_timestamp()) ON CONFLICT DO NOTHING"
     )

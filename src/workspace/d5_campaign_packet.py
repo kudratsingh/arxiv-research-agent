@@ -234,7 +234,37 @@ def plan_digest(packet: dict[str, Any]) -> str:
                 "adapter",
                 "source_bindings",
             )
-        } | ({"progression": packet["progression"], "checker_normalization_revision": packet["checker_normalization_revision"]} if packet.get("revision") in {"d5-complete-machine-campaign-v14", "d5-comprehensive-machine-campaign-v15", "d5-keyed-machine-campaign-v16"} else {}) | ({"capacity_policy": packet["capacity_policy"], "expiry_policy": packet["expiry_policy"]} if packet.get("revision") in {"d5-comprehensive-machine-campaign-v15", "d5-keyed-machine-campaign-v16"} else {}) | ({"checker_schema_template_revision": packet["checker_schema_template_revision"]} if packet.get("revision") == "d5-keyed-machine-campaign-v16" else {})
+        }
+        | (
+            {
+                "progression": packet["progression"],
+                "checker_normalization_revision": packet["checker_normalization_revision"],
+            }
+            if packet.get("revision")
+            in {
+                "d5-complete-machine-campaign-v14",
+                "d5-comprehensive-machine-campaign-v15",
+                "d5-keyed-machine-campaign-v16",
+                "d5-comparison-machine-campaign-v19",
+            }
+            else {}
+        )
+        | (
+            {"capacity_policy": packet["capacity_policy"], "expiry_policy": packet["expiry_policy"]}
+            if packet.get("revision")
+            in {
+                "d5-comprehensive-machine-campaign-v15",
+                "d5-keyed-machine-campaign-v16",
+                "d5-comparison-machine-campaign-v19",
+            }
+            else {}
+        )
+        | (
+            {"checker_schema_template_revision": packet["checker_schema_template_revision"]}
+            if packet.get("revision")
+            in {"d5-keyed-machine-campaign-v16", "d5-comparison-machine-campaign-v19"}
+            else {}
+        )
     )
 
 
@@ -537,12 +567,19 @@ def freeze(store: Any, snapshot: dict[str, Any]) -> dict[str, Any]:
 
 
 def verify_packet(p: dict[str, Any]) -> None:
+    if p.get("revision") == "d5-comparison-machine-campaign-v19":
+        from src.workspace.d5_campaign_v19_packet import verify_packet as verify_comparison
+
+        verify_comparison(p)
+        return
     if p.get("revision") == "d5-keyed-machine-campaign-v16":
         from src.workspace.d5_campaign_v16_packet import verify_packet as verify_keyed
+
         verify_keyed(p)
         return
     if p.get("revision") == "d5-comprehensive-machine-campaign-v15":
         from src.workspace.d5_campaign_v15_packet import verify_packet as verify_capacity
+
         verify_capacity(p)
         return
     if p.get("revision") == "d5-complete-machine-campaign-v14":
@@ -644,7 +681,7 @@ def compile_campaign(p: dict[str, Any]) -> dict[str, Any]:
 
     actor = owners(p)[0]
     scope = "d5-" + p["packet_digest"][:24]
-    compiled = {}
+    compiled: dict[str, Any] = {}
     for index, case in enumerate((*p["cases"], *p["probes"])):
         probe = index >= 10
         compiled[case["id"]] = {
@@ -665,6 +702,8 @@ def compile_campaign(p: dict[str, Any]) -> dict[str, Any]:
                 repair_located_prose=True,
             ).snapshot(),
         }
+        if p.get("revision") == "d5-comparison-machine-campaign-v19":
+            compiled[case["id"]]["input"]["settings"]["d5_campaign_revision"] = p["revision"]
     return compiled
 
 

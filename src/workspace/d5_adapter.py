@@ -114,16 +114,15 @@ def qualification_producer() -> dict[str, Any]:
         "workspace/d5_campaign_v16_extension.py",
         "workspace/d5_campaign_v16_packet.py",
         "workspace/migrations/021_d5_keyed_continuation.sql",
-        'workspace/d5_capacity_selection.py',
-        'workspace/d5_capacity_policy.py',
-        'workspace/d5_capacity_wire.py',
-        'workspace/assistance_capacity_contract.py',
-        'workspace/d5_capacity_outcomes.py',
-        'workspace/d5_campaign_v15_policy.py',
-        'workspace/d5_campaign_v15_extension.py',
-        'workspace/d5_campaign_v15_packet.py',
-        'workspace/migrations/020_d5_capacity_campaign.sql',
-
+        "workspace/d5_capacity_selection.py",
+        "workspace/d5_capacity_policy.py",
+        "workspace/d5_capacity_wire.py",
+        "workspace/assistance_capacity_contract.py",
+        "workspace/d5_capacity_outcomes.py",
+        "workspace/d5_campaign_v15_policy.py",
+        "workspace/d5_campaign_v15_extension.py",
+        "workspace/d5_campaign_v15_packet.py",
+        "workspace/migrations/020_d5_capacity_campaign.sql",
         "workspace/d5_coverage_policy.py",
         "workspace/d5_coverage_packet.py",
         "workspace/d5_coverage_shapes_packet.py",
@@ -204,12 +203,31 @@ _QUALIFICATION_LOADED = qualification_producer()
 _CONSISTENCY_LOADED = consistency_producer()
 
 
+def comparison_producer() -> dict[str, str]:
+    """Versioned successor dependencies never enlarge historical request metadata."""
+    root = Path(__file__).resolve().parent
+    return {
+        name: "sha256:" + hashlib.sha256((root / name).read_bytes()).hexdigest()
+        for name in (
+            "assistance_comparison_contract.py",
+            "d5_campaign_v19_policy.py",
+            "d5_campaign_v19_extension.py",
+            "d5_campaign_v19_packet.py",
+            "d5_comparison_transport.py",
+        )
+    }
+
+
+_COMPARISON_LOADED = comparison_producer()
+
+
 class D5StudyDraft(StudyDraft):
     abstention: str | None = Field(default=None, max_length=180)
 
 
 class D5CapacityStudyDraft(D5StudyDraft):
     """Internal view avoids inherited eight-claim FakeDraft validation."""
+
     claims: tuple[ResearchClaim, ...] = Field(max_length=12)
     sections: tuple[Any, ...] = Field(max_length=6)
 
@@ -272,9 +290,16 @@ def prepare_input(
     operation_deadlines: dict[str, Any] | None = None,
     capacity_policy: dict[str, Any] | None = None,
 ) -> GenerationInput:
-    prospective = sealed.get("schema_revision") in {CAPACITY_REVISION, "workspace-assistance-keyed-v16"}
+    prospective = sealed.get("schema_revision") in {
+        CAPACITY_REVISION,
+        "workspace-assistance-keyed-v16",
+    }
     if prospective:
-        if capacity_policy != CAPACITY_POLICY or operation_deadlines != CAPACITY_DEADLINES or operation_routes != CAPACITY_ROUTES:
+        if (
+            capacity_policy != CAPACITY_POLICY
+            or operation_deadlines != CAPACITY_DEADLINES
+            or operation_routes != CAPACITY_ROUTES
+        ):
             raise AdmissionError("d5_capacity_sealed_policy_binding_required")
     elif capacity_policy is not None:
         raise AdmissionError("d5_capacity_legacy_policy_forbidden")
@@ -312,7 +337,9 @@ def prepare_input(
     if sealed["schema_revision"] in {TASK_REVISION, *COVERAGE_REVISIONS}:
         compact["task_policy"] = sealed["task_policy"]
     if "provider_schema_compatibility_revision" in sealed:
-        compact["provider_schema_compatibility_revision"] = sealed["provider_schema_compatibility_revision"]
+        compact["provider_schema_compatibility_revision"] = sealed[
+            "provider_schema_compatibility_revision"
+        ]
     compact["candidate_initial_wire_digest"] = _digest(sealed["candidate_initial_wire"])
     compact["full_preview_digest"] = _digest(sealed)
     probe_context = None
@@ -355,9 +382,14 @@ def prepare_input(
         "probe_wire_digest": _digest(probe_wire) if probe_wire else None,
     }
     if prospective:
-        settings.update(d5_capacity_policy=capacity_policy, input_tokens=40000,
-                        output_tokens=8000, timeout_seconds=120, response_bytes=MAX_HTTP_BYTES,
-                        price_estimate_usd_per_million=CAPACITY_ROUTES["draft_repair"]["prices"])
+        settings.update(
+            d5_capacity_policy=capacity_policy,
+            input_tokens=40000,
+            output_tokens=8000,
+            timeout_seconds=120,
+            response_bytes=MAX_HTTP_BYTES,
+            price_estimate_usd_per_million=CAPACITY_ROUTES["draft_repair"]["prices"],
+        )
     if operation_deadlines is not None:
         from src.workspace.d5_deadlines import validate as validate_deadlines
 
@@ -387,8 +419,15 @@ def prepare_input(
             settings["output_tokens"] = selected["output_tokens"]
             settings["price_estimate_usd_per_million"] = selected["prices"]
     from src.workspace.assistance_consistency_contract import enabled as consistency_enabled
-    if consistency_enabled(sealed.get("task_policy")):
+
+    if consistency_enabled(sealed.get("task_policy")) or __import__(
+        "src.workspace.assistance_comparison_contract", fromlist=["enabled"]
+    ).enabled(sealed.get("task_policy")):
         settings["consistency_producer"] = dict(_CONSISTENCY_LOADED)
+    from src.workspace.assistance_comparison_contract import enabled as comparison_enabled
+
+    if comparison_enabled(sealed.get("task_policy")):
+        settings["comparison_producer"] = dict(_COMPARISON_LOADED)
     return GenerationInput("deep_dive", model, ADAPTER_REVISION, sources, settings)
 
 
@@ -413,7 +452,9 @@ def initial_context(sealed: dict[str, Any]) -> dict[str, Any]:
     if sealed["schema_revision"] in {TASK_REVISION, *COVERAGE_REVISIONS}:
         compact["task_policy"] = sealed["task_policy"]
     if "provider_schema_compatibility_revision" in sealed:
-        compact["provider_schema_compatibility_revision"] = sealed["provider_schema_compatibility_revision"]
+        compact["provider_schema_compatibility_revision"] = sealed[
+            "provider_schema_compatibility_revision"
+        ]
     return {
         "phase": "draft",
         "role": "workflow",
@@ -476,6 +517,7 @@ def checker_context(
     if sealed["schema_revision"] in {CAPACITY_REVISION, "workspace-assistance-keyed-v16"}:
         from src.workspace.assistance_capacity_contract import check_schemas
         from src.workspace.d5_capacity_policy import NORMALIZATION_REVISION
+
         value["output_schema"] = check_schemas()["wire"]
         value["checker_normalization_revision"] = NORMALIZATION_REVISION
     value["draft"] = {"claims": [asdict(c) for c in claims]}
@@ -511,26 +553,72 @@ def checker_context(
     if sealed["schema_revision"] in {CAPACITY_REVISION, "workspace-assistance-keyed-v16"}:
         # Keep each exact passage once. Claims carry separate sealed handles;
         # claim_input_digest still binds the complete resolved evidence identity.
-        value["draft"] = {"claims": [
-            {"claim_id": claim.claim_id, "text": claim.text, "kind": claim.kind,
-             "handles": [next(key for key, ref in sealed["units"].items() if ref == asdict(evidence)) for evidence in claim.evidence],
-             "required_scope": claim.required_scope}
-            for claim in claims
-        ]}
-        value["evidence_encoding"] = "Separate selected handles resolve only through review_evidence; no joined quotation or source expansion."
+        value["draft"] = {
+            "claims": [
+                {
+                    "claim_id": claim.claim_id,
+                    "text": claim.text,
+                    "kind": claim.kind,
+                    "handles": [
+                        next(key for key, ref in sealed["units"].items() if ref == asdict(evidence))
+                        for evidence in claim.evidence
+                    ],
+                    "required_scope": claim.required_scope,
+                }
+                for claim in claims
+            ]
+        }
+        value["evidence_encoding"] = (
+            "Separate selected handles resolve only through review_evidence; no joined quotation or source expansion."
+        )
     if sealed["schema_revision"] == "workspace-assistance-keyed-v16":
         from src.workspace.assistance_keyed_checks import NORMALIZATION_REVISION
         from src.workspace.assistance_keyed_checks import schemas as keyed_schemas
+
         value["output_schema"] = keyed_schemas(value)["wire"]
         value["checker_normalization_revision"] = NORMALIZATION_REVISION
         from src.workspace import assistance_consistency_contract as consistency
-        if consistency.enabled(sealed.get("task_policy")):
+
+        if consistency.enabled(sealed.get("task_policy")) or __import__(
+            "src.workspace.assistance_comparison_contract", fromlist=["enabled"]
+        ).enabled(sealed.get("task_policy")):
             from src.workspace import assistance_consistency_checks as consistent_checks
+
             value["checker_normalization_revision"] = consistent_checks.NORMALIZATION_REVISION
             value["question_reference_roles"] = workflow_view["question_references"]
             value["request_outcome"] = workflow_view["request_outcome"]
-            value["quality_rubric"]["coverage"] = "answered is complete; partial retains useful answers and every remaining gap; lacks_evidence has no answer; omitted is available-but-unanswered. Source context never answers the comparison. Judge each whole part independently of its declaration."
-            value["quality_rubric"]["prose"] = "Context question references do not assert factual premises. Premises are explicit and must refer to cited scored claims. A missing detail/generic gap is a coverage_critique; unsupported_factual_prose requires an actual unscored factual assertion. Preserve all independent findings; any coverage critique still blocks coverage acceptance."
+            value["quality_rubric"]["coverage"] = (
+                "answered is complete; partial retains useful answers and every remaining gap; lacks_evidence has no answer; omitted is available-but-unanswered. Source context never answers the comparison. Judge each whole part independently of its declaration."
+            )
+            value["quality_rubric"]["prose"] = (
+                "Context question references do not assert factual premises. Premises are explicit and must refer to cited scored claims. A missing detail/generic gap is a coverage_critique; unsupported_factual_prose requires an actual unscored factual assertion. Preserve all independent findings; any coverage critique still blocks coverage acceptance."
+            )
+            from src.workspace import assistance_comparison_contract as comparison
+
+            if comparison.enabled(sealed.get("task_policy")):
+                value["response_layout"]["wire_body_tag"] = value["response_layout"].get(
+                    "disposition"
+                )
+                value["response_layout"]["disposition"] = workflow_view["response_disposition"]
+                value["response_layout"]["body_tag_semantics"] = (
+                    "wire_body_tag is structural only; disposition is derived from authoritative coverage. Neither establishes semantic request fulfillment."
+                )
+                value["comparison_answer_basis"] = {
+                    p["id"]: {
+                        "requested_part": p["request"],
+                        "answer_claim_ids": next(
+                            r["answer_claim_ids"]
+                            for r in workflow_view["request_coverage"]
+                            if r["id"] == p["id"]
+                        ),
+                        "rule": "Each answer must be an actual comparative finding, independently supported by its separate cited source bases. Source notes are only context. Qualitative method comparisons need no shared benchmark; performance conclusions require compatible tasks, comparators, metrics, conditions and qualification. Reject unsupported claims or wrong answer roles, retain genuine gaps; partial earns no full-answer credit.",
+                    }
+                    for p in sealed["task_policy"]["requested_parts"]
+                    if p["kind"] == "comparison"
+                }
+                value["quality_rubric"]["comparison"] = (
+                    "Independently assess the meaning of comparative answer claims, not just citation resolution or declared roles. Common benchmark absence alone does not invalidate a qualitative method contrast. Performance superiority requires compatible evaluation evidence. Missing or incompatible bases must block support/coverage acceptance."
+                )
             value["output_schema"] = consistent_checks.schemas(value)["wire"]
     return value
 
@@ -548,8 +636,9 @@ class D5Adapter(QualificationAdapter):
         from src.workspace.d5_campaign_v14_policy import enabled as v14
 
         amount = amount_usd or (
-            "1.20" if capacity_enabled(dict(self.inputs.settings)) else
-            "0.65"
+            "1.20"
+            if capacity_enabled(dict(self.inputs.settings))
+            else "0.65"
             if v14(self.inputs.settings)
             else "0.45"
             if self.inputs.settings.get("operation_routes")
@@ -562,20 +651,26 @@ class D5Adapter(QualificationAdapter):
         # JSONB cannot store NUL; the lossless receipt retains its original bytes.
         text = body.decode("utf-8", errors="replace").replace(self.api_key, "[credential redacted]")
         response = {
-            "http_status": status, "complete_body": True,
+            "http_status": status,
+            "complete_body": True,
             "raw_body": text.replace("\x00", "\\u0000"),
-            "body_digest": hashlib.sha256(body).hexdigest(), "usage_validated": False,
+            "body_digest": hashlib.sha256(body).hexdigest(),
+            "usage_validated": False,
         }
         if not capacity_enabled(dict(self.inputs.settings)):
             self._record(job_id, ordinal, response)
             return
         import base64
         import gzip
+
         redacted = body.replace(self.api_key.encode(), b"[credential redacted]")
         receipt = {
             "representation": "httpx decoded response body bytes before JSON parsing",
-            "http_status": status, "complete_body": True, "usage_validated": False,
-            "received_bytes": len(body), "received_sha256": hashlib.sha256(body).hexdigest(),
+            "http_status": status,
+            "complete_body": True,
+            "usage_validated": False,
+            "received_bytes": len(body),
+            "received_sha256": hashlib.sha256(body).hexdigest(),
             "body_gzip_base64": base64.b64encode(gzip.compress(redacted, mtime=0)).decode("ascii"),
             "credential_redacted": redacted != body,
         }
@@ -588,12 +683,17 @@ class D5Adapter(QualificationAdapter):
                     raise AdmissionError("d5_complete_body_receipt_immutable")
                 return
             contact.update(state="completed", response=response, http_body_receipt=receipt)
-            conn.execute("UPDATE workspace_generation_jobs SET data=%s WHERE id=%s", (Jsonb(data), job_id))
+            conn.execute(
+                "UPDATE workspace_generation_jobs SET data=%s WHERE id=%s", (Jsonb(data), job_id)
+            )
 
-    def _partial_http_body(self, job_id: str, ordinal: int, status: int | None, body: bytes, error: BaseException) -> None:
+    def _partial_http_body(
+        self, job_id: str, ordinal: int, status: int | None, body: bytes, error: BaseException
+    ) -> None:
         if not capacity_enabled(dict(self.inputs.settings)):
             return
         import base64
+
         # Preserve every received byte, not an accepted or repaired JSON prefix.
         redacted = body.replace(self.api_key.encode(), b"[credential redacted]")
         with self.store.pool.connection() as conn:
@@ -602,18 +702,24 @@ class D5Adapter(QualificationAdapter):
             contacts = data["adapter"]["contacts"]
             contact = contacts[ordinal]
             receipt = {
-                "complete_body": False, "usage_validated": False, "http_status": status,
-                "received_bytes": len(body), "received_sha256": hashlib.sha256(body).hexdigest(),
+                "complete_body": False,
+                "usage_validated": False,
+                "http_status": status,
+                "received_bytes": len(body),
+                "received_sha256": hashlib.sha256(body).hexdigest(),
                 "received_body_base64": base64.b64encode(redacted).decode("ascii"),
                 "credential_redacted": redacted != body,
-                "error_class": type(error).__name__, "acceptance": "unavailable",
+                "error_class": type(error).__name__,
+                "acceptance": "unavailable",
                 "unread_tail": "unknown; no completion, cancellation or billing inferred",
             }
             if "partial_response" in contact and contact["partial_response"] != receipt:
                 raise AdmissionError("d5_partial_receipt_immutable")
             contact["partial_response"] = receipt
             # Do not use _record: dispatching and uncertainty must remain intact.
-            conn.execute("UPDATE workspace_generation_jobs SET data=%s WHERE id=%s", (Jsonb(data), job_id))
+            conn.execute(
+                "UPDATE workspace_generation_jobs SET data=%s WHERE id=%s", (Jsonb(data), job_id)
+            )
 
     def _quarantine_failure(
         self, job_id: str, reason: str, *, error: BaseException | None = None
@@ -689,16 +795,37 @@ class D5Adapter(QualificationAdapter):
         sealed = settings.get("d5_request", {})
         operation = settings.get("d5_operation")
         from src.workspace.assistance_consistency_contract import enabled as consistency_enabled
-        if consistency_enabled(sealed.get("task_policy")) and (
+
+        if (
+            consistency_enabled(sealed.get("task_policy"))
+            or __import__(
+                "src.workspace.assistance_comparison_contract", fromlist=["enabled"]
+            ).enabled(sealed.get("task_policy"))
+        ) and (
             settings.get("consistency_producer") != _CONSISTENCY_LOADED
             or consistency_producer() != _CONSISTENCY_LOADED
         ):
             raise AdmissionError("d5_consistency_producer_drift")
+        from src.workspace.assistance_comparison_contract import enabled as comparison_enabled
+
+        if comparison_enabled(sealed.get("task_policy")) and (
+            settings.get("comparison_producer") != _COMPARISON_LOADED
+            or comparison_producer() != _COMPARISON_LOADED
+        ):
+            raise AdmissionError("d5_comparison_producer_drift")
         routes = settings.get("operation_routes")
         prospective = capacity_enabled(dict(settings))
-        if prospective and (sealed.get("schema_revision") not in {CAPACITY_REVISION, "workspace-assistance-keyed-v16"} or settings.get("operation_deadlines") != CAPACITY_DEADLINES or routes != CAPACITY_ROUTES):
+        if prospective and (
+            sealed.get("schema_revision")
+            not in {CAPACITY_REVISION, "workspace-assistance-keyed-v16"}
+            or settings.get("operation_deadlines") != CAPACITY_DEADLINES
+            or routes != CAPACITY_ROUTES
+        ):
             raise AdmissionError("d5_capacity_sealed_policy_binding_required")
-        if not prospective and sealed.get("schema_revision") in {CAPACITY_REVISION, "workspace-assistance-keyed-v16"}:
+        if not prospective and sealed.get("schema_revision") in {
+            CAPACITY_REVISION,
+            "workspace-assistance-keyed-v16",
+        }:
             raise AdmissionError("d5_capacity_policy_required")
         if "operation_deadlines" in settings:
             from src.workspace.d5_deadlines import validate as validate_deadlines
@@ -724,7 +851,9 @@ class D5Adapter(QualificationAdapter):
                 if probe_route
                 else 1800
                 if operation == "probe"
-                else 8000 if prospective else 4000
+                else 8000
+                if prospective
+                else 4000
             )
             or settings.get("timeout_seconds") != (120 if prospective else 30)
             or settings.get("response_bytes") != (MAX_HTTP_BYTES if prospective else 131072)
@@ -734,7 +863,9 @@ class D5Adapter(QualificationAdapter):
             != (
                 probe_route["prices"]
                 if probe_route
-                else CAPACITY_ROUTES["draft_repair"]["prices"] if prospective else {"input": "2", "output": "10", "verified_at": "2026-11-06"}
+                else CAPACITY_ROUTES["draft_repair"]["prices"]
+                if prospective
+                else {"input": "2", "output": "10", "verified_at": "2026-11-06"}
             )
             or sealed.get("schema_revision")
             not in {
@@ -815,11 +946,17 @@ class D5Adapter(QualificationAdapter):
                 from src.workspace.assistance_keyed_encoding import KEY
                 from src.workspace.assistance_keyed_encoding import REVISION as ENCODING
                 from src.workspace.provider_schema_compat import REVISION as COMPAT
+
                 if sealed["provider_schema_compatibility_revision"] != COMPAT:
                     raise AdmissionError("provider_schema_compatibility_binding_required")
                 from src.workspace.assistance_consistency_contract import REVISION as CONSISTENCY
+
                 actual_encoding = sealed["task_policy"].get(KEY)
-                expected_policy[KEY] = CONSISTENCY if actual_encoding == CONSISTENCY else ENCODING
+                from src.workspace.assistance_comparison_contract import REVISION as COMPARISON
+
+                expected_policy[KEY] = (
+                    actual_encoding if actual_encoding in {CONSISTENCY, COMPARISON} else ENCODING
+                )
             if sealed["task_policy"] != expected_policy:
                 raise AdmissionError("d5_sealed_task_policy_drift")
         if sealed["settings"] != {
@@ -980,16 +1117,22 @@ class D5Adapter(QualificationAdapter):
             if capacity_enabled(dict(self.inputs.settings)):
                 if sealed["schema_revision"] == "workspace-assistance-keyed-v16":
                     from src.workspace.assistance_keyed_checks import compact
+
                     prior_context = checker_context(sealed, workflow, materials)
-                    value["previous_prose_review"] = compact(checked.model_dump(mode="json"), prior_context)
+                    value["previous_prose_review"] = compact(
+                        checked.model_dump(mode="json"), prior_context
+                    )
                 else:
                     from src.workspace.assistance_capacity_contract import compact_checks
+
                     value["previous_prose_review"] = compact_checks(checked.model_dump(mode="json"))
                 value["previous_grounding"]["assessments"] = [
                     {key: item for key, item in assessment.items() if key != "reason"}
                     for assessment in value["previous_grounding"]["assessments"]
                 ]
-                value["previous_review_encoding"] = "Lossless compact verdict: shared reason once per claim; all support, atomicity, qualification, coverage and prose judgments retained. Original raw and expanded verdicts remain journaled."
+                value["previous_review_encoding"] = (
+                    "Lossless compact verdict: shared reason once per claim; all support, atomicity, qualification, coverage and prose judgments retained. Original raw and expanded verdicts remain journaled."
+                )
             if sealed["schema_revision"] in COVERAGE_REVISIONS:
                 value["previous_declared_coverage"] = workflow_view["request_coverage"]
             value["procedural_draft"] = {
@@ -1016,6 +1159,7 @@ class D5Adapter(QualificationAdapter):
         required = self.inputs.settings["d5_request"].get("provider_schema_compatibility_revision")
         if required is not None:
             from src.workspace.provider_schema_compat import REVISION, guard
+
             if required != REVISION:
                 raise AdmissionError("provider_schema_compatibility_binding_required")
             guard(body)
@@ -1038,13 +1182,26 @@ class D5Adapter(QualificationAdapter):
                 from src.workspace.assistance_compact_checks import normalize as normalize_checks
 
                 return normalize_checks(parsed)
-            if self.inputs.settings["d5_request"]["schema_revision"] == "workspace-assistance-keyed-v16":
+            if (
+                self.inputs.settings["d5_request"]["schema_revision"]
+                == "workspace-assistance-keyed-v16"
+            ):
                 from src.workspace.assistance_keyed_checks import normalize as keyed_normalize
+
                 context = json.loads(body["messages"][0]["content"])
                 from src.workspace.d5_report_binding import json_object
-                return keyed_normalize(json_object(text), context, probe=self.inputs.settings["d5_operation"] == "probe")
-            if capacity_enabled(dict(self.inputs.settings)) and self.inputs.settings["d5_operation"] != "probe":
+
+                return keyed_normalize(
+                    json_object(text),
+                    context,
+                    probe=self.inputs.settings["d5_operation"] == "probe",
+                )
+            if (
+                capacity_enabled(dict(self.inputs.settings))
+                and self.inputs.settings["d5_operation"] != "probe"
+            ):
                 from src.workspace.assistance_capacity_contract import normalize_checks
+
                 return normalize_checks(parsed)
             return parsed
         return super()._response_output(response, body)
@@ -1068,12 +1225,23 @@ class D5Adapter(QualificationAdapter):
         }
 
     def _probe_schema(self) -> dict[str, Any]:
-        if self.inputs.settings["d5_request"]["schema_revision"] == "workspace-assistance-keyed-v16":
+        if (
+            self.inputs.settings["d5_request"]["schema_revision"]
+            == "workspace-assistance-keyed-v16"
+        ):
             from src.workspace.assistance_keyed_checks import schemas as keyed_schemas
+
             return dict(keyed_schemas(self.inputs.settings["probe_context"], probe=True)["wire"])
         if capacity_enabled(dict(self.inputs.settings)):
             from src.workspace.assistance_capacity_contract import probe_checks_model
-            return dict(transform_schema(probe_checks_model([c["claim_id"] for c in self.inputs.settings["probe_context"]["claims"]])))
+
+            return dict(
+                transform_schema(
+                    probe_checks_model(
+                        [c["claim_id"] for c in self.inputs.settings["probe_context"]["claims"]]
+                    )
+                )
+            )
         return dict(transform_schema(Checks))
 
     def _probe_wire(self) -> dict[str, Any]:
@@ -1121,7 +1289,11 @@ class D5Adapter(QualificationAdapter):
         report = validate_claims(claims, materials)
         if any(not item.scope_compatible for item in report.assessments):
             raise AdmissionError("d5_draft_scope_incompatible")
-        model = D5CapacityStudyDraft if sealed["schema_revision"] in {CAPACITY_REVISION, "workspace-assistance-keyed-v16"} else D5StudyDraft
+        model = (
+            D5CapacityStudyDraft
+            if sealed["schema_revision"] in {CAPACITY_REVISION, "workspace-assistance-keyed-v16"}
+            else D5StudyDraft
+        )
         return model.model_validate(
             {
                 "kind": "deep_dive",
@@ -1139,17 +1311,35 @@ class D5Adapter(QualificationAdapter):
 
     def _checks(self, output: dict[str, Any]) -> Any:
         from src.workspace import assistance_consistency_contract as consistency
-        if consistency.enabled(self.inputs.settings["d5_request"].get("task_policy")):
+
+        if self.inputs.settings["d5_operation"] != "probe" and (
+            consistency.enabled(self.inputs.settings["d5_request"].get("task_policy"))
+            or __import__(
+                "src.workspace.assistance_comparison_contract", fromlist=["enabled"]
+            ).enabled(self.inputs.settings["d5_request"].get("task_policy"))
+        ):
             from src.workspace.assistance_consistency_checks import (
                 checks_model as consistency_model,
             )
+
             return consistency_model().model_validate(output)
-        if self.inputs.settings["d5_request"]["schema_revision"] == "workspace-assistance-keyed-v16" and self.inputs.settings["d5_operation"] == "probe":
+        if (
+            self.inputs.settings["d5_request"]["schema_revision"]
+            == "workspace-assistance-keyed-v16"
+            and self.inputs.settings["d5_operation"] == "probe"
+        ):
             from src.workspace.assistance_keyed_checks import probe_checks_model as keyed_probe
+
             return keyed_probe().model_validate(output)
-        if capacity_enabled(dict(self.inputs.settings)) and self.inputs.settings["d5_operation"] == "probe":
+        if (
+            capacity_enabled(dict(self.inputs.settings))
+            and self.inputs.settings["d5_operation"] == "probe"
+        ):
             from src.workspace.assistance_capacity_contract import probe_checks_model
-            return probe_checks_model([c["claim_id"] for c in self.inputs.settings["probe_context"]["claims"]]).model_validate(output)
+
+            return probe_checks_model(
+                [c["claim_id"] for c in self.inputs.settings["probe_context"]["claims"]]
+            ).model_validate(output)
         return checks_model(self.inputs.settings["d5_request"]["schema_revision"]).model_validate(
             output
         )
@@ -1170,7 +1360,10 @@ class D5Adapter(QualificationAdapter):
 
     def _review_complete(self, grounding: Any, snapshot: dict[str, Any], checks: Any) -> bool:
         sealed = self.inputs.settings["d5_request"]
-        if sealed["schema_revision"] in COVERAGE_REVISIONS and self.inputs.settings["d5_operation"] != "probe":
+        if (
+            sealed["schema_revision"] in COVERAGE_REVISIONS
+            and self.inputs.settings["d5_operation"] != "probe"
+        ):
             rendered = render_task_output(
                 snapshot["steps"][-1]["output"],
                 list(sealed["units"]),
@@ -1277,25 +1470,42 @@ class D5Adapter(QualificationAdapter):
                         )
 
                         parsed = normalize_checks(parsed)
-                    if self.inputs.settings["d5_request"]["schema_revision"] == "workspace-assistance-keyed-v16":
+                    if (
+                        self.inputs.settings["d5_request"]["schema_revision"]
+                        == "workspace-assistance-keyed-v16"
+                    ):
                         from src.workspace.assistance_keyed_checks import (
                             normalize as keyed_normalize,
                         )
-                        parsed = keyed_normalize(parsed, context, probe=self.inputs.settings["d5_operation"] == "probe")
-                    elif capacity_enabled(dict(self.inputs.settings)) and self.inputs.settings["d5_operation"] != "probe":
+
+                        parsed = keyed_normalize(
+                            parsed, context, probe=self.inputs.settings["d5_operation"] == "probe"
+                        )
+                    elif (
+                        capacity_enabled(dict(self.inputs.settings))
+                        and self.inputs.settings["d5_operation"] != "probe"
+                    ):
                         from src.workspace.assistance_capacity_contract import (
                             normalize_checks as normalize_capacity_checks,
                         )
+
                         parsed = normalize_capacity_checks(parsed)
                     checks = self._checks(parsed)
-                    if self.inputs.settings["d5_request"]["schema_revision"] in COVERAGE_REVISIONS and self.inputs.settings["d5_operation"] != "probe":
+                    if (
+                        self.inputs.settings["d5_request"]["schema_revision"] in COVERAGE_REVISIONS
+                        and self.inputs.settings["d5_operation"] != "probe"
+                    ):
                         validate_review(checks, context)
                     checks.validate_locations(context.get("unscored_prose", {}))
                     expected = {c["claim_id"]: c["input_digest"] for c in context["claim_inputs"]}
                     actual = {c.claim_id: c.input_digest for c in checks.checks}
                     if len(actual) != len(checks.checks) or actual != expected:
                         raise AdmissionError("d5_checker_claim_binding_drift")
-                maximum = (MAX_COMPACT_CHECK_BYTES if last["stage"] == "check" else CAPACITY_DRAFT_BYTES) if capacity_enabled(dict(self.inputs.settings)) else 8000
+                maximum = (
+                    (MAX_COMPACT_CHECK_BYTES if last["stage"] == "check" else CAPACITY_DRAFT_BYTES)
+                    if capacity_enabled(dict(self.inputs.settings))
+                    else 8000
+                )
                 if len(text.encode()) > maximum:
                     raise AdmissionError("d5_compact_output_exceeded")
             response_id = last["response"].get("id")
@@ -1311,7 +1521,10 @@ class D5Adapter(QualificationAdapter):
         self._context()
 
     def _usage_within_stage(self, ins: int, outs: int, wire: dict[str, Any]) -> bool:
-        return ins <= (40000 if capacity_enabled(dict(self.inputs.settings)) else 20000) and outs <= wire["body"]["max_tokens"]
+        return (
+            ins <= (40000 if capacity_enabled(dict(self.inputs.settings)) else 20000)
+            and outs <= wire["body"]["max_tokens"]
+        )
 
 
 class D5MeasurementAdapter(D5Adapter, MeasurementAdapter):
@@ -1356,8 +1569,9 @@ class D5ProbeAdapter(D5Adapter):
         from src.workspace.d5_campaign_v14_policy import enabled as v14
 
         required = (
-            "0.50" if capacity_enabled(dict(self.inputs.settings)) else
-            "0.25"
+            "0.50"
+            if capacity_enabled(dict(self.inputs.settings))
+            else "0.25"
             if v14(self.inputs.settings)
             else "0.15"
             if self.inputs.settings.get("operation_routes")
@@ -1394,7 +1608,9 @@ class D5ProbeAdapter(D5Adapter):
                 if c["claim_id"] == claim.claim_id
             ):
                 raise AdmissionError("d5_probe_claim_binding_drift")
-        return (D5CapacityStudyDraft if capacity_enabled(dict(self.inputs.settings)) else StudyDraft).model_validate(
+        return (
+            D5CapacityStudyDraft if capacity_enabled(dict(self.inputs.settings)) else StudyDraft
+        ).model_validate(
             {
                 "kind": "deep_dive",
                 "title": "Quarantined adversarial checker diagnostic",

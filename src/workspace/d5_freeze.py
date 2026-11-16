@@ -162,7 +162,13 @@ def execution_owners(packet: dict[str, Any]) -> tuple[str, str]:
     from src.workspace.d5_campaign_packet import owners as campaign_owners
     from src.workspace.d5_coverage_packet import is_packet, owners
 
-    if packet.get("revision") in {CAMPAIGN_REVISION, "d5-complete-machine-campaign-v14", "d5-comprehensive-machine-campaign-v15", "d5-keyed-machine-campaign-v16"}:
+    if packet.get("revision") in {
+        CAMPAIGN_REVISION,
+        "d5-complete-machine-campaign-v14",
+        "d5-comprehensive-machine-campaign-v15",
+        "d5-keyed-machine-campaign-v16",
+        "d5-comparison-machine-campaign-v19",
+    }:
         return campaign_owners(packet)
 
     if is_packet(packet):
@@ -176,24 +182,23 @@ def code_bindings() -> dict[str, str]:
     root = Path(__file__).resolve().parents[2]
     names = [
         "d5_freeze.py",
-        'd5_capacity_selection.py',
-        'd5_capacity_policy.py',
-        'd5_capacity_wire.py',
-        'assistance_capacity_contract.py',
-        'd5_capacity_outcomes.py',
-        'd5_campaign_v15_policy.py',
-        'd5_campaign_v15_extension.py',
-        'd5_campaign_v15_packet.py',
-        'd5_campaign_v16_policy.py',
-        'd5_campaign_v16_extension.py',
-        'd5_campaign_v16_packet.py',
-        'assistance_keyed_contract.py',
-        'assistance_keyed_checks.py',
-        'assistance_keyed_encoding.py',
-        'provider_schema_compat.py',
-        'migrations/020_d5_capacity_campaign.sql',
-        'migrations/021_d5_keyed_continuation.sql',
-
+        "d5_capacity_selection.py",
+        "d5_capacity_policy.py",
+        "d5_capacity_wire.py",
+        "assistance_capacity_contract.py",
+        "d5_capacity_outcomes.py",
+        "d5_campaign_v15_policy.py",
+        "d5_campaign_v15_extension.py",
+        "d5_campaign_v15_packet.py",
+        "d5_campaign_v16_policy.py",
+        "d5_campaign_v16_extension.py",
+        "d5_campaign_v16_packet.py",
+        "assistance_keyed_contract.py",
+        "assistance_keyed_checks.py",
+        "assistance_keyed_encoding.py",
+        "provider_schema_compat.py",
+        "migrations/020_d5_capacity_campaign.sql",
+        "migrations/021_d5_keyed_continuation.sql",
         "d5_coverage_policy.py",
         "d5_coverage_packet.py",
         "d5_coverage_shapes_packet.py",
@@ -205,6 +210,13 @@ def code_bindings() -> dict[str, str]:
         "d5_campaign_packet.py",
         "d5_campaign_operator.py",
         "d5_campaign.py",
+        "assistance_comparison_contract.py",
+        "assistance_consistency_contract.py",
+        "assistance_consistency_checks.py",
+        "d5_campaign_v19_policy.py",
+        "d5_campaign_v19_extension.py",
+        "d5_campaign_v19_packet.py",
+        "d5_comparison_transport.py",
         "d5_campaign_report.py",
         "d5_report_binding.py",
         "d5_answerability.py",
@@ -296,7 +308,13 @@ def verify(packet: dict[str, Any]) -> None:
     from src.workspace.d5_campaign_packet import REVISION as CAMPAIGN_REVISION
     from src.workspace.d5_campaign_packet import verify_packet
 
-    if packet.get("revision") in {CAMPAIGN_REVISION, "d5-complete-machine-campaign-v14", "d5-comprehensive-machine-campaign-v15", "d5-keyed-machine-campaign-v16"}:
+    if packet.get("revision") in {
+        CAMPAIGN_REVISION,
+        "d5-complete-machine-campaign-v14",
+        "d5-comprehensive-machine-campaign-v15",
+        "d5-keyed-machine-campaign-v16",
+        "d5-comparison-machine-campaign-v19",
+    }:
         verify_packet(packet)
         return
     from src.workspace.d5_coverage_packet import is_packet, verify_controls
@@ -405,7 +423,13 @@ def compile_inputs(packet: dict[str, Any]) -> dict[str, dict[str, Any]]:
     from src.workspace.d5_campaign_packet import REVISION as CAMPAIGN_REVISION
     from src.workspace.d5_campaign_packet import compile_campaign
 
-    if packet.get("revision") in {CAMPAIGN_REVISION, "d5-complete-machine-campaign-v14", "d5-comprehensive-machine-campaign-v15", "d5-keyed-machine-campaign-v16"}:
+    if packet.get("revision") in {
+        CAMPAIGN_REVISION,
+        "d5-complete-machine-campaign-v14",
+        "d5-comprehensive-machine-campaign-v15",
+        "d5-keyed-machine-campaign-v16",
+        "d5-comparison-machine-campaign-v19",
+    }:
         return compile_campaign(packet)
     from src.workspace.d5_coverage_packet import compile_controls, is_packet
 

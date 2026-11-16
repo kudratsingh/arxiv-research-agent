@@ -298,11 +298,18 @@ def _validate(conn: Any, record: dict[str, Any], program_id: str) -> dict[str, A
 def active(
     conn: Any, program_id: str, required: str | None = None
 ) -> tuple[dict[str, Any], dict[str, Any]] | None:
+    from src.workspace.d5_campaign_v19_extension import active as comparison_active
+
+    comparison = comparison_active(conn, program_id, required)
+    if comparison is not None:
+        return comparison
     from src.workspace.d5_campaign_v16_extension import active as keyed_active
+
     keyed = keyed_active(conn, program_id, required)
     if keyed is not None:
         return keyed
     from src.workspace.d5_campaign_v15_extension import active as capacity_active
+
     capacity = capacity_active(conn, program_id, required)
     if capacity is not None:
         return capacity
@@ -355,13 +362,22 @@ def effective(
     return prior_limits
 
 
-def record_external(store: Any, receipt: dict[str, Any]) -> dict[str, Any]:
+def record_external(
+    store: Any, receipt: dict[str, Any], *, packet: dict[str, Any] | None = None
+) -> dict[str, Any]:
+    from src.workspace.d5_campaign_v19_extension import REVISION as COMPARISON_REVISION
+    from src.workspace.d5_campaign_v19_extension import record_external as record_comparison
+
+    if receipt.get("campaign_extension", {}).get("core", {}).get("revision") == COMPARISON_REVISION:
+        return record_comparison(store, receipt, packet=packet)
     from src.workspace.d5_campaign_v16_extension import REVISION as KEYED_REVISION
     from src.workspace.d5_campaign_v16_extension import record_external as record_keyed
+
     if receipt.get("campaign_extension", {}).get("core", {}).get("revision") == KEYED_REVISION:
         return record_keyed(store, receipt)
     from src.workspace.d5_campaign_v15_extension import REVISION as CAPACITY_REVISION
     from src.workspace.d5_campaign_v15_extension import record_external as record_capacity
+
     if receipt.get("campaign_extension", {}).get("core", {}).get("revision") == CAPACITY_REVISION:
         return record_capacity(store, receipt)
     from src.workspace.d5_campaign_v14_extension import REVISION as SUCCESSOR_REVISION
@@ -429,12 +445,19 @@ def guard_exception(
     if not found:
         raise AdmissionError("program_external_completion_uncertain")
     receipt, core = found
+    from src.workspace.d5_campaign_v19_extension import REVISION as COMPARISON_REVISION
+    from src.workspace.d5_campaign_v19_extension import guard_exception as comparison_guard
+
+    if core["revision"] == COMPARISON_REVISION:
+        return comparison_guard(conn, policy, found, current_job)
     from src.workspace.d5_campaign_v16_extension import REVISION as KEYED_REVISION
     from src.workspace.d5_campaign_v16_extension import guard_exception as keyed_guard
+
     if core["revision"] == KEYED_REVISION:
         return keyed_guard(conn, policy, found, current_job)
     from src.workspace.d5_campaign_v15_extension import REVISION as CAPACITY_REVISION
     from src.workspace.d5_campaign_v15_extension import guard_exception as capacity_guard
+
     if core["revision"] == CAPACITY_REVISION:
         return capacity_guard(conn, policy, found, current_job)
     from src.workspace.d5_campaign_v14_extension import REVISION as SUCCESSOR_REVISION

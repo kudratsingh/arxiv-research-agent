@@ -134,7 +134,13 @@ def score_workflow(
             bound = current_check(sealed, snapshot, materials, routes=routes)
             contact, context, raw = bound["contact"], bound["context"], bound["raw_verdict"]
             body = contact["body"]
-            parsed = checks_model(sealed["schema_revision"]).model_validate(raw)
+            from src.workspace import assistance_consistency_checks as consistency_checks
+
+            parsed = (
+                consistency_checks.checks_model()
+                if consistency_checks.enabled(context)
+                else checks_model(sealed["schema_revision"])
+            ).model_validate(raw)
             from src.workspace.assistance_coverage import validate_review
 
             validate_review(parsed, context)
@@ -162,6 +168,13 @@ def score_workflow(
                     claim_quality=raw.get("claim_quality"),
                     prose_review=raw.get("prose_review"),
                     prose_findings=raw.get("prose_findings"),
+                    prose_uncertainties=raw.get("prose_uncertainties"),
+                    coverage_critiques=raw.get("coverage_critiques"),
+                    machine_request_outcome=(
+                        consistency_checks.aggregate(parsed, context)
+                        if consistency_checks.enabled(context)
+                        else None
+                    ),
                 )
             else:
                 raise ReportBindingError("checker_claim_binding_mismatch")
@@ -227,7 +240,10 @@ def results(
             )[0]
             for m in packet["materials"]
         )
-    cases = [score_workflow(c, snapshots.get(c["id"]), materials, routes=packet.get("operation_routes")) for c in packet["cases"]]
+    cases = [
+        score_workflow(c, snapshots.get(c["id"]), materials, routes=packet.get("operation_routes"))
+        for c in packet["cases"]
+    ]
     verdicts = {}
     for probe in packet["probes"]:
         observed = snapshots.get(probe["id"], {})
@@ -377,9 +393,14 @@ def results(
         "limitations": "Frozen public snapshot, known extraction limits, exposed sources, proposed machine references and correlated claims. Human usefulness/qualification and literature recall remain unmeasured.",
     }
 
-    if packet.get("revision") in {"d5-comprehensive-machine-campaign-v15", "d5-keyed-machine-campaign-v16"}:
+    if packet.get("revision") in {
+        "d5-comprehensive-machine-campaign-v15",
+        "d5-keyed-machine-campaign-v16",
+        "d5-comparison-machine-campaign-v19",
+    }:
         from src.workspace.d5_capacity_outcomes import classify_outcome
         from src.workspace.d5_capacity_policy import POLICY as CAPACITY_POLICY
+
         diagnostics = {}
         by_case = {case["id"]: case for case in cases}
         for key in compiled:
@@ -387,26 +408,53 @@ def results(
             observed = snapshots.get(key, {})
             outcome = dict(outcomes.get(key, {"state": case.get("state", "unrun")}))
             if key not in outcomes and stop and stop["case_id"] == key:
-                outcome["content_rejection"] = {"error": stop["reason"], "error_class": stop["error_class"], "accepted": False}
-            if case.get("completion") and case.get("assessment_binding", {}).get("status") == "bound":
+                outcome["content_rejection"] = {
+                    "error": stop["reason"],
+                    "error_class": stop["error_class"],
+                    "accepted": False,
+                }
+            if (
+                case.get("completion")
+                and case.get("assessment_binding", {}).get("status") == "bound"
+            ):
                 outcome.update(mechanical_complete=True, quality_acceptance=True)
-            diagnostics[key] = classify_outcome(outcome, {**observed, "binding": case.get("assessment_binding")})
+            diagnostics[key] = classify_outcome(
+                outcome, {**observed, "binding": case.get("assessment_binding")}
+            )
         report["outcome_diagnostics"] = diagnostics
         report["capacity_policy"] = CAPACITY_POLICY
-        report["diagnostic_basis"] = "Formatting observations never gate. Execution/contract/capacity and machine quality remain separate; no human qualification."
+        report["diagnostic_basis"] = (
+            "Formatting observations never gate. Execution/contract/capacity and machine quality remain separate; no human qualification."
+        )
         if simulated:
             report["machine_quality"] = "HOLD"
-            report["simulation_disposition"] = "Software behavior only; token fit, remote schema acceptance and model quality remain unmeasured."
+            report["simulation_disposition"] = (
+                "Software behavior only; token fit, remote schema acceptance and model quality remain unmeasured."
+            )
         report["accounting"]["retained_hold_usd"] = "0.875066"
         report["accounting"]["retained_hold_components"] = [
             {"kind": "unknown_upstream_completion", "usd": "0.425066"},
             {"kind": "received_http400_usage_unvalidated", "usd": "0.45"},
         ]
-        report["accounting"]["new_scope"]["models"] = sorted({c.get("body", {}).get("model") for snapshot in snapshots.values() for c in snapshot.get("contacts", []) if isinstance(c.get("body", {}).get("model"), str)})
+        report["accounting"]["new_scope"]["models"] = sorted(
+            {
+                c.get("body", {}).get("model")
+                for snapshot in snapshots.values()
+                for c in snapshot.get("contacts", [])
+                if isinstance(c.get("body", {}).get("model"), str)
+            }
+        )
     return {
         **report,
         "analysis_receipt": {
-            "revision": "workspace-campaign-analysis-capacity-v2" if packet.get("revision") in {"d5-comprehensive-machine-campaign-v15", "d5-keyed-machine-campaign-v16"} else "workspace-campaign-analysis-v1",
+            "revision": "workspace-campaign-analysis-capacity-v2"
+            if packet.get("revision")
+            in {
+                "d5-comprehensive-machine-campaign-v15",
+                "d5-keyed-machine-campaign-v16",
+                "d5-comparison-machine-campaign-v19",
+            }
+            else "workspace-campaign-analysis-v1",
             "original_packet_digest": packet["packet_digest"],
             "raw_results_digest": _digest(snapshots),
             "report_digest_excluding_receipt": _digest(report),
@@ -416,7 +464,17 @@ def results(
                 name: value
                 for name, value in packet["code"].items()
                 if name.endswith(
-                    ("d5_campaign_report.py", "d5_report_binding.py", "d5_answerability.py") + (("d5_capacity_outcomes.py", "d5_capacity_policy.py") if packet.get("revision") in {"d5-comprehensive-machine-campaign-v15", "d5-keyed-machine-campaign-v16"} else ())
+                    ("d5_campaign_report.py", "d5_report_binding.py", "d5_answerability.py")
+                    + (
+                        ("d5_capacity_outcomes.py", "d5_capacity_policy.py")
+                        if packet.get("revision")
+                        in {
+                            "d5-comprehensive-machine-campaign-v15",
+                            "d5-keyed-machine-campaign-v16",
+                            "d5-comparison-machine-campaign-v19",
+                        }
+                        else ()
+                    )
                 )
             },
             "human_review_digest": None,

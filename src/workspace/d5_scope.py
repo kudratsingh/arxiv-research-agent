@@ -38,9 +38,16 @@ def limits_for(settings: dict[str, Any]) -> dict[str, Any]:
 
         return profile_limits(settings["d5_scope_profile"])
     from src.workspace.assistance_consistency_contract import enabled as consistency_enabled
+
     sealed = settings.get("d5_request")
-    if isinstance(sealed, dict) and consistency_enabled(sealed.get("task_policy")):
+    from src.workspace.assistance_comparison_contract import enabled as comparison_enabled
+
+    if isinstance(sealed, dict) and (
+        consistency_enabled(sealed.get("task_policy"))
+        or comparison_enabled(sealed.get("task_policy"))
+    ):
         from src.workspace.d5_campaign_v15_policy import LIMITS as CAPACITY_LIMITS
+
         return CAPACITY_LIMITS
     if settings.get("operation_routes"):
         from src.workspace.d5_operations import OPUS_LIMITS, validate
@@ -54,10 +61,19 @@ def valid_limits(value: Any) -> bool:
     from src.workspace.d5_campaign_policy import LIMITS as CAMPAIGN_LIMITS
     from src.workspace.d5_campaign_v14_policy import LIMITS as V14_LIMITS
     from src.workspace.d5_campaign_v15_policy import LIMITS as V15_LIMITS
+    from src.workspace.d5_campaign_v19_policy import LIMITS as V19_LIMITS
     from src.workspace.d5_coverage_policy import PROFILES
     from src.workspace.d5_operations import OPUS_LIMITS
 
-    return value in (LIMITS, OPUS_LIMITS, CAMPAIGN_LIMITS, V14_LIMITS, V15_LIMITS, *PROFILES.values())
+    return value in (
+        LIMITS,
+        OPUS_LIMITS,
+        CAMPAIGN_LIMITS,
+        V14_LIMITS,
+        V15_LIMITS,
+        V19_LIMITS,
+        *PROFILES.values(),
+    )
 
 
 def stage_authorizations(

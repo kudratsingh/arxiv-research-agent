@@ -51,6 +51,7 @@ CONTENT_ERRORS = frozenset(
         "prioritize_requested_parts_before_lower_priority_context",
         "unselected_evidence_handle",
         "comparison_requires_two_separately_cited_sources",
+        "comparison_finding_requires_separately_cited_source_bases",
         "d5_checker_claim_binding_drift",
         "checker_prose_location_mismatch",
         "checker_prose_scalar_required",
@@ -77,7 +78,20 @@ def limits_for(settings: dict[str, Any]) -> dict[str, Any]:
     from src.workspace.d5_campaign_v15_policy import enabled as v15
     from src.workspace.d5_campaign_v16_policy import LIMITS as V16_LIMITS
     from src.workspace.d5_campaign_v16_policy import enabled as v16
-    return V16_LIMITS if v16(settings) else V15_LIMITS if v15(settings) else V14_LIMITS if v14(settings) else LIMITS
+    from src.workspace.d5_campaign_v19_policy import LIMITS as V19_LIMITS
+    from src.workspace.d5_campaign_v19_policy import enabled as v19
+
+    return (
+        V19_LIMITS
+        if v19(settings)
+        else V16_LIMITS
+        if v16(settings)
+        else V15_LIMITS
+        if v15(settings)
+        else V14_LIMITS
+        if v14(settings)
+        else LIMITS
+    )
 
 
 def job_binding(conn: Any, job_id: str) -> tuple[str, dict[str, Any], str]:
@@ -116,12 +130,22 @@ def guard_order(conn: Any, bound: dict[str, Any], case_id: str) -> None:
     from src.workspace.d5_campaign_v15_policy import (
         require_development_contracts as require_capacity_contracts,
     )
+    from src.workspace.d5_campaign_v19_policy import LIMITS as V19_LIMITS
+    from src.workspace.d5_campaign_v19_policy import (
+        require_development_contracts as require_comparison_contracts,
+    )
 
+    if bound["limits"] == V19_LIMITS and bound["cases"][case_id]["stage"] != "B":
+        require_comparison_contracts(conn, bound)
     if bound["limits"] == V15_LIMITS and bound["cases"][case_id]["stage"] != "B":
-        if bound["authorization_record"]["campaign_extension"]["core"]["revision"] == "programme-keyed-contract-successor-v16":
+        if (
+            bound["authorization_record"]["campaign_extension"]["core"]["revision"]
+            == "programme-keyed-contract-successor-v16"
+        ):
             from src.workspace.d5_campaign_v16_policy import (
                 require_development_contracts as require_keyed_contracts,
             )
+
             require_keyed_contracts(conn, bound)
         else:
             require_capacity_contracts(conn, bound)
@@ -136,15 +160,25 @@ def registration(
     from src.workspace.d5_campaign_v14_policy import LIMITS as V14_LIMITS
     from src.workspace.d5_campaign_v14_policy import ROUTES as V14_ROUTES
     from src.workspace.d5_campaign_v15_policy import LIMITS as V15_LIMITS
+    from src.workspace.d5_campaign_v19_policy import LIMITS as V19_LIMITS
     from src.workspace.d5_capacity_policy import DEADLINES as V15_DEADLINES
     from src.workspace.d5_capacity_policy import POLICY as CAPACITY_POLICY
     from src.workspace.d5_capacity_policy import ROUTES as V15_ROUTES
     from src.workspace.d5_deadlines import POLICY
     from src.workspace.d5_operations import ROUTES
 
-    capacity = receipt["limits"] == V15_LIMITS
+    comparison = receipt["limits"] == V19_LIMITS
+    capacity = comparison or receipt["limits"] == V15_LIMITS
     prospective = receipt["limits"] == V14_LIMITS
-    expected_limits = V15_LIMITS if capacity else V14_LIMITS if prospective else LIMITS
+    expected_limits = (
+        V19_LIMITS
+        if comparison
+        else V15_LIMITS
+        if capacity
+        else V14_LIMITS
+        if prospective
+        else LIMITS
+    )
     expected_routes = V15_ROUTES if capacity else V14_ROUTES if prospective else ROUTES
     expected_deadlines = V15_DEADLINES if capacity else POLICY
     if (
@@ -156,7 +190,8 @@ def registration(
         or any(
             not enabled(e["input"]["settings"])
             or e["input"]["settings"].get("operation_deadlines") != expected_deadlines
-            or capacity and e["input"]["settings"].get("d5_capacity_policy") != CAPACITY_POLICY
+            or capacity
+            and e["input"]["settings"].get("d5_capacity_policy") != CAPACITY_POLICY
             or e["input"]["settings"].get("operation_routes") != expected_routes
             for e in compiled.values()
         )
@@ -270,11 +305,16 @@ def preserve_content_rejection(
             "accepted": False,
         }
         from src.workspace.d5_capacity_policy import enabled as capacity_enabled
+
         if capacity_enabled(dict(inputs.settings)):
             data["campaign_content_rejection"]["error"] = str(error)
             codes = []
             if isinstance(error, ValidationError):
-                codes = [str(item.get("ctx", {}).get("error")) for item in error.errors() if item.get("ctx", {}).get("error") is not None]
+                codes = [
+                    str(item.get("ctx", {}).get("error"))
+                    for item in error.errors()
+                    if item.get("ctx", {}).get("error") is not None
+                ]
             data["campaign_content_rejection"]["error_codes"] = codes
         conn.execute(
             "UPDATE workspace_generation_jobs SET data=%s WHERE id=%s AND owner=%s",

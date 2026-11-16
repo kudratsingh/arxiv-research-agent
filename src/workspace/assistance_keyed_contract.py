@@ -40,15 +40,21 @@ def _new(name: str, *, __base__: Any, **fields: Any) -> type[BaseModel]:
     return cast(type[BaseModel], create_model(name, __base__=__base__, **fields))
 
 
-
 def _codec(policy: dict[str, Any]) -> Any:
+    from src.workspace import assistance_comparison_contract as comparison
+
+    if comparison.enabled(policy):
+        return comparison
     from src.workspace import assistance_consistency_contract as consistency
+
     if consistency.enabled(policy):
         return consistency
     from src.workspace import assistance_compact_encoding as compact
+
     if policy.get("wire_encoding_revision") in compact.REVISIONS:
         return compact
     from src.workspace import assistance_keyed_encoding as original
+
     return original
 
 
@@ -61,6 +67,7 @@ def prior_policy(policy: dict[str, Any]) -> dict[str, Any]:
             policy = codec.legacy_policy(policy)
         else:
             from src.workspace.assistance_keyed_encoding import legacy_policy
+
             policy = legacy_policy(codec.prior_policy(policy))
     value = {**policy, "revision": prior.REVISION}
     prior.validate_policy(value)
@@ -349,7 +356,10 @@ def normalize(
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     if "wire_encoding_revision" in policy:
         codec = _codec(policy)
-        return cast(tuple[dict[str, Any], dict[str, Any]], codec.normalize(payload, handles, purpose, policy))
+        return cast(
+            tuple[dict[str, Any], dict[str, Any]],
+            codec.normalize(payload, handles, purpose, policy),
+        )
     prior._bounded(
         payload, prior._limits()["raw_draft_utf8_bytes"], "capacity_draft_bytes_exceeded"
     )
@@ -456,7 +466,10 @@ def resolve_draft(
 ) -> tuple[prior.CapacityDraft, tuple[ResearchClaim, ...]]:
     if "wire_encoding_revision" in policy:
         codec = _codec(policy)
-        return cast(tuple[prior.CapacityDraft, tuple[ResearchClaim, ...]], codec.resolve_draft(payload, catalog, materials, purpose=purpose, policy=policy))
+        return cast(
+            tuple[prior.CapacityDraft, tuple[ResearchClaim, ...]],
+            codec.resolve_draft(payload, catalog, materials, purpose=purpose, policy=policy),
+        )
     normalized, coverage = normalize(payload, list(catalog), purpose, policy)
     # Exact evidence checks use the existing implementation on a lossless
     # normalized-owned inverse. The additional reasons do not change evidence.

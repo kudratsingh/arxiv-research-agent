@@ -174,8 +174,13 @@ async def run(
             if offline:
                 if transport_factory is not None:
                     transport = transport_factory(key)
+                elif packet.get("revision") == "d5-comparison-machine-campaign-v19":
+                    from src.workspace.d5_comparison_transport import ComparisonCampaignTransport
+
+                    transport = ComparisonCampaignTransport(key)
                 elif packet.get("revision") == "d5-keyed-machine-campaign-v16":
                     from src.workspace.d5_keyed_transport import KeyedCampaignTransport
+
                     transport = KeyedCampaignTransport(key)
                 else:
                     transport = CampaignTransport(key)
@@ -219,14 +224,30 @@ async def run(
                         (Jsonb(time.monotonic() - started), job["id"]),
                     )
             terminal = record_outcome(store, scope, key, job["id"], _digest(entry["input"]))
-            if packet.get("revision") in {"d5-comprehensive-machine-campaign-v15", "d5-keyed-machine-campaign-v16"} and terminal["state"] == "failed":
+            if (
+                packet.get("revision")
+                in {
+                    "d5-comprehensive-machine-campaign-v15",
+                    "d5-keyed-machine-campaign-v16",
+                    "d5-comparison-machine-campaign-v19",
+                }
+                and terminal["state"] == "failed"
+            ):
                 if inputs.settings["d5_operation"] == "probe":
                     raise AdmissionError("campaign_probe_contract_incomplete")
                 from src.workspace.d5_campaign_v15_policy import (
                     development_contract as current_contract,
                 )
-                if packet.get("revision") == "d5-keyed-machine-campaign-v16":
+
+                if packet.get("revision") in {
+                    "d5-keyed-machine-campaign-v16",
+                    "d5-comparison-machine-campaign-v19",
+                }:
                     from src.workspace.d5_campaign_v16_policy import (
+                        development_contract as current_contract,
+                    )
+                if packet.get("revision") == "d5-comparison-machine-campaign-v19":
+                    from src.workspace.d5_campaign_v19_policy import (
                         development_contract as current_contract,
                     )
                 with store.pool.connection() as conn:
@@ -235,15 +256,35 @@ async def run(
             if progress is not None:
                 progress(terminal)
             if (
-                packet.get("revision") in {"d5-complete-machine-campaign-v14", "d5-comprehensive-machine-campaign-v15", "d5-keyed-machine-campaign-v16"}
+                packet.get("revision")
+                in {
+                    "d5-complete-machine-campaign-v14",
+                    "d5-comprehensive-machine-campaign-v15",
+                    "d5-keyed-machine-campaign-v16",
+                    "d5-comparison-machine-campaign-v19",
+                }
                 and entry["stage"] == "B"
             ):
                 from src.workspace.d5_campaign_v14_policy import development_contract
-                if packet.get("revision") in {"d5-comprehensive-machine-campaign-v15", "d5-keyed-machine-campaign-v16"}:
+
+                if packet.get("revision") in {
+                    "d5-comprehensive-machine-campaign-v15",
+                    "d5-keyed-machine-campaign-v16",
+                    "d5-comparison-machine-campaign-v19",
+                }:
                     from src.workspace.d5_campaign_v15_policy import development_contract
 
-                if packet.get("revision") == "d5-keyed-machine-campaign-v16":
+                if packet.get("revision") in {
+                    "d5-keyed-machine-campaign-v16",
+                    "d5-comparison-machine-campaign-v19",
+                }:
                     from src.workspace.d5_campaign_v16_policy import development_contract
+                    from src.workspace.d5_campaign_v19_policy import (
+                        development_contract as comparison_contract,
+                    )
+
+                    if packet.get("revision") == "d5-comparison-machine-campaign-v19":
+                        development_contract = comparison_contract
                 with store.pool.connection() as conn:
                     development_contract(conn, scope, key)
             if checkpoint_after is not None and advanced >= checkpoint_after:
@@ -252,7 +293,14 @@ async def run(
             stop = {
                 "case_id": key,
                 "error_class": type(exc).__name__,
-                "reason": str(exc) if packet.get("revision") in {"d5-comprehensive-machine-campaign-v15", "d5-keyed-machine-campaign-v16"} else str(exc)[:1200],
+                "reason": str(exc)
+                if packet.get("revision")
+                in {
+                    "d5-comprehensive-machine-campaign-v15",
+                    "d5-keyed-machine-campaign-v16",
+                    "d5-comparison-machine-campaign-v19",
+                }
+                else str(exc)[:1200],
                 "remaining_cases": list(compiled)[list(compiled).index(key) + 1 :],
                 "automatic_retries": 0,
             }
@@ -274,7 +322,19 @@ def main() -> None:
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "verb", choices=["freeze", "freeze-v14", "freeze-v15", "freeze-v16", "freeze-v16r2", "verify", "offline", "run", "report"]
+        "verb",
+        choices=[
+            "freeze",
+            "freeze-v14",
+            "freeze-v15",
+            "freeze-v16",
+            "freeze-v16r2",
+            "freeze-v19",
+            "verify",
+            "offline",
+            "run",
+            "report",
+        ],
     )
     parser.add_argument("--packet", type=Path, required=True)
     parser.add_argument("--snapshot", type=Path)
@@ -291,7 +351,14 @@ def main() -> None:
         return
     with database(os.environ["D5_POSTGRES_URL"]) as pool:
         store = WorkspaceStore(pool)
-        if args.verb in {"freeze", "freeze-v14", "freeze-v15", "freeze-v16", "freeze-v16r2"}:
+        if args.verb in {
+            "freeze",
+            "freeze-v14",
+            "freeze-v15",
+            "freeze-v16",
+            "freeze-v16r2",
+            "freeze-v19",
+        }:
             if (
                 args.snapshot is None
                 or os.environ.get("ANTHROPIC_API_KEY") != "local-preview-disabled"
@@ -300,11 +367,20 @@ def main() -> None:
                 raise AdmissionError("campaign_freeze_offline_snapshot_required")
             captured = read(args.snapshot)
             install(store, captured, fixture=True)
-            if args.verb in {"freeze-v16", "freeze-v16r2"}:
+            if args.verb == "freeze-v19":
+                from src.workspace.d5_campaign_v19_packet import freeze as freeze_comparison
+
+                write(args.packet, freeze_comparison(store, captured))
+            elif args.verb in {"freeze-v16", "freeze-v16r2"}:
                 from src.workspace.d5_campaign_v16_packet import freeze as freeze_keyed
-                write(args.packet, freeze_keyed(store, captured, union_safe=args.verb == "freeze-v16r2"))
+
+                write(
+                    args.packet,
+                    freeze_keyed(store, captured, union_safe=args.verb == "freeze-v16r2"),
+                )
             elif args.verb == "freeze-v15":
                 from src.workspace.d5_campaign_v15_packet import freeze as freeze_capacity
+
                 write(args.packet, freeze_capacity(store, captured))
             elif args.verb == "freeze-v14":
                 from src.workspace.d5_campaign_v14_packet import freeze as freeze_successor
@@ -332,13 +408,16 @@ def main() -> None:
         if args.out is None:
             parser.error("run/report requires new --out directory")
         transport_type: Any = CampaignTransport
-        if packet.get("revision") == "d5-keyed-machine-campaign-v16":
+        if packet.get("revision") == "d5-comparison-machine-campaign-v19":
+            from src.workspace.d5_comparison_transport import ComparisonCampaignTransport
+
+            transport_type = ComparisonCampaignTransport
+        elif packet.get("revision") == "d5-keyed-machine-campaign-v16":
             from src.workspace.d5_keyed_transport import KeyedCampaignTransport
+
             transport_type = KeyedCampaignTransport
         factory = (
-            (lambda key: transport_type(key, repair_all=True))
-            if args.fixture_repair_all
-            else None
+            (lambda key: transport_type(key, repair_all=True)) if args.fixture_repair_all else None
         )
         report = (
             results(store, packet)
