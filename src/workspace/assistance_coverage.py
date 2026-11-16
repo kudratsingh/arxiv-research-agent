@@ -430,7 +430,8 @@ def validate_review(checks: Any, context: dict[str, Any]) -> None:
 def review_failed(checks: Any, rendered: dict[str, Any]) -> bool:
     declared = {r["id"]: r["status"] for r in rendered["request_coverage"]}
     return (
-        checks.priority_review != "respected"
+        bool(getattr(checks, "coverage_critiques", ()))
+        or checks.priority_review != "respected"
         or any(
             c.atomicity != "atomic"
             or any(v in {"lost", "uncertain"} for v in c.qualifications.model_dump().values())

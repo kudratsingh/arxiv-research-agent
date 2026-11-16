@@ -42,6 +42,9 @@ def _new(name: str, *, __base__: Any, **fields: Any) -> type[BaseModel]:
 
 
 def _codec(policy: dict[str, Any]) -> Any:
+    from src.workspace import assistance_consistency_contract as consistency
+    if consistency.enabled(policy):
+        return consistency
     from src.workspace import assistance_compact_encoding as compact
     if policy.get("wire_encoding_revision") in compact.REVISIONS:
         return compact

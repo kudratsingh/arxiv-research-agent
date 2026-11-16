@@ -107,6 +107,8 @@ def qualification_producer() -> dict[str, Any]:
     files = (
         "workspace/d5_adapter.py",
         "workspace/assistance_keyed_contract.py",
+        "workspace/assistance_consistency_contract.py",
+        "workspace/assistance_consistency_checks.py",
         "workspace/assistance_keyed_checks.py",
         "workspace/assistance_keyed_encoding.py",
         "workspace/provider_schema_compat.py",
@@ -510,6 +512,15 @@ def checker_context(
         from src.workspace.assistance_keyed_checks import schemas as keyed_schemas
         value["output_schema"] = keyed_schemas(value)["wire"]
         value["checker_normalization_revision"] = NORMALIZATION_REVISION
+        from src.workspace import assistance_consistency_contract as consistency
+        if consistency.enabled(sealed.get("task_policy")):
+            from src.workspace import assistance_consistency_checks as consistent_checks
+            value["checker_normalization_revision"] = consistent_checks.NORMALIZATION_REVISION
+            value["question_reference_roles"] = workflow_view["question_references"]
+            value["request_outcome"] = workflow_view["request_outcome"]
+            value["quality_rubric"]["coverage"] = "answered is complete; partial retains useful answers and every remaining gap; lacks_evidence has no answer; omitted is available-but-unanswered. Source context never answers the comparison. Judge each whole part independently of its declaration."
+            value["quality_rubric"]["prose"] = "Context question references do not assert factual premises. Premises are explicit and must refer to cited scored claims. A missing detail/generic gap is a coverage_critique; unsupported_factual_prose requires an actual unscored factual assertion. Preserve all independent findings; any coverage critique still blocks coverage acceptance."
+            value["output_schema"] = consistent_checks.schemas(value)["wire"]
     return value
 
 
@@ -789,7 +800,9 @@ class D5Adapter(QualificationAdapter):
                 from src.workspace.provider_schema_compat import REVISION as COMPAT
                 if sealed["provider_schema_compatibility_revision"] != COMPAT:
                     raise AdmissionError("provider_schema_compatibility_binding_required")
-                expected_policy[KEY] = ENCODING
+                from src.workspace.assistance_consistency_contract import REVISION as CONSISTENCY
+                actual_encoding = sealed["task_policy"].get(KEY)
+                expected_policy[KEY] = CONSISTENCY if actual_encoding == CONSISTENCY else ENCODING
             if sealed["task_policy"] != expected_policy:
                 raise AdmissionError("d5_sealed_task_policy_drift")
         if sealed["settings"] != {
@@ -1108,6 +1121,12 @@ class D5Adapter(QualificationAdapter):
         )
 
     def _checks(self, output: dict[str, Any]) -> Any:
+        from src.workspace import assistance_consistency_contract as consistency
+        if consistency.enabled(self.inputs.settings["d5_request"].get("task_policy")):
+            from src.workspace.assistance_consistency_checks import (
+                checks_model as consistency_model,
+            )
+            return consistency_model().model_validate(output)
         if self.inputs.settings["d5_request"]["schema_revision"] == "workspace-assistance-keyed-v16" and self.inputs.settings["d5_operation"] == "probe":
             from src.workspace.assistance_keyed_checks import probe_checks_model as keyed_probe
             return keyed_probe().model_validate(output)

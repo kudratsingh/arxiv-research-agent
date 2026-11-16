@@ -47,6 +47,8 @@ def safe_reason(exc: BaseException, key: str) -> str:
 
 
 def received_rejection(data: dict[str, Any], case_id: str) -> bool:
+    if data.get("sealed_input", {}).get("settings", {}).get("compatibility_revision") == spec.SUCCESSOR_REVISION:
+        return False
     if case_id not in {"learn-list-control", "learn-compact", "research-compact"}:
         return False
     contacts = data.get("adapter", {}).get("contacts", [])
@@ -92,7 +94,7 @@ def template(packet: dict[str, Any]) -> dict[str, Any]:
         "retained_liability_exception_approved": False,
         "anticipated_received_rejection_continuation_approved": False,
         "retained_liabilities": packet["retained_liabilities"],
-        "case_order": list(spec.ORDER),
+        "case_order": list(spec.order(packet)),
         "case_bindings_digest": _digest(spec.compile_inputs(packet)),
     }
 
@@ -119,7 +121,7 @@ def _authorization(packet: dict[str, Any], value: dict[str, Any], fixture: bool)
         or not value.get("approved_by")
         or not value.get("approval_source")
         or value.get("retained_liability_exception_approved") is not True
-        or value.get("anticipated_received_rejection_continuation_approved") is not True
+        or value.get("anticipated_received_rejection_continuation_approved") is not spec.allows_received_rejections(packet)
     ):
         raise AdmissionError("diagnostic_explicit_owner_approval_required")
     try:
@@ -238,12 +240,12 @@ def guard(
         if (
             obs.get("stop_required")
             or obs.get("remote_compiler_acceptance") is None
-            or (key == spec.ORDER[0] and obs.get("remote_compiler_acceptance") is not True)
+            or (key == spec.order(packet)[0] and obs.get("remote_compiler_acceptance") is not True)
         ):
             raise AdmissionError("diagnostic_prior_stop_condition")
     rows = {r["case"]: r for r in _snapshots(conn, packet)}
-    index = spec.ORDER.index(current_key)
-    for earlier in spec.ORDER[:index]:
+    index = spec.order(packet).index(current_key)
+    for earlier in spec.order(packet)[:index]:
         if rows[earlier]["state"] == "unrun" and earlier != "research-compact":
             raise AdmissionError("diagnostic_packet_order_required")
     for target, prerequisite in [
@@ -264,16 +266,16 @@ def guard(
     ):
         raise AdmissionError("diagnostic_programme_capacity_exceeded")
     if (
-        len(new["generation_job_ids"]) + (reserve is not None) > 6
-        or new["messages"] + (endpoint == "messages" or reserve is not None) > 6
-        or new["counts"] + (endpoint == "messages/count_tokens" or reserve is not None) > 6
+        len(new["generation_job_ids"]) + (reserve is not None) > packet["limits"]["jobs"]
+        or new["messages"] + (endpoint == "messages" or reserve is not None) > packet["limits"]["messages"]
+        or new["counts"] + (endpoint == "messages/count_tokens" or reserve is not None) > packet["limits"]["counts"]
     ):
         raise AdmissionError("diagnostic_scope_capacity_exceeded")
     if Decimal(total["known_usd"]) + max(
         Decimal(total["pending_usd"]), Decimal(total["unknown_usd"])
     ) + (reserve or 0) > 20 or Decimal(new["known_usd"]) + max(
         Decimal(new["pending_usd"]), Decimal(new["unknown_usd"])
-    ) + (reserve or 0) > Decimal("1.80"):
+    ) + (reserve or 0) > Decimal(packet["limits"]["new_USD"]):
         raise AdmissionError("diagnostic_budget_exceeded")
     return new
 
@@ -540,7 +542,7 @@ class DiagnosticAdapter(QualificationAdapter):
                 workflow_usd=amounts["workflow_usd"],
                 judge_usd=amounts["judge_usd"],
             )
-            if ins > 40000 or outs > wire["body"]["max_tokens"]:
+            if ins > (32000 if self.packet["revision"] == spec.SUCCESSOR_REVISION else 40000) or outs > wire["body"]["max_tokens"]:
                 raise AdmissionError("diagnostic_actual_usage_exceeded")
             obs.update(
                 remote_compiler_acceptance=True,
@@ -602,7 +604,7 @@ class DiagnosticAdapter(QualificationAdapter):
                 ):
                     obs.update(
                         remote_compiler_acceptance=False,
-                        expected_received_grammar_rejection=True,
+                        expected_received_grammar_rejection=spec.allows_received_rejections(self.packet),
                         complete_response_received=True,
                     )
             obs.update(error_class=type(exc).__name__, reason=safe_reason(exc, self.api_key))
@@ -752,7 +754,7 @@ async def run(
     return {
         "packet_digest": packet["packet_digest"],
         "transport_mode": "mock" if isinstance(transport, httpx.MockTransport) else "provider",
-        "cases": [{"id": key, **results.get(key, {"state": "unrun"})} for key in spec.ORDER],
+        "cases": [{"id": key, **results.get(key, {"state": "unrun"})} for key in spec.order(packet)],
         "stop": stop,
         "human_qualification": False,
         "full_campaign_ready": False,

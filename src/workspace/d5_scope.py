@@ -37,6 +37,10 @@ def limits_for(settings: dict[str, Any]) -> dict[str, Any]:
         from src.workspace.d5_coverage_policy import profile_limits
 
         return profile_limits(settings["d5_scope_profile"])
+    from src.workspace.assistance_consistency_contract import enabled as consistency_enabled
+    if consistency_enabled(settings.get("d5_request", {}).get("task_policy")):
+        from src.workspace.d5_campaign_v15_policy import LIMITS as CAPACITY_LIMITS
+        return CAPACITY_LIMITS
     if settings.get("operation_routes"):
         from src.workspace.d5_operations import OPUS_LIMITS, validate
 

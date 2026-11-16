@@ -37,7 +37,9 @@ def build_wire(request: dict[str, Any]) -> dict[str, Any]:
         )
         value["identity_contract"] = "Required named coverage entries exactly match sealed requested parts. Use gap_reasons within one part for all missing details. Claims use named slots c1..mode cap; c1 is required, null means an unused remaining slot. Never emit claim_id/part_id or a reverse mapping inside values. Checker named identities/digests are derived server-side from the exact current sealed context; provide every verdict, never repeat IDs."
     encoding = value.get("sealed_request", {}).get("task_policy", {}).get("wire_encoding_revision")
-    if encoding is not None:
+    from src.workspace.assistance_consistency_contract import REVISION as CONSISTENCY
+    consistency = encoding == CONSISTENCY
+    if encoding is not None and not consistency:
         from src.workspace.assistance_keyed_encoding import REVISION, UNUSED
         if encoding != REVISION:
             raise ValueError("keyed_encoding_revision_mismatch")
@@ -89,6 +91,19 @@ def build_wire(request: dict[str, Any]) -> dict[str, Any]:
                 "No workflow atomicity, qualification, coverage or priority fields exist here. IDs, input digests and prose "
                 "field/index values are server-derived and must not be echoed. Do not answer the task or invent evidence."
             )
+    if consistency:
+        value["capacity_policy"].update(
+            checker_revision="workspace-assistance-consistency-checks-v18",
+            normalization_revision="workspace-assistance-consistency-normalization-v18",
+        )
+        value["identity_contract"] = "Emit only actual claims in order. Server assigns c1,c2 and later positions. Coverage is the only answer/context mapping: exactly each required named part, all genuine gap reasons. Questions distinguish context_claim_ids (topic links, no factual premise) from premise_claim_ids (investigate_claim only, independently checked). The structural answer tag grants no full-answer credit."
+        value["request_quality_rule"] = value["request_quality_rule"].replace(
+            "as answered, lacks_evidence or omitted", "as answered, partial, lacks_evidence or omitted"
+        ) + " Partial requires useful answer refs AND genuine remaining gaps; answered requires no remaining gap. Context alone never earns answer credit."
+        value["procedural_rendering"]["rule"] = "Neutral intents may have context_claim_ids but no premise_claim_ids. investigate_claim requires nonempty premise_claim_ids; never introduce an assertion outside the scored claims."
+        if phase == "check":
+            value["identity_contract"] = "Required named current claim, part and prose-location keys exactly once. Identities, digests and aggregate outcomes are server-derived from this exact response. No global prose-clear flag."
+            value["checker_wire_rule"] = "Supply every current claim support/atomicity/qualification judgment, every independent part coverage decision and critiques list, priority, and all exact-location prose_findings and prose_uncertainties lists. Coverage criticism belongs to coverage_checks.<part>.critiques. prose_findings contain unsupported substantive factual assertions, not missing request detail; uncertainty remains explicit. Empty required lists explicitly report no finding; missing judgments are rejected. Preserve all independent findings."
     selected = ROUTES["check_recheck_probe" if phase == "check" else "draft_repair"]
     wire = _build_request_kwargs(
         profile=RequestProfile(selected["model"], None, False, selected["effort"], True),

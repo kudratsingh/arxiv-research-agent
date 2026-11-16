@@ -23,6 +23,7 @@ from src.workspace.d5_capacity_policy import POLICY, ROUTES
 from src.workspace.material import SourceMaterial, SourceSpan
 
 REVISION = "d5-provider-compatibility-diagnostic-v1"
+SUCCESSOR_REVISION = "d5-consistency-compatibility-diagnostic-v18"
 PROGRAM_ID = "research-evaluation-20261105-v1"
 PROGRAM_LIMITS = {"jobs": 64, "messages": 160, "counts": 200, "USD": "20", "concurrency": 1}
 LIMITS = {"jobs": 6, "messages": 6, "counts": 6, "new_USD": "1.80", "concurrency": 1}
@@ -56,7 +57,22 @@ def materials(packet: dict[str, Any]) -> tuple[SourceMaterial, ...]:
     )
 
 
+def order(packet: dict[str, Any]) -> tuple[str, ...]:
+    if packet.get("revision") == SUCCESSOR_REVISION:
+        from src.workspace.d5_consistency_packet import ORDER as successor_order
+        return successor_order
+    return ORDER
+
+
+def allows_received_rejections(packet: dict[str, Any]) -> bool:
+    return packet.get("revision") == REVISION
+
+
 def verify(packet: dict[str, Any]) -> None:
+    if packet.get("revision") == SUCCESSOR_REVISION:
+        from src.workspace.d5_consistency_packet import verify as verify_successor
+        verify_successor(packet)
+        return
     if (
         packet.get("revision") != REVISION
         or packet.get("code") != producer()
@@ -331,6 +347,10 @@ def freeze(
 
 def compile_inputs(packet: dict[str, Any]) -> dict[str, dict[str, Any]]:
     verify(packet)
+    return _compile_inputs(packet)
+
+
+def _compile_inputs(packet: dict[str, Any]) -> dict[str, dict[str, Any]]:
     scope = "compat-" + packet["packet_digest"][:24]
     result = {}
     for case in packet["cases"]:
@@ -349,7 +369,7 @@ def compile_inputs(packet: dict[str, Any]) -> dict[str, dict[str, Any]]:
         route = ROUTES["check_recheck_probe" if case["family"] == "checker" else "draft_repair"]
         request_id = "compat-" + packet["packet_digest"][:16] + "-" + case["id"]
         settings = {
-            "compatibility_revision": REVISION,
+            "compatibility_revision": packet["revision"],
             "compatibility_scope": scope,
             "compatibility_packet_digest": packet["packet_digest"],
             "case_id": case["id"],
@@ -364,7 +384,7 @@ def compile_inputs(packet: dict[str, Any]) -> dict[str, dict[str, Any]]:
             "d5_capacity_policy": deepcopy(POLICY),
         }
         inputs = GenerationInput(
-            "deep_dive", route["model"], REVISION, tuple(refs[k] for k in sorted(refs)), settings
+            "deep_dive", route["model"], packet["revision"], tuple(refs[k] for k in sorted(refs)), settings
         )
         result[case["id"]] = {
             "owner": "compat-" + packet["packet_digest"][:12] + "-" + case["id"],
@@ -378,6 +398,9 @@ def compile_inputs(packet: dict[str, Any]) -> dict[str, dict[str, Any]]:
 def observed(
     payload: dict[str, Any], case: dict[str, Any], packet: dict[str, Any]
 ) -> dict[str, Any]:
+    if packet.get("revision") == SUCCESSOR_REVISION:
+        from src.workspace.d5_consistency_packet import observed as observe_successor
+        return observe_successor(payload, case, packet)
     if case["family"] == "checker":
         from src.workspace.assistance_coverage import validate_review
 

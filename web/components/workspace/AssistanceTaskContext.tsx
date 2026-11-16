@@ -42,7 +42,7 @@ export function RequestCoverage({ output, prefix }: { output: AssistanceOutput; 
   const rows = output.request_coverage.map(part => {
     const gaps = [...new Set((part.gap_texts ?? (part.status === "answered" ? [] : [part.gap_text])).filter(Boolean))];
     const inconsistent = part.status === "answered" && (gaps.length > 0 || output.response_disposition === "full_abstention" || (output.comparison_unanswered && part.kind === "comparison"));
-    const label = inconsistent ? "Coverage status inconsistent" : part.status === "answered" ? "Declared answered" : part.status === "lacks_evidence" ? "Lacks evidence" : part.status === "omitted" ? "Omitted from this response" : "Coverage status unavailable";
+    const label = inconsistent ? "Coverage status inconsistent" : part.status === "answered" ? "Declared answered" : part.status === "partial" ? "Partially answered · remaining gaps" : part.status === "lacks_evidence" ? "Lacks evidence" : part.status === "omitted" ? "Omitted from this response" : "Coverage status unavailable";
     return { part, gaps, label, inconsistent };
   });
   const complete = output.coverage_complete && rows.every(({ part, inconsistent }) => part.status === "answered" && !inconsistent);

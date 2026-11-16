@@ -1,0 +1,1 @@
+{"response":{"reason":"insufficient_selected_evidence","coverage":{"omitted":[],"lacks_evidence":[{"gap":"methods","part_id":"p1"},{"gap":"source_scope","part_id":"p2"},{"gap":"common_evaluation","part_id":"p3"}]},"disposition":"full_abstention","next_action":"request_context"}}

@@ -289,6 +289,10 @@ def _wire_model(context: dict[str, Any], *, probe: bool) -> type[BaseModel]:
 
 def schemas(context: dict[str, Any], *, probe: bool = False) -> dict[str, Any]:
     """Generate required current keys and the actual SDK-transformed schema."""
+    from src.workspace import assistance_consistency_checks as consistency
+    if consistency.enabled(context):
+        return consistency.schemas(context, probe=probe)
+
     model = _wire_model(context, probe=probe)
     return {"local": model.model_json_schema(), "wire": transform_schema(model)}
 
@@ -297,6 +301,10 @@ def normalize(
     raw: dict[str, Any], context: dict[str, Any], *, probe: bool = False
 ) -> dict[str, Any]:
     """Validate exact keys, then attach only server-supplied identities/digests."""
+    from src.workspace import assistance_consistency_checks as consistency
+    if consistency.enabled(context):
+        return consistency.normalize(raw, context, probe=probe)
+
     claims, parts = _context(context, probe=probe)
     _bounded(raw, _limits()["compact_checker_utf8_bytes"], "capacity_compact_checks_bytes_exceeded")
     value = (
@@ -340,6 +348,10 @@ def compact(
     normalized: dict[str, Any], context: dict[str, Any], *, probe: bool = False
 ) -> dict[str, Any]:
     """Exact fixture inverse; refuse mismatched bindings, ordering or reasons."""
+    from src.workspace import assistance_consistency_checks as consistency
+    if consistency.enabled(context):
+        return consistency.compact(normalized, context, probe=probe)
+
     _context(context, probe=probe)
     model = ProbeChecks if probe else CoverageChecks
     value = model.model_validate(normalized).model_dump(mode="json")

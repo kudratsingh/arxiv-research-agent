@@ -55,3 +55,16 @@ it("keeps the legacy no-gap message hidden on answered rows", () => {
   expect(screen.getByText("Declared answered")).toBeVisible();
   expect(screen.queryByText(/No evidence gap declared/)).toBeNull();
 });
+
+
+// The successor's partial declaration preserves genuine gaps without full credit.
+it("shows partial answers and every remaining gap without declaring completion", () => {
+  render(<RequestCoverage prefix="partial-job" output={{ ...base, coverage_complete: true, request_coverage: [
+    { id: "p1", request: "Explain the method and protocol", kind: "answer", status: "partial", gap_text: "Protocol unavailable", gap_reasons: ["protocol", "data_splits"], gap_texts: ["Protocol unavailable", "Data split unavailable"], answer_claim_ids: ["c1"], context_claim_ids: ["c2"] },
+  ] }} />);
+  expect(screen.getByText(/Partially answered · remaining gaps · Protocol unavailable · Data split unavailable/)).toBeVisible();
+  expect(screen.getByRole("link", { name: "c1" })).toHaveAttribute("href", "#partial-job-c1");
+  expect(screen.getByRole("link", { name: "c2" })).toHaveAttribute("href", "#partial-job-c2");
+  expect(screen.queryByText(/All requested parts declared answered/)).toBeNull();
+  expect(screen.queryByText("Declared answered")).toBeNull();
+});

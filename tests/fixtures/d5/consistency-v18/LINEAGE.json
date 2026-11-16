@@ -1,0 +1,23 @@
+{
+  "basis": "Original public-context generated payloads, unchanged. Any test modification or transport envelope is synthetic and cannot receive provider-success or factual-support credit.",
+  "fixtures": [
+    {
+      "fixture": "tests/fixtures/d5/consistency-v18/learn-accepted-control-original.json",
+      "source": "provider-compat-live-v17r2-20261116T002251Z/cases/learn-accepted-control/ORIGINAL-TEXT.txt",
+      "sha256": "3209f133aadf2d2a141e6c3470942df52f16fcbf6ec45136434288612924b337",
+      "basis": "Complete unchanged generated JSON from already public retained-source context. Private HTTP IDs, usage, authorization and journals remain only in the permanent private archive. Its historical contract result and unqualified status remain unchanged."
+    },
+    {
+      "fixture": "tests/fixtures/d5/consistency-v18/learn-compact-original.json",
+      "source": "provider-compat-live-v17r2-20261116T002251Z/cases/learn-compact/ORIGINAL-TEXT.txt",
+      "sha256": "9f9c13ab417fa6157a0d58352e05790dc24214d051206ffa866d18fc70cd0d15",
+      "basis": "Complete unchanged generated JSON from already public retained-source context. Private HTTP IDs, usage, authorization and journals remain only in the permanent private archive. Its historical contract result and unqualified status remain unchanged."
+    },
+    {
+      "fixture": "tests/fixtures/d5/consistency-v18/checker-small-original.json",
+      "source": "provider-compat-live-v17r2-20261116T002251Z/cases/checker-small/ORIGINAL-TEXT.txt",
+      "sha256": "2527f2982f20430a2b7d053e63231e19b3606d069f1f4211b3c0907482e0b979",
+      "basis": "Complete unchanged generated JSON from already public retained-source context. Private HTTP IDs, usage, authorization and journals remain only in the permanent private archive. Its historical contract result and unqualified status remain unchanged."
+    }
+  ]
+}
