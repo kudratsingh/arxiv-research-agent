@@ -29,10 +29,12 @@ from src.workspace.d5_freeze import restore_input
 from src.workspace.qualification_budget import census
 from src.workspace.store import WorkspaceStore
 
-pytestmark = pytest.mark.integration
-
 BASELINE = Path.home() / (
     "Machine-Learning-Projects/arxiv-evidence/d5-behavior-v20-20261117/READONLY-BASELINE.json.gz"
+)
+PUBLIC_PACKET = (
+    Path(__file__).resolve().parents[1]
+    / "planning/15-evaluation-audit-and-recovery/evidence/behavior-v20/packet.json.gz"
 )
 NOW = datetime(2026, 11, 18, 12, tzinfo=UTC)
 
@@ -78,6 +80,19 @@ def frozen():
         env.setattr(d5_authorization, "datetime", FixtureClock)
         packet = continuation.freeze(store, snapshot)
         yield store, packet, snapshot
+
+
+@pytest.fixture(scope="module")
+def frozen_packet(request):
+    if PUBLIC_PACKET.is_file():
+        packet = read(PUBLIC_PACKET)
+        continuation.verify_packet(packet)
+        return packet
+    if os.environ.get("CI", "").lower() in {"1", "true"}:
+        pytest.fail("frozen public v20 packet required for authority contract tests")
+    # Local staging can exercise the same contracts before the public byte
+    # freeze. CI uses the exact public packet without the private ledger mirror.
+    return request.getfixturevalue("frozen")[1]
 
 
 def approved_receipt(packet):
@@ -142,9 +157,9 @@ def rehash(packet):
         (("probes", 0, "wire", "max_tokens"), 1, "question_or_selection|probe_body_or_reference"),
     ],
 )
-def test_rehashed_packet_changes_remain_inadmissible(frozen, path, replacement, error):
-    _store, packet, _snapshot = frozen
-    altered = deepcopy(packet)
+@pytest.mark.unit
+def test_rehashed_packet_changes_remain_inadmissible(frozen_packet, path, replacement, error):
+    altered = deepcopy(frozen_packet)
     item = altered
     for field in path[:-1]:
         item = item[field]
@@ -154,9 +169,9 @@ def test_rehashed_packet_changes_remain_inadmissible(frozen, path, replacement, 
         continuation.verify_packet(altered)
 
 
-def test_rehashed_packet_and_proposal_cannot_coordinate_a_different_history(frozen):
-    _store, packet, _snapshot = frozen
-    altered = deepcopy(packet)
+@pytest.mark.unit
+def test_rehashed_packet_and_proposal_cannot_coordinate_a_different_history(frozen_packet):
+    altered = deepcopy(frozen_packet)
     history = {**altered["history"], "messages": altered["history"]["messages"] - 1}
     altered["history"] = history
     altered["campaign_extension"]["core"]["basis"] = deepcopy(history)
@@ -165,9 +180,9 @@ def test_rehashed_packet_and_proposal_cannot_coordinate_a_different_history(froz
         continuation.verify_packet(altered)
 
 
-def test_rehashed_authority_proposal_cannot_be_rebound_to_another_plan(frozen):
-    _store, packet, _snapshot = frozen
-    altered = deepcopy(packet)
+@pytest.mark.unit
+def test_rehashed_authority_proposal_cannot_be_rebound_to_another_plan(frozen_packet):
+    altered = deepcopy(frozen_packet)
     core = altered["campaign_extension"]["core"]
     core["plan_digest"] = "1" * 64
     altered["campaign_extension"]["proposal_digest"] = _digest(core)
@@ -191,6 +206,7 @@ def test_rehashed_authority_proposal_cannot_be_rebound_to_another_plan(frozen):
         ("historical_uncertainty_exception_approved", False),
     ],
 )
+@pytest.mark.integration
 def test_external_receipt_requires_explicit_bound_attributed_approval(frozen, field, value):
     store, packet, _snapshot = frozen
     receipt = approved_receipt(packet)
@@ -204,16 +220,19 @@ def test_external_receipt_requires_explicit_bound_attributed_approval(frozen, fi
 @pytest.mark.parametrize(
     "field", ["packet_digest", "case_bindings_digest", "case_order", "source_bindings"]
 )
-def test_receipt_binding_cannot_be_replaced_even_if_caller_requests_registration(frozen, field):
-    store, packet, _snapshot = frozen
-    receipt = approved_receipt(packet)
+@pytest.mark.unit
+def test_receipt_binding_cannot_be_replaced_even_if_caller_requests_registration(
+    frozen_packet, field
+):
+    receipt = approved_receipt(frozen_packet)
     receipt[field] = None
     with pytest.raises(AdmissionError, match="continuation_exact_owner_receipt_required"):
-        continuation.record(store, packet, receipt)
+        continuation.record(None, frozen_packet, receipt)
     with pytest.raises(AdmissionError, match="continuation_exact_verified_packet_required"):
-        authority.record_external(store, receipt, packet=packet)
+        authority.record_external(None, receipt, packet=frozen_packet)
 
 
+@pytest.mark.integration
 def test_disposable_receipt_refuses_provider_mode_and_disabled_mock(frozen, monkeypatch):
     store, packet, _snapshot = frozen
     receipt = approved_receipt(packet)
@@ -239,6 +258,7 @@ def test_disposable_receipt_refuses_provider_mode_and_disabled_mock(frozen, monk
         ("retained_exceptions", [], "historical_prefix_or_holds"),
     ],
 )
+@pytest.mark.integration
 def test_rehashed_proposal_does_not_allow_programme_or_ancestor_drift(frozen, field, value, error):
     store, packet, _snapshot = frozen
     proposal = deepcopy(packet["campaign_extension"])
@@ -251,6 +271,7 @@ def test_rehashed_proposal_does_not_allow_programme_or_ancestor_drift(frozen, fi
 @pytest.mark.parametrize(
     "kind", ["version", "material", "member", "history", "parent_scope", "parent_revoked"]
 )
+@pytest.mark.integration
 def test_real_mirrored_ledger_drift_refuses_authority(frozen, kind):
     store, packet, snapshot = frozen
     receipt = approved_receipt(packet)
@@ -304,6 +325,7 @@ def test_real_mirrored_ledger_drift_refuses_authority(frozen, kind):
 
 
 @pytest.mark.parametrize("index", range(4))
+@pytest.mark.integration
 def test_each_history_hold_is_required_at_its_frozen_amount(frozen, index):
     store, packet, snapshot = frozen
     receipt = approved_receipt(packet)
@@ -354,6 +376,7 @@ def assert_no_dispatch(conn, receipt, baseline):
     assert census(conn, baseline["members"][0], members=baseline["members"]) == baseline["history"]
 
 
+@pytest.mark.integration
 def test_second_phase_transaction_rolls_back_and_identical_receipt_resumes(frozen, monkeypatch):
     _store, packet, baseline = frozen
     receipt = approved_receipt(packet)
@@ -507,6 +530,7 @@ def test_second_phase_transaction_rolls_back_and_identical_receipt_resumes(froze
             assert_no_dispatch(conn, receipt, baseline)
 
 
+@pytest.mark.integration
 def test_freeze_refuses_unpinned_or_non_offline_source(frozen, monkeypatch):
     store, _packet, snapshot = frozen
     with pytest.raises(AdmissionError, match="continuation_exact_snapshot_required"):
@@ -519,3 +543,80 @@ def test_freeze_refuses_unpinned_or_non_offline_source(frozen, monkeypatch):
     monkeypatch.setenv("WORKSPACE_D5_OFFLINE", "0")
     with pytest.raises(AdmissionError, match="continuation_freeze_offline_only"):
         continuation.freeze(store, snapshot)
+
+
+@pytest.mark.unit
+def test_registration_requires_exact_order_routes_and_delegates_authority(monkeypatch):
+    from src.workspace import d5_campaign_extension
+    from src.workspace.d5_capacity_policy import POLICY
+
+    conn = object()
+    schedule = list(policy.CASE_MAP)
+    receipt = {
+        "campaign_revision": policy.REVISION,
+        "limits": policy.LIMITS,
+        "stages": ["B", "C", "D"],
+        "case_order": schedule,
+    }
+    compiled = {
+        case: {
+            "stage": "B" if index < 2 else "C" if index < 6 else "D",
+            "input": {
+                "settings": {
+                    "d5_campaign_revision": policy.REVISION,
+                    "operation_routes": policy.ROUTES,
+                    "operation_deadlines": policy.DEADLINES,
+                    "d5_capacity_policy": POLICY,
+                }
+            },
+        }
+        for index, case in enumerate(schedule)
+    }
+    calls = []
+    monkeypatch.setattr(d5_campaign_extension, "validate_scope", lambda *args: calls.append(args))
+    policy.registration(conn, authority.PROGRAM_ID, compiled, receipt)
+    assert calls == [(conn, authority.PROGRAM_ID, receipt)]
+
+    with pytest.raises(AdmissionError, match="continuation_exact_schedule_or_routes_required"):
+        policy.registration(
+            conn, authority.PROGRAM_ID, compiled, {**receipt, "case_order": schedule[::-1]}
+        )
+    wrong_route = deepcopy(compiled)
+    wrong_route[schedule[0]]["input"]["settings"]["operation_routes"] = {}
+    with pytest.raises(AdmissionError, match="continuation_exact_schedule_or_routes_required"):
+        policy.registration(conn, authority.PROGRAM_ID, wrong_route, receipt)
+    assert len(calls) == 1
+
+
+@pytest.mark.unit
+def test_order_requires_terminal_predecessors_and_both_development_contracts(monkeypatch):
+    from src.workspace import d5_campaign_policy, d5_campaign_v19_policy
+
+    conn = object()
+    schedule = list(policy.CASE_MAP)
+    scope = {
+        "id": "synthetic-continuation",
+        "authorization_record": {"campaign_revision": policy.REVISION, "case_order": schedule},
+        "cases": {
+            case: {"stage": "B" if index < 2 else "C" if index < 6 else "D"}
+            for index, case in enumerate(schedule)
+        },
+    }
+    done = {}
+    calls = []
+    monkeypatch.setattr(d5_campaign_policy, "audit_outcomes", lambda *_: done)
+    monkeypatch.setattr(
+        d5_campaign_v19_policy, "require_development_contracts", lambda *args: calls.append(args)
+    )
+    first, second, research, *_ = schedule
+    policy.guard_order(conn, scope, first)
+    with pytest.raises(AdmissionError, match="campaign_previous_case_not_terminal"):
+        policy.guard_order(conn, scope, research)
+    done[first] = {}
+    policy.guard_order(conn, scope, second)
+    assert not calls
+    done[second] = {}
+    policy.guard_order(conn, scope, research)
+    assert calls == [(conn, scope)]
+    with pytest.raises(AdmissionError, match="continuation_schedule_binding_drift"):
+        policy.guard_order(conn, scope, "unbound")
