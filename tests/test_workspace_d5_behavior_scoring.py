@@ -9,9 +9,11 @@ from pathlib import Path
 import pytest
 
 from src.workspace.admission import AdmissionError, _digest
-from src.workspace.d5_adapter import checker_context, initial_context
+from src.workspace.d5_adapter import checker_context, initial_context, prepare_input
 from src.workspace.d5_answerability import score_parts
 from src.workspace.d5_behavior_scoring import POLICY, score_campaign
+from src.workspace.d5_capacity_policy import DEADLINES
+from src.workspace.d5_capacity_policy import POLICY as CAPACITY_POLICY
 from src.workspace.d5_comparison_transport import checker_payload, draft_payload
 from src.workspace.d5_operations import wire
 from src.workspace.d5_report_binding import message_output
@@ -542,3 +544,43 @@ def test_unsupported_comparison_answer_fails_even_with_two_sources_and_clean_syn
     assert part["behavior"] == result["behavioral_gate"] == "FAIL"
     assert part["request_fulfillment"] == "unsupported_answer"
     assert "comparison_abstention_required" in part["errors"]
+
+
+@pytest.mark.parametrize(
+    "field", ["valid", "units", "task_policy", "full_preview_digest", "missing"]
+)
+def test_compact_snapshot_requires_exact_canonical_request(frozen, field):
+    packet, materials, snapshots = frozen
+    case = packet["cases"][2]
+    snapshot = deepcopy(snapshots[case["id"]])
+    snapshot["packet_digest"] = packet["packet_digest"]
+    snapshot["request"] = deepcopy(
+        prepare_input(
+            case["sealed"],
+            scope_id="test-synthetic-compact",
+            packet_digest=packet["packet_digest"],
+            case_id=case["id"],
+            capacity_policy=CAPACITY_POLICY,
+            operation_deadlines=DEADLINES,
+            operation_routes=packet["operation_routes"],
+        ).settings["d5_request"]
+    )
+    assert snapshot["request"] != case["sealed"]
+    if field == "units":
+        units = snapshot["request"]["units"]
+        units[next(iter(units))]["quote"] += " Changed."
+    elif field == "task_policy":
+        snapshot["request"]["task_policy"]["requested_parts"][0]["request"] += " Changed."
+    elif field == "full_preview_digest":
+        snapshot["request"][field] = "sha256:other"
+    elif field == "missing":
+        del snapshot["request"]
+    result = score(packet, materials, snapshots | {case["id"]: snapshot})
+    workflow = result["workflows"][0]
+    if field == "valid":
+        assert workflow["assessment_binding"]["status"] == "bound"
+        assert result["behavioral_gate"] == "PASS"
+    else:
+        assert workflow["assessment_binding"]["reason"] == "invalid_raw_snapshot"
+        assert result["behavioral_gate"] == "HOLD"
+        assert result["denominators"]["unscored_parts"] == 3

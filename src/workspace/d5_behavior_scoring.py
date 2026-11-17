@@ -13,7 +13,10 @@ from typing import Any, get_args
 
 from src.workspace.admission import AdmissionError, _digest
 from src.workspace.assistance_coverage_shapes import EvidenceGap
+from src.workspace.d5_adapter import prepare_input
 from src.workspace.d5_campaign_report import ratio, score_probes, score_workflow
+from src.workspace.d5_capacity_policy import ASSISTANCE_REVISION, DEADLINES, ROUTES
+from src.workspace.d5_capacity_policy import POLICY as CAPACITY_POLICY
 from src.workspace.grounding import EvidenceRef, _materials, _resolve
 from src.workspace.material import SourceMaterial
 
@@ -66,6 +69,35 @@ def _selected_evidence_intact(
         return False
 
 
+def _snapshot_matches(case: dict[str, Any], snapshot: dict[str, Any]) -> bool:
+    if snapshot.get("case_id") != case["id"] or snapshot.get("operation", "workflow") != "workflow":
+        return False
+    sealed = case["sealed"]
+    request = snapshot.get("request")
+    if request == sealed:
+        return True
+    packet_digest = snapshot.get("packet_digest")
+    if not isinstance(request, dict) or not isinstance(packet_digest, str) or not packet_digest:
+        return False
+    # QualificationResults returns the compact persisted request. Reconstruct
+    # it with the same pure projection used at admission, including its full
+    # preview and schema/wire digests, before binding the current check.
+    prospective = sealed["schema_revision"] in {
+        ASSISTANCE_REVISION,
+        "workspace-assistance-keyed-v16",
+    }
+    compiled = prepare_input(
+        sealed,
+        scope_id="d5-" + packet_digest[:24],
+        packet_digest=packet_digest,
+        case_id=case["id"],
+        capacity_policy=CAPACITY_POLICY if prospective else None,
+        operation_deadlines=DEADLINES if prospective else None,
+        operation_routes=ROUTES if prospective else None,
+    )
+    return bool(request == compiled.settings["d5_request"])
+
+
 def _current_workflow(
     case: dict[str, Any],
     snapshot: dict[str, Any] | None,
@@ -74,10 +106,7 @@ def _current_workflow(
 ) -> dict[str, Any]:
     """Use legacy causal binding and normalized current judgments on raw input."""
     try:
-        if snapshot is not None and (
-            snapshot.get("case_id", case["id"]) != case["id"]
-            or snapshot.get("request", case["sealed"]) != case["sealed"]
-        ):
+        if snapshot is not None and not _snapshot_matches(case, snapshot):
             raise ValueError("snapshot_case_or_request_mismatch")
         return score_workflow(case, snapshot, materials, routes=routes)
     except (ValueError, KeyError, IndexError, TypeError):
