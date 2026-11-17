@@ -390,6 +390,7 @@ def stop_details(
     response = last_contact.get("response") if isinstance(last_contact, dict) else None
     stop_reason = response.get("stop_reason") if isinstance(response, dict) else None
     classification, code = "unexpected_exception", type(error).__name__
+    reason_details = {}
     if isinstance(error, asyncio.CancelledError) or (
         isinstance(error, AdmissionError) and error.args == ("campaign_cancelled_no_dispatch",)
     ):
@@ -409,17 +410,39 @@ def stop_details(
         classification, code = "response_contract_failure", type(error).__name__
     elif isinstance(error, AdmissionError):
         code = str(error)
-        classification = {
-            "input_measurement_exceeds_cap_or_invalid": "input_capacity_or_invalid_count",
-            "usage_cap_exceeded": "usage_capacity_failure",
-            "invalid_or_unpriced_usage": "usage_or_model_binding_failure",
-            "campaign_development_contract_incomplete": "development_contract_failure",
-            "campaign_accounting_or_outcome_corruption": "accounting_corruption",
-            "campaign_v20_prior_failed_accounting_receipt_drift": "accounting_corruption",
-        }.get(code, "admission_or_contract_failure")
+        current_response_failures = {
+            "campaign_development_contract_incomplete": (
+                "campaign_current_response_contract_incomplete",
+                "current_response_contract_failure",
+            ),
+            "campaign_development_binding_drift": (
+                "campaign_current_response_binding_drift",
+                "current_response_binding_failure",
+            ),
+            "campaign_development_material_unavailable": (
+                "campaign_current_response_material_unavailable",
+                "current_response_material_unavailable",
+            ),
+        }
+        if code in current_response_failures:
+            if stage == "B":
+                classification = "development_contract_failure"
+            else:
+                original = code
+                code, classification = current_response_failures[original]
+                reason_details = {"reason": code, "raw_reason": original}
+        else:
+            classification = {
+                "input_measurement_exceeds_cap_or_invalid": "input_capacity_or_invalid_count",
+                "usage_cap_exceeded": "usage_capacity_failure",
+                "invalid_or_unpriced_usage": "usage_or_model_binding_failure",
+                "campaign_accounting_or_outcome_corruption": "accounting_corruption",
+                "campaign_v20_prior_failed_accounting_receipt_drift": "accounting_corruption",
+            }.get(code, "admission_or_contract_failure")
     return {
         "stage": stage,
         "local_stage": local_stage,
         "classification": classification,
         "reason_code": code,
+        **reason_details,
     }

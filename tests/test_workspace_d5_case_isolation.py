@@ -102,3 +102,34 @@ def test_arbitrary_exception_never_classifies_by_copied_error_text():
         assert not preserve_failed_case(None, "unused", {"stage": "C"}, error)
     stop = stop_details(RuntimeError(SEMANTIC_FAILURE), "C", "draft", {})
     assert stop["classification"] == "unexpected_exception"
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    ("suffix", "classification"),
+    [
+        ("contract_incomplete", "current_response_contract_failure"),
+        ("binding_drift", "current_response_binding_failure"),
+        ("material_unavailable", "current_response_material_unavailable"),
+    ],
+)
+def test_v20_stop_uses_failed_case_stage_when_reusing_checker_validation(suffix, classification):
+    raw = "campaign_development_" + suffix
+    error = AdmissionError(raw)
+    development = stop_details(error, "B", "development_contract", {})
+    assert development == {
+        "stage": "B",
+        "local_stage": "development_contract",
+        "classification": "development_contract_failure",
+        "reason_code": raw,
+    }
+    for stage in ("C", "D"):
+        reason = "campaign_current_response_" + suffix
+        assert stop_details(error, stage, "check", {}) == {
+            "stage": stage,
+            "local_stage": "check",
+            "classification": classification,
+            "reason_code": reason,
+            "reason": reason,
+            "raw_reason": raw,
+        }
