@@ -142,6 +142,14 @@ async def run(
     from src.workspace.d5_campaign_packet import compile_campaign, verify_dispatch_identity
     from src.workspace.d5_campaign_policy import audit_outcomes, record_outcome
     from src.workspace.d5_campaign_report import results
+    from src.workspace.d5_case_isolation import (
+        REVISION as ISOLATION_REVISION,
+    )
+    from src.workspace.d5_case_isolation import (
+        preserve_failed_case,
+        require_progression,
+        stop_details,
+    )
     from src.workspace.d5_freeze import restore_input
 
     verify_dispatch_identity(packet)
@@ -158,9 +166,12 @@ async def run(
     preflight(store, packet)
     compiled = compile_campaign(packet)
     scope = "d5-" + packet["packet_digest"][:24]
+    isolate_evaluations = packet.get("revision") == ISOLATION_REVISION
     stop = None
     advanced = 0
     for key, entry in compiled.items():
+        local_stage = "dispatch_gate"
+        job_id = None
         try:
             verify_dispatch_identity(packet)  # no packet/producer tuning between cases
             with store.pool.connection() as conn:
@@ -169,6 +180,9 @@ async def run(
                 continue
             if cancelled():
                 raise AdmissionError("campaign_cancelled_no_dispatch")
+            if isolate_evaluations:
+                with store.pool.connection() as conn:
+                    require_progression(conn, scope, packet["packet_digest"], key, entry)
             inputs = restore_input(entry["input"])
             kwargs: dict[str, Any]
             if offline:
@@ -195,28 +209,52 @@ async def run(
                 store, entry["owner"], inputs, **kwargs
             )
             started = time.monotonic()
+            local_stage = "case_start"
             job = adapter.start(inputs.settings["d5_request_id"])
+            job_id = job["id"]
             cached_ready = job["state"] == "ready"
             try:
                 if job["state"] not in {"running", "ready"}:
                     raise AdmissionError("campaign_stopped_identity_no_replay")
-                for _ in range(1 if inputs.settings["d5_operation"] == "probe" else 4):
+                stages = (
+                    ("check",)
+                    if inputs.settings["d5_operation"] == "probe"
+                    else ("draft", "check", "repair", "recheck")
+                )
+                for stage in stages:
                     if job["state"] == "ready":
                         break
+                    local_stage = stage
                     job = await adapter.advance(job["id"], cancelled=cancelled)
                 if job["state"] != "ready":
                     raise AdmissionError("campaign_incomplete_workflow_stop")
-            except (Exception, asyncio.CancelledError):
+            except (Exception, asyncio.CancelledError) as exc:
+                if isolate_evaluations:
+                    if cancelled():
+                        raise AdmissionError("campaign_cancelled_no_dispatch") from exc
+                    if not preserve_failed_case(adapter, job["id"], entry, exc):
+                        raise
+                else:
+                    with store.pool.connection() as conn:
+                        failed = conn.execute(
+                            "SELECT state,data FROM workspace_generation_jobs WHERE id=%s",
+                            (job["id"],),
+                        ).fetchone()
+                    if (
+                        not failed
+                        or failed[0] != "failed"
+                        or not failed[1].get("campaign_content_rejection")
+                    ):
+                        raise
+            if isolate_evaluations and entry["stage"] == "B":
+                local_stage = "development_contract"
+                from src.workspace.d5_campaign_v19_policy import (
+                    development_contract as comparison_development_contract,
+                )
+
                 with store.pool.connection() as conn:
-                    failed = conn.execute(
-                        "SELECT state,data FROM workspace_generation_jobs WHERE id=%s", (job["id"],)
-                    ).fetchone()
-                if (
-                    not failed
-                    or failed[0] != "failed"
-                    or not failed[1].get("campaign_content_rejection")
-                ):
-                    raise
+                    comparison_development_contract(conn, scope, key)
+            local_stage = "outcome"
             if not cached_ready:
                 with store.pool.connection() as conn:
                     conn.execute(
@@ -305,10 +343,33 @@ async def run(
                 "automatic_retries": 0,
             }
             with store.pool.connection() as conn:
-                conn.execute(
-                    "UPDATE workspace_d5_scopes SET state='stopped',data=jsonb_set(data,'{campaign_stop}',%s) WHERE scope_id=%s AND state='active'",
-                    (Jsonb(stop), scope),
-                )
+                if isolate_evaluations:
+                    row = (
+                        conn.execute(
+                            "SELECT data FROM workspace_generation_jobs WHERE id=%s",
+                            (job_id,),
+                        ).fetchone()
+                        if job_id
+                        else None
+                    )
+                    contacts = row[0].get("adapter", {}).get("contacts", []) if row else []
+                    stop.update(
+                        stop_details(
+                            exc, entry["stage"], local_stage, contacts[-1] if contacts else {}
+                        )
+                    )
+                    conn.execute(
+                        "UPDATE workspace_d5_scopes "
+                        "SET state=CASE WHEN state='revoked' THEN state ELSE 'stopped' END,"
+                        "data=jsonb_set(data,'{campaign_stop}',%s) WHERE scope_id=%s "
+                        "AND NOT(data ? 'campaign_stop')",
+                        (Jsonb(stop), scope),
+                    )
+                else:
+                    conn.execute(
+                        "UPDATE workspace_d5_scopes SET state='stopped',data=jsonb_set(data,'{campaign_stop}',%s) WHERE scope_id=%s AND state='active'",
+                        (Jsonb(stop), scope),
+                    )
             break
     return results(store, packet, stop=stop)
 
