@@ -205,11 +205,11 @@ async def run(
                     "api_key": os.environ.get("ANTHROPIC_API_KEY", "local-preview-disabled"),
                     "enabled": True,
                 }
+            local_stage = "case_start"
             adapter = (D5ProbeAdapter if inputs.settings["d5_operation"] == "probe" else D5Adapter)(
                 store, entry["owner"], inputs, **kwargs
             )
             started = time.monotonic()
-            local_stage = "case_start"
             job = adapter.start(inputs.settings["d5_request_id"])
             job_id = job["id"]
             cached_ready = job["state"] == "ready"
