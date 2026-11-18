@@ -1,0 +1,637 @@
+{
+  "kind": "Synthetic software evidence only",
+  "packet_digest": "60cf5c83a3553c765993eb8cb2db5aed7bb5e382f9434baf9c893a3c582f4b27",
+  "application": "d33a0ccf7d21052bc20fef3047769befd85b4372",
+  "provider_contacts": 0,
+  "new_spend_USD": "0",
+  "human_labels": null,
+  "quality": "HOLD",
+  "cases": {
+    "continuation-v20-research-verification": {
+      "state": "ready",
+      "stages": [
+        "draft",
+        "check",
+        "repair",
+        "check"
+      ],
+      "message_requests": 4,
+      "paired_count_requests": 4,
+      "contact_digests": [
+        {
+          "ordinal": 0,
+          "stage": "draft",
+          "endpoint": "messages/count_tokens",
+          "state": "completed",
+          "request_digest": "426ed7b13c8e229f10c927795010fa0ac7d44a13a258f6d8aa808854705f15a3",
+          "generation_request_digest": "7e18eed071d2d22fca49a38493bc57601e0f3c96c64280e35fbfc7a197f71718"
+        },
+        {
+          "ordinal": 1,
+          "stage": "draft",
+          "endpoint": "messages",
+          "state": "completed",
+          "request_digest": "7e18eed071d2d22fca49a38493bc57601e0f3c96c64280e35fbfc7a197f71718",
+          "generation_request_digest": "7e18eed071d2d22fca49a38493bc57601e0f3c96c64280e35fbfc7a197f71718"
+        },
+        {
+          "ordinal": 2,
+          "stage": "check",
+          "endpoint": "messages/count_tokens",
+          "state": "completed",
+          "request_digest": "355fb80d96816d020cf77eda5f3bfe99dff013a4e84e1202a2d0ddb58451ca3c",
+          "generation_request_digest": "42ee9b50865b366e1e92ee3771e62fd0e4856f0c30e3f938780794ba0d228721"
+        },
+        {
+          "ordinal": 3,
+          "stage": "check",
+          "endpoint": "messages",
+          "state": "completed",
+          "request_digest": "42ee9b50865b366e1e92ee3771e62fd0e4856f0c30e3f938780794ba0d228721",
+          "generation_request_digest": "42ee9b50865b366e1e92ee3771e62fd0e4856f0c30e3f938780794ba0d228721"
+        },
+        {
+          "ordinal": 4,
+          "stage": "repair",
+          "endpoint": "messages/count_tokens",
+          "state": "completed",
+          "request_digest": "6af040000738172eace0441961aac3372f6557d3ae240a81f2423f3ee36982ee",
+          "generation_request_digest": "359456e6bdf67747df3f331e104f414637daf7f1d29c22b1dfae69b7df4dec8b"
+        },
+        {
+          "ordinal": 5,
+          "stage": "repair",
+          "endpoint": "messages",
+          "state": "completed",
+          "request_digest": "359456e6bdf67747df3f331e104f414637daf7f1d29c22b1dfae69b7df4dec8b",
+          "generation_request_digest": "359456e6bdf67747df3f331e104f414637daf7f1d29c22b1dfae69b7df4dec8b"
+        },
+        {
+          "ordinal": 6,
+          "stage": "check",
+          "endpoint": "messages/count_tokens",
+          "state": "completed",
+          "request_digest": "848152456c3c2168ef28aadf4b56970a444dfbce670a83edad25faa6bf6a73e4",
+          "generation_request_digest": "ac7583c334c52fc15a80e991fcf9c2e14872c132decffc598670ee2d1e9dd417"
+        },
+        {
+          "ordinal": 7,
+          "stage": "check",
+          "endpoint": "messages",
+          "state": "completed",
+          "request_digest": "ac7583c334c52fc15a80e991fcf9c2e14872c132decffc598670ee2d1e9dd417",
+          "generation_request_digest": "ac7583c334c52fc15a80e991fcf9c2e14872c132decffc598670ee2d1e9dd417"
+        }
+      ]
+    },
+    "continuation-v20-dev-learn": {
+      "state": "ready",
+      "stages": [
+        "draft",
+        "check",
+        "repair",
+        "check"
+      ],
+      "message_requests": 4,
+      "paired_count_requests": 4,
+      "contact_digests": [
+        {
+          "ordinal": 0,
+          "stage": "draft",
+          "endpoint": "messages/count_tokens",
+          "state": "completed",
+          "request_digest": "0bb878ad70f63b96c9866dcd05a48a3d221324132408bdd043cee571a67d4292",
+          "generation_request_digest": "e5958eb1bb252afb4a9f797cb825706eed61759ab4bdfb90ddf6865d8b2572f6"
+        },
+        {
+          "ordinal": 1,
+          "stage": "draft",
+          "endpoint": "messages",
+          "state": "completed",
+          "request_digest": "e5958eb1bb252afb4a9f797cb825706eed61759ab4bdfb90ddf6865d8b2572f6",
+          "generation_request_digest": "e5958eb1bb252afb4a9f797cb825706eed61759ab4bdfb90ddf6865d8b2572f6"
+        },
+        {
+          "ordinal": 2,
+          "stage": "check",
+          "endpoint": "messages/count_tokens",
+          "state": "completed",
+          "request_digest": "9a8fb56ba056b7ad471e002d09e2d757921594d9bb6c78ffa063ead7ab71ff95",
+          "generation_request_digest": "691fd409d9131e078dd17050ef536f7a9725a3a4dcf2bc1eed3914f11c426fb3"
+        },
+        {
+          "ordinal": 3,
+          "stage": "check",
+          "endpoint": "messages",
+          "state": "completed",
+          "request_digest": "691fd409d9131e078dd17050ef536f7a9725a3a4dcf2bc1eed3914f11c426fb3",
+          "generation_request_digest": "691fd409d9131e078dd17050ef536f7a9725a3a4dcf2bc1eed3914f11c426fb3"
+        },
+        {
+          "ordinal": 4,
+          "stage": "repair",
+          "endpoint": "messages/count_tokens",
+          "state": "completed",
+          "request_digest": "adeb269aa432ff8c81671ded8a3e8be92edde228bf91f7cc89df0d809bada180",
+          "generation_request_digest": "eb27898311f4c24552a5740512d76aaf83e557701dbce5507bbff4f81859a546"
+        },
+        {
+          "ordinal": 5,
+          "stage": "repair",
+          "endpoint": "messages",
+          "state": "completed",
+          "request_digest": "eb27898311f4c24552a5740512d76aaf83e557701dbce5507bbff4f81859a546",
+          "generation_request_digest": "eb27898311f4c24552a5740512d76aaf83e557701dbce5507bbff4f81859a546"
+        },
+        {
+          "ordinal": 6,
+          "stage": "check",
+          "endpoint": "messages/count_tokens",
+          "state": "completed",
+          "request_digest": "04dcc89d341528ee7d271202c7690f62b5918e9776ece86867685e8561ad1115",
+          "generation_request_digest": "97b9d7305d9075208d48feeab4d8eefccb681a8749d3ccbcbfad948522cac5d2"
+        },
+        {
+          "ordinal": 7,
+          "stage": "check",
+          "endpoint": "messages",
+          "state": "completed",
+          "request_digest": "97b9d7305d9075208d48feeab4d8eefccb681a8749d3ccbcbfad948522cac5d2",
+          "generation_request_digest": "97b9d7305d9075208d48feeab4d8eefccb681a8749d3ccbcbfad948522cac5d2"
+        }
+      ]
+    },
+    "continuation-v20-research-insufficient": {
+      "state": "ready",
+      "stages": [
+        "draft",
+        "check",
+        "repair",
+        "check"
+      ],
+      "message_requests": 4,
+      "paired_count_requests": 4,
+      "contact_digests": [
+        {
+          "ordinal": 0,
+          "stage": "draft",
+          "endpoint": "messages/count_tokens",
+          "state": "completed",
+          "request_digest": "ed5946c9b3093f3b207255bacf7aa725a96b040190c8bb07dbdfb7f47dc878b9",
+          "generation_request_digest": "183ee0995090617d0e4f88764fa93cb9e332feec9db87e67e53f48ddcc240e7c"
+        },
+        {
+          "ordinal": 1,
+          "stage": "draft",
+          "endpoint": "messages",
+          "state": "completed",
+          "request_digest": "183ee0995090617d0e4f88764fa93cb9e332feec9db87e67e53f48ddcc240e7c",
+          "generation_request_digest": "183ee0995090617d0e4f88764fa93cb9e332feec9db87e67e53f48ddcc240e7c"
+        },
+        {
+          "ordinal": 2,
+          "stage": "check",
+          "endpoint": "messages/count_tokens",
+          "state": "completed",
+          "request_digest": "b7a81e20eee709fc787ea3f09f8ffb9a25e9128176a9ca91b4c314e2445750af",
+          "generation_request_digest": "43bee6a058f720c00c968183c71279e137669574fa139a9e7424ad2e95484a1d"
+        },
+        {
+          "ordinal": 3,
+          "stage": "check",
+          "endpoint": "messages",
+          "state": "completed",
+          "request_digest": "43bee6a058f720c00c968183c71279e137669574fa139a9e7424ad2e95484a1d",
+          "generation_request_digest": "43bee6a058f720c00c968183c71279e137669574fa139a9e7424ad2e95484a1d"
+        },
+        {
+          "ordinal": 4,
+          "stage": "repair",
+          "endpoint": "messages/count_tokens",
+          "state": "completed",
+          "request_digest": "f17c478d189ad89a0604764e785af8af36d28fd7bc9b8d742d10433fe01a826e",
+          "generation_request_digest": "4ffed3bbc31b07c7304ca6fe3096cae88952545400d91b4659c597176a0ec8da"
+        },
+        {
+          "ordinal": 5,
+          "stage": "repair",
+          "endpoint": "messages",
+          "state": "completed",
+          "request_digest": "4ffed3bbc31b07c7304ca6fe3096cae88952545400d91b4659c597176a0ec8da",
+          "generation_request_digest": "4ffed3bbc31b07c7304ca6fe3096cae88952545400d91b4659c597176a0ec8da"
+        },
+        {
+          "ordinal": 6,
+          "stage": "check",
+          "endpoint": "messages/count_tokens",
+          "state": "completed",
+          "request_digest": "b7a81e20eee709fc787ea3f09f8ffb9a25e9128176a9ca91b4c314e2445750af",
+          "generation_request_digest": "43bee6a058f720c00c968183c71279e137669574fa139a9e7424ad2e95484a1d"
+        },
+        {
+          "ordinal": 7,
+          "stage": "check",
+          "endpoint": "messages",
+          "state": "completed",
+          "request_digest": "43bee6a058f720c00c968183c71279e137669574fa139a9e7424ad2e95484a1d",
+          "generation_request_digest": "43bee6a058f720c00c968183c71279e137669574fa139a9e7424ad2e95484a1d"
+        }
+      ]
+    },
+    "continuation-v20-dev-compare": {
+      "state": "ready",
+      "stages": [
+        "draft",
+        "check",
+        "repair",
+        "check"
+      ],
+      "message_requests": 4,
+      "paired_count_requests": 4,
+      "contact_digests": [
+        {
+          "ordinal": 0,
+          "stage": "draft",
+          "endpoint": "messages/count_tokens",
+          "state": "completed",
+          "request_digest": "8586ad98b442dc400bef57288e8895fce0e07a5f9e375a68258df7eac994cb63",
+          "generation_request_digest": "c854b3ec153fccdf4df951942f557f9b466b31d723701c9b6c05660800665ead"
+        },
+        {
+          "ordinal": 1,
+          "stage": "draft",
+          "endpoint": "messages",
+          "state": "completed",
+          "request_digest": "c854b3ec153fccdf4df951942f557f9b466b31d723701c9b6c05660800665ead",
+          "generation_request_digest": "c854b3ec153fccdf4df951942f557f9b466b31d723701c9b6c05660800665ead"
+        },
+        {
+          "ordinal": 2,
+          "stage": "check",
+          "endpoint": "messages/count_tokens",
+          "state": "completed",
+          "request_digest": "450d9cc76ad28fd4e6294dd0fa1339e1a94932acf7d46819cf6e12bea3b6ced0",
+          "generation_request_digest": "3f49e2bd002589c4579461351489d7cf85c8e6fac476f205609ca42e8f39e728"
+        },
+        {
+          "ordinal": 3,
+          "stage": "check",
+          "endpoint": "messages",
+          "state": "completed",
+          "request_digest": "3f49e2bd002589c4579461351489d7cf85c8e6fac476f205609ca42e8f39e728",
+          "generation_request_digest": "3f49e2bd002589c4579461351489d7cf85c8e6fac476f205609ca42e8f39e728"
+        },
+        {
+          "ordinal": 4,
+          "stage": "repair",
+          "endpoint": "messages/count_tokens",
+          "state": "completed",
+          "request_digest": "ca5657859b806d66bddaf89a72c34d9f057193ce2698e86a1653d6ea2b5a0585",
+          "generation_request_digest": "543218d8e27694e85d68568bd0115d908aee8364e4e1f11681474e97f888a1d1"
+        },
+        {
+          "ordinal": 5,
+          "stage": "repair",
+          "endpoint": "messages",
+          "state": "completed",
+          "request_digest": "543218d8e27694e85d68568bd0115d908aee8364e4e1f11681474e97f888a1d1",
+          "generation_request_digest": "543218d8e27694e85d68568bd0115d908aee8364e4e1f11681474e97f888a1d1"
+        },
+        {
+          "ordinal": 6,
+          "stage": "check",
+          "endpoint": "messages/count_tokens",
+          "state": "completed",
+          "request_digest": "3c7b3623dacabc87728a07df828785064f2c76de03d6cf781011d689087eb2cb",
+          "generation_request_digest": "5218d7b7cae0484a3b95e533c0646f53a3dfc217d329e0a91b3fd2c41ddf4c72"
+        },
+        {
+          "ordinal": 7,
+          "stage": "check",
+          "endpoint": "messages",
+          "state": "completed",
+          "request_digest": "5218d7b7cae0484a3b95e533c0646f53a3dfc217d329e0a91b3fd2c41ddf4c72",
+          "generation_request_digest": "5218d7b7cae0484a3b95e533c0646f53a3dfc217d329e0a91b3fd2c41ddf4c72"
+        }
+      ]
+    },
+    "continuation-v20-probe-1": {
+      "state": "ready",
+      "stages": [
+        "check"
+      ],
+      "message_requests": 1,
+      "paired_count_requests": 1,
+      "contact_digests": [
+        {
+          "ordinal": 0,
+          "stage": "check",
+          "endpoint": "messages/count_tokens",
+          "state": "completed",
+          "request_digest": "b5f6c2a492e31f3be4cdf863e97dcc87bf4a039b227964083e7cf545c97db7b2",
+          "generation_request_digest": "61f0b5ecdb5aa536bb7922d4e977c23a5f70a4be36bf1fa0c228c82246f39fea"
+        },
+        {
+          "ordinal": 1,
+          "stage": "check",
+          "endpoint": "messages",
+          "state": "completed",
+          "request_digest": "61f0b5ecdb5aa536bb7922d4e977c23a5f70a4be36bf1fa0c228c82246f39fea",
+          "generation_request_digest": "61f0b5ecdb5aa536bb7922d4e977c23a5f70a4be36bf1fa0c228c82246f39fea"
+        }
+      ]
+    },
+    "continuation-v20-research-memory": {
+      "state": "ready",
+      "stages": [
+        "draft",
+        "check",
+        "repair",
+        "check"
+      ],
+      "message_requests": 4,
+      "paired_count_requests": 4,
+      "contact_digests": [
+        {
+          "ordinal": 0,
+          "stage": "draft",
+          "endpoint": "messages/count_tokens",
+          "state": "completed",
+          "request_digest": "bb487377a4c4629e9f435aa8ea94fef12e298fd1554c3fce5c7b9e4cfa26a79b",
+          "generation_request_digest": "8a7446deb3cb508db2b030f8ab3433e0a2ca22fe11e2cccf7985b1d23cce3543"
+        },
+        {
+          "ordinal": 1,
+          "stage": "draft",
+          "endpoint": "messages",
+          "state": "completed",
+          "request_digest": "8a7446deb3cb508db2b030f8ab3433e0a2ca22fe11e2cccf7985b1d23cce3543",
+          "generation_request_digest": "8a7446deb3cb508db2b030f8ab3433e0a2ca22fe11e2cccf7985b1d23cce3543"
+        },
+        {
+          "ordinal": 2,
+          "stage": "check",
+          "endpoint": "messages/count_tokens",
+          "state": "completed",
+          "request_digest": "bd121dcb4c920c7c450cbf56d92151c2589533cf0e50af2bd58da6ebad625134",
+          "generation_request_digest": "24ba9b5147bd253dd8773ed7645709c5eaccd6435f2a3696a4e384e60878b406"
+        },
+        {
+          "ordinal": 3,
+          "stage": "check",
+          "endpoint": "messages",
+          "state": "completed",
+          "request_digest": "24ba9b5147bd253dd8773ed7645709c5eaccd6435f2a3696a4e384e60878b406",
+          "generation_request_digest": "24ba9b5147bd253dd8773ed7645709c5eaccd6435f2a3696a4e384e60878b406"
+        },
+        {
+          "ordinal": 4,
+          "stage": "repair",
+          "endpoint": "messages/count_tokens",
+          "state": "completed",
+          "request_digest": "7033429cc5305db8c68a22f5c0c81840e3b7c82d86193bb8e9f4dbb66808e043",
+          "generation_request_digest": "59609dcc494fa3a643c1c26c756f18f603b39d5be70ca7dad8cc5102d0f87cda"
+        },
+        {
+          "ordinal": 5,
+          "stage": "repair",
+          "endpoint": "messages",
+          "state": "completed",
+          "request_digest": "59609dcc494fa3a643c1c26c756f18f603b39d5be70ca7dad8cc5102d0f87cda",
+          "generation_request_digest": "59609dcc494fa3a643c1c26c756f18f603b39d5be70ca7dad8cc5102d0f87cda"
+        },
+        {
+          "ordinal": 6,
+          "stage": "check",
+          "endpoint": "messages/count_tokens",
+          "state": "completed",
+          "request_digest": "34576a1e7cab65ed57102c2c4dfdb9e1749b9854b00a6573824eb20a9d5324be",
+          "generation_request_digest": "cc5f8b2be9fd821bad03c9ab3f8ba6f91520278572482496634de2da1a4ee40a"
+        },
+        {
+          "ordinal": 7,
+          "stage": "check",
+          "endpoint": "messages",
+          "state": "completed",
+          "request_digest": "cc5f8b2be9fd821bad03c9ab3f8ba6f91520278572482496634de2da1a4ee40a",
+          "generation_request_digest": "cc5f8b2be9fd821bad03c9ab3f8ba6f91520278572482496634de2da1a4ee40a"
+        }
+      ]
+    },
+    "continuation-v20-probe-2": {
+      "state": "ready",
+      "stages": [
+        "check"
+      ],
+      "message_requests": 1,
+      "paired_count_requests": 1,
+      "contact_digests": [
+        {
+          "ordinal": 0,
+          "stage": "check",
+          "endpoint": "messages/count_tokens",
+          "state": "completed",
+          "request_digest": "9c2a68a96531fccfc1020c718506771d00570b84f9cd9e37c46ff2d8c3b7562a",
+          "generation_request_digest": "b4850ae8d06340580d4b874e3f53c12dcf4ebdde3036b1ee120633227fb4a571"
+        },
+        {
+          "ordinal": 1,
+          "stage": "check",
+          "endpoint": "messages",
+          "state": "completed",
+          "request_digest": "b4850ae8d06340580d4b874e3f53c12dcf4ebdde3036b1ee120633227fb4a571",
+          "generation_request_digest": "b4850ae8d06340580d4b874e3f53c12dcf4ebdde3036b1ee120633227fb4a571"
+        }
+      ]
+    },
+    "continuation-v20-probe-3": {
+      "state": "ready",
+      "stages": [
+        "check"
+      ],
+      "message_requests": 1,
+      "paired_count_requests": 1,
+      "contact_digests": [
+        {
+          "ordinal": 0,
+          "stage": "check",
+          "endpoint": "messages/count_tokens",
+          "state": "completed",
+          "request_digest": "b1ced3a6a945b3ee0a063ce34f5194c76032cee24ae9022dcec8f07f170a8325",
+          "generation_request_digest": "aa479c87710ffd0bc99a33be4e1a81a360d383212e3ef2eb8d0d1132c71c4bf5"
+        },
+        {
+          "ordinal": 1,
+          "stage": "check",
+          "endpoint": "messages",
+          "state": "completed",
+          "request_digest": "aa479c87710ffd0bc99a33be4e1a81a360d383212e3ef2eb8d0d1132c71c4bf5",
+          "generation_request_digest": "aa479c87710ffd0bc99a33be4e1a81a360d383212e3ef2eb8d0d1132c71c4bf5"
+        }
+      ]
+    },
+    "continuation-v20-research-retrieval": {
+      "state": "ready",
+      "stages": [
+        "draft",
+        "check",
+        "repair",
+        "check"
+      ],
+      "message_requests": 4,
+      "paired_count_requests": 4,
+      "contact_digests": [
+        {
+          "ordinal": 0,
+          "stage": "draft",
+          "endpoint": "messages/count_tokens",
+          "state": "completed",
+          "request_digest": "fd1489a03d29301a2504406ec58f4d14defce8870af0c0775ed73e7642612ed6",
+          "generation_request_digest": "12a5664fdaaad8d37302d522c3475d6612640e0186517fbaaf2212048782aa6f"
+        },
+        {
+          "ordinal": 1,
+          "stage": "draft",
+          "endpoint": "messages",
+          "state": "completed",
+          "request_digest": "12a5664fdaaad8d37302d522c3475d6612640e0186517fbaaf2212048782aa6f",
+          "generation_request_digest": "12a5664fdaaad8d37302d522c3475d6612640e0186517fbaaf2212048782aa6f"
+        },
+        {
+          "ordinal": 2,
+          "stage": "check",
+          "endpoint": "messages/count_tokens",
+          "state": "completed",
+          "request_digest": "d48adcda985761bbaf109d69a8181c6b8abd4a0a3e642856f7beb294a30ad411",
+          "generation_request_digest": "7782f181b3f0e3a21e0ac3f1b981f08f8ddd23740be4e7c476974e7d33476853"
+        },
+        {
+          "ordinal": 3,
+          "stage": "check",
+          "endpoint": "messages",
+          "state": "completed",
+          "request_digest": "7782f181b3f0e3a21e0ac3f1b981f08f8ddd23740be4e7c476974e7d33476853",
+          "generation_request_digest": "7782f181b3f0e3a21e0ac3f1b981f08f8ddd23740be4e7c476974e7d33476853"
+        },
+        {
+          "ordinal": 4,
+          "stage": "repair",
+          "endpoint": "messages/count_tokens",
+          "state": "completed",
+          "request_digest": "781fa9b664acc7a951fc4882a3e8a707423f21228838793116721704790bf1ef",
+          "generation_request_digest": "30b4d5128eb74fab735ac06000492776a3ec1f7715b32d5fa9d4fe4bdd78787c"
+        },
+        {
+          "ordinal": 5,
+          "stage": "repair",
+          "endpoint": "messages",
+          "state": "completed",
+          "request_digest": "30b4d5128eb74fab735ac06000492776a3ec1f7715b32d5fa9d4fe4bdd78787c",
+          "generation_request_digest": "30b4d5128eb74fab735ac06000492776a3ec1f7715b32d5fa9d4fe4bdd78787c"
+        },
+        {
+          "ordinal": 6,
+          "stage": "check",
+          "endpoint": "messages/count_tokens",
+          "state": "completed",
+          "request_digest": "13e2e5f806a468b4c52dae606a494cd8cda3d93be35ef311f39abbde610b30a5",
+          "generation_request_digest": "4fb0437813084f85fd0ef202f7587b22be5e158eedaacc4c127666fd854b0bee"
+        },
+        {
+          "ordinal": 7,
+          "stage": "check",
+          "endpoint": "messages",
+          "state": "completed",
+          "request_digest": "4fb0437813084f85fd0ef202f7587b22be5e158eedaacc4c127666fd854b0bee",
+          "generation_request_digest": "4fb0437813084f85fd0ef202f7587b22be5e158eedaacc4c127666fd854b0bee"
+        }
+      ]
+    },
+    "continuation-v20-probe-4": {
+      "state": "ready",
+      "stages": [
+        "check"
+      ],
+      "message_requests": 1,
+      "paired_count_requests": 1,
+      "contact_digests": [
+        {
+          "ordinal": 0,
+          "stage": "check",
+          "endpoint": "messages/count_tokens",
+          "state": "completed",
+          "request_digest": "b539ddfe851e53db33a11bf3bc58d163c61fe8992434bf3d5bd45b16e5c00fc2",
+          "generation_request_digest": "18a9634f82917d4e0bfa042e9ce26307bc8fe2792f83ad12cc39d7c9c0db1a59"
+        },
+        {
+          "ordinal": 1,
+          "stage": "check",
+          "endpoint": "messages",
+          "state": "completed",
+          "request_digest": "18a9634f82917d4e0bfa042e9ce26307bc8fe2792f83ad12cc39d7c9c0db1a59",
+          "generation_request_digest": "18a9634f82917d4e0bfa042e9ce26307bc8fe2792f83ad12cc39d7c9c0db1a59"
+        }
+      ]
+    }
+  },
+  "probe_bindings": {
+    "continuation-v20-probe-1": {
+      "binding": "bound",
+      "verdicts": {
+        "p47e152c37928b63194": "unsupported",
+        "pb21e6b9c746b3e9887": "unsupported",
+        "p67993bf7fbbb3c13e3": "supported",
+        "p65d23a5830d380eed8": "supported",
+        "p516e97b12aba141558": "supported"
+      },
+      "request_digest": "61f0b5ecdb5aa536bb7922d4e977c23a5f70a4be36bf1fa0c228c82246f39fea",
+      "response_digest": "578ca5b6eb2e3953fdddae76fc5e6961c33e0d950dfcbb7a7ed230f561ef5262",
+      "context_digest": "106a71777bcf9f6f154cbfc15824dc40d37f3071b0454df09dedb5da45d6c6cc",
+      "judgments_digest": "f23999af76eeea1600e25e14f48f61199dbd9a52f33fc4b9a7de444c80667f23"
+    },
+    "continuation-v20-probe-2": {
+      "binding": "bound",
+      "verdicts": {
+        "p12127e8edb5ce9c445": "supported",
+        "p397af6519ccb7d0544": "supported",
+        "p5a100f7fbbbf527764": "unsupported",
+        "p19c8d9837e04382c22": "supported",
+        "p978f07cd3f82b2a790": "unsupported"
+      },
+      "request_digest": "b4850ae8d06340580d4b874e3f53c12dcf4ebdde3036b1ee120633227fb4a571",
+      "response_digest": "44e963b88a9a2aad5f689d1b315628b88e99ba5f79c6bbd605b54a48f7638d0f",
+      "context_digest": "67c8a5e6ca4d9e4df4b86c3654d464703360a407e229e3a15c4c1d20af582b00",
+      "judgments_digest": "fa91123656b55028b2bd7e496ed9c9e68bbe35e8d28b8dca0c2d8906788f0532"
+    },
+    "continuation-v20-probe-3": {
+      "binding": "bound",
+      "verdicts": {
+        "pc26e83b76325eb1e65": "unsupported",
+        "pffecbcf8bfbdc5dfcd": "unsupported",
+        "p6e4ca96cbd61328d32": "supported",
+        "p28fbef6c0cb3a0894c": "supported",
+        "pd6224074e8d3c1ec9c": "unsupported"
+      },
+      "request_digest": "aa479c87710ffd0bc99a33be4e1a81a360d383212e3ef2eb8d0d1132c71c4bf5",
+      "response_digest": "18b657e91413caa765326eb18d9c6b865f8fd59135dcc18110bbfbd2dc4ed65c",
+      "context_digest": "54e0b0bea8096d7b253951f237995993056c5fe821aa111c06a346525ac4bd0e",
+      "judgments_digest": "eb5edeb8812997a0a0462c9c741315561926be31082ff6b708bfe7d33050721e"
+    },
+    "continuation-v20-probe-4": {
+      "binding": "bound",
+      "verdicts": {
+        "pcb0546905ad1274ae4": "supported",
+        "p6abefc7e97d62b7bb2": "unsupported",
+        "pec3f5d4a92bbb1dd1d": "unsupported",
+        "p535b831e7b236ed6c4": "unsupported",
+        "pa52f0600f0944ce3d6": "supported"
+      },
+      "request_digest": "18a9634f82917d4e0bfa042e9ce26307bc8fe2792f83ad12cc39d7c9c0db1a59",
+      "response_digest": "2d5990cab34b7beba8244874ea597b46410c0a3ece1db078d59fad41cfb26a04",
+      "context_digest": "f1195f7d116edc8d8575bc4df8718f5bc9191e67069fca582f04f0a33af92a6d",
+      "judgments_digest": "cd12222e4e239792aef2f8d9fc841a4be4bf57c5ff288ae2fae0657426a99cf5"
+    }
+  },
+  "actual_mock_messages": 28,
+  "actual_mock_counts": 28
+}

@@ -1,0 +1,82 @@
+{
+  "continuation-v20-dev-learn": {
+    "original_reference": "campaign-dev-learn",
+    "source_units_unchanged": true,
+    "ranking_unchanged": true,
+    "initial_wire_unchanged": false,
+    "old_count_receipts_reused": false,
+    "old_current_response_judgments_reused": false
+  },
+  "continuation-v20-dev-compare": {
+    "original_reference": "campaign-dev-compare",
+    "source_units_unchanged": true,
+    "ranking_unchanged": true,
+    "initial_wire_unchanged": false,
+    "old_count_receipts_reused": false,
+    "old_current_response_judgments_reused": false
+  },
+  "continuation-v20-research-memory": {
+    "original_reference": "campaign-eval-research-memory",
+    "source_units_unchanged": true,
+    "ranking_unchanged": true,
+    "initial_wire_unchanged": false,
+    "old_count_receipts_reused": false,
+    "old_current_response_judgments_reused": false
+  },
+  "continuation-v20-research-retrieval": {
+    "original_reference": "campaign-eval-research-retrieval",
+    "source_units_unchanged": true,
+    "ranking_unchanged": true,
+    "initial_wire_unchanged": false,
+    "old_count_receipts_reused": false,
+    "old_current_response_judgments_reused": false
+  },
+  "continuation-v20-research-verification": {
+    "original_reference": "campaign-eval-research-verification",
+    "source_units_unchanged": true,
+    "ranking_unchanged": true,
+    "initial_wire_unchanged": false,
+    "old_count_receipts_reused": false,
+    "old_current_response_judgments_reused": false
+  },
+  "continuation-v20-research-insufficient": {
+    "original_reference": "campaign-eval-research-insufficient",
+    "source_units_unchanged": true,
+    "ranking_unchanged": true,
+    "initial_wire_unchanged": false,
+    "old_count_receipts_reused": false,
+    "old_current_response_judgments_reused": false
+  },
+  "continuation-v20-probe-1": {
+    "original_reference": "campaign-probe-1",
+    "source_units_unchanged": true,
+    "ranking_unchanged": true,
+    "initial_wire_unchanged": true,
+    "old_count_receipts_reused": false,
+    "old_current_response_judgments_reused": false
+  },
+  "continuation-v20-probe-2": {
+    "original_reference": "campaign-probe-2",
+    "source_units_unchanged": true,
+    "ranking_unchanged": true,
+    "initial_wire_unchanged": true,
+    "old_count_receipts_reused": false,
+    "old_current_response_judgments_reused": false
+  },
+  "continuation-v20-probe-3": {
+    "original_reference": "campaign-probe-3",
+    "source_units_unchanged": true,
+    "ranking_unchanged": true,
+    "initial_wire_unchanged": true,
+    "old_count_receipts_reused": false,
+    "old_current_response_judgments_reused": false
+  },
+  "continuation-v20-probe-4": {
+    "original_reference": "campaign-probe-4",
+    "source_units_unchanged": true,
+    "ranking_unchanged": true,
+    "initial_wire_unchanged": true,
+    "old_count_receipts_reused": false,
+    "old_current_response_judgments_reused": false
+  }
+}

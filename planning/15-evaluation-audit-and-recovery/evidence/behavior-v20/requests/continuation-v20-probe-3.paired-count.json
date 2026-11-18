@@ -1,0 +1,123 @@
+{
+  "model": "claude-opus-5-5",
+  "output_config": {
+    "effort": "high",
+    "format": {
+      "type": "json_schema",
+      "schema": {
+        "$defs": {
+          "KeyedClaims_31c8f174632b79a7": {
+            "type": "object",
+            "title": "KeyedClaims_31c8f174632b79a7",
+            "properties": {
+              "pc26e83b76325eb1e65": {
+                "$ref": "#/$defs/_SupportJudgment"
+              },
+              "pffecbcf8bfbdc5dfcd": {
+                "$ref": "#/$defs/_SupportJudgment"
+              },
+              "p6e4ca96cbd61328d32": {
+                "$ref": "#/$defs/_SupportJudgment"
+              },
+              "p28fbef6c0cb3a0894c": {
+                "$ref": "#/$defs/_SupportJudgment"
+              },
+              "pd6224074e8d3c1ec9c": {
+                "$ref": "#/$defs/_SupportJudgment"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "pc26e83b76325eb1e65",
+              "pffecbcf8bfbdc5dfcd",
+              "p6e4ca96cbd61328d32",
+              "p28fbef6c0cb3a0894c",
+              "pd6224074e8d3c1ec9c"
+            ]
+          },
+          "KeyedProse_31c8f174632b79a7": {
+            "type": "object",
+            "title": "KeyedProse_31c8f174632b79a7",
+            "properties": {},
+            "additionalProperties": false
+          },
+          "SupportDecision": {
+            "type": "string",
+            "enum": [
+              "supported",
+              "unsupported",
+              "abstain"
+            ],
+            "title": "SupportDecision"
+          },
+          "_Revision": {
+            "type": "string",
+            "enum": [
+              "workspace-assistance-keyed-checks-v16"
+            ],
+            "title": "_Revision"
+          },
+          "_SupportJudgment": {
+            "type": "object",
+            "description": "Support judgment for this exact opaque probe; do not echo its binding.",
+            "title": "_SupportJudgment",
+            "properties": {
+              "reason": {
+                "type": "string",
+                "description": "Material evidence or unresolved issue; 240 characters is a soft target, not a hard limit. Never drop findings to fit.\n\n{minLength: 1}",
+                "title": "Reason"
+              },
+              "decision": {
+                "$ref": "#/$defs/SupportDecision"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "reason",
+              "decision"
+            ]
+          }
+        },
+        "type": "object",
+        "title": "KeyedChecks_31c8f174632b79a7",
+        "properties": {
+          "prose_review": {
+            "type": "string",
+            "enum": [
+              "procedural_only",
+              "unscored_factual_content",
+              "abstain"
+            ],
+            "title": "Prose Review"
+          },
+          "prose_findings": {
+            "$ref": "#/$defs/KeyedProse_31c8f174632b79a7"
+          },
+          "revision": {
+            "$ref": "#/$defs/_Revision"
+          },
+          "checks": {
+            "$ref": "#/$defs/KeyedClaims_31c8f174632b79a7"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "prose_review",
+          "prose_findings",
+          "revision",
+          "checks"
+        ]
+      }
+    }
+  },
+  "system": "Assess each statement against its exact selected passage and preserve uncertainty. A resolving citation is not factual support. Return every support verdict and prose judgment required by the closed support-only schema; no workflow quality fields.",
+  "messages": [
+    {
+      "role": "user",
+      "content": "{\"capacity_policy\":{\"assistance_revision\":\"workspace-assistance-keyed-v16\",\"checker_revision\":\"workspace-assistance-keyed-checks-v16\",\"citations_by_mode\":{\"learn\":3,\"research\":6},\"claims_by_mode\":{\"learn\":8,\"research\":12},\"compact_checker_utf8_bytes\":262144,\"deadlines\":{\"check_seconds\":240,\"count_seconds\":60,\"draft_seconds\":120,\"origin\":\"durable_reservation_created_at\",\"recheck_seconds\":240,\"repair_seconds\":120,\"revision\":\"d5-operation-deadlines-v2-capacity\",\"workflow_seconds\":1200},\"http_body_bytes\":4194304,\"internal_json_bytes\":8388608,\"keyed_prose_finding_capacity\":{\"aggregate_findings_limit\":null,\"compact_checker_utf8_bytes\":262144,\"normalized_checker_utf8_bytes\":1048576,\"per_location_findings_limit\":null,\"revision\":\"workspace-assistance-keyed-finding-capacity-v16\"},\"max_citations_per_claim\":6,\"max_claim_characters\":10000,\"max_follow_up_intents\":3,\"max_materials\":3,\"max_messages_per_workflow\":4,\"max_procedural_gaps\":3,\"max_repairs\":1,\"max_requested_parts\":8,\"max_selected_evidence_utf8_bytes\":131072,\"max_selected_units\":12,\"max_unit_characters\":1600,\"normalization_revision\":\"workspace-assistance-keyed-normalization-v16\",\"normalized_checker_utf8_bytes\":1048576,\"operation_routes\":{\"check_recheck_probe\":{\"effort\":\"high\",\"input_tokens\":40000,\"model\":\"claude-opus-5-5\",\"output_tokens\":12000,\"prices\":{\"input\":\"4\",\"output\":\"20\",\"verified_at\":\"2026-11-14\"},\"thinking\":{\"type\":\"adaptive\"}},\"draft_repair\":{\"effort\":\"medium\",\"input_tokens\":40000,\"model\":\"claude-sonnet-5-5\",\"output_tokens\":8000,\"prices\":{\"input\":\"2\",\"output\":\"10\",\"verified_at\":\"2026-11-14\"},\"thinking\":{\"type\":\"between_tools\"}},\"revision\":\"d5-sonnet-opus-high-capacity-v3\"},\"paired_input_tokens_fit\":32000,\"raw_draft_utf8_bytes\":131072,\"reservation_input_tokens\":40000,\"revision\":\"d5-comprehensive-capacity-v15\",\"sealed_input_json_bytes\":8388608,\"soft_claim_characters\":500,\"soft_reason_characters\":240},\"checker_wire_rule\":\"Support-only blinded diagnostic. Return the fixed revision, checks for every exact opaque probe key, prose_review and every required prose_findings location key. Each check has a support decision and reason. No workflow atomicity, qualification, coverage or priority fields exist here. IDs, input digests and prose field/index values are server-derived and must not be echoed. Do not answer the task or invent evidence.\",\"claim_inputs\":[{\"claim_id\":\"pc26e83b76325eb1e65\",\"input_digest\":\"sha256:9ccdc3c194e4a25d0f98e730e2958641a0db25151fa671e0c750c4db8bca3f76\"},{\"claim_id\":\"pffecbcf8bfbdc5dfcd\",\"input_digest\":\"sha256:bbe32ed8c4411f8242d17ba1246d4f1529a9a765ac8c54f2fc6198825c3b7654\"},{\"claim_id\":\"p6e4ca96cbd61328d32\",\"input_digest\":\"sha256:6c115571191834687606fb261f3d0958fb832907a78690bbe6549616ab4416c7\"},{\"claim_id\":\"p28fbef6c0cb3a0894c\",\"input_digest\":\"sha256:671809a3092cdb28c437e94e1e69fe9968cd14d9829be6f1af34c96bb669d906\"},{\"claim_id\":\"pd6224074e8d3c1ec9c\",\"input_digest\":\"sha256:9fdb20c4d601a933a401c690a043644093c0a2bf3cc614c23034426bfe5673d5\"}],\"draft\":{\"claims\":[{\"claim_id\":\"pc26e83b76325eb1e65\",\"evidence\":[{\"end\":1906,\"material_id\":\"mat-f21ad4e80c44211991e82a95f45998cd\",\"page\":null,\"parser_revision\":\"workspace-plain-text-v1\",\"quote\":\"On 87 runs, the two best live supervisors are statistically tied and one of them is a small open-weight model (DeepSeek V4.1 Flash); the supervisor that is among the best post-hoc diagnosers (GPT-6.1 Sol) is the weakest live one (-14.5 points on the same runs, p = 0.002), so post-hoc diagnostic performance can be a poor proxy for live oversight. The environment and the evaluation code are released at https://github.com/jeremy1392/RCAreplay.\",\"scope\":\"abstract\",\"source_hash\":\"sha256:eac921aee1ab954efb0214424bb246ecbd9672cc5e59b0fb138db644a1cf3de3\",\"span_id\":\"span-1942c09355c6070032a062a1b97f487f\",\"start\":1462,\"version_id\":\"arxiv:2610.41025:v1:metadata-1aa9801b0aa16243\",\"work_id\":\"arxiv:2610.41025\"}],\"inference_label\":null,\"kind\":\"factual\",\"required_scope\":\"abstract\",\"required_section\":null,\"text\":\"The selected oversight abstract concludes that the strongest post-hoc diagnostician is guaranteed to be the strongest live supervisor on those runs.\"},{\"claim_id\":\"pffecbcf8bfbdc5dfcd\",\"evidence\":[{\"end\":875,\"material_id\":\"mat-54f2f6e0645f499458d5030d06e35a59\",\"page\":null,\"parser_revision\":\"workspace-plain-text-v1\",\"quote\":\"Recursive textual memory can carry earlier errors into later updates, yet task performance alone does not establish memory reliability. We define self-consistency bias as the persistence of incorrect claims already present in the incoming memory. We present KEEPER, a comparative analysis of four auxiliary objectives along information-content and update-sensitivity axes within a shared recursive interface, examining how supervision targets relate to agent performance. Among evaluated conditions, reward-related prediction achieve the highest task performance before and after offline reinforcement learning, outperforming joint supervision. A claim-level analysis of one baseline trajectory documents error persistence despite corrective observations. Together, these analyses motivate evaluating error persistence and valid-information retention alongside task outcomes.\",\"scope\":\"abstract\",\"source_hash\":\"sha256:2b307ec864315d90d5e828786c2505fff1feda8837559b7e8601961ea9717759\",\"span_id\":\"span-3fd278aadaa92873179ed21c075ab368\",\"start\":0,\"version_id\":\"arxiv:2610.41482:v1:metadata-e5c832a06d88973f\",\"work_id\":\"arxiv:2610.41482\"}],\"inference_label\":null,\"kind\":\"factual\",\"required_scope\":\"abstract\",\"required_section\":null,\"text\":\"The KEEPER abstract defines self-consistency bias as retention of correct claims newly introduced by corrective observations.\"},{\"claim_id\":\"p6e4ca96cbd61328d32\",\"evidence\":[{\"end\":1906,\"material_id\":\"mat-f21ad4e80c44211991e82a95f45998cd\",\"page\":null,\"parser_revision\":\"workspace-plain-text-v1\",\"quote\":\"On 87 runs, the two best live supervisors are statistically tied and one of them is a small open-weight model (DeepSeek V4.1 Flash); the supervisor that is among the best post-hoc diagnosers (GPT-6.1 Sol) is the weakest live one (-14.5 points on the same runs, p = 0.002), so post-hoc diagnostic performance can be a poor proxy for live oversight. The environment and the evaluation code are released at https://github.com/jeremy1392/RCAreplay.\",\"scope\":\"abstract\",\"source_hash\":\"sha256:eac921aee1ab954efb0214424bb246ecbd9672cc5e59b0fb138db644a1cf3de3\",\"span_id\":\"span-1942c09355c6070032a062a1b97f487f\",\"start\":1462,\"version_id\":\"arxiv:2610.41025:v1:metadata-1aa9801b0aa16243\",\"work_id\":\"arxiv:2610.41025\"}],\"inference_label\":null,\"kind\":\"factual\",\"required_scope\":\"abstract\",\"required_section\":null,\"text\":\"On the 87 runs reported in the selected oversight abstract, the two best live supervisors are statistically tied.\"},{\"claim_id\":\"p28fbef6c0cb3a0894c\",\"evidence\":[{\"end\":875,\"material_id\":\"mat-54f2f6e0645f499458d5030d06e35a59\",\"page\":null,\"parser_revision\":\"workspace-plain-text-v1\",\"quote\":\"Recursive textual memory can carry earlier errors into later updates, yet task performance alone does not establish memory reliability. We define self-consistency bias as the persistence of incorrect claims already present in the incoming memory. We present KEEPER, a comparative analysis of four auxiliary objectives along information-content and update-sensitivity axes within a shared recursive interface, examining how supervision targets relate to agent performance. Among evaluated conditions, reward-related prediction achieve the highest task performance before and after offline reinforcement learning, outperforming joint supervision. A claim-level analysis of one baseline trajectory documents error persistence despite corrective observations. Together, these analyses motivate evaluating error persistence and valid-information retention alongside task outcomes.\",\"scope\":\"abstract\",\"source_hash\":\"sha256:2b307ec864315d90d5e828786c2505fff1feda8837559b7e8601961ea9717759\",\"span_id\":\"span-3fd278aadaa92873179ed21c075ab368\",\"start\":0,\"version_id\":\"arxiv:2610.41482:v1:metadata-e5c832a06d88973f\",\"work_id\":\"arxiv:2610.41482\"}],\"inference_label\":null,\"kind\":\"factual\",\"required_scope\":\"abstract\",\"required_section\":null,\"text\":\"Among the conditions evaluated in the KEEPER abstract, reward-related prediction has the highest task performance before and after offline reinforcement learning, outperforming joint supervision.\"},{\"claim_id\":\"pd6224074e8d3c1ec9c\",\"evidence\":[{\"end\":1861,\"material_id\":\"mat-7c5d45b31f4da5928986ff0ad3193693\",\"page\":null,\"parser_revision\":\"workspace-plain-text-v1\",\"quote\":\"Cost-effective state-of-the-art (SOTA) LLMs relevant to personal agents achieve below 60% accuracy on temporal tracking, higher-level pattern inference, and constraint-aware action-boundary decisions, with fewer than 10% of test cases answered correctly across all three repeated runs. Even a high-performing SOTA model remains inconsistent on these capabilities. P-ContextBench provides measurable targets for improving the accuracy, reliability, and safety of LLM-based personal agents.\",\"scope\":\"abstract\",\"source_hash\":\"sha256:b513e6d6bbd259d5abd3a746d635ae6fc9bea669b45b8c639f7dd222918183c5\",\"span_id\":\"span-26b832a8767bae8d976ae5f81f0789a6\",\"start\":1373,\"version_id\":\"arxiv:2610.40959:v1:metadata-a78f18ab927d7ec9\",\"work_id\":\"arxiv:2610.40959\"}],\"inference_label\":null,\"kind\":\"factual\",\"required_scope\":\"abstract\",\"required_section\":null,\"text\":\"For the cost-effective SOTA LLMs evaluated in the selected P-ContextBench abstract, temporal-tracking accuracy is at least 90%.\"}]},\"identity_contract\":\"Return every exact named verdict key and the fixed revision from output_schema. Identities and digests are derived server-side from this exact current request. Never emit claim_id, part_id, input_digest, field or index inside verdict values.\",\"operation\":\"probe\",\"phase\":\"check\",\"role\":\"checker\",\"sealed_request\":{\"private_context\":false,\"provider_schema_compatibility_revision\":\"anthropic-structured-schema-compat-v1\",\"schema_revision\":\"workspace-assistance-keyed-v16\"},\"unscored_prose\":{}}"
+    }
+  ],
+  "thinking": {
+    "type": "adaptive"
+  }
+}

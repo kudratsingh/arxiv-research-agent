@@ -1,0 +1,130 @@
+{
+  "progression": {
+    "revision": "metered-evaluation-content-isolation-v20",
+    "development": "Both new development identities require complete current-response final checker contracts. Only fully decisive negative judgments can permit progression after quality rejection, and they grant no acceptance.",
+    "evaluation": "A narrowly allowlisted, independently reproduced, fully received end_turn and fully metered semantic content failure fails only that case. No invalid-first-draft repair, salvage or acceptance.",
+    "global_stop": "Provider/auth/accounting/binding/capacity errors, missing or malformed judgments, any unresolved terminal judgment including mixed negative and unresolved verdicts, truncation, new uncertainty, expiry, revocation or cancellation stop all dispatch.",
+    "retries": 0,
+    "maximum_quality_repairs": 1,
+    "mandatory_recheck": true
+  },
+  "deadlines": {
+    "revision": "d5-operation-deadlines-v2-capacity",
+    "count_seconds": 60,
+    "draft_seconds": 120,
+    "repair_seconds": 120,
+    "check_seconds": 240,
+    "recheck_seconds": 240,
+    "workflow_seconds": 1200,
+    "origin": "durable_reservation_created_at"
+  },
+  "capacity_policy": {
+    "revision": "d5-comprehensive-capacity-v15",
+    "assistance_revision": "workspace-assistance-capacity-v15",
+    "checker_revision": "workspace-assistance-capacity-checks-v15",
+    "normalization_revision": "workspace-assistance-capacity-normalization-v15",
+    "claims_by_mode": {
+      "learn": 8,
+      "research": 12
+    },
+    "max_citations_per_claim": 6,
+    "citations_by_mode": {
+      "learn": 3,
+      "research": 6
+    },
+    "max_selected_units": 12,
+    "max_materials": 3,
+    "max_unit_characters": 1600,
+    "max_selected_evidence_utf8_bytes": 131072,
+    "max_requested_parts": 8,
+    "max_prose_findings": 16,
+    "soft_claim_characters": 500,
+    "max_claim_characters": 10000,
+    "max_procedural_gaps": 3,
+    "max_follow_up_intents": 3,
+    "soft_reason_characters": 240,
+    "raw_draft_utf8_bytes": 131072,
+    "compact_checker_utf8_bytes": 262144,
+    "normalized_checker_utf8_bytes": 1048576,
+    "internal_json_bytes": 8388608,
+    "sealed_input_json_bytes": 8388608,
+    "http_body_bytes": 4194304,
+    "paired_input_tokens_fit": 32000,
+    "reservation_input_tokens": 40000,
+    "max_messages_per_workflow": 4,
+    "max_repairs": 1,
+    "deadlines": {
+      "revision": "d5-operation-deadlines-v2-capacity",
+      "count_seconds": 60,
+      "draft_seconds": 120,
+      "repair_seconds": 120,
+      "check_seconds": 240,
+      "recheck_seconds": 240,
+      "workflow_seconds": 1200,
+      "origin": "durable_reservation_created_at"
+    },
+    "operation_routes": {
+      "revision": "d5-sonnet-opus-high-capacity-v3",
+      "draft_repair": {
+        "model": "claude-sonnet-5-5",
+        "thinking": {
+          "type": "between_tools"
+        },
+        "effort": "medium",
+        "input_tokens": 40000,
+        "output_tokens": 8000,
+        "prices": {
+          "input": "2",
+          "output": "10",
+          "verified_at": "2026-11-14"
+        }
+      },
+      "check_recheck_probe": {
+        "model": "claude-opus-5-5",
+        "thinking": {
+          "type": "adaptive"
+        },
+        "effort": "high",
+        "input_tokens": 40000,
+        "output_tokens": 12000,
+        "prices": {
+          "input": "4",
+          "output": "20",
+          "verified_at": "2026-11-14"
+        }
+      }
+    }
+  },
+  "scoring": {
+    "revision": "workspace-campaign-behavior-scoring-v20",
+    "evaluation_denominator": 4,
+    "generated_claims_min": 20,
+    "probe_records_min": 20,
+    "machine_false_pass_max": 0,
+    "machine_false_reject_max": 0,
+    "missing": "UNSCORED/HOLD",
+    "human_qualification": false,
+    "correlation": "Claims and matched probes share cases/passages; not independent samples",
+    "historical_evaluation_denominator": 8,
+    "completion_min_ratio": 0.9,
+    "interpretation": "Behavior under frozen evidence versus full research-need fulfillment are separate. No pooling of old/development claims into current thresholds."
+  },
+  "interpretation": {
+    "preserved_original_evaluation_denominator": 8,
+    "original_v19_report_quality": "FAIL",
+    "original_v19_attempted_evaluation": 4,
+    "unrun_research_references": [
+      "campaign-eval-research-memory",
+      "campaign-eval-research-retrieval",
+      "campaign-eval-research-verification",
+      "campaign-eval-research-insufficient"
+    ],
+    "new_evaluation_denominator": 4,
+    "fresh_heldout": false
+  },
+  "development_reuse": {
+    "old_packet": "00cc2c78e66fcc58c16a5afcf24db3c5177b6a8940ef2638c07a841edeacf48d",
+    "old_checks_reused": false,
+    "reason": "Draft and repair guidance, request contexts and producer hashes change in both modes; old input-bound verdicts remain historical. Two fresh development contracts are required."
+  }
+}

@@ -1,0 +1,155 @@
+{
+  "$defs": {
+    "ComparisonCompactUnionSafeFull_6eb02fe052f0045b": {
+      "additionalProperties": false,
+      "properties": {
+        "disposition": {
+          "$ref": "#/$defs/KeyedFixed_full_abstention"
+        },
+        "reason": {
+          "$ref": "#/$defs/KeyedFixed_application_context_required"
+        },
+        "next_action": {
+          "$ref": "#/$defs/KeyedFixed_request_context"
+        },
+        "coverage": {
+          "$ref": "#/$defs/UnionSafeFullCoverage_6eb02fe052f0045b"
+        },
+        "context_requests": {
+          "$ref": "#/$defs/KeyedContext_adde2c13a7021c4a"
+        }
+      },
+      "required": [
+        "disposition",
+        "reason",
+        "next_action",
+        "coverage",
+        "context_requests"
+      ],
+      "title": "ComparisonCompactUnionSafeFull_6eb02fe052f0045b",
+      "type": "object"
+    },
+    "KeyedContext_adde2c13a7021c4a": {
+      "additionalProperties": false,
+      "properties": {
+        "vehicle_configuration": {
+          "$ref": "#/$defs/KeyedFixed_required"
+        },
+        "operating_envelope": {
+          "$ref": "#/$defs/KeyedFixed_required"
+        },
+        "safety_objectives": {
+          "$ref": "#/$defs/KeyedFixed_required"
+        },
+        "validation_evidence": {
+          "$ref": "#/$defs/KeyedFixed_required"
+        }
+      },
+      "required": [
+        "vehicle_configuration",
+        "operating_envelope",
+        "safety_objectives",
+        "validation_evidence"
+      ],
+      "title": "KeyedContext_adde2c13a7021c4a",
+      "type": "object"
+    },
+    "KeyedEvidenceGap_adde2c13a7021c4aTrue": {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "$ref": "#/$defs/KeyedFixed_lacks_evidence"
+        },
+        "gap_reasons": {
+          "items": {
+            "$ref": "#/$defs/KeyedFixed_application_context"
+          },
+          "maxItems": 10,
+          "minItems": 1,
+          "title": "Gap Reasons",
+          "type": "array"
+        }
+      },
+      "required": [
+        "status",
+        "gap_reasons"
+      ],
+      "title": "KeyedEvidenceGap_adde2c13a7021c4aTrue",
+      "type": "object"
+    },
+    "KeyedFixed_application_context": {
+      "enum": [
+        "application_context"
+      ],
+      "title": "KeyedFixed_application_context",
+      "type": "string"
+    },
+    "KeyedFixed_application_context_required": {
+      "enum": [
+        "application_context_required"
+      ],
+      "title": "KeyedFixed_application_context_required",
+      "type": "string"
+    },
+    "KeyedFixed_full_abstention": {
+      "enum": [
+        "full_abstention"
+      ],
+      "title": "KeyedFixed_full_abstention",
+      "type": "string"
+    },
+    "KeyedFixed_lacks_evidence": {
+      "enum": [
+        "lacks_evidence"
+      ],
+      "title": "KeyedFixed_lacks_evidence",
+      "type": "string"
+    },
+    "KeyedFixed_request_context": {
+      "enum": [
+        "request_context"
+      ],
+      "title": "KeyedFixed_request_context",
+      "type": "string"
+    },
+    "KeyedFixed_required": {
+      "enum": [
+        "required"
+      ],
+      "title": "KeyedFixed_required",
+      "type": "string"
+    },
+    "UnionSafeFullCoverage_6eb02fe052f0045b": {
+      "additionalProperties": false,
+      "properties": {
+        "p1": {
+          "$ref": "#/$defs/KeyedEvidenceGap_adde2c13a7021c4aTrue"
+        },
+        "p2": {
+          "$ref": "#/$defs/KeyedEvidenceGap_adde2c13a7021c4aTrue"
+        },
+        "p3": {
+          "$ref": "#/$defs/KeyedEvidenceGap_adde2c13a7021c4aTrue"
+        }
+      },
+      "required": [
+        "p1",
+        "p2",
+        "p3"
+      ],
+      "title": "UnionSafeFullCoverage_6eb02fe052f0045b",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "response": {
+      "$ref": "#/$defs/ComparisonCompactUnionSafeFull_6eb02fe052f0045b"
+    }
+  },
+  "required": [
+    "response"
+  ],
+  "title": "ComparisonResponse_5d66f40bca150063",
+  "type": "object"
+}

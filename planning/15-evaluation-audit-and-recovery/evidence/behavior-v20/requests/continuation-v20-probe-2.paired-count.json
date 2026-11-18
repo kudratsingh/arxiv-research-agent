@@ -1,0 +1,123 @@
+{
+  "model": "claude-opus-5-5",
+  "output_config": {
+    "effort": "high",
+    "format": {
+      "type": "json_schema",
+      "schema": {
+        "$defs": {
+          "KeyedClaims_6eb58de0ac98a1b7": {
+            "type": "object",
+            "title": "KeyedClaims_6eb58de0ac98a1b7",
+            "properties": {
+              "p12127e8edb5ce9c445": {
+                "$ref": "#/$defs/_SupportJudgment"
+              },
+              "p397af6519ccb7d0544": {
+                "$ref": "#/$defs/_SupportJudgment"
+              },
+              "p5a100f7fbbbf527764": {
+                "$ref": "#/$defs/_SupportJudgment"
+              },
+              "p19c8d9837e04382c22": {
+                "$ref": "#/$defs/_SupportJudgment"
+              },
+              "p978f07cd3f82b2a790": {
+                "$ref": "#/$defs/_SupportJudgment"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "p12127e8edb5ce9c445",
+              "p397af6519ccb7d0544",
+              "p5a100f7fbbbf527764",
+              "p19c8d9837e04382c22",
+              "p978f07cd3f82b2a790"
+            ]
+          },
+          "KeyedProse_6eb58de0ac98a1b7": {
+            "type": "object",
+            "title": "KeyedProse_6eb58de0ac98a1b7",
+            "properties": {},
+            "additionalProperties": false
+          },
+          "SupportDecision": {
+            "type": "string",
+            "enum": [
+              "supported",
+              "unsupported",
+              "abstain"
+            ],
+            "title": "SupportDecision"
+          },
+          "_Revision": {
+            "type": "string",
+            "enum": [
+              "workspace-assistance-keyed-checks-v16"
+            ],
+            "title": "_Revision"
+          },
+          "_SupportJudgment": {
+            "type": "object",
+            "description": "Support judgment for this exact opaque probe; do not echo its binding.",
+            "title": "_SupportJudgment",
+            "properties": {
+              "reason": {
+                "type": "string",
+                "description": "Material evidence or unresolved issue; 240 characters is a soft target, not a hard limit. Never drop findings to fit.\n\n{minLength: 1}",
+                "title": "Reason"
+              },
+              "decision": {
+                "$ref": "#/$defs/SupportDecision"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "reason",
+              "decision"
+            ]
+          }
+        },
+        "type": "object",
+        "title": "KeyedChecks_6eb58de0ac98a1b7",
+        "properties": {
+          "prose_review": {
+            "type": "string",
+            "enum": [
+              "procedural_only",
+              "unscored_factual_content",
+              "abstain"
+            ],
+            "title": "Prose Review"
+          },
+          "prose_findings": {
+            "$ref": "#/$defs/KeyedProse_6eb58de0ac98a1b7"
+          },
+          "revision": {
+            "$ref": "#/$defs/_Revision"
+          },
+          "checks": {
+            "$ref": "#/$defs/KeyedClaims_6eb58de0ac98a1b7"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "prose_review",
+          "prose_findings",
+          "revision",
+          "checks"
+        ]
+      }
+    }
+  },
+  "system": "Assess each statement against its exact selected passage and preserve uncertainty. A resolving citation is not factual support. Return every support verdict and prose judgment required by the closed support-only schema; no workflow quality fields.",
+  "messages": [
+    {
+      "role": "user",
+      "content": "{\"capacity_policy\":{\"assistance_revision\":\"workspace-assistance-keyed-v16\",\"checker_revision\":\"workspace-assistance-keyed-checks-v16\",\"citations_by_mode\":{\"learn\":3,\"research\":6},\"claims_by_mode\":{\"learn\":8,\"research\":12},\"compact_checker_utf8_bytes\":262144,\"deadlines\":{\"check_seconds\":240,\"count_seconds\":60,\"draft_seconds\":120,\"origin\":\"durable_reservation_created_at\",\"recheck_seconds\":240,\"repair_seconds\":120,\"revision\":\"d5-operation-deadlines-v2-capacity\",\"workflow_seconds\":1200},\"http_body_bytes\":4194304,\"internal_json_bytes\":8388608,\"keyed_prose_finding_capacity\":{\"aggregate_findings_limit\":null,\"compact_checker_utf8_bytes\":262144,\"normalized_checker_utf8_bytes\":1048576,\"per_location_findings_limit\":null,\"revision\":\"workspace-assistance-keyed-finding-capacity-v16\"},\"max_citations_per_claim\":6,\"max_claim_characters\":10000,\"max_follow_up_intents\":3,\"max_materials\":3,\"max_messages_per_workflow\":4,\"max_procedural_gaps\":3,\"max_repairs\":1,\"max_requested_parts\":8,\"max_selected_evidence_utf8_bytes\":131072,\"max_selected_units\":12,\"max_unit_characters\":1600,\"normalization_revision\":\"workspace-assistance-keyed-normalization-v16\",\"normalized_checker_utf8_bytes\":1048576,\"operation_routes\":{\"check_recheck_probe\":{\"effort\":\"high\",\"input_tokens\":40000,\"model\":\"claude-opus-5-5\",\"output_tokens\":12000,\"prices\":{\"input\":\"4\",\"output\":\"20\",\"verified_at\":\"2026-11-14\"},\"thinking\":{\"type\":\"adaptive\"}},\"draft_repair\":{\"effort\":\"medium\",\"input_tokens\":40000,\"model\":\"claude-sonnet-5-5\",\"output_tokens\":8000,\"prices\":{\"input\":\"2\",\"output\":\"10\",\"verified_at\":\"2026-11-14\"},\"thinking\":{\"type\":\"between_tools\"}},\"revision\":\"d5-sonnet-opus-high-capacity-v3\"},\"paired_input_tokens_fit\":32000,\"raw_draft_utf8_bytes\":131072,\"reservation_input_tokens\":40000,\"revision\":\"d5-comprehensive-capacity-v15\",\"sealed_input_json_bytes\":8388608,\"soft_claim_characters\":500,\"soft_reason_characters\":240},\"checker_wire_rule\":\"Support-only blinded diagnostic. Return the fixed revision, checks for every exact opaque probe key, prose_review and every required prose_findings location key. Each check has a support decision and reason. No workflow atomicity, qualification, coverage or priority fields exist here. IDs, input digests and prose field/index values are server-derived and must not be echoed. Do not answer the task or invent evidence.\",\"claim_inputs\":[{\"claim_id\":\"p12127e8edb5ce9c445\",\"input_digest\":\"sha256:d91d44e00611c133da822a747eadbd715d83db44864a2f071d194f2eeb89e2d3\"},{\"claim_id\":\"p397af6519ccb7d0544\",\"input_digest\":\"sha256:695c6ad3748323fc75fef0068be9728cd798445cd255ea99a0d40575fa9da130\"},{\"claim_id\":\"p5a100f7fbbbf527764\",\"input_digest\":\"sha256:0cd9056f22ea07054820542ff8d84f1d40a13ba68adc84b6a24fe2b347542248\"},{\"claim_id\":\"p19c8d9837e04382c22\",\"input_digest\":\"sha256:d52d1f62d159a5b3ecda78875925968835fd0f4c484d1feb1f68d429ea112ffd\"},{\"claim_id\":\"p978f07cd3f82b2a790\",\"input_digest\":\"sha256:c69b8f323d191325e362e475d7911e6ece372e67754fc8bf9996a7b04f20f3e2\"}],\"draft\":{\"claims\":[{\"claim_id\":\"p12127e8edb5ce9c445\",\"evidence\":[{\"end\":1866,\"material_id\":\"mat-48780ffb91b68f22cf607c5650336baf\",\"page\":null,\"parser_revision\":\"workspace-plain-text-v1\",\"quote\":\"This design effectively integrates spatial information into the state space and the tensor core, substantially advancing the state adaptability and enhancing the expressiveness of the data compression. Extensive experiments demonstrate that TensorSSM achieves significantly high reconstruction accuracy and storage efficiency, exhibiting robust expressiveness across diverse tensor datasets without relying on strict spatial assumptions.\",\"scope\":\"abstract\",\"source_hash\":\"sha256:0a0d6c2b721f9e82465d91ea96cec77e8245c6cccbe44e194b19a14db5f36be0\",\"span_id\":\"span-19ad83096299f09c1ada7a49ddd9bce9\",\"start\":1429,\"version_id\":\"arxiv:2610.40871:v1:metadata-0be4ee69b6741057\",\"work_id\":\"arxiv:2610.40871\"}],\"inference_label\":null,\"kind\":\"factual\",\"required_scope\":\"abstract\",\"required_section\":null,\"text\":\"The selected TensorSSM abstract reports experiments across diverse tensor datasets without relying on strict spatial assumptions.\"},{\"claim_id\":\"p397af6519ccb7d0544\",\"evidence\":[{\"end\":1910,\"material_id\":\"mat-c35118081c1369f460cb4c41adbc185a\",\"page\":null,\"parser_revision\":\"workspace-plain-text-v1\",\"quote\":\"The defect patterns it exposed (evaluation criteria leaking into prompts, token-level swaps that break Arabic agreement, epistemically unbalanced pairs, single-theme refusal probes, unwritten dialect twins counted as coverage) are, we argue, general hazards of counterfactual fairness benchmarks. This is a protocol paper, not a results paper: no model has been evaluated, and the accompanying pre-registration commits the hypotheses, metrics, exclusion rules, and analysis plan that the pilot will follow.\",\"scope\":\"abstract\",\"source_hash\":\"sha256:1122e718e19513fe95c3c094c5f12f18ff207bac442405d2fcc7098cfe8b54e2\",\"span_id\":\"span-163cc35fb95515cc133e7405c86ba94a\",\"start\":1404,\"version_id\":\"arxiv:2610.40893:v1:metadata-018e69b4ec3841a0\",\"work_id\":\"arxiv:2610.40893\"}],\"inference_label\":null,\"kind\":\"factual\",\"required_scope\":\"abstract\",\"required_section\":null,\"text\":\"The selected fairness-benchmark abstract describes a protocol paper in which no model has yet been evaluated.\"},{\"claim_id\":\"p5a100f7fbbbf527764\",\"evidence\":[{\"end\":1910,\"material_id\":\"mat-c35118081c1369f460cb4c41adbc185a\",\"page\":null,\"parser_revision\":\"workspace-plain-text-v1\",\"quote\":\"The defect patterns it exposed (evaluation criteria leaking into prompts, token-level swaps that break Arabic agreement, epistemically unbalanced pairs, single-theme refusal probes, unwritten dialect twins counted as coverage) are, we argue, general hazards of counterfactual fairness benchmarks. This is a protocol paper, not a results paper: no model has been evaluated, and the accompanying pre-registration commits the hypotheses, metrics, exclusion rules, and analysis plan that the pilot will follow.\",\"scope\":\"abstract\",\"source_hash\":\"sha256:1122e718e19513fe95c3c094c5f12f18ff207bac442405d2fcc7098cfe8b54e2\",\"span_id\":\"span-163cc35fb95515cc133e7405c86ba94a\",\"start\":1404,\"version_id\":\"arxiv:2610.40893:v1:metadata-018e69b4ec3841a0\",\"work_id\":\"arxiv:2610.40893\"}],\"inference_label\":null,\"kind\":\"factual\",\"required_scope\":\"abstract\",\"required_section\":null,\"text\":\"The selected fairness protocol abstract says the pilot was completed before its hypotheses and exclusion rules were specified.\"},{\"claim_id\":\"p19c8d9837e04382c22\",\"evidence\":[{\"end\":1863,\"material_id\":\"mat-f215cad7235629deacb40965a6cc68c5\",\"page\":null,\"parser_revision\":\"workspace-plain-text-v1\",\"quote\":\"With the stronger GPT-6-Sol, ACE and Dynamic Cheatsheet learn from feedback alone. They reach 78% accuracy and solve 59-60% of the single cells, against 53% and 8% with the certifying model, and they surpass the raw history. CLR-Bench therefore measures how well an agent learns, and this ability differs across models.\",\"scope\":\"abstract\",\"source_hash\":\"sha256:cd9e14f99e31776e9ccf7e02900f0e8ef3f79b98abff32889ab815dc1254c5d8\",\"span_id\":\"span-3796f5b460ad2a613da39b1c12a2630d\",\"start\":1544,\"version_id\":\"arxiv:2610.40758:v1:metadata-96148d2d4e4a4093\",\"work_id\":\"arxiv:2610.40758\"}],\"inference_label\":null,\"kind\":\"factual\",\"required_scope\":\"abstract\",\"required_section\":null,\"text\":\"For the stronger GPT-6-Sol comparison, the selected CLR-Bench excerpt reports 78% accuracy against 53% with the certifying model.\"},{\"claim_id\":\"p978f07cd3f82b2a790\",\"evidence\":[{\"end\":1863,\"material_id\":\"mat-f215cad7235629deacb40965a6cc68c5\",\"page\":null,\"parser_revision\":\"workspace-plain-text-v1\",\"quote\":\"With the stronger GPT-6-Sol, ACE and Dynamic Cheatsheet learn from feedback alone. They reach 78% accuracy and solve 59-60% of the single cells, against 53% and 8% with the certifying model, and they surpass the raw history. CLR-Bench therefore measures how well an agent learns, and this ability differs across models.\",\"scope\":\"abstract\",\"source_hash\":\"sha256:cd9e14f99e31776e9ccf7e02900f0e8ef3f79b98abff32889ab815dc1254c5d8\",\"span_id\":\"span-3796f5b460ad2a613da39b1c12a2630d\",\"start\":1544,\"version_id\":\"arxiv:2610.40758:v1:metadata-96148d2d4e4a4093\",\"work_id\":\"arxiv:2610.40758\"}],\"inference_label\":null,\"kind\":\"factual\",\"required_scope\":\"abstract\",\"required_section\":null,\"text\":\"In the selected CLR-Bench excerpt, ACE and Dynamic Cheatsheet cannot learn from feedback alone with the stronger GPT-6-Sol model.\"}]},\"identity_contract\":\"Return every exact named verdict key and the fixed revision from output_schema. Identities and digests are derived server-side from this exact current request. Never emit claim_id, part_id, input_digest, field or index inside verdict values.\",\"operation\":\"probe\",\"phase\":\"check\",\"role\":\"checker\",\"sealed_request\":{\"private_context\":false,\"provider_schema_compatibility_revision\":\"anthropic-structured-schema-compat-v1\",\"schema_revision\":\"workspace-assistance-keyed-v16\"},\"unscored_prose\":{}}"
+    }
+  ],
+  "thinking": {
+    "type": "adaptive"
+  }
+}

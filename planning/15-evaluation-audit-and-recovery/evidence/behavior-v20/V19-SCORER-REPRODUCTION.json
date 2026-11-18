@@ -1,0 +1,518 @@
+{
+  "basis": "Actual unchanged score_parts function on ideal synthetic current-response controls, not provider or human evidence",
+  "original_packet_digest": "00cc2c78e66fcc58c16a5afcf24db3c5177b6a8940ef2638c07a841edeacf48d",
+  "original_reference_matrix_digest": "228a3eb5b60cd9bf6d9e999409b3b92e29abe3f9eaca4b9ee82ddfe06a3cbf60",
+  "original_scorer_module_sha256": "927897b1ebe1fdd3a460e3db8f5c66518c6fa55458a6f35f6b2c322d4d420920",
+  "ideal_synthetic_snapshot_digest": "d0c8ede79f241652ea03aff37757de208b49f90439fd0d120fbbe74711a53111",
+  "legacy_request_fulfillment_counts": {
+    "unmet": 17,
+    "met": 7
+  },
+  "legacy_all24_met_gate": false,
+  "rows": [
+    {
+      "case_id": "campaign-eval-learn-mechanism",
+      "part_id": "p1",
+      "reference_answerability": "partially_answerable",
+      "expected_behavior": "bounded_partial_answer",
+      "limitation_origins": [
+        "available_text",
+        "extraction"
+      ],
+      "declared_status": "partial",
+      "current_machine_status": "partial",
+      "coverage_disagreement": false,
+      "request_fulfillment": "unmet",
+      "appropriate_abstention_machine_reference": null,
+      "research_need_unmet": true,
+      "retrieval_gap": false,
+      "unsupported_claims_in_case": 0,
+      "human_judgment": null,
+      "basis": "Bound unqualified checker versus frozen machine reference; no semantic fact inferred from citation identity"
+    },
+    {
+      "case_id": "campaign-eval-learn-mechanism",
+      "part_id": "p2",
+      "reference_answerability": "partially_answerable",
+      "expected_behavior": "bounded_partial_answer",
+      "limitation_origins": [
+        "available_text",
+        "extraction"
+      ],
+      "declared_status": "partial",
+      "current_machine_status": "partial",
+      "coverage_disagreement": false,
+      "request_fulfillment": "unmet",
+      "appropriate_abstention_machine_reference": null,
+      "research_need_unmet": true,
+      "retrieval_gap": false,
+      "unsupported_claims_in_case": 0,
+      "human_judgment": null,
+      "basis": "Bound unqualified checker versus frozen machine reference; no semantic fact inferred from citation identity"
+    },
+    {
+      "case_id": "campaign-eval-learn-mechanism",
+      "part_id": "p3",
+      "reference_answerability": "answerable",
+      "expected_behavior": "answer",
+      "limitation_origins": [
+        "available_text",
+        "extraction"
+      ],
+      "declared_status": "answered",
+      "current_machine_status": "answered",
+      "coverage_disagreement": false,
+      "request_fulfillment": "met",
+      "appropriate_abstention_machine_reference": null,
+      "research_need_unmet": false,
+      "retrieval_gap": false,
+      "unsupported_claims_in_case": 0,
+      "human_judgment": null,
+      "basis": "Bound unqualified checker versus frozen machine reference; no semantic fact inferred from citation identity"
+    },
+    {
+      "case_id": "campaign-eval-learn-conditions",
+      "part_id": "p1",
+      "reference_answerability": "insufficient",
+      "expected_behavior": "bounded_partial_answer",
+      "limitation_origins": [
+        "available_text"
+      ],
+      "declared_status": "partial",
+      "current_machine_status": "partial",
+      "coverage_disagreement": false,
+      "request_fulfillment": "unmet",
+      "appropriate_abstention_machine_reference": false,
+      "research_need_unmet": true,
+      "retrieval_gap": true,
+      "unsupported_claims_in_case": 0,
+      "human_judgment": null,
+      "basis": "Bound unqualified checker versus frozen machine reference; no semantic fact inferred from citation identity"
+    },
+    {
+      "case_id": "campaign-eval-learn-conditions",
+      "part_id": "p2",
+      "reference_answerability": "partially_answerable",
+      "expected_behavior": "bounded_partial_answer",
+      "limitation_origins": [
+        "available_text"
+      ],
+      "declared_status": "partial",
+      "current_machine_status": "partial",
+      "coverage_disagreement": false,
+      "request_fulfillment": "unmet",
+      "appropriate_abstention_machine_reference": null,
+      "research_need_unmet": true,
+      "retrieval_gap": false,
+      "unsupported_claims_in_case": 0,
+      "human_judgment": null,
+      "basis": "Bound unqualified checker versus frozen machine reference; no semantic fact inferred from citation identity"
+    },
+    {
+      "case_id": "campaign-eval-learn-conditions",
+      "part_id": "p3",
+      "reference_answerability": "answerable",
+      "expected_behavior": "answer",
+      "limitation_origins": [
+        "available_text"
+      ],
+      "declared_status": "answered",
+      "current_machine_status": "answered",
+      "coverage_disagreement": false,
+      "request_fulfillment": "met",
+      "appropriate_abstention_machine_reference": null,
+      "research_need_unmet": false,
+      "retrieval_gap": false,
+      "unsupported_claims_in_case": 0,
+      "human_judgment": null,
+      "basis": "Bound unqualified checker versus frozen machine reference; no semantic fact inferred from citation identity"
+    },
+    {
+      "case_id": "campaign-eval-learn-experiment",
+      "part_id": "p1",
+      "reference_answerability": "partially_answerable",
+      "expected_behavior": "bounded_partial_answer",
+      "limitation_origins": [
+        "available_text",
+        "extraction"
+      ],
+      "declared_status": "partial",
+      "current_machine_status": "partial",
+      "coverage_disagreement": false,
+      "request_fulfillment": "unmet",
+      "appropriate_abstention_machine_reference": null,
+      "research_need_unmet": true,
+      "retrieval_gap": false,
+      "unsupported_claims_in_case": 0,
+      "human_judgment": null,
+      "basis": "Bound unqualified checker versus frozen machine reference; no semantic fact inferred from citation identity"
+    },
+    {
+      "case_id": "campaign-eval-learn-experiment",
+      "part_id": "p2",
+      "reference_answerability": "partially_answerable",
+      "expected_behavior": "bounded_partial_answer",
+      "limitation_origins": [
+        "available_text",
+        "extraction"
+      ],
+      "declared_status": "partial",
+      "current_machine_status": "partial",
+      "coverage_disagreement": false,
+      "request_fulfillment": "unmet",
+      "appropriate_abstention_machine_reference": null,
+      "research_need_unmet": true,
+      "retrieval_gap": false,
+      "unsupported_claims_in_case": 0,
+      "human_judgment": null,
+      "basis": "Bound unqualified checker versus frozen machine reference; no semantic fact inferred from citation identity"
+    },
+    {
+      "case_id": "campaign-eval-learn-experiment",
+      "part_id": "p3",
+      "reference_answerability": "answerable",
+      "expected_behavior": "answer",
+      "limitation_origins": [
+        "available_text",
+        "extraction"
+      ],
+      "declared_status": "answered",
+      "current_machine_status": "answered",
+      "coverage_disagreement": false,
+      "request_fulfillment": "met",
+      "appropriate_abstention_machine_reference": null,
+      "research_need_unmet": false,
+      "retrieval_gap": false,
+      "unsupported_claims_in_case": 0,
+      "human_judgment": null,
+      "basis": "Bound unqualified checker versus frozen machine reference; no semantic fact inferred from citation identity"
+    },
+    {
+      "case_id": "campaign-eval-learn-measurement",
+      "part_id": "p1",
+      "reference_answerability": "partially_answerable",
+      "expected_behavior": "bounded_partial_answer",
+      "limitation_origins": [
+        "available_text",
+        "extraction"
+      ],
+      "declared_status": "partial",
+      "current_machine_status": "partial",
+      "coverage_disagreement": false,
+      "request_fulfillment": "unmet",
+      "appropriate_abstention_machine_reference": null,
+      "research_need_unmet": true,
+      "retrieval_gap": false,
+      "unsupported_claims_in_case": 0,
+      "human_judgment": null,
+      "basis": "Bound unqualified checker versus frozen machine reference; no semantic fact inferred from citation identity"
+    },
+    {
+      "case_id": "campaign-eval-learn-measurement",
+      "part_id": "p2",
+      "reference_answerability": "partially_answerable",
+      "expected_behavior": "bounded_partial_answer",
+      "limitation_origins": [
+        "available_text",
+        "extraction"
+      ],
+      "declared_status": "partial",
+      "current_machine_status": "partial",
+      "coverage_disagreement": false,
+      "request_fulfillment": "unmet",
+      "appropriate_abstention_machine_reference": null,
+      "research_need_unmet": true,
+      "retrieval_gap": false,
+      "unsupported_claims_in_case": 0,
+      "human_judgment": null,
+      "basis": "Bound unqualified checker versus frozen machine reference; no semantic fact inferred from citation identity"
+    },
+    {
+      "case_id": "campaign-eval-learn-measurement",
+      "part_id": "p3",
+      "reference_answerability": "answerable",
+      "expected_behavior": "answer",
+      "limitation_origins": [
+        "available_text",
+        "extraction"
+      ],
+      "declared_status": "answered",
+      "current_machine_status": "answered",
+      "coverage_disagreement": false,
+      "request_fulfillment": "met",
+      "appropriate_abstention_machine_reference": null,
+      "research_need_unmet": false,
+      "retrieval_gap": false,
+      "unsupported_claims_in_case": 0,
+      "human_judgment": null,
+      "basis": "Bound unqualified checker versus frozen machine reference; no semantic fact inferred from citation identity"
+    },
+    {
+      "case_id": "campaign-eval-research-memory",
+      "part_id": "p1",
+      "reference_answerability": "partially_answerable",
+      "expected_behavior": "bounded_partial_answer",
+      "limitation_origins": [
+        "corpus",
+        "selection",
+        "available_text"
+      ],
+      "declared_status": "partial",
+      "current_machine_status": "partial",
+      "coverage_disagreement": false,
+      "request_fulfillment": "unmet",
+      "appropriate_abstention_machine_reference": null,
+      "research_need_unmet": true,
+      "retrieval_gap": false,
+      "unsupported_claims_in_case": 0,
+      "human_judgment": null,
+      "basis": "Bound unqualified checker versus frozen machine reference; no semantic fact inferred from citation identity"
+    },
+    {
+      "case_id": "campaign-eval-research-memory",
+      "part_id": "p2",
+      "reference_answerability": "partially_answerable",
+      "expected_behavior": "bounded_partial_answer",
+      "limitation_origins": [
+        "corpus",
+        "selection",
+        "available_text"
+      ],
+      "declared_status": "partial",
+      "current_machine_status": "partial",
+      "coverage_disagreement": false,
+      "request_fulfillment": "unmet",
+      "appropriate_abstention_machine_reference": null,
+      "research_need_unmet": true,
+      "retrieval_gap": false,
+      "unsupported_claims_in_case": 0,
+      "human_judgment": null,
+      "basis": "Bound unqualified checker versus frozen machine reference; no semantic fact inferred from citation identity"
+    },
+    {
+      "case_id": "campaign-eval-research-memory",
+      "part_id": "p3",
+      "reference_answerability": "answerable",
+      "expected_behavior": "answer",
+      "limitation_origins": [
+        "corpus",
+        "selection",
+        "available_text"
+      ],
+      "declared_status": "answered",
+      "current_machine_status": "answered",
+      "coverage_disagreement": false,
+      "request_fulfillment": "met",
+      "appropriate_abstention_machine_reference": null,
+      "research_need_unmet": false,
+      "retrieval_gap": false,
+      "unsupported_claims_in_case": 0,
+      "human_judgment": null,
+      "basis": "Bound unqualified checker versus frozen machine reference; no semantic fact inferred from citation identity"
+    },
+    {
+      "case_id": "campaign-eval-research-retrieval",
+      "part_id": "p1",
+      "reference_answerability": "insufficient",
+      "expected_behavior": "comparison_only_abstention",
+      "limitation_origins": [
+        "corpus",
+        "ranking",
+        "selection",
+        "available_text"
+      ],
+      "declared_status": "lacks_evidence",
+      "current_machine_status": "lacks_evidence",
+      "coverage_disagreement": false,
+      "request_fulfillment": "unmet",
+      "appropriate_abstention_machine_reference": true,
+      "research_need_unmet": true,
+      "retrieval_gap": true,
+      "unsupported_claims_in_case": 0,
+      "human_judgment": null,
+      "basis": "Bound unqualified checker versus frozen machine reference; no semantic fact inferred from citation identity"
+    },
+    {
+      "case_id": "campaign-eval-research-retrieval",
+      "part_id": "p2",
+      "reference_answerability": "partially_answerable",
+      "expected_behavior": "bounded_partial_answer",
+      "limitation_origins": [
+        "corpus",
+        "ranking",
+        "selection",
+        "available_text"
+      ],
+      "declared_status": "partial",
+      "current_machine_status": "partial",
+      "coverage_disagreement": false,
+      "request_fulfillment": "unmet",
+      "appropriate_abstention_machine_reference": null,
+      "research_need_unmet": true,
+      "retrieval_gap": false,
+      "unsupported_claims_in_case": 0,
+      "human_judgment": null,
+      "basis": "Bound unqualified checker versus frozen machine reference; no semantic fact inferred from citation identity"
+    },
+    {
+      "case_id": "campaign-eval-research-retrieval",
+      "part_id": "p3",
+      "reference_answerability": "answerable",
+      "expected_behavior": "answer",
+      "limitation_origins": [
+        "corpus",
+        "ranking",
+        "selection",
+        "available_text"
+      ],
+      "declared_status": "answered",
+      "current_machine_status": "answered",
+      "coverage_disagreement": false,
+      "request_fulfillment": "met",
+      "appropriate_abstention_machine_reference": null,
+      "research_need_unmet": false,
+      "retrieval_gap": false,
+      "unsupported_claims_in_case": 0,
+      "human_judgment": null,
+      "basis": "Bound unqualified checker versus frozen machine reference; no semantic fact inferred from citation identity"
+    },
+    {
+      "case_id": "campaign-eval-research-verification",
+      "part_id": "p1",
+      "reference_answerability": "partially_answerable",
+      "expected_behavior": "bounded_partial_answer",
+      "limitation_origins": [
+        "corpus",
+        "ranking",
+        "selection",
+        "available_text"
+      ],
+      "declared_status": "partial",
+      "current_machine_status": "partial",
+      "coverage_disagreement": false,
+      "request_fulfillment": "unmet",
+      "appropriate_abstention_machine_reference": null,
+      "research_need_unmet": true,
+      "retrieval_gap": false,
+      "unsupported_claims_in_case": 0,
+      "human_judgment": null,
+      "basis": "Bound unqualified checker versus frozen machine reference; no semantic fact inferred from citation identity"
+    },
+    {
+      "case_id": "campaign-eval-research-verification",
+      "part_id": "p2",
+      "reference_answerability": "partially_answerable",
+      "expected_behavior": "bounded_partial_answer",
+      "limitation_origins": [
+        "corpus",
+        "ranking",
+        "selection",
+        "available_text"
+      ],
+      "declared_status": "partial",
+      "current_machine_status": "partial",
+      "coverage_disagreement": false,
+      "request_fulfillment": "unmet",
+      "appropriate_abstention_machine_reference": null,
+      "research_need_unmet": true,
+      "retrieval_gap": false,
+      "unsupported_claims_in_case": 0,
+      "human_judgment": null,
+      "basis": "Bound unqualified checker versus frozen machine reference; no semantic fact inferred from citation identity"
+    },
+    {
+      "case_id": "campaign-eval-research-verification",
+      "part_id": "p3",
+      "reference_answerability": "answerable",
+      "expected_behavior": "answer",
+      "limitation_origins": [
+        "corpus",
+        "ranking",
+        "selection",
+        "available_text"
+      ],
+      "declared_status": "answered",
+      "current_machine_status": "answered",
+      "coverage_disagreement": false,
+      "request_fulfillment": "met",
+      "appropriate_abstention_machine_reference": null,
+      "research_need_unmet": false,
+      "retrieval_gap": false,
+      "unsupported_claims_in_case": 0,
+      "human_judgment": null,
+      "basis": "Bound unqualified checker versus frozen machine reference; no semantic fact inferred from citation identity"
+    },
+    {
+      "case_id": "campaign-eval-research-insufficient",
+      "part_id": "p1",
+      "reference_answerability": "insufficient",
+      "expected_behavior": "full_application_abstention",
+      "limitation_origins": [
+        "application_context",
+        "corpus",
+        "ranking",
+        "selection",
+        "available_text"
+      ],
+      "declared_status": "lacks_evidence",
+      "current_machine_status": "lacks_evidence",
+      "coverage_disagreement": false,
+      "request_fulfillment": "unmet",
+      "appropriate_abstention_machine_reference": true,
+      "research_need_unmet": true,
+      "retrieval_gap": false,
+      "unsupported_claims_in_case": 0,
+      "human_judgment": null,
+      "basis": "Bound unqualified checker versus frozen machine reference; no semantic fact inferred from citation identity"
+    },
+    {
+      "case_id": "campaign-eval-research-insufficient",
+      "part_id": "p2",
+      "reference_answerability": "insufficient",
+      "expected_behavior": "full_application_abstention",
+      "limitation_origins": [
+        "application_context",
+        "corpus",
+        "ranking",
+        "selection",
+        "available_text"
+      ],
+      "declared_status": "lacks_evidence",
+      "current_machine_status": "lacks_evidence",
+      "coverage_disagreement": false,
+      "request_fulfillment": "unmet",
+      "appropriate_abstention_machine_reference": true,
+      "research_need_unmet": true,
+      "retrieval_gap": false,
+      "unsupported_claims_in_case": 0,
+      "human_judgment": null,
+      "basis": "Bound unqualified checker versus frozen machine reference; no semantic fact inferred from citation identity"
+    },
+    {
+      "case_id": "campaign-eval-research-insufficient",
+      "part_id": "p3",
+      "reference_answerability": "insufficient",
+      "expected_behavior": "full_application_abstention",
+      "limitation_origins": [
+        "application_context",
+        "corpus",
+        "ranking",
+        "selection",
+        "available_text"
+      ],
+      "declared_status": "lacks_evidence",
+      "current_machine_status": "lacks_evidence",
+      "coverage_disagreement": false,
+      "request_fulfillment": "unmet",
+      "appropriate_abstention_machine_reference": true,
+      "research_need_unmet": true,
+      "retrieval_gap": false,
+      "unsupported_claims_in_case": 0,
+      "human_judgment": null,
+      "basis": "Bound unqualified checker versus frozen machine reference; no semantic fact inferred from citation identity"
+    }
+  ],
+  "historical_records_modified": false,
+  "human_labels": null,
+  "provider_contacts": 0
+}

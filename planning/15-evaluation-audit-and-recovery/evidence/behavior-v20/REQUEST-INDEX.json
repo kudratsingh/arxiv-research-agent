@@ -1,0 +1,112 @@
+{
+  "continuation-v20-dev-learn": {
+    "stage": "B",
+    "cohort": "development",
+    "original_reference": "campaign-dev-learn",
+    "initial_message_digest": "e5958eb1bb252afb4a9f797cb825706eed61759ab4bdfb90ddf6865d8b2572f6",
+    "initial_paired_count_digest": "0bb878ad70f63b96c9866dcd05a48a3d221324132408bdd043cee571a67d4292",
+    "wire_schema_digest": "1255d40c6ee44017e611dac117a989dccafb93c32b2dc1d9caac3ac502e89ebd",
+    "sealed_context_digest": "b9cd7fa851a959e288198dc95febfdc7fe2715469901d8b70f06f4ea02edd033",
+    "input_digest": "51cdfad08fd15e597dfbf50316c6598e929ff27abeebf85123d817bd3f1c4d96",
+    "dynamic_requests": "Checker, repair and recheck derive from actual preceding outputs under frozen source/templates/limits; each needs a fresh exact paired count. No future bodies are invented."
+  },
+  "continuation-v20-dev-compare": {
+    "stage": "B",
+    "cohort": "development",
+    "original_reference": "campaign-dev-compare",
+    "initial_message_digest": "c854b3ec153fccdf4df951942f557f9b466b31d723701c9b6c05660800665ead",
+    "initial_paired_count_digest": "8586ad98b442dc400bef57288e8895fce0e07a5f9e375a68258df7eac994cb63",
+    "wire_schema_digest": "a8e3ab7d74d1458b228ff64e68adc103a4afafc9cb7472c3168214b355348037",
+    "sealed_context_digest": "d5307c1cd937c8479b5368155298df7930989b3a017de4187fbba7faee3b0fe7",
+    "input_digest": "ede87b62cbdfc03bccf56aca6c9249da70c4e548b4de6f5a6023afdfb75b7e09",
+    "dynamic_requests": "Checker, repair and recheck derive from actual preceding outputs under frozen source/templates/limits; each needs a fresh exact paired count. No future bodies are invented."
+  },
+  "continuation-v20-research-memory": {
+    "stage": "C",
+    "cohort": "evaluation_exposed_corpus",
+    "original_reference": "campaign-eval-research-memory",
+    "initial_message_digest": "8a7446deb3cb508db2b030f8ab3433e0a2ca22fe11e2cccf7985b1d23cce3543",
+    "initial_paired_count_digest": "bb487377a4c4629e9f435aa8ea94fef12e298fd1554c3fce5c7b9e4cfa26a79b",
+    "wire_schema_digest": "2cea057dbbd9ce8fed3890942d8b0cc6a5783ca0eb36a93150bd1759c32e21dc",
+    "sealed_context_digest": "3490b16f7e286e51d41971a04d71364bbdff3cf97da4911823c700b68fb7ef9e",
+    "input_digest": "c0cc3c7b713853103ce3cbc412c0a6674c0d287c4b9d01dbfd72aee95030224c",
+    "dynamic_requests": "Checker, repair and recheck derive from actual preceding outputs under frozen source/templates/limits; each needs a fresh exact paired count. No future bodies are invented."
+  },
+  "continuation-v20-research-retrieval": {
+    "stage": "C",
+    "cohort": "evaluation_exposed_corpus",
+    "original_reference": "campaign-eval-research-retrieval",
+    "initial_message_digest": "12a5664fdaaad8d37302d522c3475d6612640e0186517fbaaf2212048782aa6f",
+    "initial_paired_count_digest": "fd1489a03d29301a2504406ec58f4d14defce8870af0c0775ed73e7642612ed6",
+    "wire_schema_digest": "e118131fdabf70462659ac7a1d9f8c23abbbafe0e9bff5ad5c3d85f45b006b5b",
+    "sealed_context_digest": "1a4b40e051d2dfda5e93afab3712213362a8914f8bc73da7a51ff5525dc2afcb",
+    "input_digest": "a6614e06fe0a753d06835557ee5d2fa233f5d6821b2670db0ca46235b3b24e3b",
+    "dynamic_requests": "Checker, repair and recheck derive from actual preceding outputs under frozen source/templates/limits; each needs a fresh exact paired count. No future bodies are invented."
+  },
+  "continuation-v20-research-verification": {
+    "stage": "C",
+    "cohort": "evaluation_exposed_corpus",
+    "original_reference": "campaign-eval-research-verification",
+    "initial_message_digest": "7e18eed071d2d22fca49a38493bc57601e0f3c96c64280e35fbfc7a197f71718",
+    "initial_paired_count_digest": "426ed7b13c8e229f10c927795010fa0ac7d44a13a258f6d8aa808854705f15a3",
+    "wire_schema_digest": "c1a268e07913db91bca2dd5bd83f05b8ccec998eaaa9a150addbd88ae860d5a0",
+    "sealed_context_digest": "6af8c5c89a2890be510569182d16dd24aa7819662ad313a646ac3d856cf13bd9",
+    "input_digest": "af776ff322498d53db2a58f27da1738c36eded8c350b88e84c0882fccd781ec9",
+    "dynamic_requests": "Checker, repair and recheck derive from actual preceding outputs under frozen source/templates/limits; each needs a fresh exact paired count. No future bodies are invented."
+  },
+  "continuation-v20-research-insufficient": {
+    "stage": "C",
+    "cohort": "evaluation_exposed_corpus",
+    "original_reference": "campaign-eval-research-insufficient",
+    "initial_message_digest": "183ee0995090617d0e4f88764fa93cb9e332feec9db87e67e53f48ddcc240e7c",
+    "initial_paired_count_digest": "ed5946c9b3093f3b207255bacf7aa725a96b040190c8bb07dbdfb7f47dc878b9",
+    "wire_schema_digest": "ee62198b32a3ce570380661fddb74fd7b5491f8745861e48ad85341950a482a9",
+    "sealed_context_digest": "82ec9ccf1c3ab765f1a9c74403b85114e3a4a287148c5f3b737839b2ad4981d9",
+    "input_digest": "3feeb41f384680a132040d3eceaef494ce5d02d51093b3d4b9b00d2632f8b486",
+    "dynamic_requests": "Checker, repair and recheck derive from actual preceding outputs under frozen source/templates/limits; each needs a fresh exact paired count. No future bodies are invented."
+  },
+  "continuation-v20-probe-1": {
+    "stage": "D",
+    "cohort": "machine_reference_checker_diagnostic",
+    "original_reference": "campaign-probe-1",
+    "initial_message_digest": "61f0b5ecdb5aa536bb7922d4e977c23a5f70a4be36bf1fa0c228c82246f39fea",
+    "initial_paired_count_digest": "b5f6c2a492e31f3be4cdf863e97dcc87bf4a039b227964083e7cf545c97db7b2",
+    "wire_schema_digest": "6a104ccae423028a1b3bb8dc8ee43c2e409c4f4c158e1e36fe8c9af365753e07",
+    "sealed_context_digest": "1087f4e659c6225b2529800517afda1eb9a383231caef71d228403e91d24db1c",
+    "input_digest": "61b4a9e0da3ce3108ce3763db4a8d79e45b5c6c34e514642d07f064ec674e936",
+    "dynamic_requests": "Checker, repair and recheck derive from actual preceding outputs under frozen source/templates/limits; each needs a fresh exact paired count. No future bodies are invented."
+  },
+  "continuation-v20-probe-2": {
+    "stage": "D",
+    "cohort": "machine_reference_checker_diagnostic",
+    "original_reference": "campaign-probe-2",
+    "initial_message_digest": "b4850ae8d06340580d4b874e3f53c12dcf4ebdde3036b1ee120633227fb4a571",
+    "initial_paired_count_digest": "9c2a68a96531fccfc1020c718506771d00570b84f9cd9e37c46ff2d8c3b7562a",
+    "wire_schema_digest": "2deda02efa5ae939c63e6d438772e6b9435e17edf3e18d952b2e4bf3b649bfb4",
+    "sealed_context_digest": "79196f73fba32d6574315e156b5abe6df4d1ba85740f5658c7d27e91936a90c1",
+    "input_digest": "09261579f283a7438962a7e9fa2a5a57528742f0caf8755e7b0c293f7dc8f32c",
+    "dynamic_requests": "Checker, repair and recheck derive from actual preceding outputs under frozen source/templates/limits; each needs a fresh exact paired count. No future bodies are invented."
+  },
+  "continuation-v20-probe-3": {
+    "stage": "D",
+    "cohort": "machine_reference_checker_diagnostic",
+    "original_reference": "campaign-probe-3",
+    "initial_message_digest": "aa479c87710ffd0bc99a33be4e1a81a360d383212e3ef2eb8d0d1132c71c4bf5",
+    "initial_paired_count_digest": "b1ced3a6a945b3ee0a063ce34f5194c76032cee24ae9022dcec8f07f170a8325",
+    "wire_schema_digest": "d46917e1884262425a80eaee84012e305e6f9b1d157c41ab1630e56276229c07",
+    "sealed_context_digest": "54cbe992b214b535d5ca67f56f27f3ce4b910f2893dbe0b386d8dda7c35aa487",
+    "input_digest": "214f0ef165fa0ae14cb3f4081baf26422130202d3ba89e2b35f66db01f085acb",
+    "dynamic_requests": "Checker, repair and recheck derive from actual preceding outputs under frozen source/templates/limits; each needs a fresh exact paired count. No future bodies are invented."
+  },
+  "continuation-v20-probe-4": {
+    "stage": "D",
+    "cohort": "machine_reference_checker_diagnostic",
+    "original_reference": "campaign-probe-4",
+    "initial_message_digest": "18a9634f82917d4e0bfa042e9ce26307bc8fe2792f83ad12cc39d7c9c0db1a59",
+    "initial_paired_count_digest": "b539ddfe851e53db33a11bf3bc58d163c61fe8992434bf3d5bd45b16e5c00fc2",
+    "wire_schema_digest": "608089c8529367aa319aa450cdc266c17817d75432d33f84756b9c13b13c41e7",
+    "sealed_context_digest": "3207f8d7dfb8c6909eb301e96bf40f789c54487665a843136f98196fa45fabed",
+    "input_digest": "b94161373f12d1fd00f4c8a682b47a575867e5327c4337b9fb2560c68cbbe602",
+    "dynamic_requests": "Checker, repair and recheck derive from actual preceding outputs under frozen source/templates/limits; each needs a fresh exact paired count. No future bodies are invented."
+  }
+}
