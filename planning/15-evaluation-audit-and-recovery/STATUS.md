@@ -1,39 +1,16 @@
-# Current work — v20 prospective behavior continuation (offline verification)
+# Current offline handoff — v20 behavior continuation
 
-[Scoring/failure-isolation design](BEHAVIOR-CONTINUATION-v20.md) and
-[observed quality review](QUALITY-REVIEW-v20.md) preserve the immutable stopped
-v19 scope, originals and FAIL. The prospective scope prioritizes four unrun
-Research controls and four unrun checker batches, with two necessary new
-input-bound development workflows. No completed Learn evaluation or standalone
-schema diagnostic is repeated. Human qualification remains out of scope.
+Frozen application `d33a0ccf7d21052bc20fef3047769befd85b4372`. Review the [replay commands](evidence/behavior-v20/RUN-COMMANDS.md), [final local verification](evidence/behavior-v20/FINAL-LOCAL-VERIFICATION.md), [quality report](evidence/behavior-v20/OFFLINE-QUALITY-REPORT-v2.md), [consolidated campaign proposal](evidence/behavior-v20/APPROVAL-REQUEST.md) and [unresolved C4 decision](evidence/behavior-v20/SECURITY-DECISION.md). Runtime and packet bytes remain unchanged after the freeze. Exact publication and hosted-CI receipts follow outside git; local results do not imply hosted success.
 
-The actual scorer reproduction is seven possible fully met parts against an
-unreachable historical24/24 requirement. The new policy separates expected
-behavior, full research-need fulfillment, factual quality and completion/review.
-The ideal synthetic control reaches behavioral PASS with7fully met/13partial/
-4unmet needs; synthetic overall quality remains HOLD. Existing negative quality
-findings and all historical denominators remain unchanged.
+The actual old scorer reproduces seven possible fully met parts against an unreachable 24/24 gate. The new policy separates expected behavior, full research-need satisfaction, factual quality, and completion/review. The ideal synthetic control reaches behavioral PASS while retaining unmet needs. The actual mock replay remains behavioral FAIL / overall HOLD, with seven reviewed findings. The historical v19 FAIL is unchanged.
 
-Read-only baseline:52jobs/101Messages/126counts,USD3.770505known plus
-USD2.275066retained overlapping liability once =USD6.045571; no active jobs.
-The bounded10job/28Message/28fresh-paired-count/USD9.20 continuation plusUSD2
-buffer would giveUSD17.245571 exposure, within the unchangedUSD22 ceiling.
-Programme64/160/200,concurrency1,expiry2026-11-21T11:03:57Z remain unchanged.
-No cap, dollar, expiry or migration amendment is proposed or activated.
+Full coverage: 8659 passed, 62 skipped, 53 deselected in 4106.01s (1:08:26); Coverage: 95%; all package floors passed. Final E2E: 53 passed, 8721 deselected in 22.49s. Ruff, strict mypy over 256 source files, 4,308 frontend tests with coverage, type/lint/contracts, build/budgets, registry parity 260/0, and mock simulation 20/20 at USD 0 pass. The protected replay exercised 28 paired operations with zero actual contacts or spend. Browser journeys passed 16/16. Restart preserved four results and four threads. Axe found zero serious/critical issues; two mobile checks remain incomplete. The third coverage run's stale test expectations were corrected to assert stronger authority guards; the complete fourth run passed.
 
-Verification and final byte freeze are in progress. [Dependency patches](WEB-DEPENDENCY-PATCH-v20.md)
-pass local frontend tests/coverage/build/budgets, but the [existing audit gate
-is blocked](CI-AUDIT-DECISION-v20.md) by the unpatched development advisory.
-Automatic approval review refused a persistent exception outside current
-scope; the allowlist is unchanged. Hosted all-green is not claimed. Preserve
-this failure while completing all independent offline checks and publication.
+The required C4 audit remains red on the documented unpatched development advisory. Automatic review refused a persistent exception without owner risk acceptance. No exception, threshold bypass or all-green claim. Resolve exact-head CI before activation; the dated risk decision and bounded campaign scope may be returned together. Dispatch remains unauthorized.
 
-No provider/count/key access, live authority, financial mutation, settlement,
-hold release, owner-data edit, merge or deployment. Owner3137/review3178 remain
-untouched. Everyday generation, recurrence and notifications stay disabled.
+Read-only baseline: 52 jobs / 101 Messages / 126 counts; USD 3.770505 known plus USD 2.275066 overlapping holds counted once = USD 6.045571; active jobs zero. Proposed scope: two new development workflows, four unrun Research controls and four unrun batches with 20 balanced machine references. Maximum 10 jobs / 28 Messages / 28 fresh paired counts / USD 9.20. With a separate USD 2 buffer, exposure is USD 17.245571 within USD 22. Programme 64/160/200, concurrency one and expiry 2026-11-21T11:03:57Z remain unchanged. No capacity, dollar, expiry or migration amendment is proposed or active.
 
-All earlier current/pending headings below are immutable historical records,
-not renewed execution authority.
+Owner3137 and review3178 remain untouched. Human qualification is out of scope. No provider/count/key access, live authority, financial mutation, settlement, hold release, merge or deployment. Everyday generation, recurrence and notifications remain disabled. Prior current/pending records below remain historical and grant no renewed authority.
 
 ---
 
