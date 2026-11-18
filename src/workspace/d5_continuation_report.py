@@ -121,6 +121,7 @@ def probe_verdicts(
 
     from src.workspace.assistance_keyed_checks import probe_checks_model
     from src.workspace.d5_adapter import prepare_input
+    from src.workspace.d5_behavior_scoring import material_records_intact
     from src.workspace.d5_capacity_policy import MAX_HTTP_BYTES
     from src.workspace.d5_case_isolation import _complete_body
     from src.workspace.d5_operations import route, verdict_text
@@ -135,6 +136,9 @@ def probe_verdicts(
     if not snapshot:
         return {"binding": "unavailable", "reason": "probe_unrun", "verdicts": {}}
     try:
+        require(
+            material_records_intact(materials, packet["materials"]), "frozen_material_record_drift"
+        )
         sealed, body = case["sealed"], case["wire"]
         compact = prepare_input(
             sealed,
@@ -250,23 +254,82 @@ def probe_verdicts(
         return {"binding": "unavailable", "reason": str(exc), "verdicts": {}}
 
 
-def _bound_probes(packet: dict[str, Any], raw: dict[str, Any], materials: Any) -> dict[str, Any]:
+def _bound_probes(
+    packet: dict[str, Any], raw: dict[str, Any], materials: Any, *, source_error: str | None = None
+) -> dict[str, Any]:
+    if source_error is not None:
+        return {
+            p["id"]: {"binding": "unavailable", "reason": source_error, "verdicts": {}}
+            for p in packet["probes"]
+        }
     return {
         p["id"]: probe_verdicts(p, raw.get(p["id"]), packet, materials) for p in packet["probes"]
+    }
+
+
+def terminal_scope(conn: Any, scope: str, supplied_stop: dict[str, Any] | None) -> dict[str, Any]:
+    """Read durable terminal state even for a later report with no runner argument."""
+    row = conn.execute(
+        "SELECT state,data FROM workspace_d5_scopes WHERE scope_id=%s", (scope,)
+    ).fetchone()
+    if row is None:
+        return {"state": "unavailable", "stop": supplied_stop, "integrity": "scope_missing"}
+    state, data = row
+    persisted = data.get("campaign_stop")
+    if "campaign_stop" in data and (not isinstance(persisted, dict) or not persisted):
+        return {"state": state, "stop": supplied_stop, "integrity": "invalid_persisted_stop"}
+    issue = (
+        "supplied_stop_differs_from_persisted"
+        if supplied_stop is not None and supplied_stop != persisted
+        else None
+    )
+    return {
+        "state": state,
+        "stop": persisted or supplied_stop,
+        "integrity": issue,
+        "terminal": bool(persisted or supplied_stop or state in {"stopped", "revoked", "expired"}),
+    }
+
+
+def case_census(
+    schedule: list[str], compiled: dict[str, Any], raw: dict[str, Any], outcomes: dict[str, Any]
+) -> dict[str, Any]:
+    """An attempted job without a recorded outcome is not an unrun identity."""
+    return {
+        key: {
+            "case_id": key,
+            "stage": compiled[key]["stage"],
+            **outcomes.get(key, {"state": raw.get(key, {}).get("state", "unrun")}),
+            "outcome_recorded": key in outcomes,
+            "raw_job_state": raw.get(key, {}).get("state"),
+            "attempted": key in raw,
+        }
+        for key in schedule
     }
 
 
 def results(
     store: Any, packet: dict[str, Any], *, stop: dict[str, Any] | None = None
 ) -> dict[str, Any]:
-    from src.workspace.d5_behavior_scoring import score_campaign
-    from src.workspace.d5_campaign_report import _legacy_results, score_workflow
+    from src.workspace.d5_behavior_scoring import (
+        bound_workflow,
+        material_records_intact,
+        score_campaign,
+    )
+    from src.workspace.d5_benchmark import check_storage
+    from src.workspace.d5_campaign_report import _legacy_results
     from src.workspace.d5_freeze import compile_inputs
     from src.workspace.executor import FakeExecutor
 
     base = _legacy_results(store, packet, stop=stop)
+    source_error = None
+    try:
+        check_storage(store, packet)
+    except AdmissionError as exc:
+        source_error = str(exc)
     compiled = compile_inputs(packet)
     with store.pool.connection() as conn:
+        terminal = terminal_scope(conn, "d5-" + packet["packet_digest"][:24], stop)
         materials = tuple(
             FakeExecutor(store)._sources(
                 conn, next(iter(compiled.values()))["owner"], [m["material_id"]]
@@ -276,7 +339,7 @@ def results(
         financial = liabilities(
             conn, packet["program_id"], packet["campaign_extension"]["core"]["retained_exceptions"]
         )
-    bindings = _bound_probes(packet, base["raw_results"], materials)
+    bindings = _bound_probes(packet, base["raw_results"], materials, source_error=source_error)
     verdicts = {k: v for b in bindings.values() for k, v in b["verdicts"].items()}
     score = score_campaign(
         packet["cases"],
@@ -286,6 +349,8 @@ def results(
         packet["probe_references"],
         verdicts,
         routes=packet["operation_routes"],
+        frozen_materials=packet["materials"],
+        source_records_intact=source_error is None,
     )
     accounting = {
         **base["accounting"],
@@ -303,27 +368,33 @@ def results(
         "protocol_cohort": packet["revision"],
         "cases": score["workflows"],
         "development_cases": [
-            score_workflow(
-                c, base["raw_results"].get(c["id"]), materials, routes=packet["operation_routes"]
+            bound_workflow(
+                c,
+                base["raw_results"].get(c["id"]),
+                materials,
+                packet["operation_routes"],
+                records_intact=source_error is None
+                and material_records_intact(materials, packet["materials"]),
             )
             for c in packet["cases"]
             if c["cohort"] == "development"
         ],
         "probe_bindings": bindings,
-        "case_census": {
-            key: {
-                "case_id": key,
-                "stage": compiled[key]["stage"],
-                **base["outcomes"].get(key, {"state": "unrun"}),
-            }
-            for key in packet["schedule"]
-        },
+        "case_census": case_census(
+            packet["schedule"], compiled, base["raw_results"], base["outcomes"]
+        ),
         "financial_integrity": financial["financial_integrity"],
+        "source_integrity": {
+            "state": "PASS" if source_error is None else "FAIL",
+            "reason": source_error,
+        },
         "raw_results": base["raw_results"],
         "outcomes": base["outcomes"],
         **score,
         "accounting": accounting,
-        "stop": stop,
+        "stop": terminal["stop"],
+        "scope_state": terminal["state"],
+        "terminal_integrity": terminal["integrity"],
         "human_labels": None,
         "checker_qualified": False,
         "everyday_generation": False,
@@ -338,10 +409,20 @@ def results(
     if financial["new_liabilities"]:
         report["machine_quality"] = "HOLD" if report["machine_quality"] != "FAIL" else "FAIL"
         report["gate_reasons"] = [*report["gate_reasons"], "new_external_liability_unresolved"]
+    if source_error is not None:
+        report["behavioral_gate"] = report["machine_quality"] = "FAIL"
+        report["gate_reasons"] = [*report["gate_reasons"], "frozen_source_storage_drift"]
+    if terminal.get("terminal") or terminal["integrity"] is not None:
+        report["behavioral_gate"] = report["machine_quality"] = "FAIL"
+        report["gate_reasons"] = [*report["gate_reasons"], "durable_campaign_terminal_or_unbound"]
     accepted = [
         c
         for c in report["cases"]
-        if c["review_complete"]
+        if source_error is None
+        and not terminal.get("terminal")
+        and terminal["integrity"] is None
+        and base["outcomes"].get(c["id"], {}).get("state") == "ready"
+        and c["review_complete"]
         and c["contract_complete"]
         and not c["behavior_errors"]
         and c["state"] == "ready"
@@ -436,6 +517,7 @@ def analyze_archive(packet_path: Path, result_path: Path, out: Path) -> dict[str
         p["probe_references"],
         verdicts,
         routes=p["operation_routes"],
+        frozen_materials=p["materials"],
     )
     receipt = {
         "at": datetime.now(UTC).isoformat(),

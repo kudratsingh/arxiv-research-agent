@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from collections import Counter
 from collections.abc import Sequence
+from dataclasses import asdict
 from typing import Any, get_args
 
 from src.workspace.admission import AdmissionError, _digest
@@ -96,6 +97,54 @@ def _snapshot_matches(case: dict[str, Any], snapshot: dict[str, Any]) -> bool:
         operation_routes=ROUTES if prospective else None,
     )
     return bool(request == compiled.settings["d5_request"])
+
+
+def material_records_intact(
+    materials: Sequence[SourceMaterial], frozen_records: Sequence[dict[str, Any]] | None
+) -> bool:
+    """Bind whole retained records, including unselected spans and parser metadata."""
+    if frozen_records is None:
+        return False
+    try:
+        expected = {r["material_id"]: _digest(r) for r in frozen_records}
+        actual = {m.material_id: _digest(asdict(m)) for m in materials}
+        return (
+            bool(expected)
+            and len(expected) == len(frozen_records)
+            and (len(actual) == len(materials) and actual == expected)
+        )
+    except (KeyError, TypeError, ValueError):
+        return False
+
+
+def bound_workflow(
+    case: dict[str, Any],
+    snapshot: dict[str, Any] | None,
+    materials: Sequence[SourceMaterial],
+    routes: Any,
+    *,
+    records_intact: bool,
+) -> dict[str, Any]:
+    """Keep current judgments unavailable when the sealed retained record drifts."""
+    result = _current_workflow(case, snapshot, materials, routes)
+    if not records_intact:
+        result["completion"] = False
+        result["assessment_binding"] = {
+            "status": "unavailable",
+            "reason": "frozen_material_record_drift",
+        }
+        for key in (
+            "whole_claim_support",
+            "claim_quality",
+            "machine_coverage",
+            "prose_review",
+            "prose_findings",
+            "prose_uncertainties",
+            "coverage_critiques",
+            "machine_request_outcome",
+        ):
+            result[key] = None
+    return result
 
 
 def _current_workflow(
@@ -310,6 +359,8 @@ def score_campaign(
     probe_verdicts: dict[str, Any],
     *,
     routes: Any = None,
+    frozen_materials: Sequence[dict[str, Any]] | None = None,
+    source_records_intact: bool = True,
 ) -> dict[str, Any]:
     """Score only the supplied evaluation cohort against its current journals.
 
@@ -328,6 +379,7 @@ def score_campaign(
     if reference["matrix_digest"] != _digest(matrix):
         raise AdmissionError("behavior_reference_matrix_digest_mismatch")
 
+    records_intact = source_records_intact and material_records_intact(materials, frozen_materials)
     parts = []
     workflows = []
     totals: Counter[str] = Counter(
@@ -351,8 +403,10 @@ def score_campaign(
     for case in evaluated:
         rows = _reference_rows(case, reference["rows"])
         snapshot = snapshots.get(case["id"])
-        workflow = _current_workflow(case, snapshot, materials, routes)
-        evidence_intact = _selected_evidence_intact(case["sealed"]["units"], rows, materials)
+        workflow = bound_workflow(case, snapshot, materials, routes, records_intact=records_intact)
+        evidence_intact = records_intact and _selected_evidence_intact(
+            case["sealed"]["units"], rows, materials
+        )
         review = _review(workflow, snapshot, evidence_intact)
         scores = [_part_score(workflow, row, review) for row in rows]
         parts.extend(scores)

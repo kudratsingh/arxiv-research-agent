@@ -8,6 +8,7 @@ import gzip
 import hashlib
 import json
 from copy import deepcopy
+from dataclasses import replace
 from decimal import Decimal
 from pathlib import Path
 
@@ -282,3 +283,184 @@ def test_preserved_synthetic_v20_probe_journals_when_available():
         result = probe_verdicts(case, report["raw_results"].get(case["id"]), packet, sources)
         assert result["binding"] == "bound", (case["id"], result)
         assert len(result["verdicts"]) == 5
+
+
+@pytest.mark.parametrize("mutation", ["sibling_span", "warnings", "page_mapping", "duplicate"])
+def test_full_frozen_material_record_is_required_for_probe(probe_data, mutation):
+    case, snapshot, packet, sources = probe_data
+    changed = list(sources)
+    source = changed[0]
+    if mutation == "sibling_span":
+        changed[0] = replace(
+            source, spans=(*source.spans, replace(source.spans[0], span_id="extra"))
+        )
+    elif mutation == "warnings":
+        changed[0] = replace(source, warnings=(*source.warnings, "changed extraction warning"))
+    elif mutation == "page_mapping":
+        changed[0] = replace(source, page_numbers=(999,))
+    else:
+        changed.append(source)
+    observed = probe_verdicts(case, snapshot, packet, changed)
+    assert observed == {
+        "binding": "unavailable",
+        "reason": "frozen_material_record_drift",
+        "verdicts": {},
+    }
+
+
+class _ScopeConnection:
+    def __init__(self, row):
+        self.row = row
+
+    def execute(self, query, args):
+        assert query == "SELECT state,data FROM workspace_d5_scopes WHERE scope_id=%s"
+        assert args == ("scope",)
+        return self
+
+    def fetchone(self):
+        return self.row
+
+
+@pytest.mark.parametrize("state", ["stopped", "revoked", "expired", "active"])
+def test_later_report_recovers_persisted_terminal_stop(state):
+    from src.workspace.d5_continuation_report import terminal_scope
+
+    stop = {"case_id": "last", "stage": "outcome", "reason": "accounting failure"}
+    result = terminal_scope(_ScopeConnection((state, {"campaign_stop": stop})), "scope", None)
+    assert result["stop"] == stop
+    assert result["terminal"] is True
+    assert result["integrity"] is None
+
+
+@pytest.mark.parametrize("state", ["stopped", "revoked", "expired"])
+def test_terminal_scope_without_stop_does_not_become_active(state):
+    from src.workspace.d5_continuation_report import terminal_scope
+
+    result = terminal_scope(_ScopeConnection((state, {})), "scope", None)
+    assert result["terminal"] is True
+
+
+@pytest.mark.parametrize(
+    "row, reason",
+    [
+        (None, "scope_missing"),
+        (("stopped", {"campaign_stop": "invalid"}), "invalid_persisted_stop"),
+        (("active", {}), "supplied_stop_differs_from_persisted"),
+    ],
+)
+def test_stop_integrity_refuses_missing_or_contradictory_binding(row, reason):
+    from src.workspace.d5_continuation_report import terminal_scope
+
+    assert terminal_scope(_ScopeConnection(row), "scope", {"reason": "stop"})["integrity"] == reason
+
+
+def test_case_census_distinguishes_attempted_jobs_without_outcomes():
+    from src.workspace.d5_continuation_report import case_census
+
+    ids = ["ready", "failed", "uncertain", "unrun", "recorded"]
+    raw = {key: {"state": key} for key in ids[:3]}
+    compiled = {key: {"stage": "C"} for key in ids}
+    result = case_census(ids, compiled, raw, {"recorded": {"state": "failed"}})
+    assert [result[key]["state"] for key in ids] == ids[:4] + ["failed"]
+    assert all(result[key]["attempted"] for key in ids[:3])
+    assert all(not result[key]["outcome_recorded"] for key in ids[:4])
+    assert result["recorded"]["outcome_recorded"] is True
+
+
+@pytest.mark.parametrize(
+    "stop_kind", ["none", "persisted", "terminal_without_detail", "mismatch", "version_drift"]
+)
+def test_complete_report_cannot_erase_a_terminal_stop(monkeypatch, stop_kind):
+    from contextlib import contextmanager
+    from types import SimpleNamespace
+
+    from src.workspace import (
+        d5_benchmark,
+        d5_campaign_report,
+        d5_continuation_report,
+        d5_freeze,
+        executor,
+    )
+    from tests.test_workspace_d5_behavior_scoring import ideal_snapshots
+
+    packet = read(
+        ROOT / "planning/15-evaluation-audit-and-recovery/evidence/comparison-v19/packet.json.gz"
+    )
+    packet["continuation_lineage"] = {"basis": "Synthetic v20 report wrapper control"}
+    packet["continuation_producer"] = {"basis": "Synthetic wrapper code identity"}
+    sources = materials(packet)
+    raw = ideal_snapshots(packet["cases"], packet, sources)
+    compiled = {c["id"]: {"owner": "fixture", "stage": "C"} for c in packet["cases"]}
+    compiled.update({p["id"]: {"owner": "fixture", "stage": "D"} for p in packet["probes"]})
+    stop = {"case_id": packet["cases"][-1]["id"], "stage": "outcome", "reason": "settlement_drift"}
+    persisted = stop if stop_kind in {"persisted", "mismatch"} else None
+    state = "active" if stop_kind in {"none", "version_drift"} else "stopped"
+    conn = _ScopeConnection((state, {"campaign_stop": persisted} if persisted else {}))
+
+    @contextmanager
+    def connection():
+        yield conn
+
+    store = SimpleNamespace(pool=SimpleNamespace(connection=connection))
+    base = {
+        "raw_results": raw,
+        "outcomes": {k: {"state": "ready"} for k in raw},
+        "accounting": {"new_scope": {"known_usd": "1.0"}},
+    }
+
+    def check_storage(*args):
+        if stop_kind == "version_drift":
+            from src.workspace.admission import AdmissionError
+
+            raise AdmissionError("d5_frozen_source_changed")
+
+    monkeypatch.setattr(d5_benchmark, "check_storage", check_storage)
+    monkeypatch.setattr(d5_campaign_report, "_legacy_results", lambda *a, **k: base)
+    monkeypatch.setattr(d5_freeze, "compile_inputs", lambda p: compiled)
+    monkeypatch.setattr(
+        d5_continuation_report,
+        "terminal_scope",
+        lambda c, scope, supplied: {
+            "state": state,
+            "stop": persisted,
+            "terminal": state == "stopped",
+            "integrity": "supplied_stop_differs_from_persisted"
+            if stop_kind == "mismatch"
+            else None,
+        },
+    )
+    monkeypatch.setattr(
+        d5_continuation_report,
+        "liabilities",
+        lambda *a: {
+            "financial_integrity": "PASS",
+            "retained_liability_USD": "2.275066",
+            "validated_retained_components": [],
+            "new_liabilities": [],
+        },
+    )
+    monkeypatch.setattr(
+        executor.FakeExecutor,
+        "_sources",
+        lambda self, c, o, ids: [m for m in sources if m.material_id in ids],
+    )
+    result = d5_continuation_report.results(store, packet)
+    assert result["stop"] == persisted
+    if state == "stopped" or stop_kind == "version_drift":
+        assert result["behavioral_gate"] == result["machine_quality"] == "FAIL"
+        assert result["machine_behaviorally_satisfactory_results"] == 0
+        assert result["accounting"]["cost_per_behaviorally_satisfactory_result"] is None
+        assert (
+            "frozen_source_storage_drift"
+            if stop_kind == "version_drift"
+            else "durable_campaign_terminal_or_unbound"
+        ) in result["gate_reasons"]
+        if stop_kind == "version_drift":
+            assert all(
+                c["assessment_binding"]["status"] == "unavailable" for c in result["workflows"]
+            )
+            assert all(b["binding"] == "unavailable" for b in result["probe_bindings"].values())
+            assert result["denominators"]["reviewed_claim_findings"] == 0
+    else:
+        assert result["machine_behaviorally_satisfactory_results"] > 0
+    assert result["analysis_receipt"]["historical_records_modified"] is False

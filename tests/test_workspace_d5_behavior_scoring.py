@@ -185,6 +185,7 @@ def score(packet, materials, snapshots, *, cases=None, probe_references=None, ve
         if verdicts is None
         else verdicts,
         routes=packet["operation_routes"],
+        frozen_materials=packet["materials"],
     )
 
 
@@ -584,3 +585,39 @@ def test_compact_snapshot_requires_exact_canonical_request(frozen, field):
         assert workflow["assessment_binding"]["reason"] == "invalid_raw_snapshot"
         assert result["behavioral_gate"] == "HOLD"
         assert result["denominators"]["unscored_parts"] == 3
+
+
+@pytest.mark.parametrize("mutation", ["sibling_span", "warnings", "parser", "missing_binding"])
+def test_whole_material_drift_removes_current_judgments(frozen, mutation):
+    packet, materials, snapshots = frozen
+    changed = list(materials)
+    source = changed[0]
+    if mutation == "sibling_span":
+        changed[0] = replace(
+            source, spans=(*source.spans, replace(source.spans[0], span_id="extra"))
+        )
+    elif mutation == "warnings":
+        changed[0] = replace(source, warnings=("unapproved extraction",))
+    elif mutation == "parser":
+        changed[0] = replace(source, parser_revision="other")
+    result = score_campaign(
+        packet["cases"],
+        snapshots,
+        changed,
+        packet["answerability"],
+        packet["probe_references"],
+        {},
+        routes=packet["operation_routes"],
+        frozen_materials=None if mutation == "missing_binding" else packet["materials"],
+    )
+    for workflow in result["workflows"]:
+        assert workflow["assessment_binding"] == {
+            "status": "unavailable",
+            "reason": "frozen_material_record_drift",
+        }
+        assert workflow["whole_claim_support"] is None
+        assert workflow["machine_coverage"] is None
+        assert workflow["prose_review"] is None
+        assert not workflow["contract_complete"]
+    assert result["denominators"]["reviewed_claim_findings"] == 0
+    assert result["behavioral_gate"] == "FAIL"

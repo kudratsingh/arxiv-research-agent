@@ -1,6 +1,7 @@
 """Behavior scoring from real isolated qualification snapshots and mock HTTP."""
 
 from copy import deepcopy
+from dataclasses import asdict
 from types import SimpleNamespace
 
 import httpx
@@ -134,7 +135,14 @@ async def test_bound_qualification_snapshot_reaches_ready_and_scores_behavior(
 
         _, materials = adapter._context()
         report = score_campaign(
-            [case], {case["id"]: snapshot}, materials, reference, {}, {}, routes=ROUTES
+            [case],
+            {case["id"]: snapshot},
+            materials,
+            reference,
+            {},
+            {},
+            routes=ROUTES,
+            frozen_materials=[asdict(material) for material in materials],
         )
         fixture.retain_report(
             "behavior-scoring", scenario, {"report": report, "raw_qualification_snapshot": snapshot}
