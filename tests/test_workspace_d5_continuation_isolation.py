@@ -190,11 +190,17 @@ async def test_missing_revision_in_durable_authority_stops_before_factory(fixtur
             ("d5-" + packet["packet_digest"][:24],),
         )
     calls = {}
-    report = await d5_campaign.run(
-        store, packet, offline=True, transport_factory=_factory(calls, EVALUATION, "semantic")
-    )
+    # The stored authorization digest is checked before entering the case loop.
+    with pytest.raises(AdmissionError, match="^continuation_registered_scope_binding_drift$"):
+        await d5_campaign.run(
+            store, packet, offline=True, transport_factory=_factory(calls, EVALUATION, "semantic")
+        )
     assert calls == {}
-    assert report["stop"]["reason_code"] == "campaign_v20_progression_authorization_binding_drift"
+    with store.pool.connection() as conn:
+        assert conn.execute(
+            "SELECT count(*) FROM workspace_d5_case_runs WHERE scope_id=%s",
+            ("d5-" + packet["packet_digest"][:24],),
+        ).fetchone() == (0,)
 
 
 async def test_complete_negative_quality_development_keeps_its_bound_verdict(fixture_campaign):
@@ -232,9 +238,9 @@ async def test_complete_negative_quality_development_keeps_its_bound_verdict(fix
             "dispatch_gate",
             "revoked",
         ),
-        ("exhaustion", "program_job_cap_exceeded", "case_start", "stopped"),
+        ("unbound_activity", "continuation_post_baseline_activity_drift", "case_start", "stopped"),
         ("source_drift", "source_material_changed_or_inaccessible", "case_start", "stopped"),
-        ("packet_drift", "campaign_frozen_packet_or_producer_drift", "dispatch_gate", "stopped"),
+        ("packet_drift", "continuation_frozen_protocol_drift", "dispatch_gate", "stopped"),
     ],
 )
 async def test_mid_campaign_global_gate_has_exact_next_case_and_no_new_contact(
@@ -270,7 +276,8 @@ async def test_mid_campaign_global_gate_has_exact_next_case_and_no_new_contact(
                     "UPDATE workspace_material SET content_hash='synthetic-drift' WHERE material_id=%s",
                     (second["input"]["sources"][0]["material_id"],),
                 )
-            elif mutation == "exhaustion":
+            elif mutation == "unbound_activity":
+                # Unregistered jobs are rejected before they can exhaust programme capacity.
                 data = {
                     "sealed_input": second["input"],
                     "usage_events": [],
