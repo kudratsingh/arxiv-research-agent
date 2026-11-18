@@ -197,6 +197,10 @@ def authorize_fixture(store: Any, packet: dict[str, Any]) -> dict[str, Any]:
 
 def revoke(store: Any, packet: dict[str, Any], authorization: dict[str, Any]) -> dict[str, Any]:
     """Explicit operator revocation follows the selected append-only revision."""
+    if packet.get("revision") == "d5-behavior-continuation-v20":
+        from src.workspace.d5_continuation_authority import revoke_external
+
+        return revoke_external(store, packet, authorization)
     from psycopg.types.json import Jsonb
 
     if authorization.get("packet_digest") != packet["packet_digest"] or not authorization.get(
@@ -210,14 +214,13 @@ def revoke(store: Any, packet: dict[str, Any], authorization: dict[str, Any]) ->
         "d5-comprehensive-machine-campaign-v15",
         "d5-keyed-machine-campaign-v16",
         "d5-comparison-machine-campaign-v19",
-        "d5-behavior-continuation-v20",
     }
     if capacity and authorization.get("scope_id") != "d5-" + packet["packet_digest"][:24]:
         raise AdmissionError("campaign_revocation_scope_binding_required")
     statement = (
         "INSERT INTO workspace_d5_keyed_continuation_revocations VALUES(%s,%s,clock_timestamp()) ON CONFLICT DO NOTHING"
         if packet.get("revision")
-        in {"d5-keyed-machine-campaign-v16", "d5-comparison-machine-campaign-v19", "d5-behavior-continuation-v20"}
+        in {"d5-keyed-machine-campaign-v16", "d5-comparison-machine-campaign-v19"}
         else "INSERT INTO workspace_d5_capacity_revision_revocations VALUES(%s,%s,clock_timestamp()) ON CONFLICT DO NOTHING"
         if capacity
         else "INSERT INTO workspace_d5_campaign_successor_revocations VALUES(%s,%s,clock_timestamp()) ON CONFLICT DO NOTHING"

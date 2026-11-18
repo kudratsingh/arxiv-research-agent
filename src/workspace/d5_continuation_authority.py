@@ -79,6 +79,7 @@ def proposal(
 
 
 def validate_proposal(conn: Any, value: dict[str, Any], *, fresh: bool) -> dict[str, Any]:
+    """Audit the frozen ancestry and baseline before checking registered activity."""
     core = value.get("core", {})
     if (
         value.get("approved") is not False
@@ -310,6 +311,203 @@ def record_external(
     }
 
 
+def _bound_scope(
+    conn: Any,
+    receipt: dict[str, Any],
+    authorization_digest: str,
+) -> dict[str, Any] | None:
+    row = conn.execute(
+        "SELECT packet_digest,authorization_digest,data,expires_at "
+        "FROM workspace_d5_scopes WHERE scope_id=%s",
+        (receipt["scope_id"],),
+    ).fetchone()
+    if not row:
+        return None
+    packet_digest, digest, data, expires_at = row
+    if (
+        packet_digest != receipt["packet_digest"]
+        or digest != authorization_digest
+        or not isinstance(data, dict)
+        or data.get("program_id") != PROGRAM_ID
+        or data.get("authorization_record") != receipt
+        or data.get("members") != receipt["members"]
+        or data.get("limits") != receipt["limits"]
+        or data.get("stages") != receipt["stages"]
+        or data.get("baseline") != receipt["campaign_extension"]["core"]["basis"]
+        or data.get("program_amendment_proposal_digest")
+        != receipt["campaign_extension"]["proposal_digest"]
+        or not isinstance(data.get("cases"), dict)
+        or set(data["cases"]) != set(CASE_MAP)
+        or _digest(data["cases"]) != receipt["case_bindings_digest"]
+        or expires_at != datetime.fromisoformat(receipt["expires_at"])
+    ):
+        raise AdmissionError("continuation_registered_scope_binding_drift")
+    return data
+
+
+def _validate_activity(
+    conn: Any,
+    receipt: dict[str, Any],
+    core: dict[str, Any],
+    authorization_digest: str,
+) -> None:
+    scope = _bound_scope(conn, receipt, authorization_digest)
+    expected_members = {*core["basis_members"], *(receipt["members"] if scope else ())}
+    members = sorted(
+        row[0]
+        for row in conn.execute(
+            "SELECT owner FROM workspace_evaluation_members WHERE program_id=%s", (PROGRAM_ID,)
+        )
+    )
+    if members != sorted(expected_members):
+        raise AdmissionError("continuation_active_membership_drift")
+
+    historical = set(core["basis"]["contact_checkpoints"])
+    cases = scope["cases"] if scope else {}
+    (run_owner,) = receipt["members"]
+    scope_id = receipt["scope_id"]
+    # Include every post-baseline programme job and every row registered in
+    # this scope. This catches missing reservations and foreign or historical
+    # jobs attached to an approved case, even when a census join omits them.
+    for (
+        job_id,
+        owner,
+        input_digest,
+        inputs,
+        case_id,
+        packet_digest,
+        run_input,
+        run_actor,
+        reserve_actor,
+    ) in conn.execute(
+        "SELECT j.id,j.owner,j.input_digest,j.data->'sealed_input',c.case_id,"
+        "c.packet_digest,c.input_digest,c.owner,r.owner "
+        "FROM workspace_generation_jobs j "
+        "LEFT JOIN workspace_d5_case_runs c ON c.job_id=j.id AND c.scope_id=%s "
+        "LEFT JOIN workspace_spend_reservations r ON r.job_id=j.id "
+        "WHERE (j.owner=ANY(%s) AND NOT(j.id=ANY(%s))) OR c.scope_id=%s",
+        (scope_id, members, sorted(historical), scope_id),
+    ):
+        case = cases.get(case_id)
+        if (
+            not case
+            or job_id in historical
+            or owner != run_owner
+            or owner != run_actor
+            or owner != reserve_actor
+            or case.get("owner") != owner
+            or packet_digest != receipt["packet_digest"]
+            or input_digest != run_input
+            or input_digest != case.get("input_digest")
+            or _digest(inputs) != input_digest
+            or job_id != "gen-" + _digest([owner, scope_id + "-" + case_id])[:40]
+        ):
+            raise AdmissionError("continuation_post_baseline_activity_drift")
+
+
+def revoke_external(
+    store: Any,
+    packet: dict[str, Any],
+    authorization: dict[str, Any],
+) -> dict[str, Any]:
+    """Withdraw the stored v20 grant, including expired or partially recorded grants."""
+    approved_by = authorization.get("approved_by")
+    packet_digest = packet.get("packet_digest")
+    if (
+        not isinstance(approved_by, str)
+        or not approved_by.strip()
+        or not isinstance(packet_digest, str)
+        or authorization.get("packet_digest") != packet_digest
+    ):
+        raise AdmissionError("campaign_revocation_attribution_required")
+
+    scope_id = "d5-" + packet_digest[:24]
+    if authorization.get("scope_id") != scope_id:
+        raise AdmissionError("campaign_revocation_scope_binding_required")
+    extension = packet.get("campaign_extension")
+    if not isinstance(extension, dict):
+        raise AdmissionError("continuation_revocation_packet_binding_drift")
+    core = extension.get("core")
+    if (
+        packet.get("revision") != REVISION
+        or packet.get("program_id") != PROGRAM_ID
+        or _digest({k: v for k, v in packet.items() if k != "packet_digest"}) != packet_digest
+        or not isinstance(core, dict)
+        or core.get("revision") != AUTHORITY_REVISION
+        or core.get("program_id") != PROGRAM_ID
+        or core.get("extension_id") != EXTENSION_ID
+        or extension.get("proposal_digest") != _digest(core)
+    ):
+        raise AdmissionError("continuation_revocation_packet_binding_drift")
+
+    with store.pool.connection() as conn:
+        # Match admission's lock order if a scope already exists. The scope
+        # lock can also be acquired before phase two registers the row.
+        conn.execute("SELECT pg_advisory_xact_lock(hashtextextended(%s,0))", ("d5:" + scope_id,))
+        conn.execute(
+            "SELECT pg_advisory_xact_lock(hashtextextended(%s,0))", ("evaluation:" + PROGRAM_ID,)
+        )
+        row = conn.execute(
+            "SELECT program_id,record,authorization_digest,proposal_digest,packet_digest,scope_id,"
+            "expires_at,programme_expires_at,predecessor_extension_id,predecessor_authorization_digest "
+            "FROM workspace_d5_keyed_continuations WHERE extension_id=%s FOR UPDATE",
+            (EXTENSION_ID,),
+        ).fetchone()
+        if not row:
+            raise AdmissionError("continuation_revocation_recorded_grant_required")
+        (
+            program,
+            receipt,
+            digest,
+            proposal_digest,
+            stored_packet,
+            stored_scope,
+            expiry,
+            end,
+            ancestor,
+            ancestor_digest,
+        ) = row
+        try:
+            if (
+                program != PROGRAM_ID
+                or stored_packet != packet_digest
+                or stored_scope != scope_id
+                or proposal_digest != extension["proposal_digest"]
+                or _digest(receipt) != digest
+                or receipt.get("approved") is not True
+                or receipt.get("campaign_revision") != REVISION
+                or receipt.get("packet_digest") != stored_packet
+                or receipt.get("scope_id") != stored_scope
+                or receipt.get("campaign_extension") != extension
+                or datetime.fromisoformat(receipt["expires_at"]) != expiry
+                or datetime.fromisoformat(receipt["programme_expires_at"]) != end
+                or core["capacity_ancestor"]["extension_id"] != ancestor
+                or core["capacity_ancestor"]["authorization_digest"] != ancestor_digest
+            ):
+                raise ValueError("recorded grant fields disagree")
+            _bound_scope(conn, receipt, digest)
+        except (KeyError, TypeError, ValueError, AttributeError) as exc:
+            raise AdmissionError("continuation_revocation_recorded_grant_drift") from exc
+        conn.execute(
+            "INSERT INTO workspace_d5_keyed_continuation_revocations "
+            "VALUES(%s,%s,clock_timestamp()) ON CONFLICT DO NOTHING",
+            (
+                EXTENSION_ID,
+                Jsonb(
+                    {
+                        "revoked_by": approved_by.strip(),
+                        "at": datetime.now(UTC).isoformat(),
+                        "scope_id": stored_scope,
+                        "packet_digest": stored_packet,
+                        "authorization_digest": digest,
+                        "proposal_digest": proposal_digest,
+                    }
+                ),
+            ),
+        )
+    return {"revoked": True, "provider_contacts": 0}
+
+
 def active(
     conn: Any, program_id: str, required: str | None = None
 ) -> tuple[dict[str, Any], dict[str, Any]] | None:
@@ -341,6 +539,7 @@ def active(
         ).fetchone()
     ):
         raise AdmissionError("continuation_revoked_or_receipt_corrupt")
+    _validate_activity(conn, receipt, core, digest)
     return receipt, core
 
 
