@@ -385,6 +385,27 @@ def record_outcome(
             "quality_acceptance": None,  # Requires the separate frozen scorecard.
             "content_rejection": data.get("campaign_content_rejection"),
         }
+        if (
+            state == "failed"
+            and row[0]["authorization_record"].get("campaign_revision")
+            == "d5-behavior-continuation-v20"
+        ):
+            from src.workspace.d5_case_isolation import require_promoted_failure
+
+            reservation = conn.execute(
+                "SELECT state,unknown FROM workspace_spend_reservations WHERE job_id=%s FOR UPDATE",
+                (job_id,),
+            ).fetchone()
+            reserved_state, unknown = reservation or (None, None)
+            require_promoted_failure(
+                scope_id,
+                entry,
+                record,
+                data,
+                job_state=state,
+                reservation_state=reserved_state,
+                unknown=unknown,
+            )
         old = conn.execute(
             "SELECT record FROM workspace_d5_campaign_outcomes WHERE scope_id=%s AND case_id=%s",
             (scope_id, case_id),

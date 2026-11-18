@@ -26,9 +26,12 @@ from src.workspace.grounding import SupportCheck, validate_claims
 from src.workspace.qualification_accounting import priced_usage
 
 if TYPE_CHECKING:
+    from src.workspace.assistance_consistency_checks import Checks
     from src.workspace.d5_adapter import D5Adapter
 
 REVISION = "d5-behavior-continuation-v20"
+SEMANTIC_FAILURE = "isolated_evaluation_first_draft_semantic_failure"
+NEGATIVE_VERDICT = "complete_negative_quality_verdict"
 SEMANTIC_CODES = frozenset({"answered_requires_complete_answer_without_gaps"})
 QUALITY_CODES = frozenset(
     {
@@ -67,15 +70,106 @@ def require_progression(
         raise AdmissionError("campaign_v20_progression_authorization_binding_drift")
     if entry["stage"] != "B":
         require_development_contracts(conn, {**row[2], "id": scope_id})
-    if conn.execute(
-        "SELECT 1 FROM workspace_d5_campaign_outcomes o "
+    require_classified_outcomes(conn, scope_id, row[2]["cases"])
+
+
+def require_promoted_failure(
+    scope_id: str,
+    entry: dict[str, Any],
+    record: dict[str, Any],
+    data: dict[str, Any],
+    *,
+    job_state: str,
+    reservation_state: str | None,
+    unknown: Decimal | None,
+) -> None:
+    """Accept only the exact failed receipt promoted after independent replay."""
+    _require(
+        job_state == reservation_state == record.get("state") == "failed" and unknown == 0,
+        "campaign_v20_prior_failed_accounting_receipt_drift",
+    )
+    stage, case_id = entry["stage"], record.get("case_id")
+    sealed = data.get("sealed_input", {})
+    settings = sealed.get("settings", {})
+    receipt = data.get("campaign_content_rejection")
+    audit = data.get("accounting_audits", {}).get("completed-failure")
+    snapshot = data.get("adapter", {})
+    contacts, steps = snapshot.get("contacts", []), snapshot.get("steps")
+    input_digest = entry["input_digest"]
+    if not isinstance(receipt, dict) or not isinstance(audit, dict):
+        raise AdmissionError("campaign_v20_promoted_failure_required")
+    _require(
+        record.get("content_rejection") == receipt
+        and record.get("input_digest") == input_digest == receipt.get("input_digest")
+        and _digest(sealed) == input_digest
+        and settings.get("d5_campaign_revision") == REVISION
+        and settings.get("d5_scope_id") == scope_id
+        and settings.get("d5_case_id") == case_id == receipt.get("case_id")
+        and settings.get("d5_operation") == entry["operation"] == "workflow"
+        and receipt.get("stage") == stage
+        and receipt.get("accepted") is False
+        and data.get("result") is None
+        and receipt.get("contacts_digest") == audit.get("contacts_digest") == _digest(contacts)
+        and receipt.get("failed_accounting_digest") == _digest(audit)
+        and audit.get("state") == "failed"
+        and audit.get("content_accepted") is False
+        and _money(audit.get("unknown_usd")) == 0,
+        "campaign_v20_promoted_failure_required",
+    )
+    reason = receipt.get("reason_code")
+    classification = receipt.get("classification")
+    _require(
+        (
+            classification == SEMANTIC_FAILURE
+            and stage == "C"
+            and receipt.get("local_stage") == "draft"
+            and receipt.get("error_class") == "ValidationError"
+            and isinstance(reason, str)
+            and reason in SEMANTIC_CODES
+            and receipt.get("error_codes") == [reason]
+            and len(contacts) == 2
+            and steps == []
+        )
+        or (
+            classification == NEGATIVE_VERDICT
+            and stage in {"B", "C"}
+            and receipt.get("error_class") == "AdmissionError"
+            and isinstance(reason, str)
+            and reason in QUALITY_CODES
+            and reason == receipt.get("error")
+            and len(contacts) in {4, 8}
+            and isinstance(steps, list)
+            and len(steps) * 2 == len(contacts)
+            and steps[-1].get("stage") == "check"
+            and receipt.get("local_stage") == ("recheck" if len(contacts) == 8 else "check")
+        ),
+        "campaign_v20_promoted_failure_required",
+    )
+
+
+def require_classified_outcomes(conn: Any, scope_id: str, cases: dict[str, Any]) -> None:
+    """Enforce the same terminal contract during runner and adapter admission."""
+    for case, job_id, record, state, data, reservation, unknown in conn.execute(
+        "SELECT o.case_id,o.job_id,o.record,j.state,j.data,r.state,r.unknown "
+        "FROM workspace_d5_campaign_outcomes o "
+        "JOIN workspace_generation_jobs j ON j.id=o.job_id "
         "LEFT JOIN workspace_spend_reservations r ON r.job_id=o.job_id "
-        "WHERE o.scope_id=%s AND o.record->>'state'='failed' "
-        "AND (r.state IS DISTINCT FROM 'failed' OR r.unknown IS DISTINCT FROM 0 "
-        "OR o.record->'content_rejection'->>'classification' IS NULL) LIMIT 1",
+        "WHERE o.scope_id=%s AND (o.record->>'state'='failed' OR j.state='failed')",
         (scope_id,),
-    ).fetchone():
-        raise AdmissionError("campaign_v20_prior_failed_accounting_receipt_drift")
+    ):
+        _require(
+            case in cases and record.get("case_id") == case and record.get("job_id") == job_id,
+            "campaign_v20_promoted_failure_required",
+        )
+        require_promoted_failure(
+            scope_id,
+            cases[case],
+            record,
+            data,
+            job_state=state,
+            reservation_state=reservation,
+            unknown=unknown,
+        )
 
 
 def _semantic_code(error: BaseException) -> str | None:
@@ -246,12 +340,36 @@ def _contact_accounting(
     return audit
 
 
+def require_decisive_negative(verdict: Checks, context: dict[str, Any]) -> None:
+    """A negative finding cannot substitute for an unresolved checker judgment."""
+    from src.workspace.assistance_consistency_checks import aggregate
+
+    _require(
+        verdict.priority_review != "uncertain"
+        and not verdict.prose_uncertainties
+        and all(check.decision.value != "abstain" for check in verdict.checks)
+        and all(part.decision != "uncertain" for part in verdict.coverage_checks)
+        and all(
+            review.atomicity != "uncertain"
+            and "uncertain" not in review.qualifications.model_dump().values()
+            for review in verdict.claim_quality
+        ),
+        "campaign_v20_checker_judgment_unresolved",
+    )
+    _require(
+        aggregate(verdict, context)["quality_gate"] == "FAIL",
+        "campaign_v20_decisive_negative_checker_required",
+    )
+
+
 def _replay_quality_rejection(adapter: D5Adapter, snapshot: dict[str, Any], code: str) -> None:
     steps = snapshot["steps"]
     checked = {"steps": steps[:-1]}
     current = steps[-1]
     output = {k: v for k, v in current["output"].items() if k != "grounding"}
     verdict = adapter._checks(output)
+    context = json_object(snapshot["contacts"][-1]["body"]["messages"][0]["content"])
+    require_decisive_negative(verdict, context)
     _, materials = adapter._context()
     draft = adapter._checked_draft(checked)
     grounding = validate_claims(
@@ -359,13 +477,13 @@ def preserve_failed_case(
                 )
             else:
                 raise AdmissionError("campaign_v20_semantic_replay_mismatch")
-            classification = "isolated_evaluation_first_draft_semantic_failure"
+            classification = SEMANTIC_FAILURE
         elif quality:
             # This validates the latest complete checker against the actual draft/repair.
             development_contract(conn, scope_id, case_id)
             _require(receipt.get("error") == quality, "campaign_v20_quality_rejection_drift")
             _replay_quality_rejection(adapter, snapshot, quality)
-            classification = "complete_negative_quality_verdict"
+            classification = NEGATIVE_VERDICT
         else:
             raise AdmissionError("campaign_v20_failure_classification_missing")
         data["campaign_content_rejection"] = {
@@ -435,6 +553,7 @@ def stop_details(
             classification = {
                 "input_measurement_exceeds_cap_or_invalid": "input_capacity_or_invalid_count",
                 "usage_cap_exceeded": "usage_capacity_failure",
+                "campaign_v20_checker_judgment_unresolved": "unresolved_checker_judgment",
                 "invalid_or_unpriced_usage": "usage_or_model_binding_failure",
                 "campaign_accounting_or_outcome_corruption": "accounting_corruption",
                 "campaign_v20_prior_failed_accounting_receipt_drift": "accounting_corruption",

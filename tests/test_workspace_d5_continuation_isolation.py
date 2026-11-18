@@ -348,3 +348,132 @@ async def test_prior_isolation_accounting_corruption_stops_before_next_case(fixt
     assert report["stop"]["local_stage"] == "dispatch_gate"
     assert report["stop"]["classification"] == "accounting_corruption"
     assert report["outcomes"][EVALUATION]["state"] == "failed"
+
+
+@pytest.mark.timeout(180)
+async def test_unresolved_final_checker_stops_scope_even_with_decisive_negative(
+    fixture_campaign,
+):
+    import json
+
+    from jsonschema import Draft202012Validator
+
+    class MixedChecker(FaultTransport):
+        async def __call__(self, request):
+            response = await super().__call__(request)
+            if request.url.path.endswith("/messages") and self.checks == 2:
+                body = json.loads(request.content)
+                wire = response.json()
+                verdict = json.loads(wire["content"][-1]["text"])
+                if verdict.get("claim_reviews"):
+                    assert any(
+                        review["decision"] == "unsupported"
+                        for review in verdict["claim_reviews"].values()
+                    )
+                verdict["priority_review"] = "uncertain"
+                Draft202012Validator(body["output_config"]["format"]["schema"]).validate(verdict)
+                wire["content"][-1]["text"] = json.dumps(verdict)
+                return httpx.Response(200, json=wire)
+            return response
+
+    store, packet, compiled = fixture_campaign
+    calls = {}
+    bad = MixedChecker(CASE_MAP[DEVELOPMENT], repair_all=True)
+    bad.scenario = "final_negative"
+
+    def only_development(key):
+        assert key == DEVELOPMENT
+        calls[key] = bad
+        return bad
+
+    report = await d5_campaign.run(store, packet, offline=True, transport_factory=only_development)
+    assert list(calls) == [DEVELOPMENT]
+    assert len(bad.contacts) == 8
+    assert report["stop"]["case_id"] == DEVELOPMENT
+    assert report["stop"]["local_stage"] == "recheck"
+    assert report["stop"]["reason_code"] == "campaign_v20_checker_judgment_unresolved"
+    assert report["outcomes"] == {}
+    assert report["denominators"]["unrun_workflows"] == 4
+    with store.pool.connection() as conn:
+        row = conn.execute(
+            "SELECT j.id,j.state FROM workspace_generation_jobs j "
+            "JOIN workspace_d5_case_runs r ON j.id=r.job_id "
+            "WHERE r.case_id=%s AND r.packet_digest=%s",
+            (DEVELOPMENT, packet["packet_digest"]),
+        ).fetchone()
+    assert row and row[1] == "failed"
+    data, reservation = job_ledger(store, row[0])
+    assert reservation[-2:] == (0, "failed")
+    assert data["adapter"]["steps"][-1]["output"]["priority_review"] == "uncertain"
+    assert "classification" not in data["campaign_content_rejection"]
+    assert data["sealed_input"] == compiled[DEVELOPMENT]["input"]
+
+
+@pytest.mark.timeout(180)
+async def test_direct_adapter_cannot_record_or_advance_past_preliminary_failure(fixture_campaign):
+    from pydantic import ValidationError
+
+    from src.workspace.d5_adapter import D5Adapter
+    from src.workspace.d5_campaign_policy import job_binding, record_outcome
+
+    store, packet, compiled = fixture_campaign
+    scope = "d5-" + packet["packet_digest"][:24]
+    result = await d5_campaign.run(
+        store, packet, offline=True, transport_factory=_factory({}), checkpoint_after=2
+    )
+    assert result["stop"] is None
+    assert set(result["outcomes"]) == set(list(compiled)[:2])
+    failed = compiled[EVALUATION]
+    bad = FaultTransport(CASE_MAP[EVALUATION], fault="semantic")
+    adapter = D5Adapter(
+        store,
+        failed["owner"],
+        d5_freeze.restore_input(failed["input"]),
+        transport=httpx.MockTransport(bad),
+    )
+    original = adapter.start(adapter.inputs.settings["d5_request_id"])
+    job_id = original["id"]
+    with pytest.raises(ValidationError, match=SEMANTIC_FAILURE):
+        await adapter.advance(job_id)
+    assert len(bad.contacts) == 2
+    digest = _digest(failed["input"])
+    data, reservation = job_ledger(store, job_id)
+    assert reservation[-2:] == (0, "failed")
+    assert "classification" not in data["campaign_content_rejection"]
+
+    with pytest.raises(AdmissionError, match="campaign_v20_promoted_failure_required"):
+        record_outcome(store, scope, EVALUATION, job_id, digest)
+
+    following_id = list(compiled)[3]
+    following = compiled[following_id]
+    safe = FaultTransport(CASE_MAP[following_id])
+    later = D5Adapter(
+        store,
+        following["owner"],
+        d5_freeze.restore_input(following["input"]),
+        transport=httpx.MockTransport(safe),
+    )
+    with pytest.raises(AdmissionError, match="campaign_previous_case_not_terminal"):
+        later.start(later.inputs.settings["d5_request_id"])
+
+    # Simulate an old weak recorder that wrote a fully hashed preliminary record.
+    # Real order admission must still recheck its terminal classification.
+    record = {
+        "job_id": job_id,
+        "case_id": EVALUATION,
+        "state": "failed",
+        "input_digest": digest,
+        "content_rejection": data["campaign_content_rejection"],
+    }
+    with store.pool.connection() as conn:
+        _, _, binding = job_binding(conn, job_id)
+        conn.execute(
+            "INSERT INTO workspace_d5_campaign_outcomes "
+            "VALUES(%s,%s,%s,%s,%s,%s,clock_timestamp())",
+            (scope, EVALUATION, job_id, binding, Jsonb(record), _digest(record)),
+        )
+    with pytest.raises(AdmissionError, match="campaign_v20_promoted_failure_required"):
+        later.start(later.inputs.settings["d5_request_id"])
+    with pytest.raises(AdmissionError):
+        await adapter.advance(job_id)
+    assert len(bad.contacts) == 2 and safe.contacts == []

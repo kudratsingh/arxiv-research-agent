@@ -37,9 +37,9 @@ CASE_MAP = {
 }
 PROGRESSION = {
     "revision": "metered-evaluation-content-isolation-v20",
-    "development": "Both new development identities require complete current-response final checker contracts; complete negative quality is not acceptance.",
+    "development": "Both new development identities require complete current-response final checker contracts. Only fully decisive negative judgments can permit progression after quality rejection, and they grant no acceptance.",
     "evaluation": "A narrowly allowlisted, independently reproduced, fully received end_turn and fully metered semantic content failure fails only that case. No invalid-first-draft repair, salvage or acceptance.",
-    "global_stop": "Provider/auth/accounting/binding/capacity errors, missing or malformed judgments, truncation, new uncertainty, expiry, revocation or cancellation stop all dispatch.",
+    "global_stop": "Provider/auth/accounting/binding/capacity errors, missing or malformed judgments, any unresolved terminal judgment including mixed negative and unresolved verdicts, truncation, new uncertainty, expiry, revocation or cancellation stop all dispatch.",
     "retries": 0,
     "maximum_quality_repairs": 1,
     "mandatory_recheck": True,
@@ -80,6 +80,7 @@ def guard_order(conn: Any, bound: dict[str, Any], case_id: str) -> None:
     from src.workspace.admission import AdmissionError
     from src.workspace.d5_campaign_policy import audit_outcomes
     from src.workspace.d5_campaign_v19_policy import require_development_contracts
+    from src.workspace.d5_case_isolation import require_classified_outcomes
 
     order = list(CASE_MAP)
     if (
@@ -92,5 +93,6 @@ def guard_order(conn: Any, bound: dict[str, Any], case_id: str) -> None:
     done = audit_outcomes(conn, bound["id"])
     if any(key not in done for key in order[: order.index(case_id)]):
         raise AdmissionError("campaign_previous_case_not_terminal")
+    require_classified_outcomes(conn, bound["id"], bound["cases"])
     if bound["cases"][case_id]["stage"] != "B":
         require_development_contracts(conn, bound)

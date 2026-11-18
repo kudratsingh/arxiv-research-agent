@@ -133,3 +133,107 @@ def test_v20_stop_uses_failed_case_stage_when_reusing_checker_validation(suffix,
             "reason": reason,
             "raw_reason": raw,
         }
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    ("priority", "negative", "gate", "refusal"),
+    [
+        ("respected", True, "FAIL", None),
+        ("respected", False, "PASS", "decisive_negative_checker_required"),
+        ("uncertain", False, "HOLD", "checker_judgment_unresolved"),
+        ("uncertain", True, "FAIL", "checker_judgment_unresolved"),
+    ],
+)
+def test_only_decisive_negative_checker_can_promote(priority, negative, gate, refusal):
+    from src.workspace import assistance_consistency_checks as checks
+    from src.workspace.d5_adapter import checker_context, initial_context
+    from src.workspace.d5_campaign_v19_packet import predecessor, upgrade
+    from src.workspace.d5_case_isolation import require_decisive_negative
+    from src.workspace.d5_comparison_transport import checker_payload, draft_payload
+    from tests.test_workspace_d5_comparison_packet import materials
+
+    sealed = upgrade(predecessor()["cases"][0]["sealed"])
+    draft = draft_payload(initial_context(sealed))
+    context = checker_context(sealed, draft, materials())
+    payload = checker_payload(context, negative=negative)
+    payload["priority_review"] = priority
+    Draft202012Validator(checks.schemas(context)["wire"]).validate(payload)
+    verdict = checks.Checks.model_validate(checks.normalize(payload, context))
+    assert checks.aggregate(verdict, context)["quality_gate"] == gate
+    if refusal:
+        with pytest.raises(AdmissionError, match=refusal):
+            require_decisive_negative(verdict, context)
+    else:
+        require_decisive_negative(verdict, context)
+
+
+@pytest.mark.unit
+def test_terminal_receipt_requires_all_promotion_bindings():
+    from copy import deepcopy
+    from decimal import Decimal
+
+    from src.workspace.admission import _digest
+    from src.workspace.d5_case_isolation import REVISION, require_promoted_failure
+
+    scope_id, case_id = "synthetic-scope", "synthetic-evaluation"
+    sealed_input = {
+        "settings": {
+            "d5_campaign_revision": REVISION,
+            "d5_scope_id": scope_id,
+            "d5_case_id": case_id,
+            "d5_operation": "workflow",
+        },
+    }
+    input_digest = _digest(sealed_input)
+    contacts = [{"ordinal": 0}, {"ordinal": 1}]
+    audit = {
+        "contacts_digest": _digest(contacts),
+        "state": "failed",
+        "content_accepted": False,
+        "unknown_usd": "0",
+    }
+    receipt = {
+        "case_id": case_id,
+        "stage": "C",
+        "local_stage": "draft",
+        "classification": "isolated_evaluation_first_draft_semantic_failure",
+        "reason_code": SEMANTIC_FAILURE,
+        "error_class": "ValidationError",
+        "error_codes": [SEMANTIC_FAILURE],
+        "accepted": False,
+        "input_digest": input_digest,
+        "contacts_digest": _digest(contacts),
+        "failed_accounting_digest": _digest(audit),
+    }
+    data = {
+        "sealed_input": sealed_input,
+        "adapter": {"contacts": contacts, "steps": []},
+        "campaign_content_rejection": receipt,
+        "accounting_audits": {"completed-failure": audit},
+    }
+    entry = {"stage": "C", "operation": "workflow", "input_digest": input_digest}
+    record = {
+        "case_id": case_id,
+        "state": "failed",
+        "input_digest": input_digest,
+        "content_rejection": receipt,
+    }
+    reservation = {"job_state": "failed", "reservation_state": "failed", "unknown": Decimal(0)}
+    require_promoted_failure(scope_id, entry, record, data, **reservation)
+    for field in ("classification", "stage", "reason_code", "failed_accounting_digest"):
+        forged = deepcopy(data)
+        del forged["campaign_content_rejection"][field]
+        stale_record = {**record, "content_rejection": forged["campaign_content_rejection"]}
+        with pytest.raises(AdmissionError, match="promoted_failure_required"):
+            require_promoted_failure(scope_id, entry, stale_record, forged, **reservation)
+    with pytest.raises(AdmissionError, match="prior_failed_accounting_receipt_drift"):
+        require_promoted_failure(
+            scope_id,
+            entry,
+            record,
+            data,
+            job_state="failed",
+            reservation_state="uncertain",
+            unknown=Decimal("0.1"),
+        )

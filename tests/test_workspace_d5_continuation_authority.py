@@ -590,7 +590,7 @@ def test_registration_requires_exact_order_routes_and_delegates_authority(monkey
 
 @pytest.mark.unit
 def test_order_requires_terminal_predecessors_and_both_development_contracts(monkeypatch):
-    from src.workspace import d5_campaign_policy, d5_campaign_v19_policy
+    from src.workspace import d5_campaign_policy, d5_campaign_v19_policy, d5_case_isolation
 
     conn = object()
     schedule = list(policy.CASE_MAP)
@@ -604,7 +604,11 @@ def test_order_requires_terminal_predecessors_and_both_development_contracts(mon
     }
     done = {}
     calls = []
+    terminal_audits = []
     monkeypatch.setattr(d5_campaign_policy, "audit_outcomes", lambda *_: done)
+    monkeypatch.setattr(
+        d5_case_isolation, "require_classified_outcomes", lambda *args: terminal_audits.append(args)
+    )
     monkeypatch.setattr(
         d5_campaign_v19_policy, "require_development_contracts", lambda *args: calls.append(args)
     )
@@ -618,5 +622,6 @@ def test_order_requires_terminal_predecessors_and_both_development_contracts(mon
     done[second] = {}
     policy.guard_order(conn, scope, research)
     assert calls == [(conn, scope)]
+    assert terminal_audits == [(conn, scope["id"], scope["cases"])] * 3
     with pytest.raises(AdmissionError, match="continuation_schedule_binding_drift"):
         policy.guard_order(conn, scope, "unbound")
