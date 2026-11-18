@@ -483,6 +483,8 @@ def checker_context(
 ) -> dict[str, Any]:
     """The exact context the production checker receives for one response."""
     value = initial_context(sealed)
+    # Authoring instructions belong only to the workflow model, never its checker.
+    value.pop("authoring_guidance", None)
     value["phase"] = "check"
     draft, claims = resolve_draft(
         workflow,
