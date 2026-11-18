@@ -1,3 +1,42 @@
+# Current work — v20 prospective behavior continuation (offline verification)
+
+[Scoring/failure-isolation design](BEHAVIOR-CONTINUATION-v20.md) and
+[observed quality review](QUALITY-REVIEW-v20.md) preserve the immutable stopped
+v19 scope, originals and FAIL. The prospective scope prioritizes four unrun
+Research controls and four unrun checker batches, with two necessary new
+input-bound development workflows. No completed Learn evaluation or standalone
+schema diagnostic is repeated. Human qualification remains out of scope.
+
+The actual scorer reproduction is seven possible fully met parts against an
+unreachable historical24/24 requirement. The new policy separates expected
+behavior, full research-need fulfillment, factual quality and completion/review.
+The ideal synthetic control reaches behavioral PASS with7fully met/13partial/
+4unmet needs; synthetic overall quality remains HOLD. Existing negative quality
+findings and all historical denominators remain unchanged.
+
+Read-only baseline:52jobs/101Messages/126counts,USD3.770505known plus
+USD2.275066retained overlapping liability once =USD6.045571; no active jobs.
+The bounded10job/28Message/28fresh-paired-count/USD9.20 continuation plusUSD2
+buffer would giveUSD17.245571 exposure, within the unchangedUSD22 ceiling.
+Programme64/160/200,concurrency1,expiry2026-11-21T11:03:57Z remain unchanged.
+No cap, dollar, expiry or migration amendment is proposed or activated.
+
+Verification and final byte freeze are in progress. [Dependency patches](WEB-DEPENDENCY-PATCH-v20.md)
+pass local frontend tests/coverage/build/budgets, but the [existing audit gate
+is blocked](CI-AUDIT-DECISION-v20.md) by the unpatched development advisory.
+Automatic approval review refused a persistent exception outside current
+scope; the allowlist is unchanged. Hosted all-green is not claimed. Preserve
+this failure while completing all independent offline checks and publication.
+
+No provider/count/key access, live authority, financial mutation, settlement,
+hold release, owner-data edit, merge or deployment. Owner3137/review3178 remain
+untouched. Everyday generation, recurrence and notifications stay disabled.
+
+All earlier current/pending headings below are immutable historical records,
+not renewed execution authority.
+
+---
+
 # Current offline handoff — v19 comparison and complete-pipeline evaluation
 
 Application `b1bad909b112c246b678c0194325ae974e4284bf`; branch

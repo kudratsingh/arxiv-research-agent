@@ -196,6 +196,15 @@ def score_workflow(
 def results(
     store: Any, packet: dict[str, Any], *, stop: dict[str, Any] | None = None
 ) -> dict[str, Any]:
+    if packet.get("revision") == "d5-behavior-continuation-v20":
+        from src.workspace.d5_continuation_report import results as continuation_results
+        return continuation_results(store, packet, stop=stop)
+    return _legacy_results(store, packet, stop=stop)
+
+
+def _legacy_results(
+    store: Any, packet: dict[str, Any], *, stop: dict[str, Any] | None = None
+) -> dict[str, Any]:
     from src.workspace.d5_campaign_policy import audit_outcomes
     from src.workspace.d5_freeze import compile_inputs
     from src.workspace.d5_results import QualificationResults
@@ -484,6 +493,9 @@ def results(
 
 
 def markdown(report: dict[str, Any]) -> str:
+    if report.get("revision") == "d5-behavior-continuation-report-v20":
+        from src.workspace.d5_continuation_report import markdown as continuation_markdown
+        return continuation_markdown(report)
     rows = [
         "# D5 consolidated campaign — machine only",
         "",

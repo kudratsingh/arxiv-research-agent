@@ -298,6 +298,11 @@ def _validate(conn: Any, record: dict[str, Any], program_id: str) -> dict[str, A
 def active(
     conn: Any, program_id: str, required: str | None = None
 ) -> tuple[dict[str, Any], dict[str, Any]] | None:
+    from src.workspace.d5_continuation_authority import active as continuation_active
+
+    continuation = continuation_active(conn, program_id, required)
+    if continuation is not None:
+        return continuation
     from src.workspace.d5_campaign_v19_extension import active as comparison_active
 
     comparison = comparison_active(conn, program_id, required)
@@ -445,6 +450,10 @@ def guard_exception(
     if not found:
         raise AdmissionError("program_external_completion_uncertain")
     receipt, core = found
+    from src.workspace.d5_continuation_authority import AUTHORITY_REVISION
+    from src.workspace.d5_continuation_authority import guard_exception as continuation_guard
+    if core["revision"] == AUTHORITY_REVISION:
+        return continuation_guard(conn, policy, found, current_job)
     from src.workspace.d5_campaign_v19_extension import REVISION as COMPARISON_REVISION
     from src.workspace.d5_campaign_v19_extension import guard_exception as comparison_guard
 

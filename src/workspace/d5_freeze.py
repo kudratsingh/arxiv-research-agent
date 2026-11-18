@@ -168,6 +168,7 @@ def execution_owners(packet: dict[str, Any]) -> tuple[str, str]:
         "d5-comprehensive-machine-campaign-v15",
         "d5-keyed-machine-campaign-v16",
         "d5-comparison-machine-campaign-v19",
+        "d5-behavior-continuation-v20",
     }:
         return campaign_owners(packet)
 
@@ -314,6 +315,7 @@ def verify(packet: dict[str, Any]) -> None:
         "d5-comprehensive-machine-campaign-v15",
         "d5-keyed-machine-campaign-v16",
         "d5-comparison-machine-campaign-v19",
+        "d5-behavior-continuation-v20",
     }:
         verify_packet(packet)
         return
@@ -429,6 +431,7 @@ def compile_inputs(packet: dict[str, Any]) -> dict[str, dict[str, Any]]:
         "d5-comprehensive-machine-campaign-v15",
         "d5-keyed-machine-campaign-v16",
         "d5-comparison-machine-campaign-v19",
+        "d5-behavior-continuation-v20",
     }:
         return compile_campaign(packet)
     from src.workspace.d5_coverage_packet import compile_controls, is_packet

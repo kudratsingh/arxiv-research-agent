@@ -1,3 +1,10 @@
+> Current offline repair: [v20 evidence-conditioned behavior and unrun-case continuation](BEHAVIOR-CONTINUATION-v20.md).
+> Verification/freeze is in progress; the [unresolved CI audit decision](CI-AUDIT-DECISION-v20.md)
+> is explicit. No live authority, exception, financial or expiry change is activated.
+> Original v19 outputs, stopped scope and FAIL remain immutable. [Current status](STATUS.md).
+
+---
+
 > Current prospective handoff: [v19 comparison and full-pipeline campaign](evidence/comparison-v19/HANDOFF-v2.md).
 > The frozen packet is unapproved. Required local gates are complete; exact-head publication CI
 > is recorded separately after push; no live authority, provider contact or financial mutation

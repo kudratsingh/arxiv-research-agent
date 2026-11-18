@@ -190,3 +190,36 @@ it("keeps the same fallback save payload across inspection modes and return path
  const entries=mock.request.mock.calls.filter(([p])=>p==="context/entries");expect(entries).toHaveLength(2);expect(entries[0]![1]).toEqual(entries[1]![1]);
  expect(entries[0]![1].context).toEqual({mode:"research",project_id:PID,thread_id:null,return_to:`/workspace/today?mode=research&project=${PID}`});
 });
+
+it("retains complete historical checker reasons without turning an uncertain recheck into accepted content", async () => {
+  const original = jobs[0]!;
+  original.state = "uncertain"; original.assistance_output = null; original.result = null;
+  original.workflow_usd = "0.024934"; original.checker_usd = "0"; original.unknown_usd = "0.425066";
+  const longReason = "Synthetic historical judgment: the source does not establish the entire assertion. " + "Scope, comparator and conditions remain necessary. 🔬 αβ ".repeat(20);
+  original.steps = [
+    null, 0, {}, { stage: "draft", output: { checks: [{ reason: "Not a checker" }] } },
+    { stage: "check", output: null }, { stage: "check", output: "invalid" },
+    { stage: "check", output: {
+      checks: [null, {}, { reason: 42 }, { reason: longReason }],
+      claim_reviews: "malformed collection",
+      claim_quality: [{ reason: "Synthetic bundled finding remains a historical assessment." }],
+      coverage_checks: [{ reason: "Synthetic coverage of the old draft does not check the repair." }],
+      prose_findings: [{ reason: "First independent prose concern." }, { reason: "Second independent prose concern." }],
+    } },
+    { stage: "repair", output: { checks: [{ reason: "Repair is not a checker" }] } },
+  ];
+  const user = userEvent.setup(); await mount();
+  await screen.findByText(/No completed content is available/);
+  await user.click(screen.getByText("Stored machine checker reasons"));
+  expect(screen.getByText((_, node) => node?.tagName === "SPAN" && node.textContent === longReason).textContent).toBe(longReason);
+  expect(screen.getByText("First independent prose concern.")).toBeInTheDocument();
+  expect(screen.getByText("Second independent prose concern.")).toBeInTheDocument();
+  expect(screen.getByText("Machine judgments are not human review.")).toBeInTheDocument();
+  expect(screen.queryByText("Not a checker")).not.toBeInTheDocument();
+  expect(screen.queryByText("Repair is not a checker")).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Save experimental learning thread" })).not.toBeInTheDocument();
+  await user.click(screen.getByText("Request, exact packet and split accounting"));
+  const audit = JSON.parse(screen.getByText(/"unknown_usd": "0.425066"/).textContent!);
+  expect(audit).toMatchObject({workflow_usd:"0.024934",checker_usd:"0",unknown_usd:"0.425066"});
+  expect(mock.request.mock.calls.every(([, body]) => body === undefined)).toBe(true);
+});

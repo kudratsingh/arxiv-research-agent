@@ -62,10 +62,11 @@ def valid_limits(value: Any) -> bool:
     from src.workspace.d5_campaign_v14_policy import LIMITS as V14_LIMITS
     from src.workspace.d5_campaign_v15_policy import LIMITS as V15_LIMITS
     from src.workspace.d5_campaign_v19_policy import LIMITS as V19_LIMITS
+    from src.workspace.d5_continuation_policy import LIMITS as CONTINUATION_LIMITS
     from src.workspace.d5_coverage_policy import PROFILES
     from src.workspace.d5_operations import OPUS_LIMITS
-
     return value in (
+        CONTINUATION_LIMITS,
         LIMITS,
         OPUS_LIMITS,
         CAMPAIGN_LIMITS,

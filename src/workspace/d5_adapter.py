@@ -340,6 +340,8 @@ def prepare_input(
         compact["provider_schema_compatibility_revision"] = sealed[
             "provider_schema_compatibility_revision"
         ]
+    if "quality_guidance_revision" in sealed:
+        compact["quality_guidance_revision"] = sealed["quality_guidance_revision"]
     compact["candidate_initial_wire_digest"] = _digest(sealed["candidate_initial_wire"])
     compact["full_preview_digest"] = _digest(sealed)
     probe_context = None
@@ -455,7 +457,7 @@ def initial_context(sealed: dict[str, Any]) -> dict[str, Any]:
         compact["provider_schema_compatibility_revision"] = sealed[
             "provider_schema_compatibility_revision"
         ]
-    return {
+    context = {
         "phase": "draft",
         "role": "workflow",
         "sealed_request": compact,
@@ -466,6 +468,14 @@ def initial_context(sealed: dict[str, Any]) -> dict[str, Any]:
             task_policy=sealed.get("task_policy"),
         )["wire"],
     }
+
+    if "quality_guidance_revision" in sealed:
+        from src.workspace.d5_quality_guidance import GUIDANCE_VERSION, guidance
+        if sealed["quality_guidance_revision"] != GUIDANCE_VERSION:
+            raise AdmissionError("continuation_quality_guidance_revision_drift")
+        context["sealed_request"]["quality_guidance_revision"] = GUIDANCE_VERSION
+        context["authoring_guidance"] = {"revision": GUIDANCE_VERSION, "text": guidance("draft")}
+    return context
 
 
 def checker_context(
@@ -794,6 +804,14 @@ class D5Adapter(QualificationAdapter):
         settings = self.inputs.settings
         sealed = settings.get("d5_request", {})
         operation = settings.get("d5_operation")
+        from src.workspace.d5_continuation_policy import enabled as continuation
+        if continuation(dict(settings)):
+            from src.workspace.d5_continuation_packet import producer_bindings
+            from src.workspace.d5_quality_guidance import GUIDANCE_VERSION
+            if settings.get("continuation_producer") != producer_bindings() or (operation == "workflow" and sealed.get("quality_guidance_revision") != GUIDANCE_VERSION):
+                raise AdmissionError("continuation_producer_or_guidance_drift")
+        elif "quality_guidance_revision" in sealed:
+            raise AdmissionError("continuation_guidance_requires_new_scope")
         from src.workspace.assistance_consistency_contract import enabled as consistency_enabled
 
         if (
@@ -1069,6 +1087,9 @@ class D5Adapter(QualificationAdapter):
         if phase == "check":
             value = checker_context(sealed, steps[-1]["output"], materials)
         elif phase == "repair":
+            if "quality_guidance_revision" in sealed:
+                from src.workspace.d5_quality_guidance import GUIDANCE_VERSION, guidance
+                value["authoring_guidance"] = {"revision": GUIDANCE_VERSION, "text": guidance("repair")}
             workflow = steps[0]["output"]
             draft, claims = resolve_draft(
                 workflow,

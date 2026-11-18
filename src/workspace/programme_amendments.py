@@ -219,6 +219,11 @@ def effective_limits(
     conn: Any, program_id: str, *, required_proposal_digest: str | None = None
 ) -> dict[str, Any]:
     """The default remains20, and all other programmes/caps stay unchanged."""
+    from src.workspace.d5_continuation_authority import active as continuation_active
+
+    continuation = continuation_active(conn, program_id, required_proposal_digest)
+    if continuation is not None:
+        return dict(continuation[1]["limits"])
     from src.workspace.d5_campaign_v19_extension import active as comparison_active
 
     comparison = comparison_active(conn, program_id, required_proposal_digest)

@@ -17,6 +17,9 @@ from src.workspace.admission import AdmissionError, _digest
 
 
 def template(packet: dict[str, Any]) -> dict[str, Any]:
+    if packet.get("revision") == "d5-behavior-continuation-v20":
+        from src.workspace.d5_continuation_packet import template as continuation_template
+        return continuation_template(packet)
     from src.workspace.d5_authorization import case_bindings
     from src.workspace.d5_freeze import compile_inputs, verify
 
@@ -75,6 +78,9 @@ def template(packet: dict[str, Any]) -> dict[str, Any]:
 
 
 def record(store: Any, packet: dict[str, Any], receipt: dict[str, Any]) -> dict[str, Any]:
+    if packet.get("revision") == "d5-behavior-continuation-v20":
+        from src.workspace.d5_continuation_packet import record as continuation_record
+        return continuation_record(store, packet, receipt)
     from src.workspace.d5_authorization import record_external
     from src.workspace.d5_benchmark import check_storage
     from src.workspace.d5_campaign_extension import record_external as activate
@@ -140,6 +146,9 @@ def record(store: Any, packet: dict[str, Any], receipt: dict[str, Any]) -> dict[
 
 
 def authorize_fixture(store: Any, packet: dict[str, Any]) -> dict[str, Any]:
+    if packet.get("revision") == "d5-behavior-continuation-v20":
+        from src.workspace.d5_continuation_packet import authorize_fixture as continuation_fixture
+        return continuation_fixture(store, packet)
     with store.pool.connection() as conn:
         if not conn.execute("SELECT 1 FROM workspace_d5_fixture_marker").fetchone():
             raise AdmissionError("campaign_fixture_database_required")
@@ -201,6 +210,7 @@ def revoke(store: Any, packet: dict[str, Any], authorization: dict[str, Any]) ->
         "d5-comprehensive-machine-campaign-v15",
         "d5-keyed-machine-campaign-v16",
         "d5-comparison-machine-campaign-v19",
+        "d5-behavior-continuation-v20",
     }
     if capacity and authorization.get("scope_id") != "d5-" + packet["packet_digest"][:24]:
         raise AdmissionError("campaign_revocation_scope_binding_required")

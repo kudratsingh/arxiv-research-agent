@@ -188,7 +188,7 @@ async def run(
             if offline:
                 if transport_factory is not None:
                     transport = transport_factory(key)
-                elif packet.get("revision") == "d5-comparison-machine-campaign-v19":
+                elif packet.get("revision") in {"d5-comparison-machine-campaign-v19", "d5-behavior-continuation-v20"}:
                     from src.workspace.d5_comparison_transport import ComparisonCampaignTransport
 
                     transport = ComparisonCampaignTransport(key)
@@ -391,6 +391,7 @@ def main() -> None:
             "freeze-v16",
             "freeze-v16r2",
             "freeze-v19",
+            "freeze-v20",
             "verify",
             "offline",
             "run",
@@ -419,6 +420,7 @@ def main() -> None:
             "freeze-v16",
             "freeze-v16r2",
             "freeze-v19",
+            "freeze-v20",
         }:
             if (
                 args.snapshot is None
@@ -428,7 +430,10 @@ def main() -> None:
                 raise AdmissionError("campaign_freeze_offline_snapshot_required")
             captured = read(args.snapshot)
             install(store, captured, fixture=True)
-            if args.verb == "freeze-v19":
+            if args.verb == "freeze-v20":
+                from src.workspace.d5_continuation_packet import freeze as freeze_continuation
+                write(args.packet, freeze_continuation(store, captured))
+            elif args.verb == "freeze-v19":
                 from src.workspace.d5_campaign_v19_packet import freeze as freeze_comparison
 
                 write(args.packet, freeze_comparison(store, captured))
@@ -469,7 +474,7 @@ def main() -> None:
         if args.out is None:
             parser.error("run/report requires new --out directory")
         transport_type: Any = CampaignTransport
-        if packet.get("revision") == "d5-comparison-machine-campaign-v19":
+        if packet.get("revision") in {"d5-comparison-machine-campaign-v19", "d5-behavior-continuation-v20"}:
             from src.workspace.d5_comparison_transport import ComparisonCampaignTransport
 
             transport_type = ComparisonCampaignTransport

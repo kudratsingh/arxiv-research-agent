@@ -72,6 +72,10 @@ def enabled(settings: dict[str, Any]) -> bool:
 
 
 def limits_for(settings: dict[str, Any]) -> dict[str, Any]:
+    from src.workspace.d5_continuation_policy import LIMITS as CONTINUATION_LIMITS
+    from src.workspace.d5_continuation_policy import enabled as continuation
+    if continuation(settings):
+        return CONTINUATION_LIMITS
     from src.workspace.d5_campaign_v14_policy import LIMITS as V14_LIMITS
     from src.workspace.d5_campaign_v14_policy import enabled as v14
     from src.workspace.d5_campaign_v15_policy import LIMITS as V15_LIMITS
@@ -118,6 +122,10 @@ def audit_outcomes(conn: Any, scope_id: str) -> dict[str, Any]:
 
 
 def guard_order(conn: Any, bound: dict[str, Any], case_id: str) -> None:
+    if bound["authorization_record"].get("campaign_revision") == "d5-behavior-continuation-v20":
+        from src.workspace.d5_continuation_policy import guard_order as continuation_order
+        continuation_order(conn, bound, case_id)
+        return
     order = bound["authorization_record"].get("case_order", [])
     if set(order) != set(bound["cases"]) or len(order) != len(bound["cases"]):
         raise AdmissionError("campaign_schedule_binding_drift")
@@ -167,6 +175,10 @@ def registration(
     from src.workspace.d5_deadlines import POLICY
     from src.workspace.d5_operations import ROUTES
 
+    if receipt.get("campaign_revision") == "d5-behavior-continuation-v20":
+        from src.workspace.d5_continuation_policy import registration as continuation_registration
+        continuation_registration(conn, program_id, compiled, receipt)
+        return
     comparison = receipt["limits"] == V19_LIMITS
     capacity = comparison or receipt["limits"] == V15_LIMITS
     prospective = receipt["limits"] == V14_LIMITS
@@ -251,6 +263,10 @@ def preserve_content_rejection(
     store: Any, owner: str, inputs: Any, job_id: str, error: BaseException | None
 ) -> bool:
     """Only fully metered output failures continue. Binding/accounting faults stop."""
+    if inputs.settings.get("d5_campaign_revision") == "d5-behavior-continuation-v20":
+        from src.workspace.d5_case_isolation import eligible_error
+        if not eligible_error(error):
+            return False
     if (
         not enabled(inputs.settings)
         or error is None

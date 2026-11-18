@@ -13,13 +13,13 @@ from pathlib import Path
 
 import httpx
 import pytest
-from src.workspace.d5_continuation_report import liabilities, probe_verdicts
 
 from src.workspace.admission import _digest
 from src.workspace.d5_adapter import prepare_input
 from src.workspace.d5_benchmark import read
 from src.workspace.d5_comparison_transport import ComparisonCampaignTransport
 from src.workspace.d5_compatibility_packet import materials
+from src.workspace.d5_continuation_report import liabilities, probe_verdicts
 from src.workspace.d5_report_binding import message_output
 
 ROOT = Path(__file__).resolve().parents[1]

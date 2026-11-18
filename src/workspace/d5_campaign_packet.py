@@ -211,6 +211,9 @@ def predecessor() -> dict[str, Any]:
 
 
 def owners(packet: dict[str, Any]) -> tuple[str, str]:
+    if packet.get("revision") == "d5-behavior-continuation-v20":
+        from src.workspace.d5_continuation_packet import owners as continuation_owners
+        return continuation_owners(packet)
     actor = "d5-campaign-" + packet["packet_digest"][:16] + "-run"
     return actor, actor
 
@@ -567,6 +570,10 @@ def freeze(store: Any, snapshot: dict[str, Any]) -> dict[str, Any]:
 
 
 def verify_packet(p: dict[str, Any]) -> None:
+    if p.get("revision") == "d5-behavior-continuation-v20":
+        from src.workspace.d5_continuation_packet import verify_packet as verify_continuation
+        verify_continuation(p)
+        return
     if p.get("revision") == "d5-comparison-machine-campaign-v19":
         from src.workspace.d5_campaign_v19_packet import verify_packet as verify_comparison
 
@@ -677,6 +684,9 @@ def verify_packet(p: dict[str, Any]) -> None:
 
 
 def compile_campaign(p: dict[str, Any]) -> dict[str, Any]:
+    if p.get("revision") == "d5-behavior-continuation-v20":
+        from src.workspace.d5_continuation_packet import compile_packet
+        return compile_packet(p)
     from src.workspace.d5_adapter import prepare_input
 
     actor = owners(p)[0]
@@ -716,6 +726,10 @@ def verify_dispatch_identity(packet: dict[str, Any]) -> None:
     from src.workspace.d5_adapter import qualification_producer
     from src.workspace.d5_freeze import code_bindings
 
+    if packet.get("revision") == "d5-behavior-continuation-v20":
+        from src.workspace.d5_continuation_packet import verify_packet as verify_continuation
+        verify_continuation(packet)
+        return
     if (
         packet.get("approved") is not False
         or _digest({k: v for k, v in packet.items() if k != "packet_digest"})
