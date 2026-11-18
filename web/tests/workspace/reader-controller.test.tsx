@@ -581,10 +581,11 @@ it("opens a scored claim fragment in Understand after reload without saving or d
  const claim=`gen-${"a".repeat(40)}-c1`;
  const path=new URL(location.href);path.hash=claim;history.replaceState(null,"",path);
  await mount();
- expect(screen.getByRole("link",{name:"Understand"})).toHaveAttribute("aria-current","location");
+ // Heading readiness precedes the animation frame that synchronizes fragment navigation.
+ await waitFor(() => expect(screen.getByRole("link",{name:"Understand"})).toHaveAttribute("aria-current","location"));
  expect(calls.every(call=>!call.path.startsWith("assistance/jobs")&&!call.path.startsWith("qualification/"))).toBe(true);
  history.replaceState(null,"",`${path.pathname}${path.search}#source`);fireEvent(window,new HashChangeEvent("hashchange"));
- expect(screen.getByRole("link",{name:"Source"})).toHaveAttribute("aria-current","location");
+ await waitFor(() => expect(screen.getByRole("link",{name:"Source"})).toHaveAttribute("aria-current","location"));
  history.replaceState(null,"",path);fireEvent(window,new PopStateEvent("popstate"));
- expect(screen.getByRole("link",{name:"Understand"})).toHaveAttribute("aria-current","location");
+ await waitFor(() => expect(screen.getByRole("link",{name:"Understand"})).toHaveAttribute("aria-current","location"));
 });

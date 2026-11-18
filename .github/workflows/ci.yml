@@ -1160,7 +1160,9 @@ jobs:
     # future dependency does make the image expensive to build, the fix is a
     # registry-published image (05 §3.1 B5 / R-12, a paused DEPLOY item), not
     # a cache trick that silently stops working.
-    runs-on: ubuntu-latest
+    # Pin the browser host after two 26.04 mirror stalls before any test ran.
+    # Preserve the complete matrix, dependency installation and ten-minute bound.
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
       # Never a real key. See "THE COST BOUNDARY" above.
