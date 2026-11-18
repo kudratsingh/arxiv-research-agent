@@ -37,6 +37,8 @@ def _draft():
     }
 
 
+pytestmark = pytest.mark.unit
+
 def test_split_fixture_passes_real_coverage_normalization_and_preserves_context():
     result, coverage = _normalize(_draft(), "single_paper", _policy())
     assert coverage["p1"]["answer_claim_ids"] == ["c1", "c2"]

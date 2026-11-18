@@ -22,6 +22,8 @@ from src.workspace.d5_compatibility_packet import materials
 from src.workspace.d5_continuation_report import liabilities, probe_verdicts
 from src.workspace.d5_report_binding import message_output
 
+pytestmark = pytest.mark.unit
+
 ROOT = Path(__file__).resolve().parents[1]
 
 

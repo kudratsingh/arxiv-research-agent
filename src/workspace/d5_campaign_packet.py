@@ -219,6 +219,9 @@ def owners(packet: dict[str, Any]) -> tuple[str, str]:
 
 
 def plan_digest(packet: dict[str, Any]) -> str:
+    if packet.get("revision") == "d5-behavior-continuation-v20":
+        from src.workspace.d5_continuation_packet import plan_digest as continuation_digest
+        return continuation_digest(packet)
     return _digest(
         {
             k: packet[k]

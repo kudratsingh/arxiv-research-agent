@@ -217,7 +217,7 @@ def revoke(store: Any, packet: dict[str, Any], authorization: dict[str, Any]) ->
     statement = (
         "INSERT INTO workspace_d5_keyed_continuation_revocations VALUES(%s,%s,clock_timestamp()) ON CONFLICT DO NOTHING"
         if packet.get("revision")
-        in {"d5-keyed-machine-campaign-v16", "d5-comparison-machine-campaign-v19"}
+        in {"d5-keyed-machine-campaign-v16", "d5-comparison-machine-campaign-v19", "d5-behavior-continuation-v20"}
         else "INSERT INTO workspace_d5_capacity_revision_revocations VALUES(%s,%s,clock_timestamp()) ON CONFLICT DO NOTHING"
         if capacity
         else "INSERT INTO workspace_d5_campaign_successor_revocations VALUES(%s,%s,clock_timestamp()) ON CONFLICT DO NOTHING"
